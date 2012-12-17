@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Add rules to .mozilla/firefox/profile/pref.js
+# Let firefox update mime.types.  It's too complicated to script.
+files=`find ~/.mozilla/firefox -name prefs.js`
+
+printf "Close all firefox windows.  Press return when they are all closed."
+read junk
+for file in $files; do
+    if ! fgrep -q app.mms $file; then
+	cat << EOM >> $file
+user_pref("network.protocol-handler.app.mms", "/usr/local/bin/movie-player");
+user_pref("network.protocol-handler.external.mms", true);
+user_pref("network.protocol-handler.expose.mms", false);
+EOM
+    fi
+    if ! fgrep -q app.rtsp $file; then
+	cat << EOM >> $file
+user_pref("network.protocol-handler.app.rtsp", "/usr/local/bin/movie-player");
+user_pref("network.protocol-handler.external.rtsp", true);
+user_pref("network.protocol-handler.expose.rtsp", false);
+EOM
+    fi
+done
+
+# Alternative: Does not work with XFCE.  Gnome not tested.
+#gconftool-2 -s /desktop/gnome/url-handlers/mms/command '/usr/local/bin/movieplayer %s' --type String
+#gconftool-2 -s /desktop/gnome/url-handlers/mms/enabled --type Boolean true
+#gconftool-2 -s /desktop/gnome/url-handlers/rtsp/command '/usr/local/bin/movieplayer %s' --type String
+#gconftool-2 -s /desktop/gnome/url-handlers/rtsp/enabled --type Boolean true
+

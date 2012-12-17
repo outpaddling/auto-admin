@@ -1,0 +1,78 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2011-07-24  Jason Bacon Begin
+##########################################################################
+
+pause()
+{
+    printf "Press return to continue...\n"
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    printf "Usage: $0 public-interface local-interface\n"
+    printf "    Example: $0 bce0 bce1\n"
+    exit 1
+fi
+
+public=$1
+local=$2
+
+script_name="ifpw-gateway-enable"
+
+# Install rules script
+if [ ! -e /usr/local/etc/ipfw-rules.sh ]; then
+    sed -e "s|%%PUBLIC%%|$public|" -e "s|%%LOCAL%%|$local|" \
+	/usr/local/share/auto-admin/ipfw-rules.sh > /usr/local/etc/ipfw-rules.sh
+    chmod 755 /usr/local/etc/ipfw-rules.sh
+fi
+auto-append-line firewall_script 'firewall_script="/usr/local/etc/ipfw-rules.sh"' /etc/rc.conf $script_name
+
+#printf "Enable gateway (Configure/Networking) in sysinstall...\n"
+#pause
+#sysinstall
+
+# Anything else?
+auto-append-line gateway_enable 'gateway_enable="YES"' /etc/rc.conf $script_name
+
+# NAT
+auto-append-line ipfw_load 'ipfw_load="YES"' /boot/loader.conf $script_name
+auto-append-line ipdivert_load 'ipdivert_load="YES"' /boot/loader.conf $script_name
+auto-append-line net.inet.ip.fw.default_to_accept 'net.inet.ip.fw.default_to_accept="1"' /boot/loader.conf $script_name
+
+auto-append-line firewall_enable 'firewall_enable="YES"' /etc/rc.conf $script_name
+auto-append-line firewall_type '# firewall_type="OPEN"' /etc/rc.conf $script_name
+auto-append-line natd_enable 'natd_enable="YES"' /etc/rc.conf $script_name
+auto-append-line natd_interface 'natd_interface="'$public'"' /etc/rc.conf $script_name
+auto-append-line natd_flags 'natd_flags="-u"' /etc/rc.conf $script_name
+
+cat << EOM
+
+The gateway should be functional after the next reboot.
+
+It is strongly recommended that the first reboot be done at the console,
+since the slightest configuration error could cause the network to be
+completely locked down.  In one case, natd did not start up after the
+first reboot, although the configuration was correct.  This was due to
+a race condition between the interface coming up and natd starting. (If
+the interface is not up yet, natd will fail to start.)
+
+Be sure to configure the local interface of this machine as the default
+router on each client machine on the subnet.
+
+EOM
+

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cd /etc/pam.d
+awk ' { if ($3 == "pam_passwdqc.so")
+	{
+	    printf("password\t%s\t%s\t\t%s\n", $2, $3, $4);
+	}
+	else
+	{
+	    print $0;
+	}
+    }' passwd > passwd.tmp
+mv -f passwd.tmp passwd
+

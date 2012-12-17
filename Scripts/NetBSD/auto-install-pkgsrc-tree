@@ -1,0 +1,40 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-10-10  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+# Install source tree for same release
+save_cwd=`pwd`
+
+. /usr/pkgsrc.shrc
+
+# FIXME: Don't assume /usr
+cd /usr
+distname=pkgsrc-${PKGSRC_QUARTER}
+archive=$distname.tar.bz2
+
+if [ ! -e $archive ]; then
+    printf 'Fetching...\n'
+    fetch http://ftp.netbsd.org/pub/pkgsrc/$distname/$archive
+fi
+
+if [ ! -e pkgsrc ]; then
+    printf "Unpacking...\n"
+    tar -jxf $archive
+fi
+
+cd $save_cwd
+

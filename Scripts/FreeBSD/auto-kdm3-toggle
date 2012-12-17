@@ -1,0 +1,56 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Enable or disable kdm3 via /etc/ttys
+#
+#   Arguments:
+#       on|off
+#
+#   History:
+#   Date        Name        Modification
+#   2012-08-04  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 on|off\n"
+    exit 1
+fi
+
+orig=/etc/ttys.orig
+temp='/tmp/ttys.auto-kdm-toggle'
+
+if [ ! -e $orig ]; then
+    cp /etc/ttys $orig
+fi
+
+# In case something is left over from a crashed run
+rm -f $temp
+
+# Add kdm line to /etc/ttys
+if ! fgrep -q bin/kdm /etc/ttys; then
+    printf "Adding kdm line...\n"
+    line=`fgrep bin/xdm /etc/ttys | sed -e 's|bin/xdm|bin/kdm|g'`
+    awk -v line="$line"\
+	' { print $0;
+	    if ( $2 ~ "bin/xdm" ) print line;
+	}' /etc/ttys > $temp
+    mv -f $temp /etc/ttys
+fi
+
+# Toggle on|off in kdm line
+new_state=$1
+awk -v new_state=$new_state \
+    ' { if ( $2 ~ "bin/kdm" ) {
+	    printf("%s\t%s %s\t%s\t%-3s %s\n", \
+	    $1, $2, $3, $4, new_state, $6) }
+	else {
+	    print $0
+	}
+      }' /etc/ttys > $temp
+mv -f $temp /etc/ttys
+

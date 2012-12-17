@@ -1,0 +1,18 @@
+
+Add to rc.suspend
+    if fgrep amd_enable="YES" /etc/rc.conf; then
+	/etc/rc.d/amd stop
+    fi
+    if fgrep moused_enable="YES" /etc/rc.conf; then
+	/etc/rc.d/moused stop
+    fi
+    
+Add to rc.resume
+    if fgrep amd_enable="YES" /etc/rc.conf; then
+	/etc/rc.d/amd start
+    fi
+    if fgrep moused_enable="YES" /etc/rc.conf; then
+	/etc/rc.d/moused start
+    fi
+
+Scripts that enable amd, moused should re-run auto-set-suspend-on-lid

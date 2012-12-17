@@ -1,0 +1,74 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-10-10  Jason Bacon Begin
+##########################################################################
+
+line()
+{
+    printf '================================================================\n'
+}
+
+
+prog_name='auto-desktop-setup'
+AUTO_BUILD_FROM_SOURCE='fall-back'
+export AUTO_BUILD_FROM_SOURCE
+
+for pkg in meta-pkgs/xfce4 x11/gdm www/firefox misc/bsdstats; do
+    printf "Installing: %s\n" $pkg
+    auto-install-packages $pkg
+done
+
+for service in hal dbus gdm famd; do
+    # FIXME: Use auto-enable-service
+    cp /usr/pkg/share/examples/rc.d/${service} /etc/rc.d
+    auto-append-line $service $service=YES /etc/rc.conf ${prog_name}
+done
+
+if [ ! -e /tmp/.X0-lock ]; then
+    Xorg -configure
+    cp ~/xorg.conf.new /etc/X11/xorg.conf
+fi
+
+cat << EOM
+Editing xorg.conf.  You may wish to add monitor settings to the
+Monitor section (HorizSync and VertRefresh) to allow the X11 server
+to optimize your display settings, e.g.
+
+    # Optiquest Q51
+    HorizSync   24.0 - 80.0
+    VertRefresh 49.0 - 75.0
+    
+    # VirtualBox VESA
+    HorizSync   30.0 - 120.0
+    VertRefresh 50.0 - 100.0
+
+These settings can be found in the monitor manual.
+EOM
+line
+
+resp=`auto-ask edit-xorg.conf 'Edit xorg.conf? (y/n)' y`
+if [ $resp = 'y' ]; then
+    vi /etc/X11/xorg.conf
+fi
+
+resp=`auto-ask test-xorg 'Test X11? (y/n)' y`
+printf "exec startxfce4\n" > ~/.xinitrc
+if [ $resp = 'y' ]; then
+    startx
+fi
+
+resp=`auto-ask enable-gdm 'Enable GDM? (y/n)' y`
+if [ $resp = 'y' ]; then
+    auto-append-line gdm 'gdm=YES' /etc/rc.conf ${prog_name}
+    /etc/rc.d/gdm restart
+fi
+
