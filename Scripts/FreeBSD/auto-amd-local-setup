@@ -1,0 +1,61 @@
+#!/bin/sh
+
+###########################################################################
+# fstab
+# /mnt/flash_fstype
+
+auto-append-line /flash_ufs "/dev/da0a\t/mnt/flash_ufs\tufs\trw,noauto,nosuid\t0\t0\n" /etc/fstab $0
+auto-append-line /flash_msdosfs "/dev/da0s1\t/mnt/flash_msdosfs\tmsdosfs\trw,noauto,nosuid\t0\t0\n" /etc/fstab $0
+auto-append-line /flash_ntfs "/dev/da0s1\t/mnt/flash_ntfs\tntfs\trw,noauto,nosuid\t0\t0\n" /etc/fstab $0
+auto-append-line /dvdrom "/dev/cd0\t/mnt/dvdrom\tcd9660\tro,noauto,nosuid\t0\t0\n" /etc/fstab $0
+
+###########################################################################
+# amd.conf
+
+if ! fgrep -q 'global' /etc/amd.conf; then
+    cat << EOM >> /etc/amd.conf
+[ global ]
+restart_mounts = yes
+unmount_on_exit= yes
+EOM
+fi
+
+###########################################################################
+# amd.map
+
+if ! fgrep -q 'localhost type:=auto;fs:=${map};pref:=${key}/' /etc/amd.map
+then
+    cat << EOM >> /etc/amd.map
+
+# Added by auto-admin from auto-amd-local-setup
+localhost type:=auto;fs:=\${map};pref:=\${key}/
+
+localhost/flash_ufs type:=program;fs:=/mnt/flash_ufs;\
+mount:="/sbin/mount mount /mnt/flash_ufs";\
+unmount:="/sbin/umount umount /mnt/flash_ufs"
+
+localhost/flash_msdosfs type:=program;fs:=/mnt/flash_msdosfs;\
+mount:="/sbin/mount mount /mnt/flash_msdosfs";\
+unmount:="/sbin/umount umount /mnt/flash_msdosfs"
+
+localhost/flash_ntfs type:=program;fs:=/mnt/flash_ntfs;\
+mount:="/sbin/mount mount /mnt/flash_ntfs";\
+unmount:="/sbin/umount umount /mnt/flash_ntfs"
+
+localhost/dvdrom type:=program;fs:=/mnt/dvdrom;\
+mount:="/sbin/mount mount /mnt/dvdrom";\
+unmount:="/sbin/umount umount /mnt/dvdrom"
+EOM
+fi
+
+###########################################################################
+# rc.conf
+
+# Added by amd_setup
+auto-append-line amd_flags 'amd_flags="-a /.amd_mnt -c 10 -w 2 -l syslog /net /etc/amd.map"' /etc/rc.conf $0
+auto-enable-service amd $0
+
+for mp in flash_ufs flash_msdosfs flash_ntfs dvdrom; do
+    ln -fs /net/localhost/$mp /$mp
+done
+

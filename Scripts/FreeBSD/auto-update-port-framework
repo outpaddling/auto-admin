@@ -1,0 +1,68 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-c] category/port\n"
+    exit 1
+}
+    
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+1)
+    create=0
+    ;;
+2)
+    if [ $1 != '-c' ]; then
+	usage
+    fi
+    create=1
+    shift
+    ;;
+*)
+    usage
+    ;;
+esac
+
+category=`dirname $1`
+portname=`basename $1`
+if [ ${category} = "." ]; then
+    usage
+fi
+
+# 
+if [ $create = 1 ]; then
+    mkdir /usr/ports/$category/$portname
+fi
+
+if [ ! -e /usr/ports/${category}/${portname} ]; then
+    printf "${category}/${portname}: No such port.\n"
+    exit 1
+fi
+
+cd /usr/ports/${category}
+mv ${portname} ${portname}.old.`date '+%Y.%m.%d.%H.%M.%S'`
+if fetch -o $portname.tar.gz \
+    http://cvsweb.freebsd.org/ports/$category/$portname/$portname.tar.gz\?tarball=1; then
+    tar zxvf $portname.tar.gz
+    rm -f $portname.tar.gz
+else
+    printf "Error downloading port.\n"
+    exit 1
+fi
+

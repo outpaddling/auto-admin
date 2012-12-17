@@ -1,0 +1,38 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 on|off\n"
+    exit 1
+fi
+
+new_state=$1
+# In case something is left over from a crashed run
+rm -f /tmp/ttys.auto-xdm-toggle
+awk -v new_state=$new_state \
+    ' { if ( $2 ~ "bin/xdm" ) {
+	    tty=$1;
+	    sub("#tty","tty",tty);
+	    printf("%s\t%s %s\t%s\t%-3s %s\n", \
+		tty, $2, $3, $4, new_state, $6) }
+	else {
+	    print $0
+	}
+      }' /etc/ttys > /tmp/ttys.auto-xdm-toggle
+mv -f /tmp/ttys.auto-xdm-toggle /etc/ttys
+

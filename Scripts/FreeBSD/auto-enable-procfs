@@ -1,0 +1,13 @@
+#!/bin/sh
+
+FSTAB=/etc/fstab
+
+auto-append-line procfs "proc\t\t\t/proc\t\tprocfs\trw\t\t0\t0" $FSTAB auto-admin
+
+# Mount if not already mounted
+if ! df | fgrep -qw /proc; then
+    mount proc
+else
+    printf "/proc is already mounted.\n"
+fi
+

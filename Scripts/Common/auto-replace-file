@@ -1,0 +1,41 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    printf "Usage: replace_file new old\n"
+    exit 1
+fi
+
+new=$1
+old=$2
+bak='orig'
+if diff $new $old; then
+    printf "$new already installed.\n"
+else
+    if [ ! -e $old.$bak ]; then
+	printf "Replacing $old and backing up to $old.$bak.\n"
+	mv $old $old.$bak
+	cp $new $old
+    else
+	printf "$old.$bak already exists, but $old is not the same as $new.\n"
+	printf "Apparently this file has been modified by other means.\n"
+	printf "Aborting...\n"
+	exit 1
+    fi
+fi
+

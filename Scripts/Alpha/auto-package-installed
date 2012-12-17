@@ -1,0 +1,48 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 category/port\n"
+    exit 1
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ] || ! echo $1 | fgrep -q '/'; then
+    usage
+fi
+
+name=`basename $1`
+
+# cluster-local-port-add sends the exact package name, so check for
+# name without appending -[0-9]*
+db=`auto-db-dir $1`
+if [ $? != 0 ]; then
+    printf "$1 does not exist.\n"
+    return 1
+fi
+
+# Watch out for similar versions.  ( math/eigen and math/eigen2 both install
+# as /var/db/pkg/eigen-* )
+if [ -d /var/db/pkg/${name} ] || [ -d $db ]; then
+    printf "$1 is installed. ($db)\n"
+    return 0
+else
+    printf "$1 is not installed.\n"
+    return 1
+fi
+

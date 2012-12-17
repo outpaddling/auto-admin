@@ -1,0 +1,71 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+tty=`tty`
+if [ $# != 3 ]; then
+    cat << EOM > $tty
+Usage: $0 tag "question" default-answer
+
+    'tag' is a name used to uniquely identify this question in the
+    recorded responses.  It must be a single word without spaces or
+    special shell characters, and must be unique across all calls
+    to $0.
+    
+    'question' must be enclosed in quotes if it contains spaces or
+    special characters.
+    
+    'default-answer' must also be encloded in quotes if it contains
+    spaces or special characters.
+
+EOM
+    exit 1
+fi
+
+tag=$1
+question="$2"
+
+response_file=auto-ask-responses.txt
+touch $response_file
+
+default_response="`awk -F'|' '$1 == "'$tag'" { print $2 }' $response_file`"
+if [ 0"$default_response" = 0 ]; then
+    default_response="$3"
+fi
+
+valid=0
+while [ $valid = 0 ]; do
+    printf "$question [$default_response] " > $tty
+    read resp
+    # resp cannot contain '|'
+    if echo "$resp" | fgrep '|'; then
+	printf "Sorry, responses cannot contain '|'.\n" > $tty
+    else
+	valid=1
+    fi
+done
+
+if [ 0"$resp" = 0 ]; then
+    resp="$default_response"
+fi
+
+awk -F'|' '$1 != "'$tag'" { print $0 }' $response_file > $response_file.temp
+mv -f $response_file.temp $response_file
+printf "${tag}|${resp}\n" >> $response_file
+
+printf "$resp\n"
+

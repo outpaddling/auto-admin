@@ -1,0 +1,35 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 pkg\n"
+    exit 1
+fi
+
+name=`basename $1`
+
+# cluster-local-port-add sends the exact package name, so check for
+# name without appending -[0-9]*
+if [ -d /var/db/pkg/${name} -o -d /var/db/pkg/${name}-[0-9]* ]; then
+    printf "$1 is installed.\n"
+    return 0;
+else
+    printf "$1 is not installed.\n"
+    return 1;
+fi
+
