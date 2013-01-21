@@ -17,8 +17,15 @@
 ##########################################################################
 
 if [ $# -lt 1 ]; then
-    printf "Usage: $0 category/port [category/port ...]\n"
+    printf "Usage: $0 [-p] category/port [category/port ...]\n"
     exit 1
+fi
+
+if [ $1 = '-p' ]; then
+    literal_package_name=1
+    shift
+else
+    literal_package_name=0
 fi
 
 # FIXME: Allow override
@@ -48,11 +55,13 @@ for port in $*; do
 	break
     fi
     
-    # Deducing the generic package name is difficult, and sometimes impossible
-    # such as in eigen vs eigen2.  The only package name that can be deduced
-    # is the one containing the specific version, revision, and epoch.
-    # pkg_name=`awk '$1 ~ "PORTNAME" { print $2 }' ${PORTSDIR}/$port/Makefile`
-    pkg_name=`basename $port`
+    # Deducing the generic (non-versioned) package name is difficult
+    # such as in eigen vs eigen2 and net/jags vs math/jags.
+    if [ $literal_package_name = 1 ]; then
+	pkg_name=`basename $port`
+    else
+	pkg_name=`auto-print-make-variable $port PKGNAME`
+    fi
     if ! auto-package-installed $port; then
 	if [ x$AUTO_BUILD_FROM_SOURCE = xyes ]; then
 	    PACKAGEROOT=

@@ -1,4 +1,6 @@
 
+pkg_add should have option to specify version for cases like eigen/eigen2
+
 Add to rc.suspend
     if fgrep amd_enable="YES" /etc/rc.conf; then
 	/etc/rc.d/amd stop
