@@ -21,15 +21,25 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
-name=`basename $1`
+# name=`basename $1`
+name=`auto-print-make-variable $1 PKGNAME`
+if [ $? != 0 ]; then
+    exit 2
+fi
+major_name=`echo $name | cut -d '.' -f 1`
+# echo $major_name
 
 # cluster-local-port-add sends the exact package name, so check for
 # name without appending -[0-9]*
-if [ -d /var/db/pkg/${name} -o -d /var/db/pkg/${name}-[0-9]* ]; then
-    printf "$1 is installed.\n"
+if [ -d /var/db/pkg/${name} ]; then
+    printf "$name is installed.\n"
+    return 0;
+elif [ -d /var/db/pkg/${major_name}* ]; then
+    installed=$(basename $(ls -d /var/db/pkg/${major_name}*))
+    printf "$installed is installed (not the version in your ports tree).\n"
     return 0;
 else
-    printf "$1 is not installed.\n"
+    printf "$name is not installed.\n"
     return 1;
 fi
 

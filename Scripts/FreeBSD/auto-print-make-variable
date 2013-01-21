@@ -1,0 +1,59 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-01-21  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-01-21  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 category/port variable-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+#
+if [ $# != 2 ]; then
+    usage
+fi
+
+if [ ! -d /usr/ports/$1 ]; then
+    printf "No such port: $1\n"
+    exit 2
+fi
+
+makefile=/tmp/pkgname.$$
+cat << EOM > $makefile
+print-variable:
+	@echo \${$2}
+
+.include "/usr/ports/$1/Makefile"
+EOM
+
+# cat $makefile
+make -f $makefile print-variable
+rm -f $makefile
+
