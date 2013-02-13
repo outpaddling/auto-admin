@@ -12,16 +12,26 @@
 #   2012-01-08  Jason Bacon Begin
 ##########################################################################
 
+
+install_from_port()
+{
+    PACKAGEROOT=
+    PACKAGESITE=
+    export PACKAGEROOT PACKAGESITE
+    (cd /usr/ports/$port && make -DBATCH install)
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# -lt 1 ]; then
-    printf "Usage: $0 [-p] category/port [category/port ...]\n"
+    printf "Usage: $0 [-l] category/port [category/port ...]\n"
     exit 1
 fi
 
-if [ $1 = '-p' ]; then
+if [ $1 = '-l' ]; then
     literal_package_name=1
     shift
 else
@@ -34,14 +44,28 @@ PORTSDIR='/usr/ports'
 # Allow mirrors to be used without having PACKAGEROOT set globally.
 if [ x$AUTO_BUILD_FROM_SOURCE != xyes ] && [ x$AUTO_PACKAGEROOT != x ]; then
     export PACKAGEROOT=$AUTO_PACKAGEROOT
-
-    # Auto-correct PACKAGESITE to use -stable instead of -release for release
-    # candidates
-    if ! uname -r | fgrep -q RELEASE; then
-	PACKAGESITE=$PACKAGEROOT'/pub/FreeBSD/ports/i386/packages-'$(uname -r | cut -d '.' -f 1)'-stable/Latest/'
-	export PACKAGESITE
-    fi
+else
+    export PACKAGEROOT="ftp://ftp.freebsd.org"
 fi
+
+# Use -stable instead of -release for release candidates
+if uname -r | fgrep -q RELEASE; then
+    # Keep whole version and remove -RELEASE
+    release=$(uname -r | cut -d '-' -f 1)'-release'
+else
+    # Keep only major version
+    release=$(uname -r | cut -d '.' -f 1)'-stable'
+fi
+
+if [ $literal_package_name = 1 ]; then
+    release=$release/Latest
+else
+    release=$release/All
+fi
+
+PACKAGEDIR=$(uname -p)'/packages-'$release
+PACKAGESITE=$PACKAGEROOT/pub/FreeBSD/ports/$PACKAGEDIR/
+export PACKAGESITE
 
 for port in $*; do
     # Make sure each is given as category/port
@@ -64,16 +88,24 @@ for port in $*; do
     fi
     if ! auto-package-installed $port; then
 	if [ x$AUTO_BUILD_FROM_SOURCE = xyes ]; then
-	    PACKAGEROOT=
-	    PACKAGESITE=
-	    export PACKAGEROOT PACKAGESITE
-	    (cd /usr/ports/$port && make -DBATCH install)
+	    install_from_port
 	    status=$?
 	else
 	    tries=2
-	    # FIXME: Try both port name (e.g. eigen2 vs eigen) and
-	    # package name (e.g. clp vs Clp)
-	    while ! pkg_add -Fr $pkg_name && [ $tries -gt 0 ]; do
+	    # Short: pub/FreeBSD/ports/amd64/packages-8.3-release/Latest
+	    # Versioned: pub/FreeBSD/ports/amd64/packages-8.3-release/All
+	    if [ $literal_package_name != 1 ]; then
+		
+	    fi
+	    if [ -e /media/packages/All/$pkg_name.tbz ]; then
+		pkg_flags=''
+		pkg_name="/media/packages/Latest/$pkg_name.tbz"
+		printf 'Installing from CD/DVD...\n'
+	    else
+		pkg_flags='-Fr'
+		printf 'Installing from network...\n'
+	    fi
+	    while ! pkg_add $pkg_flags $pkg_name && [ $tries -gt 0 ]; do
 		printf "Error installing $port.  $tries more tries.\n"
 		tries=$((tries-1))
 	    done
@@ -82,10 +114,7 @@ for port in $*; do
 	    else
 		if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
 		    printf "Giving up on binary package.  Attempting to build from source...\n"
-		    PACKAGEROOT=
-		    PACKAGESITE=
-		    export PACKAGEROOT PACKAGESITE
-		    (cd /usr/ports/$port && make -DBATCH install)
+		    install_from_port
 		    status=$?
 		else
 		    # Better status value (from pkg_add?)
