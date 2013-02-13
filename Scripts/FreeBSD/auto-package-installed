@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 pkg\n"
+    printf "Usage: $0 [-p ports-dir] category/port\n"
     exit 1
 }
 
@@ -24,10 +24,13 @@ usage()
 
 case $# in
 1)
+    port=$1
     ;;
 3)
     if [ $1 != '-p' ]; then
 	usage
+    else
+	port=$3
     fi
     ;;
 *)
@@ -35,7 +38,10 @@ case $# in
     ;;
 esac
 
-# name=`basename $1`
+if [ `echo $port | awk -F / ' { print NF }'` != 2 ]; then
+    usage
+fi
+
 name=`auto-print-make-variable $* PKGNAME`
 if [ $? != 0 ]; then
     printf "$name"
