@@ -1,4 +1,6 @@
 
+soft quote all strings that might contain spaces
+
 pkg_add should have option to specify version for cases like eigen/eigen2
 
 Add to rc.suspend
