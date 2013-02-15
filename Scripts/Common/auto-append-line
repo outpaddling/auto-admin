@@ -29,21 +29,21 @@ if [ $# != 4 ]; then
     exit 1
 fi
 
-string=$1
-line=$2
-file=$3
-caller=$4
+string="$1"
+line="$2"
+file="$3"
+caller="$4"
 
 # Make sure file exists for fgrep
 touch $file
 
-if ! fgrep -q $string $file; then
+if ! fgrep "$string" "$file"; then
     if [ 0$caller != 0'nocomment' ]; then
-	printf "# Added by auto-admin from $caller\n" >> $file
+	printf "# Added by auto-admin from $caller\n" >> "$file"
     fi
-    printf "$line\n" >> $file
+    printf "$line\n" >> "$file"
     if [ 0$caller != 0'nocomment' ]; then
-	printf "# End auto-admin addition\n" >> $file
+	printf "# End auto-admin addition\n" >> "$file"
     fi
 fi
 
