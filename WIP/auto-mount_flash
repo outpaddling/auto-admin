@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# DOS/Windows
+for dev in da0s1 da0s4; do
+    if [ -e /dev/$dev ]; then
+	for fs in msdosfs ntfs; do
+	    if mount -t $fs /dev/$dev /media/flash; then
+		exit 0
+	    fi
+	done
+    fi
+done
+
+# UFS
+for dev in da0a; do
+    if [ -e /dev/$dev ]; then
+	mount /dev/$dev /media/flash
+    fi
+done
+

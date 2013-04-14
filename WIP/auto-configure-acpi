@@ -1,0 +1,25 @@
+#!/bin/sh
+
+################
+# Handbook ACPI
+# sysctl hw.acpi
+
+# Mouse workaround
+# hint.psm.0.flags="0x3000" to /boot/loader.conf.
+
+# Debugging resume issues
+# This test emulates suspend/resume cycle of all device drivers without actually going into S3 state
+
+# sysctl debug.bootverbose=1
+# sysctl debug.acpi.suspend_bounce=1
+# acpiconf -s 3
+
+if fgrep acpi0: /var/run/dmesg.boot | fgrep IBM; then
+    printf "Enable acpi_ibm? (y/n) "
+    read resp
+    if [ 0$resp = 0y ]; then
+	auto-append-line 'acpi_ibm' 'acpi_ibm_load="YES"' /boot/loader.conf $0
+	kldload acpi_ibm
+    fi
+fi
+

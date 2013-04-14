@@ -61,6 +61,10 @@ fi
 
 makefile=/tmp/pkgname.$$
 cat << EOM > $makefile
+
+# Prevent HAVE_GNOME from adding -gnome to PKGNAME
+WITHOUT_GNOME=  yes
+
 print-variable:
 	@echo \${$2}
 

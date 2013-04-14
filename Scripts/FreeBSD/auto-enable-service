@@ -36,13 +36,13 @@ if [ 0$LOCALBASE = 0 ]; then
     LOCALBASE="/usr/local"
 fi
 
-if fgrep -q "${service}_enable=\"YES\"" /etc/rc.conf; then
+if grep -qw "${service}_enable=\"YES\"" /etc/rc.conf; then
     printf "$service already running.\n"
     printf "If you need the service restarted, you must do it manually.\n"
     exit 0
 fi
 
-if fgrep -q "${service}_enable=\"NO\"" /etc/rc.conf; then
+if grep -qw "${service}_enable=\"NO\"" /etc/rc.conf; then
     sed -i '' "s|${service}_enable=\"NO\"|${service}_enable=\"YES\"|g" /etc/rc.conf
 fi
 

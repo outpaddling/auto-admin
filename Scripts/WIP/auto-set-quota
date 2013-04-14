@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ $# != 3 ]; then
+    printf "Usage: $0 path GB username\n"
+    exit 1
+fi
+
+path=$1
+gb=$2
+username=$3
+
+size=$(($gb * 1024 * 1024))
+
+edquota -e ${path}:${size}:${size} $username
+quota -vh $username
+

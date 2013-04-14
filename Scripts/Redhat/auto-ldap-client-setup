@@ -1,0 +1,65 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Redhat/CentOS LDAP client configurator
+#       This script is part of auto-admin tools.  The most up-to-date
+#       version can be obtained by downloading the latest auto-admin
+#       distfile from http://acadix.biz/Ports/distfiles/
+#
+#   Arguments:
+#       1)  URI of ldap server
+#       2)  Base DN for LDAP queries
+#       3)  cacert filename
+#
+#   Returns:
+#       0 or exit status of first failed command
+#
+#   History:
+#   Date        Name        Modification
+#   2013-02-12  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    printf "Usage: $0 uri basedn cacert-file\n"
+    printf "Example:\n    $0 ldap://ldap.my.domain "ou=people,o=uwm.edu" ./cacert.crt\n"
+    exit 1
+fi
+
+uri=$1
+basedn=$2
+cacert=$3
+
+# FIXME: Check for release 6.  This script will not work on 5.x.
+if [ ! -e /etc/redhat-release ]; then
+    printf "$0 is only for Redhat and similar Linux distrubutions.\n"
+    exit 1
+fi
+
+yum install openldap openldap-clients nss-pam-ldapd
+
+# Install cert
+certs_dir=/etc/openldap/cacerts
+mkdir -p $certs_dir
+cp $cacert $certs_dir
+
+authconfig --useshadow --enableldap --enableldapauth --enableldaptls \
+    --ldapserver="$uri" --ldapbasedn="$basedn" \
+    --passalgo=md5 --enablelocauthorize --update
+
+cat << EOM
+
+==========================================================================
+
+Make sure forward and reverse DNS are functioning for $(hostname).
+
+Some LDAP servers will reject authentication requests if they cannot
+verify the hostname and IP.
+
+==========================================================================
+EOM
+

@@ -1,0 +1,57 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Auto-detect sound devices and add appropriate driver loads
+#       to /boot/loader.conf.
+#
+#   Arguments:
+#       None
+#
+#   Returns:
+#       0 if a supported sound device is found, 1 otherwise.
+#
+#   History:
+#   Date        Name        Modification
+#   2013-04-14  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+devnum=0
+for module in /boot/kernel/snd_*.ko; do
+    driver=`basename ${module%%.ko}`
+    if [ $driver != 'snd_driver' ]; then
+	printf "Testing $driver...\n"
+	if kldload ${driver} > /dev/null 2>&1; then
+	    if dmesg | fgrep -q pcm$devnum; then
+		printf "Device found for $driver.  Updating loader.conf...\n"
+		auto-append-line "${driver}_load" "${driver}_load=\"YES\"" \
+		    /boot/loader.conf $0
+		devnum=$((devnum + 1))
+	    else
+		kldunload $driver
+	    fi
+	fi
+    fi
+done
+
+if [ $devnum -gt 0 ]; then
+    exit 0
+else
+    exit 1
+fi
+

@@ -14,6 +14,8 @@
 
 switch(`uname`)
 case    FreeBSD:
+    set before=`df -m /usr | awk '$6 == "/usr" { print $4 }'`
+    printf "Initial free space: %d\n" $before
     cd /usr/ports
     rm -rf distfiles/*
     foreach dir ( `ls -d */*/work`)
@@ -25,6 +27,11 @@ case    FreeBSD:
 	    cd /usr/ports
 	endif
     end
+    set after=`df -m /usr | awk '$6 == "/usr" { print $4 }'`
+    printf "Initial free space: %d\n" $before
+    printf "Final free space: %d\n" $after
+    @ diff = $after - $before
+    printf "%d megabytes freed.\n" $diff
     breaksw
 case    Darwin:
     port clean --all installed

@@ -45,7 +45,7 @@ done
 printf "User ID? [Press return for default] "
 read user_id
 
-default_shell="/usr/local/bin/bash"
+default_shell="/bin/tcsh"
 cat /etc/shells
 printf "\nShell? [$default_shell] "
 read shell

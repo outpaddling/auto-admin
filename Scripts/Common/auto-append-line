@@ -37,7 +37,7 @@ caller="$4"
 # Make sure file exists for fgrep
 touch $file
 
-if ! fgrep "$string" "$file"; then
+if ! grep -qw "$string" "$file"; then
     if [ 0$caller != 0'nocomment' ]; then
 	printf "# Added by auto-admin from $caller\n" >> "$file"
     fi

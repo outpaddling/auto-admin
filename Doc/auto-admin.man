@@ -68,7 +68,9 @@ directory under which the server should be mounted.
 Appends 
 .B line
 to a text file if the file does not already contain
-.B search-string.
+.B search-string
+as a whole word.  ( Uses grep -w to prevent false positives as
+webcamd when searching for amd. )
 A comment beginning with '#' is placed above the line stating that the
 line was added by
 .B calling-program-name.
