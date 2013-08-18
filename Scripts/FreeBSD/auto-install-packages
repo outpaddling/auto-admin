@@ -99,7 +99,7 @@ for port in $*; do
 	    if [ -e $PKGDIR/$pkg_name.tbz ]; then
 		pkg_flags=''
 		pkg_name="$PKGDIR/$pkg_name.tbz"
-		printf "Installing $pkg_name.tbz from $PKGDIR...\n"
+		printf "Installing $pkg_name from $PKGDIR...\n"
 	    elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
 		pkg_flags=''
 		pkg_name="/dist/packages/All/$pkg_name.tbz"

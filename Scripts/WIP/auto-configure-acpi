@@ -14,6 +14,13 @@
 # sysctl debug.acpi.suspend_bounce=1
 # acpiconf -s 3
 
+# https://wiki.freebsd.org/AsusEee#Suspend.2Fresume
+# hw.acpi.reset_video=1
+# hw.acpi.asus.lcd_brightness=8
+# snd_hda(4) has no resume support. You have to kldunload it before suspend
+# acpi_asus_load="YES"
+# acpi_video_load="YES"
+
 if fgrep acpi0: /var/run/dmesg.boot | fgrep IBM; then
     printf "Enable acpi_ibm? (y/n) "
     read resp

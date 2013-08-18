@@ -47,7 +47,7 @@ fi
 
 # 
 if [ $create = 1 ]; then
-    mkdir /usr/ports/$category/$portname
+    mkdir -p /usr/ports/$category/$portname
 fi
 
 if [ ! -e /usr/ports/${category}/${portname} ]; then

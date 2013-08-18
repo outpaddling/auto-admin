@@ -1,0 +1,58 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Inserts a line to a text file after the search key if the search key provided
+#       is in the file.
+#
+#   Arguments:
+#       $1 = search key (if this text is NOT in file, then add the next argument's text)
+#       $2 = line to insert after the 'location' argument if search key is NOT found
+#       $3 = filename
+#       $4 = location in file (match text in the file and append after the FIRST matched text-containing line)
+#       $5 = name of calling program, which is placed in a comment
+#            above the appended line.  Pass 'nocomment' to omit the comment.
+#
+#   Returns:
+#       NA
+#
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+#   2013-02-19  Jim Wagner
+#
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 5 ]; then
+    printf "Usage: $0 search-string line file location-in-file calling-program-name\n"
+    exit 1
+fi
+
+string="$1"
+line="$2"
+file="$3"
+location="$4"
+caller="$5"
+
+# Make sure file exists for fgrep
+touch $file
+
+if ! fgrep "$string" "$file"; then
+    if fgrep "$location" "$file"; then
+        if [ 0$caller != 0'nocomment' ]; then
+	    
+            perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n\n# Added by auto-admin from $caller\n$line\n# End auto-admin addition\n"@');' $file
+
+        fi
+        if [ 0$caller == 0'nocomment' ]; then
+
+            perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n$line"@');' $file
+
+        fi
+    fi
+fi
+

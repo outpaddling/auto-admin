@@ -13,6 +13,7 @@ auto-amd-nfs-setup
 auto-append-line search-string line file calling-program-name
 auto-ask tag "question" default-answer
 auto-clean-ports
+auto-config-snd-driver
 auto-disable-service rc.conf-name
 auto-enable-compat32
 auto-enable-passwdqc
@@ -69,11 +70,16 @@ Appends
 .B line
 to a text file if the file does not already contain
 .B search-string
-as a whole word.  ( Uses grep -w to prevent false positives as
+as a whole word.  ( Uses grep -w to prevent false positives such as
 webcamd when searching for amd. )
+If search-string is the empty string (''), line is used as the search
+string.
+
 A comment beginning with '#' is placed above the line stating that the
 line was added by
-.B calling-program-name.
+.B calling-program-name
+unless calling-program-name is "nocomment".  When calling auto-append-line
+from another script, $0 is usually passed to calling-program-name.
 
 Example:
 
@@ -81,7 +87,7 @@ Enable USB-serial adapters at boot time if they have not
 already been explicitly enabled or disabled.
 
 .na
-auto-append-line uplcom_load 'uplcom_load="YES"' /boot/loader.conf myscript
+auto-append-line uplcom_load 'uplcom_load="YES"' /boot/loader.conf $0
 .ad
 
 .SH AUTO-ASK
@@ -117,6 +123,14 @@ resp=`auto-ask edit-xorg "Edit xorg.conf? (y/n)" n`
 Run "make distclean" in all ports directories containing a work directory.
 This can free a substantial amount of disk space after many ports have
 been installed.
+
+.SH AUTO-CONFIG-SND-DRIVER
+
+.B auto-config-snd-driver
+
+Auto-detect supported sound devices and add a load command to /boot/loader.conf
+for the first device detected.  Does not currently support auto-detecting
+multiple sound devices.
 
 .SH AUTO-DISABLE-SERVICE
 
