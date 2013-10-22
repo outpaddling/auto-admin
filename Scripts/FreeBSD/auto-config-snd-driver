@@ -31,12 +31,18 @@ if [ $# != 0 ]; then
     usage
 fi
 
-if kldstat | grep -q snd_; then
+devnum=0
+while dmesg | fgrep -q pcm$devnum; do
+    printf "Found pcm$devnum.\n"
+    devnum=$(($devnum + 1))
+done
+
+if [ $devnum -gt 0 ]; then
     cat << EOM
 
 =================================== Warning ==================================
 
-One or more sound drivers are already loaded.
+One or more sound devices already detected.
 
 $0 works by detecting kernel messages
 for recognized devices after a new driver is loaded.
@@ -59,7 +65,10 @@ fi
 
 for module in /boot/kernel/snd_*.ko; do
     driver=`basename ${module%%.ko}`
-    if [ $driver != 'snd_driver' ]; then
+    case $driver in
+    snd_driver)
+	break;;
+    *)
 	printf "Testing $driver...\n"
 	if kldload ${driver} > /dev/null 2>&1; then
 	    if dmesg | fgrep -q pcm$devnum; then
@@ -71,7 +80,7 @@ for module in /boot/kernel/snd_*.ko; do
 		kldunload $driver
 	    fi
 	fi
-    fi
+    esac
 done
 
 # No supported sound device found

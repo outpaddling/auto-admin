@@ -10,7 +10,7 @@ auto-admin \- Automated systems management tools
 .na 
 auto-amd-local-setup
 auto-amd-nfs-setup
-auto-append-line search-string line file calling-program-name
+auto-append-line [search-string] line file calling-program-name
 auto-ask tag "question" default-answer
 auto-clean-ports
 auto-config-snd-driver
@@ -64,7 +64,7 @@ directory under which the server should be mounted.
 
 .SH "AUTO-APPEND-LINE"
 
-.B auto-append-line search-string line file calling-program-name
+.B auto-append-line [search-string] line file calling-program-name
 
 Appends 
 .B line
@@ -72,8 +72,7 @@ to a text file if the file does not already contain
 .B search-string
 as a whole word.  ( Uses grep -w to prevent false positives such as
 webcamd when searching for amd. )
-If search-string is the empty string (''), line is used as the search
-string.
+If search-string is omitted, line is used as the search string.
 
 A comment beginning with '#' is placed above the line stating that the
 line was added by
