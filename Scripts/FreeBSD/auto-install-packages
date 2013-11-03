@@ -17,7 +17,7 @@ install_from_port()
 {
     # PKGDIR causes "Missing pkg-descr" errors during install
     unset PKGDIR
-    (cd /usr/ports/$port && make -DBATCH install)
+    (cd /usr/ports/$port && make -DBATCH install && make clean)
 }
 
 

@@ -14,10 +14,10 @@
 
 switch(`uname`)
 case    FreeBSD:
-    set before=`df -m /usr | awk '$6 == "/usr" { print $4 }'`
+    set before=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
     printf "Initial free space: %d\n" $before
     cd /usr/ports
-    rm -rf distfiles/*
+    rm -rf distfiles/* >& /dev/null
     foreach dir ( `ls -d */*/work`)
 	# Make sure it still exists - may have been wiped by a recursive clean
 	if ( -e $dir ) then
@@ -27,7 +27,7 @@ case    FreeBSD:
 	    cd /usr/ports
 	endif
     end
-    set after=`df -m /usr | awk '$6 == "/usr" { print $4 }'`
+    set after=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
     printf "Initial free space: %d\n" $before
     printf "Final free space: %d\n" $after
     @ diff = $after - $before
