@@ -154,7 +154,9 @@ for port in $*; do
     
 		# Compensate for network hiccups by retrying
 		tries=2
-		while ! pkg $pkg_flags $pkg_name && [ $tries -gt 0 ]; do
+		# pkg returns 0 when it can't find a package, so grepo the
+		# output to detect failures.
+		while ! pkg $pkg_flags $pkg_name 2>&1 | fgrep 'no package' && [ $tries -gt 0 ]; do
 		    printf "Error installing $port.  $tries more tries.\n"
 		    tries=$((tries-1))
 		    sleep 5
