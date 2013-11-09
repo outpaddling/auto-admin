@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# From pkg man page
+if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
+     PACKAGESITE=file:///nonexistent \
+     pkg info pkg >/dev/null 2>&1; then
+    exit 0
+else
+    exit 1
+fi
+

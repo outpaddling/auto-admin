@@ -50,7 +50,7 @@ fi
 major_name=`echo $name | cut -d '.' -f 1`
 # echo $major_name
 
-if [ -e /usr/sbin/pkg_add ] && [ ! -e /usr/sbin/pkg ]; then
+if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
     # Using old pkg_*
 
     # cluster-local-port-add sends the exact package name, so check for

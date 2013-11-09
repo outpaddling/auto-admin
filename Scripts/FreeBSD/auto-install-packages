@@ -94,7 +94,7 @@ for port in $*; do
 	    install_from_port
 	    status=$?
 	else
-	    if [ -e /usr/sbin/pkg_add ] && [ ! -e /usr/sbin/pkg ]; then
+	    if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
 		# Old pkg_add system
 		# Short: pub/FreeBSD/ports/amd64/packages-8.3-release/Latest
 		# Versioned: pub/FreeBSD/ports/amd64/packages-8.3-release/All
