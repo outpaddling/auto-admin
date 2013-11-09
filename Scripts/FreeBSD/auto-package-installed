@@ -50,8 +50,6 @@ fi
 major_name=`echo $name | cut -d '.' -f 1`
 # echo $major_name
 
-# FIXME: We really need to see if pkg2ng has been run to completion
-# on a pre-10 system.
 if [ -e /usr/sbin/pkg_add ] && [ ! -e /usr/sbin/pkg ]; then
     # Using old pkg_*
 
@@ -69,7 +67,7 @@ if [ -e /usr/sbin/pkg_add ] && [ ! -e /usr/sbin/pkg ]; then
 	return 1;
     fi
 else
-    # Using new pkg command
+    # Using new pkgng system
     if pkg info ${name} > /dev/null 2>&1; then
 	printf "$name is installed.\n"
 	return 0;

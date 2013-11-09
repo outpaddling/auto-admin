@@ -94,39 +94,83 @@ for port in $*; do
 	    install_from_port
 	    status=$?
 	else
-	    # Short: pub/FreeBSD/ports/amd64/packages-8.3-release/Latest
-	    # Versioned: pub/FreeBSD/ports/amd64/packages-8.3-release/All
-	    if [ -e $PKGDIR/$pkg_name.tbz ]; then
-		pkg_flags=''
-		pkg_name="$PKGDIR/$pkg_name.tbz"
-		printf "Installing $pkg_name from $PKGDIR...\n"
-	    elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
-		pkg_flags=''
-		pkg_name="/dist/packages/All/$pkg_name.tbz"
-		printf 'Installing from CD/DVD...\n'
-	    else
-		pkg_flags='-FKr'
-		printf 'Installing from network...\n'
-	    fi
-
-	    # Compensate for network hiccups by retrying
-	    tries=2
-	    while ! pkg_add $pkg_flags $pkg_name && [ $tries -gt 0 ]; do
-		printf "Error installing $port.  $tries more tries.\n"
-		tries=$((tries-1))
-		sleep 5
-	    done
-	    if [ $tries -gt 0 ]; then
-		status=0
-	    else
-		if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
-		    rm $pkg_name
-		    printf "Giving up on binary package.  Attempting to build from source...\n"
-		    install_from_port
-		    status=$?
+	    if [ -e /usr/sbin/pkg_add ] && [ ! -e /usr/sbin/pkg ]; then
+		# Old pkg_add system
+		# Short: pub/FreeBSD/ports/amd64/packages-8.3-release/Latest
+		# Versioned: pub/FreeBSD/ports/amd64/packages-8.3-release/All
+		if [ -e $PKGDIR/$pkg_name.tbz ]; then
+		    pkg_flags=''
+		    pkg_name="$PKGDIR/$pkg_name.tbz"
+		    printf "Installing $pkg_name from $PKGDIR...\n"
+		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
+		    pkg_flags=''
+		    pkg_name="/dist/packages/All/$pkg_name.tbz"
+		    printf 'Installing from CD/DVD...\n'
 		else
-		    # Better status value (from pkg_add?)
-		    status=1
+		    pkg_flags='-FKr'
+		    printf 'Installing from network...\n'
+		fi
+    
+		# Compensate for network hiccups by retrying
+		tries=2
+		while ! pkg_add $pkg_flags $pkg_name && [ $tries -gt 0 ]; do
+		    printf "Error installing $port.  $tries more tries.\n"
+		    tries=$((tries-1))
+		    sleep 5
+		done
+		if [ $tries -gt 0 ]; then
+		    status=0
+		else
+		    if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
+			rm $pkg_name
+			printf "Giving up on binary package.  Attempting to build from source...\n"
+			install_from_port
+			status=$?
+		    else
+			# Better status value (from pkg_add?)
+			status=1
+		    fi
+		fi
+	    else
+		# New pkgng system
+		# This is a hack to avoid modifying the pkg_add logic
+		# above for now.  Improvements to come when I have more
+		# time for testing.
+		unset PACKAGESITE
+		unset PACKAGEROOT
+		if [ -e $PKGDIR/$pkg_name.tbz ]; then
+		    pkg_flags='add'
+		    pkg_name="$PKGDIR/$pkg_name.tbz"
+		    printf "Installing $pkg_name from $PKGDIR...\n"
+		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
+		    pkg_flags='add'
+		    pkg_name="/dist/packages/All/$pkg_name.tbz"
+		    printf 'Installing from CD/DVD...\n'
+		else
+		    pkg_flags='install'
+		    unset PKGDIR    # Let pkgng find it
+		    printf 'Installing from network...\n'
+		fi
+    
+		# Compensate for network hiccups by retrying
+		tries=2
+		while ! pkg $pkg_flags $pkg_name && [ $tries -gt 0 ]; do
+		    printf "Error installing $port.  $tries more tries.\n"
+		    tries=$((tries-1))
+		    sleep 5
+		done
+		if [ $tries -gt 0 ]; then
+		    status=0
+		else
+		    if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
+			rm $pkg_name
+			printf "Giving up on binary package.  Attempting to build from source...\n"
+			install_from_port
+			status=$?
+		    else
+			# Better status value (from pkg_add?)
+			status=1
+		    fi
 		fi
 	    fi
 	fi
