@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ ! -e /usr/sbin/pkg ]; then
+    exit 1
+fi
+
 # From pkg man page
 if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
      PACKAGESITE=file:///nonexistent \

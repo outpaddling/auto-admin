@@ -156,10 +156,16 @@ for port in $*; do
 		tries=2
 		# pkg returns 0 when it can't find a package, so grepo the
 		# output to detect failures.
-		while ! pkg $pkg_flags $pkg_name 2>&1 | fgrep 'no package' && [ $tries -gt 0 ]; do
-		    printf "Error installing $port.  $tries more tries.\n"
-		    tries=$((tries-1))
-		    sleep 5
+		success=0
+		while [ $success = 0 ] && [ $tries -gt 0 ]; do
+		    pkg $pkg_flags -y $pkg_name 2>&1 | tee auto-install-package.tmp
+		    if fgrep -q 'No package' auto-install-package.tmp; then
+			printf "Error installing $port.  $tries more tries.\n"
+			tries=$((tries-1))
+			sleep 5
+		    else
+			success=1
+		    fi
 		done
 		if [ $tries -gt 0 ]; then
 		    status=0
