@@ -12,7 +12,8 @@ state=$1
 
 # Enable suspend on lid-close
 # hw.acpi.lid_switch_state exists whether or not computer has a lid
-if ! sysctl hw.acpi.supported_sleep_state | fgrep -q $state; then
+if ! sysctl hw.acpi.supported_sleep_state | fgrep -q $state && \
+    [ $state != 'NONE' ]; then
     printf "$state is not a supported state.\n"
     exit 1
 fi

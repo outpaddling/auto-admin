@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -41,28 +41,22 @@ esac
 
 category=`dirname $1`
 portname=`basename $1`
-if [ ${category} = "." ]; then
+if [ $category = "." ]; then
     usage
 fi
 
-# 
-if [ $create = 1 ]; then
-    mkdir -p /usr/ports/$category/$portname
-fi
-
-if [ ! -e /usr/ports/${category}/${portname} ]; then
-    printf "${category}/${portname}: No such port.\n"
+if [ ! -e /usr/ports/$category/$portname ] && [ $create != 1 ]; then
+    printf "$category/$portname: No such port.\n"
     exit 1
 fi
 
-cd /usr/ports/${category}
-mv ${portname} ${portname}.old.`date '+%Y.%m.%d.%H.%M.%S'`
-if fetch -o $portname.tar.gz \
-    http://cvsweb.freebsd.org/ports/$category/$portname/$portname.tar.gz\?tarball=1; then
-    tar zxvf $portname.tar.gz
-    rm -f $portname.tar.gz
+cd /usr/ports/$category
+if [ -d $portname/.svn ]; then
+    cd $portname && svn up
 else
-    printf "Error downloading port.\n"
-    exit 1
+    if [ -e $portname ]; then
+	mv $portname $portname.old.`date '+%Y.%m.%d.%H.%M.%S'`
+    fi
+    svn checkout https://svn0.us-east.FreeBSD.org/ports/head/$category/$portname $portname
 fi
 

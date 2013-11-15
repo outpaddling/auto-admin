@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -17,7 +17,7 @@ install_from_port()
 {
     # PKGDIR causes "Missing pkg-descr" errors during install
     unset PKGDIR
-    (cd /usr/ports/$port && make -DBATCH install && make clean)
+    (cd $PORTSDIR/$port && make -DBATCH install && make clean)
 }
 
 
@@ -26,19 +26,25 @@ install_from_port()
 ##########################################################################
 
 if [ $# -lt 1 ]; then
-    printf "Usage: $0 [-l] category/port [category/port ...]\n"
+    printf "Usage: $0 [-l] [-p PORTSDIR] category/port [category/port ...]\n"
     exit 1
 fi
 
-if [ $1 = '-l' ]; then
-    literal_package_name=1
-    shift
-else
-    literal_package_name=0
-fi
-
-# FIXME: Allow override
+# Default.  Override below.
 PORTSDIR='/usr/ports'
+literal_package_name=0
+
+#set -x
+while [ 0`echo $1 | cut -c 1,1` = 0'-' ]; do
+    if [ $1 = '-l' ]; then
+	literal_package_name=1
+	shift
+    elif [ $1 = '-p' ]; then
+	PORTSDIR=$2
+	shift
+	shift
+    fi
+done
 
 if [ 0$PKGDIR = 0 ]; then
     export PKGDIR=$PORTSDIR/packages/All
@@ -46,7 +52,7 @@ if [ 0$PKGDIR = 0 ]; then
 fi
 
 # Allow mirrors to be used without having PACKAGEROOT set globally.
-if [ x$AUTO_BUILD_FROM_SOURCE != xyes ] && [ x$AUTO_PACKAGEROOT != x ]; then
+if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
     export PACKAGEROOT=$AUTO_PACKAGEROOT
 else
     export PACKAGEROOT="ftp://ftp.freebsd.org"
@@ -61,7 +67,7 @@ else
     release=$(uname -r | cut -d '.' -f 1)'-stable'
 fi
 
-if [ $literal_package_name = 1 ]; then
+if [ 0$literal_package_name = 01 ]; then
     release=$release/Latest
 else
     release=$release/All
@@ -87,9 +93,9 @@ for port in $*; do
     if [ $literal_package_name = 1 ]; then
 	pkg_name=`basename $port`
     else
-	pkg_name=`auto-print-make-variable $port PKGNAME`
+	pkg_name=`auto-print-make-variable -p $PORTSDIR $port PKGNAME`
     fi
-    if ! auto-package-installed $port; then
+    if ! auto-package-installed -p $PORTSDIR $port; then
 	if [ x$AUTO_BUILD_FROM_SOURCE = xyes ]; then
 	    install_from_port
 	    status=$?
@@ -122,7 +128,7 @@ for port in $*; do
 		    status=0
 		else
 		    if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
-			rm $pkg_name
+			rm -f $pkg_name
 			printf "Giving up on binary package.  Attempting to build from source...\n"
 			install_from_port
 			status=$?
@@ -157,21 +163,23 @@ for port in $*; do
 		# pkg returns 0 when it can't find a package, so grepo the
 		# output to detect failures.
 		success=0
+		tmp=auto-install-packages.tmp
 		while [ $success = 0 ] && [ $tries -gt 0 ]; do
-		    pkg $pkg_flags -y $pkg_name 2>&1 | tee auto-install-package.tmp
-		    if fgrep -q 'No package' auto-install-package.tmp; then
+		    pkg $pkg_flags -y $pkg_name 2>&1 | tee $tmp
+		    if fgrep -q 'No package' $tmp; then
 			printf "Error installing $port.  $tries more tries.\n"
 			tries=$((tries-1))
 			sleep 5
 		    else
 			success=1
 		    fi
+		    rm $tmp
 		done
 		if [ $tries -gt 0 ]; then
 		    status=0
 		else
 		    if [ x$AUTO_BUILD_FROM_SOURCE = xfall-back ]; then
-			rm $pkg_name
+			rm -f $pkg_name
 			printf "Giving up on binary package.  Attempting to build from source...\n"
 			install_from_port
 			status=$?
