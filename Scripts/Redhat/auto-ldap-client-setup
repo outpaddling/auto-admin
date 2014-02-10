@@ -40,7 +40,7 @@ if [ ! -e /etc/redhat-release ]; then
     exit 1
 fi
 
-yum install openldap openldap-clients nss-pam-ldapd
+yum -y install openldap openldap-clients nss-pam-ldapd
 
 # Install cert
 certs_dir=/etc/openldap/cacerts

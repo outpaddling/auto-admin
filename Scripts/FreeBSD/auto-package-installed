@@ -47,11 +47,10 @@ if [ $? != 0 ]; then
     printf "$name"
     exit 2
 fi
-major_name=`echo $name | cut -d '.' -f 1`
-# echo $major_name
 
 if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
     # Using old pkg_*
+    major_name=`echo $name | cut -d '.' -f 1`
 
     # cluster-local-port-add sends the exact package name, so check for
     # name without appending -[0-9]*
@@ -60,24 +59,27 @@ if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
 	return 0;
     elif [ -d /var/db/pkg/${major_name}* ]; then
 	installed=$(basename $(ls -d /var/db/pkg/${major_name}*))
-	printf "$installed is installed (not the version in your ports tree).\n"
+	printf "$installed is installed (your ports tree contains $name).\n"
 	return 0;
     else
-	printf "$name is not installed.\n"
+	printf "$major_name is not installed.\n"
 	return 1;
     fi
 else
     # Using new pkgng system
+    major_name=${name%%-*}
+    
     if pkg info ${name} > /dev/null 2>&1; then
 	printf "$name is installed.\n"
 	return 0;
     elif pkg info $major_name > /dev/null 2>&1; then
-	installed=`pkg info $major_name | cut -d ' ' -f 1`
+	version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
+	installed="$major_name-$version"
 	if [ $installed != $name ]; then
-	    printf "$installed is installed (not the version in your ports tree).\n"
+	    printf "$installed is installed (your ports tree contains $name).\n"
 	fi
     else
-	printf "$name is not installed.\n"
+	printf "$major_name is not installed.\n"
 	return 1;
     fi
 fi

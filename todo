@@ -1,4 +1,6 @@
 
+auto-replace-file should take extension as third arg, otherwise use numbers
+
 Clean ports after successful install
 
 Rename auto-package-installed to auto-port-installed
