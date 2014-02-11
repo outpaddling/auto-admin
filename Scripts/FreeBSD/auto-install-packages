@@ -146,9 +146,6 @@ for port in $*; do
 		fi
 	    else
 		# New pkgng system
-		# This is a hack to avoid modifying the pkg_add logic
-		# above for now.  Improvements to come when I have more
-		# time for testing.
 		unset PACKAGESITE
 		unset PACKAGEROOT
 		if [ -e $PKGDIR/$pkg_name.tbz ]; then
@@ -172,7 +169,7 @@ for port in $*; do
     
 		# Compensate for network hiccups by retrying
 		tries=2
-		# pkg returns 0 when it can't find a package, so grepo the
+		# pkg returns 0 when it can't find a package, so grep the
 		# output to detect failures.
 		success=0
 		tmp=auto-install-packages.tmp
