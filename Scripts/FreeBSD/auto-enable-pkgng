@@ -1,0 +1,45 @@
+#!/bin/sh
+
+if ! which auto-append-line; then
+    printf "You must install auto-admin first.\n"
+    exit 1
+fi
+
+printf "Enabling pkgng is not reversible and you cannot use pkg_* afterward.\n"
+printf "Are you sure you want to do this? (yes/[no]) "
+read resp
+if [ 0$resp != 0'yes' ]; then
+    exit 0
+fi
+
+if [ -e /usr/sbin/pkg ]; then
+    pkg
+else
+    pkg_add -r pkg
+fi
+
+auto-append-line 'WITH_PKGNG=yes' /etc/make.conf $0
+
+# https://wiki.freebsd.org/pkgng
+pkg_conf=/usr/local/etc/pkg.conf
+if [ ! -e $pkg_conf.old ]; then
+    mv $pkg_conf $pkg_conf.old
+else
+    printf "Warning: Leaving $pkg_conf in place.\nSee https://wiki.freebsd.org/pkgng.\n"
+fi
+
+mkdir -p /usr/local/etc/pkg/repos
+cat << EOM > /usr/local/etc/pkg/repos/FreeBSD.conf
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest",
+  mirror_type: "srv",
+  enabled: yes
+}
+EOM
+
+# Convert existing package database
+pkg2ng
+
+# Disable old pkg commands
+chmod 444 /usr/sbin/pkg_*
+
