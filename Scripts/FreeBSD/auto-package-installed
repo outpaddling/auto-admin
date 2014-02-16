@@ -67,7 +67,7 @@ if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
     fi
 else
     # Using new pkgng system
-    major_name=${name%%-*}
+    major_name=${name%-*}
     
     if pkg info ${name} > /dev/null 2>&1; then
 	printf "$name is installed.\n"
