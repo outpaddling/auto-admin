@@ -1,0 +1,22 @@
+#!/bin/sh
+
+pkg install openvpn
+
+mkdir -p /usr/local/etc/openvpn
+
+# Fetch the configuration files.
+cd /usr/local/etc/openvpn
+
+zip=ovpn-conf.zip
+if [ ! -e $zip ]; then
+    fetch http://www.tf.uni-kiel.de/rbg/vpn/conf/$zip
+    # rm $zip
+fi
+unzip $zip
+
+# Start the client
+# Start the OpenVPN-Client with your preferred profile and enter your TF-account-credentials.
+
+exit
+openvpn /usr/local/etc/openvpn/TF-normal.ovpn
+

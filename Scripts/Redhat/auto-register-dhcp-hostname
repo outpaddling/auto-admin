@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# FIXME: Auto-detect primary interface
+file=/etc/sysconfig/network-scripts/ifcfg-eth0
+auto-append-line "DHCP_HOSTNAME=$(hostname)" $file
+
