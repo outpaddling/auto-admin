@@ -61,22 +61,24 @@ if ! fgrep -q login_attribute $ldap_conf; then
 fi
 
 # Tell PAM to use LDAP for ssh logins
-if ! fgrep -q pam_ldap.so /etc/pam.d/sshd; then
-    awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
-	    {
-		print "# Attempt and accept LDAP auth before unix auth"
-		printf("auth\t\tsufficient\t/usr/local/lib/pam_ldap.so\tno_warn\n");
-		print "# If LDAP auth fails, unix auth must succeed to grant access"
-		print $0;
-	    }
-	    else
-	    {
-		print $0;
-	    }
-	  }' /etc/pam.d/sshd > /etc/pam.d/temp
-    mv /etc/pam.d/sshd /etc/pam.d/sshd.orig
-    mv /etc/pam.d/temp /etc/pam.d/sshd
-fi
+for file in sshd xdm; do
+    if ! fgrep -q pam_ldap.so /etc/pam.d/$file; then
+	awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
+		{
+		    print "# Attempt and accept LDAP auth before unix auth"
+		    printf("auth\t\tsufficient\t/usr/local/lib/pam_ldap.so\tno_warn\n");
+		    print "# If LDAP auth fails, unix auth must succeed to grant access"
+		    print $0;
+		}
+		else
+		{
+		    print $0;
+		}
+	      }' /etc/pam.d/sshd > /etc/pam.d/temp
+	mv /etc/pam.d/sshd /etc/pam.d/sshd.orig
+	mv /etc/pam.d/temp /etc/pam.d/sshd
+    fi
+done
 
 printf "Updated /etc/pam.d/sshd.  Check/correct syntax if necessary.\n"
 #pause

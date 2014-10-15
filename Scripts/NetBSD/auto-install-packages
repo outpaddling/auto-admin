@@ -25,7 +25,7 @@ fi
 SOURCE_PREFIX=/usr/pkgsrc
 
 # Set PKG_PATH
-. /usr/pkgsrc.shrc
+# . /usr/pkgsrc.shrc
 
 for pkg in $*; do
     # Make sure each package is given as category/port
@@ -40,7 +40,13 @@ for pkg in $*; do
 	    status=$?
 	else
 	    tries=2
-	    while ! pkg_add `basename $pkg` && [ $tries -gt 0 ]; do
+	    # FIXME: Is more needed to verify that pkgin is in use?
+	    if [ -e /usr/pkg/bin/pkgin ]; then
+		cmd='pkgin -y install'
+	    else
+		cmd='pkg_add'
+	    fi
+	    while ! $cmd `basename $pkg` && [ $tries -gt 0 ]; do
 		printf "Error installing $pkg.  $tries more tries.\n"
 		tries=$((tries-1))
 	    done
