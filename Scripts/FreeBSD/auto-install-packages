@@ -162,7 +162,7 @@ for port in $*; do
 		    pkg_flags='add'
 		else
 		    pkg_path=$pkg_name
-		    pkg_flags='install'
+		    pkg_flags='install -y'
 		    unset PKGDIR    # Let pkgng find it
 		fi
 		printf "pkg $pkg_flags $pkg_path\n"
@@ -174,7 +174,7 @@ for port in $*; do
 		success=0
 		tmp=auto-install-packages.tmp
 		while [ $success = 0 ] && [ $tries -gt 1 ]; do
-		    pkg $pkg_flags -y $pkg_path 2>&1 | tee $tmp
+		    pkg $pkg_flags $pkg_path 2>&1 | tee $tmp
 		    if fgrep -q 'No package' $tmp; then
 			tries=$((tries-1))
 			printf "Error installing $port.  $tries more tries.\n"
