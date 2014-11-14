@@ -1,0 +1,50 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Copy ssh keys to another host.
+#       ssh-copy-keys is broken on some systems and may add duplicate keys.
+#
+#   Arguments:
+#       Same as you would use with ssh to the same host.
+#
+#   Returns:
+#       Exit status of ssh command that attempts to install keys.
+#
+#   History:
+#   Date        Name        Modification
+#   2014-11-14  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [ssh flags] remotehost\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+cd
+
+user=`whoami`
+
+# Last command-line argument is remote hostname
+eval remotehost="\${$#}"
+
+echo "Authorizing ${user}@${HOST} on $remotehost."
+
+if [ ! -f .ssh/id_dsa.pub ] ; then
+   ssh-keygen -t dsa -P "" -f "./.ssh/id_dsa"
+fi
+
+key=`cat .ssh/id_dsa.pub`
+ssh $@ "umask 022; mkdir -p .ssh; touch .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; fgrep -q ${user}@${HOST} .ssh/authorized_keys || echo $key >> .ssh/authorized_keys"
+exit $?
+
