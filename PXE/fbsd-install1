@@ -1,0 +1,28 @@
+FreeBSD PXE SERVER HOWTO
+We are going to install an unattended FreeBSD installation server which basically consists on a dual nic server; one for accessing to the machine (through ssh I mean) and the other one with a private network used for unattended installations and dhcp leases and so. We will make that machines to be installed with our new unattended installation system to boot with with PXE and later after loading kernel mount root using an mfsroot. Finally launch sysinstall scripted by install.cfg.
+First of all after a freebsd fresh install I install the dhcp server port :
+cd /usr/ports/net/dhcp41-server (now in 9.0-RELEASE, it's a ESV version) make install clean
+Later I configure dhcpd.conf like :
+allow booting; allow bootp; authoritative; option domain-name "freebsdpxe.ramattack.net"; option subnet-mask 255.255.255.0; default-lease-time 600;
+max-lease-time 7200; ddns-update-style none; log-facility local7; local-address 10.0.0.1; subnet 10.0.0.0 netmask 255.255.255.0 { range 10.0.0.70 10.0.0.80;
+next-server 10.0.0.1; filename "boot/pxeboot"; option root-path "/expert/netboot/freebsd90"; }
+I will use the tftp-server that comes with freebsd... so in inetd.conf : Uncomment this :
+tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s /expert/netboot/freebsd90 In /etc/exports : /expert -alldirs,ro -network 10.0.0 -mask 255.255.255.0 Yes readonly... nothing should be written to our nfs exported content.
+Now let's populate /expert/netboot/freebsd90 with freebsd disc 1 : tar -C /expert/netboot/freebsd90 -pxvf 9.0-RELEASE-amd64-disc1.iso
+Later in /expert/netboot/freebsd90/boot/loader.conf just to be this lines : mfsroot_load="YES" mfsroot_type="mfs_root" mfsroot_name="/boot/mfsroot"
+vfs.root.mountfrom="ufs:/dev/md0"
+Now lets do an automated sysintall (Yes in 9.0-RELEASE you could build release and generate isos that use sysinstall as installer) :
+cd /expert/netboot/freebsd90/boot gzip -d mfsroot.gz
+Now for being able to automate sysintall partitioning and so... sysinstall searches for install.cfg file in the root of the memory filesystem provided by mfsroot... mfsroot is a memory disk file for loader
+to be able to have a / partition... so we need to attach it to a device memory disk for the kernel and later mount that attached memory disk for copying there the install.cfg file :
+mkdir /onemountpoint mdconfig -a -t vnode -f /expert/netboot/freebsd8/boot/mfsroot -u 200 mount /dev/md200 /onemountpoint ( I have used the 200 number but really it's optional you could not specify -u ___ and it will be attached to the first free in numerical order kernel memory disk)
+cp /locationofourdefinedinstallcfg/install.cfg /onemountpoint done !! :)
+Now : cd / umount /onemountpoint
+After ensuring it's unmounted... let's remove our attached kernel memory disk... mdconfig -d -u 200
+We ensure it's removed with and there's no output : mdconfig -l
+Now finally let's configure /etc/rc.conf of our pxe server for launching all services automatically :
+## PXE services dhcpd_enable="YES" dhcpd_ifaces="fxp0" (for example for fxp0 interface) inetd_enable="YES" rpcbind_enable="yes" mountd_enable="yes" nfs_server_enable="yes"
+Now important... without doing this tftp server won't be able to find pxeboot under /expert/netboot/freebsd90/boot/ (apart from avoiding other problems doing this) :
+chmod -R 755 /expert/netboot/freebsd90
+That's all :). Any doubts you can write me to egoitz@ramattack.net.
+
