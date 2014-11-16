@@ -1,0 +1,101 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-15  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+##########################################################################
+#   Set up dhcpd
+##########################################################################
+
+isc_version=42
+printf "Run dhcpd on this host? ([y]/n) "
+read dhcpd
+if [ 0$dhcpd != 0n ]; then
+    pkg install isc-dhcp$isc_version-server
+    vi /usr/local/etc/dhcpd.conf
+    #allow booting;
+    #allow bootp;
+    #authoritative;
+    #option domain-name "freebsdpxe.sarenet.es";
+    #option subnet-mask 255.255.255.0;
+    #default-lease-time 600;
+    #max-lease-time 7200;
+    #ddns-update-style none;
+    #log-facility local7;
+    #local-address 10.0.0.1;
+    #subnet 10.0.0.0 netmask 255.255.255.0
+    #{
+    #   range 10.0.0.70 10.0.0.80;
+    #   next-server 10.0.0.1;
+    #   filename "boot/pxeboot";
+    #   option root-path "/damamountpoint/netboot/freebsd91";
+    #}
+    
+    # rc.conf
+    #dhcpd_enable="YES"
+    #dhcpd_ifaces="fxp0"
+else
+    pkg install pxe-pdhcp
+    # What else?
+fi
+
+##########################################################################
+#   Set up tftp
+##########################################################################
+
+#sed -i 's|#tftpd|tftpd|g' /etc/inetd.conf
+# tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s /datamountpoint/ne tboot/freebsd91
+vi /etc/inetd.conf
+
+exit
+
+##########################################################################
+#   Set up NFS
+##########################################################################
+
+# /datamountpoint -alldirs,ro -network 10.0.0 -mask 255.255.255.0
+vi /etc/exports
+
+tar -C /datamountpoint/netboot/freebsd91 -pxvf FreeBSD-9.1-20121230-SNAP- amd64-disc1.iso
+
+# Add to /datamountpoint/netboot/freebsd91/boot/loader.conf
+#mfsroot_load="YES"
+#mfsroot_type="mfs_root"
+#mfsroot_name="/boot/mfsroot"
+#vfs.root.mountfrom="ufs:/dev/md0"
+cd /datamountpoint/netboot/freebsd91/boot
+gzip -d mfsroot.gz
+
+#Listing 7. /etc/rc.conf.
+## fxp0 is the PXE-Boot interface
+#ifconfig_fxp0="inet 10.0.0.1 netmask 255.255.255.0"
+## PXE services
+#inetd_enable="YES"
+#rpcbind_enable="yes"
+#mountd_enable="yes"
+#nfs_server_enable="yes"
+
