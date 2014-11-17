@@ -194,7 +194,7 @@ Double-check the tftp entry.
 EOM
 pause
 vi $conf
-auto-append-line 'inetd_enable="YES"' /etc/rc.cond $0
+auto-append-line 'inetd_enable="YES"' /etc/rc.conf $0
 service inetd restart
 
 ##########################################################################
