@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0 file.iso\n"
     exit 1
 }
 
@@ -23,9 +23,15 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 0 ]; then
+if [ $# != 1 ]; then
     usage
 fi
+
+# Test file to paste into command:
+# /home/bacon/Save/FreeBSD-9.2-RELEASE-amd64-disc1.iso
+
+path=${1%.iso}
+path=/netboot/${path##*/}
 
 ##########################################################################
 #   Set up dhcpd
@@ -36,30 +42,47 @@ printf "Run dhcpd on this host? ([y]/n) "
 read dhcpd
 if [ 0$dhcpd != 0n ]; then
     pkg install isc-dhcp$isc_version-server
-    vi /usr/local/etc/dhcpd.conf
-    #allow booting;
-    #allow bootp;
-    #authoritative;
-    #option domain-name "freebsdpxe.sarenet.es";
-    #option subnet-mask 255.255.255.0;
-    #default-lease-time 600;
-    #max-lease-time 7200;
-    #ddns-update-style none;
-    #log-facility local7;
-    #local-address 10.0.0.1;
-    #subnet 10.0.0.0 netmask 255.255.255.0
-    #{
-    #   range 10.0.0.70 10.0.0.80;
-    #   next-server 10.0.0.1;
-    #   filename "boot/pxeboot";
-    #   option root-path "/damamountpoint/netboot/freebsd91";
-    #}
+    
+    domain=`auto-ask pxe-domain 'Domain name?' 'local'`
+    netmask=`auto-ask pxe-netmask 'Net mask?' '255.255.0.0'`
+    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '15552000'`
+    local_ip=`auto-ask pxe-local-ip 'IP address of DHCP server?' ''`
+    filename=`auto-ask pxe-filename 'File name of boot image?' 'boot/pxeboot'`
+    # pxe_path=`auto-ask pxe-path 'Path to boot image?' '/netboot/freebsd10.1'`
+    # FIXME: Replace fields with zeros from netmask
+    subnet=${local_ip}
+
+    conf='/usr/local/etc/dhcpd.conf'
+    if [ ! -e $conf.orig ]; then
+	cp $conf $conf.orig
+    fi
+    cat << EOM > $conf
+allow booting;
+allow bootp;
+authoritative;
+option domain-name "$domain";
+option subnet-mask $netmask;
+default-lease-time $lease_time;
+max-lease-time $lease_time;
+ddns-update-style none;
+log-facility local7;
+local-address $loocal_ip;
+subnet $subnet netmask $netmask
+{
+   range 10.0.0.70 10.0.0.80;
+   next-server 10.0.0.1;
+   filename "boot/pxeboot";
+   option root-path "$path";
+}
+EOM
+    vi $conf
     
     # rc.conf
     #dhcpd_enable="YES"
     #dhcpd_ifaces="fxp0"
 else
     pkg install pxe-pdhcp
+    # pxe-pdhcp -i bge0
     # What else?
 fi
 
@@ -68,26 +91,43 @@ fi
 ##########################################################################
 
 #sed -i 's|#tftpd|tftpd|g' /etc/inetd.conf
-# tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s /datamountpoint/ne tboot/freebsd91
-vi /etc/inetd.conf
-
-exit
+# tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s $path
+conf='/etc/inetd.conf'
+if [ ! -e $conf.orig ]; then
+    cp $conf $conf.orig
+fi
+if ! grep -q '^tftp' $conf; then
+    awk -v path=$path ' {
+	if ($1 == "#tftp" && $3 == "udp")
+	{
+	    printf("tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s %s\n",
+	    path);
+	}
+	print $0;
+    }' $conf > $conf.temp
+    mv $conf.temp $conf
+fi
+vi $conf
 
 ##########################################################################
 #   Set up NFS
 ##########################################################################
 
-# /datamountpoint -alldirs,ro -network 10.0.0 -mask 255.255.255.0
+auto-append-line "/netboot -alldirs,ro -network 10.0.0 -mask 255.255.255.0" \
+    /etc/exports $0
 vi /etc/exports
 
-tar -C /datamountpoint/netboot/freebsd91 -pxvf FreeBSD-9.1-20121230-SNAP- amd64-disc1.iso
+if [ ! -e $path ]; then
+    mkdir -p $path
+    tar -C $path -pxvf $1
+fi
 
 # Add to /datamountpoint/netboot/freebsd91/boot/loader.conf
 #mfsroot_load="YES"
 #mfsroot_type="mfs_root"
 #mfsroot_name="/boot/mfsroot"
 #vfs.root.mountfrom="ufs:/dev/md0"
-cd /datamountpoint/netboot/freebsd91/boot
+cd $path/boot
 gzip -d mfsroot.gz
 
 #Listing 7. /etc/rc.conf.
