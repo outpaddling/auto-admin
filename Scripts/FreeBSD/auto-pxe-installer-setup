@@ -3,6 +3,9 @@
 ##########################################################################
 #   Script description:
 #       Set up a PXE install server including dhcpd, tftpf, and nfsd.
+#       Primary references:
+#       http://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
+#       man bsdinstall
 #
 #   Arguments:
 #       Name of ISO image to install.
@@ -17,6 +20,9 @@
 #   To do:
 #       Support multiple install images.
 ##########################################################################
+
+# Test file to paste into command:
+# /home/bacon/Save/FreeBSD-10.1-RELEASE-amd64-disc1.iso
 
 usage()
 {
@@ -64,9 +70,6 @@ if [ ! -e $iso ]; then
     exit 1
 fi
 
-# Test file to paste into command:
-# /home/bacon/Save/FreeBSD-10.1-RELEASE-amd64-disc1.iso
-
 line
 df -h
 cat << EOM
@@ -76,8 +79,8 @@ to contain to contents of your install CD or DVD.
 
 EOM
 prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
-path=${iso%.iso}
-path=$prefix/${path##*/}
+installer_path=${iso%.iso}
+installer_path=$prefix/${installer_path##*/}
 
 ##########################################################################
 #   Set up dhcpd
@@ -109,6 +112,7 @@ EOM
     subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
     netmask=`auto-ask pxe-netmask 'Net mask?' '255.255.0.0'`
     router=`auto-ask pxe-router 'Router?' 10.1.1.1`
+    nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
     local_ip=`auto-ask pxe-local-ip 'IP address of DHCP server?' ''`
     first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.2.1`
     last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.4.254`
@@ -133,10 +137,11 @@ log-facility local7;
 local-address $local_ip;
 subnet $subnet netmask $netmask
 {
-   range $first_address $last_address;
-   # next-server $first_address;
-   filename "boot/pxeboot";
-   option root-path "$path";
+    range $first_address $last_address;
+    next-server $local_ip;
+    filename "boot/pxeboot";
+    option root-path "$installer_path";
+    option domain-name-servers $nameserver;
 }
 EOM
     cat << EOM
@@ -154,6 +159,8 @@ EOM
     service isc-dhcpd restart
 else
     # FIXME: Unfinished
+    # Set up for situations where the DHCP server is not running on
+    # this server.  ( e.g. DHCP is handled by a hardware router. )
     pkg install -y pxe-pdhcp
     # pxe-pdhcp -i bge0
     # What else?
@@ -168,11 +175,11 @@ if [ ! -e $conf.orig ]; then
     cp $conf $conf.orig
 fi
 if ! grep -q '^tftp' $conf; then
-    awk -v path=$path ' {
+    awk -v installer_path=$installer_path ' {
 	if ($1 == "#tftp" && $3 == "udp")
 	{
 	    printf("tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s %s\n",
-	    path);
+	    installer_path);
 	}
 	print $0;
     }' $conf > $conf.temp
@@ -206,11 +213,102 @@ EOM
 pause
 vi /etc/exports
 
-if [ ! -e $path ]; then
-    mkdir -p $path
-    tar -C $path -pxvf $iso
+if [ ! -e $installer_path ]; then
+    mkdir -p $installer_path
+    tar -C $installer_path -pxvf $iso
 fi
-chmod -R a+rX $path
+
+if [ ! -e $installer_path/usr/sbin/bsdinstall ]; then
+    cat << EOM
+
+Warning: $0 only supports bsdinstall.
+
+Did not find $installer_path/usr/sbin/bsdinstall.
+
+We can continue, but you're on your own as far as setting up unattended
+installation.
+
+EOM
+    pause
+fi
+
+# Prevent mount_nfs: no <host>:<dirpath> nfs-name error during boot
+# https://wiki.koumbit.net/FreeBsd/PxeBootConfiguration
+if [ -e $installer_path/etc/fstab ]; then
+    mv $installer_path/etc/fstab $installer_path/etc/fstab.hide
+fi
+
+# Hack to get around resolution issue with 10.1-RELEASE
+rm -f $installer_path/etc/resolv.conf
+echo "nameserver $nameserver" > $installer_path/etc/resolv.conf
+
+# Add root ssh key from this server to new node
+if [ ! -e /root/.ssh/id_dsa.pub ]; then
+    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+fi
+root_key=`cat /root/.ssh/id_dsa.pub`
+
+# Create automated install script
+# man bsdinstall lacks an explanation of PARTITIONS
+# http://www.sysadminwiki.net/site/doku.php/os/bsd/freebsd/automating_freebsd_installations
+installerconfig=$installer_path/etc/installerconfig
+cat << EOM > $installerconfig
+PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
+DISTRIBUTIONS="doc.txz kernel.txz base.txz lib32.txz"
+
+#!/bin/sh
+
+# Don't install any packages here, unless you want to interact with the
+# new node after installation.  The first run of 'pkg' requires keyboard
+# input to confirm initialization.  If you want to unplug the keyboard and
+# display and move onto the next node before installation completes, this
+# will be a problem.
+
+# Use IP as hostname if you don't care.
+# hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0\`
+
+# Alternative: User input
+printf "Hostname? "
+read hostname
+
+echo "hostname=\$hostname" >> /etc/rc.conf
+
+# Set all available interfaces to DHCP for now.
+for iface in \`dmesg | awk '\$2 == "Ethernet" { print \$1 }'\`; do
+    iface=\${iface%:}
+    echo "ifconfig_\$iface=DHCP" >> /etc/rc.conf
+done
+
+# Configure basic services.  Most configuration can be done after reboot, but
+# a few basics here will save a little hassle.
+echo 'sshd_enable=YES' >> /etc/rc.conf
+echo 'ntpd_enable=YES' >> /etc/rc.conf
+echo 'ntpdate_enable=YES' >> /etc/rc.conf
+echo 'ntpdate_flags="-u pool.ntp.org"' >> /etc/rc.conf
+echo 'dumpdev=NO' >> /etc/rc.conf
+
+sed -i '' 's|#PermitRootLogin no|PermitRootLogin without-password|g' /etc/ssh/sshd_config
+mkdir -p /root/.ssh
+echo '$root_key' >> /root/.ssh/authorized_keys
+
+touch /etc/fstab
+
+EOM
+chmod 640 $installerconfig      # Will contain an ssh public key
+
+cat << EOM
+
+Opening installerconfig automated install script.
+
+Edit partitions, distributions, etc. to taste.
+
+EOM
+pause
+vi $installerconfig
+
+# Make sure everything is readable!
+chmod -R a+rX $installer_path
+
 auto-append-line 'rpcbind_enable="YES"' /etc/rc.conf $0
 auto-append-line 'mountd_enable="YES"' /etc/rc.conf $0
 auto-append-line 'nfs_server_enable="YES"' /etc/rc.conf $0
