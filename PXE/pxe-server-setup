@@ -2,20 +2,51 @@
 
 ##########################################################################
 #   Script description:
-#       
+#       Set up a PXE install server including dhcpd, tftpf, and nfsd.
+#
 #   Arguments:
-#       
+#       Name of ISO image to install.
+#
 #   Returns:
-#       
+#       NA
+#
 #   History:
 #   Date        Name        Modification
-#   2014-11-15  Charlie &   Begin
+#   2014-11-15  Jason Bacon Begin
+#
+#   To do:
+#       Support multiple install images.
 ##########################################################################
 
 usage()
 {
     printf "Usage: $0 file.iso\n"
     exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Print a line
+##########################################################################
+
+line()
+{
+    printf '================================================================\n'
 }
 
 
@@ -27,30 +58,62 @@ if [ $# != 1 ]; then
     usage
 fi
 
-# Test file to paste into command:
-# /home/bacon/Save/FreeBSD-9.2-RELEASE-amd64-disc1.iso
+iso="$1"
+if [ ! -e $iso ]; then
+    printf "$iso: No such file.\n"
+    exit 1
+fi
 
-path=${1%.iso}
-path=/netboot/${path##*/}
+# Test file to paste into command:
+# /home/bacon/Save/FreeBSD-10.1-RELEASE-amd64-disc1.iso
+
+line
+df -h
+cat << EOM
+
+Your PXE installation directory must be on a partition with enough space
+to contain to contents of your install CD or DVD.
+
+EOM
+prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
+path=${iso%.iso}
+path=$prefix/${path##*/}
 
 ##########################################################################
 #   Set up dhcpd
 ##########################################################################
 
 isc_version=42
+line
 printf "Run dhcpd on this host? ([y]/n) "
 read dhcpd
 if [ 0$dhcpd != 0n ]; then
-    pkg install isc-dhcp$isc_version-server
+    if [ ! -e /usr/local/sbin/dhcpd ]; then
+	pkg install -y isc-dhcp$isc_version-server
+    fi
     
+    cat << EOM
+
+Note: Your original dhcpd.conf (from before the first pxe-server-setup)
+run will be saved to dhcpd.conf.orig and your current dhcpd.conf will
+be overwritten.
+
+If you don't like this idea, press Ctrl+C now.
+
+EOM
+    pause
+    printf 'Available network interfaces:\n\n'
+    ifconfig|fgrep flags
+    iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
     domain=`auto-ask pxe-domain 'Domain name?' 'local'`
+    subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
     netmask=`auto-ask pxe-netmask 'Net mask?' '255.255.0.0'`
-    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '15552000'`
+    router=`auto-ask pxe-router 'Router?' 10.1.1.1`
     local_ip=`auto-ask pxe-local-ip 'IP address of DHCP server?' ''`
+    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.2.1`
+    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.4.254`
+    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '15552000'`
     filename=`auto-ask pxe-filename 'File name of boot image?' 'boot/pxeboot'`
-    # pxe_path=`auto-ask pxe-path 'Path to boot image?' '/netboot/freebsd10.1'`
-    # FIXME: Replace fields with zeros from netmask
-    subnet=${local_ip}
 
     conf='/usr/local/etc/dhcpd.conf'
     if [ ! -e $conf.orig ]; then
@@ -62,26 +125,36 @@ allow bootp;
 authoritative;
 option domain-name "$domain";
 option subnet-mask $netmask;
+option routers $router;
 default-lease-time $lease_time;
 max-lease-time $lease_time;
 ddns-update-style none;
 log-facility local7;
-local-address $loocal_ip;
+local-address $local_ip;
 subnet $subnet netmask $netmask
 {
-   range 10.0.0.70 10.0.0.80;
-   next-server 10.0.0.1;
+   range $first_address $last_address;
+   # next-server $first_address;
    filename "boot/pxeboot";
    option root-path "$path";
 }
 EOM
+    cat << EOM
+
+Editing $conf.
+
+Double-check the addresses, etc.
+
+EOM
+    pause
     vi $conf
     
-    # rc.conf
-    #dhcpd_enable="YES"
-    #dhcpd_ifaces="fxp0"
+    auto-append-line 'dhcpd_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
+    service isc-dhcpd restart
 else
-    pkg install pxe-pdhcp
+    # FIXME: Unfinished
+    pkg install -y pxe-pdhcp
     # pxe-pdhcp -i bge0
     # What else?
 fi
@@ -90,8 +163,6 @@ fi
 #   Set up tftp
 ##########################################################################
 
-#sed -i 's|#tftpd|tftpd|g' /etc/inetd.conf
-# tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s $path
 conf='/etc/inetd.conf'
 if [ ! -e $conf.orig ]; then
     cp $conf $conf.orig
@@ -107,35 +178,42 @@ if ! grep -q '^tftp' $conf; then
     }' $conf > $conf.temp
     mv $conf.temp $conf
 fi
+cat << EOM
+
+Editing $conf.
+
+Double-check the tftp entry.
+
+EOM
+pause
 vi $conf
+auto-append-line 'inetd_enable="YES"' /etc/rc.cond $0
+service inetd restart
 
 ##########################################################################
 #   Set up NFS
 ##########################################################################
 
-auto-append-line "/netboot -alldirs,ro -network 10.0.0 -mask 255.255.255.0" \
+auto-append-line "$prefix -alldirs,ro -network $subnet -mask $netmask" \
     /etc/exports $0
+
+cat << EOM
+
+Editing /etc/exports.  Make sure your syntax is correct and that you are
+using -alldirs on the parent of any directories in the same partition.
+
+EOM
+pause
 vi /etc/exports
 
 if [ ! -e $path ]; then
     mkdir -p $path
-    tar -C $path -pxvf $1
+    tar -C $path -pxvf $iso
 fi
-
-# Add to /datamountpoint/netboot/freebsd91/boot/loader.conf
-#mfsroot_load="YES"
-#mfsroot_type="mfs_root"
-#mfsroot_name="/boot/mfsroot"
-#vfs.root.mountfrom="ufs:/dev/md0"
-cd $path/boot
-gzip -d mfsroot.gz
-
-#Listing 7. /etc/rc.conf.
-## fxp0 is the PXE-Boot interface
-#ifconfig_fxp0="inet 10.0.0.1 netmask 255.255.255.0"
-## PXE services
-#inetd_enable="YES"
-#rpcbind_enable="yes"
-#mountd_enable="yes"
-#nfs_server_enable="yes"
+chmod -R a+rX $path
+auto-append-line 'rpcbind_enable="YES"' /etc/rc.conf $0
+auto-append-line 'mountd_enable="YES"' /etc/rc.conf $0
+auto-append-line 'nfs_server_enable="YES"' /etc/rc.conf $0
+service nfsd restart
+service mountd reload
 
