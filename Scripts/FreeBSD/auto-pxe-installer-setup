@@ -271,15 +271,25 @@ root_key=`cat /root/.ssh/id_dsa.pub`
 installerconfig=$installer_path/etc/installerconfig
 cat << EOM > $installerconfig
 PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
-DISTRIBUTIONS="doc.txz kernel.txz base.txz lib32.txz"
+DISTRIBUTIONS="base.txt doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
 
 #!/bin/sh
+#
+# If you want to unplug the keyboard and display before installation
+# completes and never come back, remove all interactive commands
+# below, like pkg install, read hostname, tzsetup.
+#
+# The new node will accept passwordless root login from this host via ssh
+# after the first reboot, so you can immediately run more post-install
+# options over the network.  If you are running DHCP on this host, the IP
+# addresses of all imaged hosts will be in /var/db/dhcpd/dhcpd.leases.
+# If your netowrk supports it, the hostname should also self-register in DNS.
 
-# Don't install any packages here, unless you want to interact with the
+# Installing any packages here will require another interaction with the
 # new node after installation.  The first run of 'pkg' requires keyboard
-# input to confirm initialization.  If you want to unplug the keyboard and
-# display and move onto the next node before installation completes, this
-# will be a problem.
+# input to confirm initialization.  ( yes | pkg will not work )
+#
+# pkg install -y rsync
 
 # Use IP as hostname if you don't care.
 # hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0\`
@@ -289,6 +299,8 @@ printf "Hostname? "
 read hostname
 
 echo "hostname=\$hostname" >> /etc/rc.conf
+
+tzsetup
 
 # Set all available interfaces to DHCP for now.
 for iface in \`dmesg | awk '\$2 == "Ethernet" { print \$1 }'\`; do
