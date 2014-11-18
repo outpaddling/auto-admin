@@ -271,7 +271,7 @@ root_key=`cat /root/.ssh/id_dsa.pub`
 installerconfig=$installer_path/etc/installerconfig
 cat << EOM > $installerconfig
 PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
-DISTRIBUTIONS="base.txt doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
+DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
 
 #!/bin/sh
 #
