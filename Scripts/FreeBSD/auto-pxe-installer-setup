@@ -19,6 +19,7 @@
 #
 #   To do:
 #       Support multiple install images.
+#       http://www.wonkity.com/~wblock/docs/html/pxe.html
 ##########################################################################
 
 # Test file to paste into command:
