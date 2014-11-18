@@ -89,6 +89,20 @@ installer_path=$prefix/${installer_path##*/}
 
 isc_version=42
 line
+cat << EOM
+
+PXE booting requires a DHCP server on the local network.  You can run it
+on this server or use the DHCP server provided by the network router or
+other device.
+
+***************************************************************************
+*                                WARNING                                  *
+* DO NOT ENABLE A DHCP SERVER ON THIS HOST UNLESS YOU MANAGE THE NETWORK  *
+* AND KNOW WHAT YOU'RE DOING.  ENABLING A "ROGUE" DHCP SERVER CAN CAUSE   *
+* SERIOUS PROBLEMS FOR OTHER USERS ON THE NETWORK.                        *
+***************************************************************************
+
+EOM
 printf "Run dhcpd on this host? ([y]/n) "
 read dhcpd
 if [ 0$dhcpd != 0n ]; then
@@ -115,9 +129,11 @@ EOM
     router=`auto-ask pxe-router 'Router?' 10.1.1.1`
     nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
     local_ip=`auto-ask pxe-local-ip 'IP address of DHCP server?' ''`
-    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.2.1`
-    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.4.254`
-    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '15552000'`
+    # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
+    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
+    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
+    # Default lease time 10 years (effectively permanent for cluster nodes)
+    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '315360000'`
     filename=`auto-ask pxe-filename 'File name of boot image?' 'boot/pxeboot'`
 
     conf='/usr/local/etc/dhcpd.conf'
