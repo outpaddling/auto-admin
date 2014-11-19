@@ -266,7 +266,6 @@ EOM
     last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
     # Default lease time 10 years (effectively permanent for cluster nodes)
     lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '315360000'`
-    filename=`auto-ask pxe-filename 'File name of boot image?' 'boot/pxeboot'`
 
     conf='/usr/local/etc/dhcpd.conf'
     if [ ! -e $conf.orig ]; then
