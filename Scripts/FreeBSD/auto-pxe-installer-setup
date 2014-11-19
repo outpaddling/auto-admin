@@ -6,6 +6,7 @@
 #       Primary references:
 #       http://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
 #       man bsdinstall
+#       http://www.wonkity.com/~wblock/docs/html/pxe.html
 #
 #   Arguments:
 #       Name of ISO image to install.
@@ -16,10 +17,6 @@
 #   History:
 #   Date        Name        Modification
 #   2014-11-15  Jason Bacon Begin
-#
-#   To do:
-#       Support multiple install images.
-#       http://www.wonkity.com/~wblock/docs/html/pxe.html
 ##########################################################################
 
 # Test file to paste into command:
@@ -58,6 +55,113 @@ line()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-18  Jason Bacon Begin
+##########################################################################
+
+tftp_inetd()
+{
+    conf='/etc/inetd.conf'
+    if [ ! -e $conf.orig ]; then
+	cp $conf $conf.orig
+    fi
+    if ! grep -q '^tftp' $conf; then
+	awk -v installer_path=$installer_path ' {
+	    if ($1 == "#tftp" && $3 == "udp")
+	    {
+		printf("tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s %s\n",
+		installer_path);
+	    }
+	    print $0;
+	}' $conf > $conf.temp
+	mv $conf.temp $conf
+    fi
+    cat << EOM
+    
+    Editing $conf.
+    
+    Double-check the tftp entry.
+    
+EOM
+    pause
+    vi $conf
+    auto-append-line 'inetd_enable="YES"' /etc/rc.conf $0
+    service inetd restart
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-18  Jason Bacon Begin
+##########################################################################
+
+tftp_hpa()
+{
+    if [ ! -e /usr/local/libexec/in.tftpd ]; then
+	pkg install -y tftp-hpa
+    fi
+    mkdir -p $prefix/pxelinux.cfg $prefix/Dist
+    auto-append-line 'tftpd_enable="YES"' /etc/rc.conf $0
+    auto-append-line "tftpd_flags=\"-p -s $prefix -B 1024 --ipv4\"" \
+	/etc/rc.conf $0
+    printf "Make sure no other tftp servers are running.\n"
+    pause
+    service tftpd restart
+    save_cwd=`pwd`
+    cd $prefix/Dist
+    dist=syslinux-4.04
+    if [ ! -e $dist.tar.xz ]; then
+	fetch --no-verify-peer \
+	    https://www.kernel.org/pub/linux/utils/boot/syslinux/$dist.tar.xz
+	tar zxvf $dist.tar.xz
+    fi
+    cp $dist/gpxe/gpxelinux.0 $prefix
+    cp $dist/com32/menu/menu.c32 $prefix
+    cp $dist/com32/menu/vesamenu.c32 $prefix
+    cp $dist/com32/modules/reboot.c32 $prefix
+    cp $dist/com32/modules/chain.c32 $prefix
+    cp $dist/memdisk/memdisk $prefix
+    cd $save_cwd
+    
+    # Create a simple PXELINUX boot menu
+    config=$prefix/pxelinux.cfg/default
+    cat << EOM > $config
+timeout 600
+ui menu.c32
+menu title PXELINUX Boot Menu
+
+label localboot
+  menu label Boot from local disk
+  localboot
+
+label freebsd
+  menu label FreeBSD Install
+  pxe ${installer_path##$prefix/}/boot/pxeboot
+
+label reboot
+  menu label Reboot
+  kernel reboot.c32
+EOM
+    printf "Editing $config\n"
+    pause
+    vi $config
+}
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -81,7 +185,35 @@ to contain to contents of your install CD or DVD.
 EOM
 prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
 installer_path=${iso%.iso}
-installer_path=$prefix/${installer_path##*/}
+installer_path=$prefix/images/${installer_path##*/}
+
+
+##########################################################################
+#   Set up tftp
+##########################################################################
+
+line
+cat << EOM
+
+The PXELINUX boot image supports a PXE boot menu with potentially many
+different boot options.  If you select this option, auto-pxe-installer-setup
+will create a simple boot menu that will allow you to choose between
+booting from the local disk or starting a FreeBSD installation.  You may
+add additional boot options such as memtest86 afterward.
+
+Without this menu, booting from PXE will go straight to the installer every
+time.  If your BIOS is configured to PXE boot by default, you should either
+choose the PXELINUX menu option or find another way to ensure that you
+don't accidentally reimage your computer every time it boots!
+
+EOM
+pxe_boot_menu=`auto-ask pxe-menu "Install a PXE boot menu using syslinux boot images?" n`
+if [ $pxe_boot_menu = y ]; then
+    tftp_hpa
+else
+    tftp_inetd
+fi
+
 
 ##########################################################################
 #   Set up dhcpd
@@ -128,7 +260,7 @@ EOM
     netmask=`auto-ask pxe-netmask 'Net mask?' '255.255.0.0'`
     router=`auto-ask pxe-router 'Router?' 10.1.1.1`
     nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
-    local_ip=`auto-ask pxe-local-ip 'IP address of DHCP server?' ''`
+    local_ip=`auto-ask pxe-local-ip 'IP address of this DHCP server?' ''`
     # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
     first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
     last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
@@ -139,6 +271,12 @@ EOM
     conf='/usr/local/etc/dhcpd.conf'
     if [ ! -e $conf.orig ]; then
 	cp $conf $conf.orig
+    fi
+    
+    if [ 0$pxe_boot_menu = 0y ]; then
+	boot_filename=gpxelinux.0
+    else
+	boot_filename="boot/pxeboot"
     fi
     cat << EOM > $conf
 allow booting;
@@ -155,8 +293,11 @@ local-address $local_ip;
 subnet $subnet netmask $netmask
 {
     range $first_address $last_address;
+    # IP of PXE server required by some clients.
     next-server $local_ip;
-    filename "boot/pxeboot";
+    # Location of PXE boot image within bootable system
+    filename "$boot_filename";
+    # Location of bootable system for NFS
     option root-path "$installer_path";
     option domain-name-servers $nameserver;
 }
@@ -173,7 +314,7 @@ EOM
     
     auto-append-line 'dhcpd_enable="YES"' /etc/rc.conf $0
     auto-append-line 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
-    service isc-dhcpd restart
+    service isc-dhcpd onerestart
 else
     # FIXME: Unfinished
     # Set up for situations where the DHCP server is not running on
@@ -183,42 +324,12 @@ else
     # What else?
 fi
 
-##########################################################################
-#   Set up tftp
-##########################################################################
-
-conf='/etc/inetd.conf'
-if [ ! -e $conf.orig ]; then
-    cp $conf $conf.orig
-fi
-if ! grep -q '^tftp' $conf; then
-    awk -v installer_path=$installer_path ' {
-	if ($1 == "#tftp" && $3 == "udp")
-	{
-	    printf("tftp dgram udp wait root /usr/libexec/tftpd tftpd -l -s %s\n",
-	    installer_path);
-	}
-	print $0;
-    }' $conf > $conf.temp
-    mv $conf.temp $conf
-fi
-cat << EOM
-
-Editing $conf.
-
-Double-check the tftp entry.
-
-EOM
-pause
-vi $conf
-auto-append-line 'inetd_enable="YES"' /etc/rc.conf $0
-service inetd restart
 
 ##########################################################################
 #   Set up NFS
 ##########################################################################
 
-auto-append-line "$prefix -alldirs,ro -network $subnet -mask $netmask" \
+auto-append-line "$prefix/images -alldirs,ro -network $subnet -mask $netmask" \
     /etc/exports $0
 
 cat << EOM
@@ -233,6 +344,7 @@ vi /etc/exports
 if [ ! -e $installer_path ]; then
     mkdir -p $installer_path
     tar -C $installer_path -pxvf $iso
+    chroot $installer_path passwd root
 fi
 
 if [ ! -e $installer_path/usr/sbin/bsdinstall ]; then
@@ -269,6 +381,7 @@ root_key=`cat /root/.ssh/id_dsa.pub`
 # man bsdinstall lacks an explanation of PARTITIONS
 # http://www.sysadminwiki.net/site/doku.php/os/bsd/freebsd/automating_freebsd_installations
 installerconfig=$installer_path/etc/installerconfig
+
 cat << EOM > $installerconfig
 PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
 DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
@@ -291,16 +404,27 @@ DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz
 #
 # pkg install -y rsync
 
-# Use IP as hostname if you don't care.
-# hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0\`
+##########################################################################
+#   Set a hostname
+##########################################################################
 
-# Alternative: User input
-printf "Hostname? "
-read hostname
+# Use IP as hostname if you don't care.
+hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0 | sed -e 's|\.|-|g'\`'.local'
+
+# Interactive option
+# printf "Hostname? "
+# read hostname
 
 echo "hostname=\$hostname" >> /etc/rc.conf
 
-tzsetup
+##########################################################################
+#   Set time zone
+##########################################################################
+
+cp /usr/share/zoneinfo/America/Chicago /etc/localtime
+
+# Interactive option
+# tzsetup
 
 # Set all available interfaces to DHCP for now.
 for iface in \`dmesg | awk '\$2 == "Ethernet" { print \$1 }'\`; do
@@ -323,7 +447,6 @@ echo '$root_key' >> /root/.ssh/authorized_keys
 touch /etc/fstab
 
 EOM
-chmod 640 $installerconfig      # Will contain an ssh public key
 
 cat << EOM
 
@@ -337,6 +460,7 @@ vi $installerconfig
 
 # Make sure everything is readable!
 chmod -R a+rX $installer_path
+chmod 640 $installerconfig      # Will contain an ssh public key
 
 auto-append-line 'rpcbind_enable="YES"' /etc/rc.conf $0
 auto-append-line 'mountd_enable="YES"' /etc/rc.conf $0
