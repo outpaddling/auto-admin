@@ -1,0 +1,124 @@
+#!/bin/sh
+
+# WIP...testing...
+ 
+# This script will discover and name new compute nodes and add them to the server's /etc/dhcp/dhcpd.conf and /var/lib/tftpboot/pxelinux.cfg/ 
+
+# compute-001
+# compute-002
+# .
+# .
+# compute-142
+
+# After a node has been "discovered" it's boot option will change from default install boot to default localdisk boot.
+
+# Run this script on the server. Then boot each node in order, several minutes between each node's power-up.
+
+# FIXME: Enable dhcpd if necessary
+
+chkconfig xinetd on
+service xinetd start
+chkconfig httpd on
+service httpd start
+
+HOSTIP=10.1.1.253
+NIC=em1
+
+NODEIP=""
+NODEIPTAIL=""
+HWADD=""
+DASHHWADD=""
+COMPUTE="compute-"
+FLAG=1
+
+
+while [ $FLAG -eq 1 ]
+do
+
+	NODEIP=""
+	NODEIPTAIL=""
+	COMPUTE="compute-"
+	HWADD=""
+	DASHHWADD=""
+
+	#FIXME ...Find a better way to determine when a node is kickstarting.
+	if [ `grep Wget/ /var/log/httpd/access_log | awk '{print $1}' | tail -1` ]; then
+	   
+		NODEIP=`grep Wget/ /var/log/httpd/access_log | awk '{print $1}' | tail -1`
+
+	    if [ ! `grep "fixed-address $NODEIP" /etc/dhcp/dhcpd.conf | awk '{print $2}'` ];then
+
+		NODEIPTAIL=`echo $NODEIP | cut -d "." -f4`
+
+		#TWO=2
+		#NODEIPTAIL=$(($NODEIPTAIL - $TWO))
+ 
+		if [ $NODEIPTAIL -lt 10 ];then
+			NODEIPTAIL=00$NODEIPTAIL
+		else if [ $NODEIPTAIL -lt 100 ];then
+			NODEIPTAIL=0$NODEIPTAIL
+		     fi
+		fi
+
+		COMPUTE=$COMPUTE$NODEIPTAIL
+		
+
+		  
+		HWADD=`grep $NODEIP /var/log/messages | awk '$6 == "DHCPACK" { print $10 }' | tail -1| sed 's/\(.*\)/\L\1/'`
+		DASHHWADD=01-`echo $HWADD | sed 's/:/-/g'`
+		
+		if [ ! "$DASHHWADD" = "01-" ]  && [ ! -f /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD ]; then
+			touch /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD
+			./auto-append-line "# $COMPUTE\n" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+			./auto-append-line "timeout 100" "timeout 100\ndefault menu.c32\n" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+			./auto-append-line  "menu title ## Avi Boot Menu ##" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+			./auto-append-line "label 1" "\nlabel 1\n  menu label ^1) Boot from local drive\n  localboot" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+			./auto-append-line "label 2" "\nlabel 2\n  menu label ^2) Install CentOS 6\n  kernel centos6/vmlinuz\n  append initrd=centos6/initrd.img ks=http://$HOSTIP/ks/centos6-ks.cfg ksdevice=$NIC" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+
+			sed -i '/option routers/ c\\toption routers '"$HOSTIP"';\n\n\thost '"$COMPUTE"' {\n\t\thardware ethernet '"$HWADD"';\n\t\toption host-name \"'"$COMPUTE"'\";\n\t\tfixed-address '"$NODEIP"';\n\t}' /etc/dhcp/dhcpd.conf
+			
+			service dhcpd restart
+				
+			if [ ! -e /etc/ssh/ssh_config.orig ];then
+				cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
+			fi
+			
+			if [ ! `grep $COMPUTE /etc/ssh/ssh_config | awk '{print $1}'` ];then    
+				sed -i '2iHost '"$COMPUTE"' ' /etc/ssh/ssh_config
+				sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+				sed -i '4iHost '"$NODEIP"' ' /etc/ssh/ssh_config
+				sed -i '5i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+			fi
+
+			./auto-append-line  "$NODEIP\t$COMPUTE-$NIC\t$COMPUTE" /etc/hosts nocomment
+			
+			for u in `ls /home`
+			do
+				if [ -f /home/$u/.ssh/known_hosts ]; then
+					sed -i '/'"$NODEIP"'/ c\' /home/$u/.ssh/known_hosts
+					sed -i '/'"$COMPUTE"'/ c\' /home/$u/.ssh/known_hosts
+				fi
+			done
+
+			if [ -f /root/.ssh/known_hosts ]; then
+				sed -i '/'"$NODEIP"'/ c\' /root/.ssh/known_hosts
+			fi
+
+			echo "$COMPUTE at IP $NODEIP processed...OK"
+			#FLAG=0
+		fi
+	    fi
+	fi
+	sleep 10
+	echo -n .
+done
+echo "DONE"
+
+
+chkconfig httpd on
+service httpd start
+service xinetd stop
+chkconfig xinetd off
+
+# FIXME: Disable DHCP if necessary
+

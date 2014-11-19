@@ -1,0 +1,342 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-10-01? Jim Wagner  Begin
+#   2013-12-23  Jason Bacon Strip down to essential functions
+#   2014-04-23  Jason Bacon 
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+# Creates, on a CentOS-6 machine, a server that can be PXE booted to and
+# provide a kickstart file used for deploying an image to compute nodes.
+
+##vvvvvvvvv VARIABLES vvvvvvvvvv##
+
+# Last octets of start/end IP addresses handed out by DHCP server.
+# i.e.:  10.1.1.x to 10.1.1.y  where 'x' is dhcp_first and 'y' is dhcp_last   
+
+printf "IP base? [10.1.1] "
+read ip_base
+if [ 0$ip_base = 0 ]; then
+    ip_base="10.1.1"
+fi
+
+printf "Last octet of first DHCP address? [2] "
+read dhcp_first
+if [ 0$dhcp_first = 0 ]; then
+    dhcp_first=2
+fi
+
+printf "Last octet of last DHCP address? [200] "
+read dhcp_last
+if [ 0$dhcp_first = 0 ]; then
+    dhcp_last=200
+fi
+
+# full_hostname of this machine that the world sees to get to this www site.
+full_hostname=`hostname` 
+
+printf "Which NIC is the private interface (eth0, eth1, em1, etc..)? [em1]: "
+read private_iface
+private_iface="${private_iface:=em1}"
+
+printf "DNS server 1? "
+read primary_dns
+
+printf "DNS server 2? "
+read secondary_dns
+
+# Netmask.
+NETMASK=255.255.255.0
+
+##^^^^^^^^^^ VARIABLES ^^^^^^^^^^##
+
+if [ ! -f /root/iptables.orig ]; then
+	/sbin/iptables-save > /root/iptables.orig
+fi
+
+
+# Disable selinux.
+if [ ! -f /etc/sysconfig/selinux.orig ]; then
+	cp /etc/sysconfig/selinux /etc/sysconfig/selinux.orig
+fi
+sed -i '/SELINUX=enforcing/ c\SELINUX=disabled' /etc/sysconfig/selinux
+echo 0 > /selinux/enforce
+
+# Parse IP & subnet of $private_iface on this machine.
+HOSTIP=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2`
+SUBNET=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cut -d "." -f 1-3`.0
+
+
+##
+## Create ISO
+##
+
+if [ ! -f /root/centos6.iso ]; then
+    printf "\n\n"
+    read -p "Insert CentOS DVD, close its window that auto-opens, then press [ENTER]." 
+    printf "Creating ISO file from CD. This will take a few minutes...\n"
+    umount /dev/cdrom
+    dd if=/dev/cdrom of=/root/centos6.iso bs=2048
+fi
+
+
+
+##
+## Setup PXE Server
+##
+
+yum -y install syslinux xinetd tftp-server
+
+mkdir -p /var/lib/tftpboot/pxelinux.cfg
+
+cp /usr/share/syslinux/pxelinux.0 /var/lib/tftpboot/
+
+# Enable tftp
+if [ ! -f /etc/xinetd.d/tftp.orig ]; then
+    cp /etc/xinetd.d/tftp /etc/xinetd.d/tftp.orig
+fi
+sed -i '/disable/ c\\tdisable\t\t\t= no' /etc/xinetd.d/tftp
+
+
+/etc/rc.d/init.d/xinetd restart
+
+chkconfig xinetd on
+
+
+##
+## Start DHCP Server
+##
+
+# Create IP broadcast address.
+BCAST=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cut -d "." -f 1-3`.255
+
+# Set begin and end range for IP's handed out by DHCP server. (default 1-100)
+STARTIP=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cut -d "." -f 1-3`.$dhcp_first
+ENDIP=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cut -d "." -f 1-3`.$dhcp_last
+
+yum -y install dhcp
+
+if [ ! -f /etc/dhcp/dhcpd.conf.orig ]; then
+    cp /etc/dhcp/dhcpd.conf  /etc/dhcp/dhcpd.conf.orig
+fi
+
+cp /etc/dhcp/dhcpd.conf.orig /etc/dhcp/dhcpd.conf
+
+DOMAINNAME=`hostname | cut -d "." --complement -s -f1`
+HOSTNAME=`hostname`
+
+ ./auto-append-line  "option domain-name    \"$DOMAINNAME\";" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "option domain-name-servers   $HOSTNAME;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "default-lease-time    600;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "max-lease-time    7200;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "authoritative;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "subnet $SUBNET netmask $NETMASK {" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "\trange dynamic-bootp $STARTIP $ENDIP;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "\tuse-host-decl-names on;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "\toption broadcast-address $BCAST;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "\toption domain-name-servers $primary_dns, $secondary_dns;" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "\toption routers "$HOSTIP";" "\toption routers "$HOSTIP";\n}" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "filename    \"pxelinux.0\";" /etc/dhcp/dhcpd.conf nocomment
+ ./auto-append-line  "next-server    "$HOSTIP";" /etc/dhcp/dhcpd.conf nocomment
+
+# Make the DHCP server only server to $private_iface's subnet
+sed -i '/DHCPDARGS/ c\DHCPDARGS=$private_iface' /etc/sysconfig/dhcpd
+
+/etc/rc.d/init.d/dhcpd restart
+chkconfig dhcpd on
+
+# Fine the REJECT line in iptables to insert rules above.
+if [ `iptables-save | grep -- "-j NFS" | awk '{print $1}' | uniq` ];then
+    INSRTLINE=`iptables -L INPUT -n --line-numbers | grep NFS | awk '{print $1}'`
+else
+    INSRTLINE=`iptables -L INPUT -n --line-numbers | grep REJECT | awk '{print $1}'`
+fi
+
+# Allow DHCP thru firewall
+if [ ! `iptables-save | grep -- "--dport 67 -j ACCEPT" | awk '{print $1}'` ];then
+   iptables -I INPUT $INSRTLINE -p udp --dport 67 -j ACCEPT
+fi
+
+if [ ! `iptables-save | grep -- "--dport 68 -j ACCEPT" | awk '{print $1}'` ];then
+    iptables -I INPUT $INSRTLINE -p udp --dport 68 -j ACCEPT
+fi
+
+service iptables restart
+
+##
+## Network-install setup
+##
+
+mkdir -p /var/pxe/centos6
+mkdir -p /var/lib/tftpboot/centos6
+
+mount -t iso9660 -o loop ./centos6.iso /var/pxe/centos6
+
+yum install syslinux -y
+
+cp /var/pxe/centos6/images/pxeboot/vmlinuz /var/lib/tftpboot/centos6/
+cp /var/pxe/centos6/images/pxeboot/initrd.img /var/lib/tftpboot/centos6/
+cp /usr/share/syslinux/menu.c32 /var/lib/tftpboot/
+
+# Start with a fresh file.
+if [ -f /var/lib/tftpboot/pxelinux.cfg/default ]; then
+	rm /var/lib/tftpboot/pxelinux.cfg/default
+fi
+touch /var/lib/tftpboot/pxelinux.cfg/default
+
+
+ ./auto-append-line "timeout 100" "timeout 100\ndefault menu.c32\n" /var/lib/tftpboot/pxelinux.cfg/default nocomment
+
+ ./auto-append-line  "menu title ## Avi Boot Menu ##" /var/lib/tftpboot/pxelinux.cfg/default nocomment
+
+# Default first boot option is PXE boot on nodes.
+./auto-append-line "label 1" "\nlabel 1\n  menu label ^1) Install CentOS 6\n  kernel centos6/vmlinuz\n  append initrd=centos6/initrd.img ks=http://$HOSTIP/ks/centos6-ks.cfg ksdevice=$private_iface" /var/lib/tftpboot/pxelinux.cfg/default nocomment
+
+ ./auto-append-line "label 2" "\nlabel 2\n  menu label ^2) Boot from local drive\n  localboot" /var/lib/tftpboot/pxelinux.cfg/default nocomment
+
+
+# Allow tftp service (PXE) thru firewall.
+if [ ! `iptables-save | grep -- "--dport 69 -j ACCEPT" | awk '{print $1}'` ];then
+    iptables -I INPUT $INSRTLINE -p udp --dport 69 -j ACCEPT
+fi
+
+##
+## HTTP server setup
+##
+
+yum -y install httpd
+
+rm -f /etc/httpd/conf.d/welcome.conf
+rm -f /var/www/error/noindex.html
+ln -s /usr/bin/perl /usr/local/bin/perl
+
+if [ ! -f /etc/httpd/conf/httpd.conf.orig ]; then
+	cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.orig
+fi
+
+sed -i 's%ServerTokens\ OS%ServerTokens\ Prod%' /etc/httpd/conf/httpd.conf
+sed -i 's%KeepAlive Off%KeepAlive On%' /etc/httpd/conf/httpd.conf
+sed -i 's%ServerAdmin\ root@localhost%ServerAdmin\ root@$full_hostname%' /etc/httpd/conf/httpd.conf
+sed -i 's%#ServerName\ www.example.com:80%ServerName\ www.$full_hostname%' /etc/httpd/conf/httpd.conf
+sed -i 's%Options\ Indexes\ FollowSymLinks%Options\ FollowSymLinks\ ExecCGI%' /etc/httpd/conf/httpd.conf
+sed -i 's%AllowOverride\ None%AllowOverride\ All%' /etc/httpd/conf/httpd.conf
+sed -i 's%DirectoryIndex\ index.html\ index.html.var%DirectoryIndex\ index.html\ index.cgi\ index.php%' /etc/httpd/conf/httpd.conf
+sed -i 's%ServerSignature On%ServerSignature Off%' /etc/httpd/conf/httpd.conf
+sed -i 's%AddDefaultCharset\ UTF-8%#AddDefaultCharset\ UTF-8%' /etc/httpd/conf/httpd.conf
+sed -i 's%#AddHandler\ cgi-script\ .cgi%AddHandler\ cgi-script\ .cgi\ .pl%' /etc/httpd/conf/httpd.conf
+
+# Allow www thru the firewall.
+if [ ! `iptables-save | grep -- "--dport 80 -j ACCEPT" | awk '{print $1}'` ];then
+iptables -I INPUT $INSRTLINE -m state --state NEW -p tcp --dport 80 -j ACCEPT 
+fi 
+
+if [ ! `iptables-save | grep -- "--dport 443 -j ACCEPT" |  awk '{print $1}'` ];then
+    iptables -I INPUT $INSRTLINE -m state --state NEW -p tcp --dport 443 -j ACCEPT 
+fi
+
+/etc/rc.d/init.d/httpd restart
+chkconfig httpd on
+
+
+ ./auto-append-line  "Alias /centos6 /var/pxe/centos6" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "<Directory /var/pxe/centos6>" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "  Options Indexes FollowSymLinks" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "  Order Deny,Allow" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "  Deny from all" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "  Allow from 127.0.0.1 $SUBNET/24" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "</Directory>" /etc/httpd/conf.d/pxeboot.conf nocomment
+
+if [ ! -f /etc/httpd/conf.d/pxeboot.conf.bak ]; then
+	cp /etc/httpd/conf.d/pxeboot.conf /etc/httpd/conf.d/pxeboot.conf.bak
+fi
+
+/etc/rc.d/init.d/httpd restart
+
+
+##
+## Kickstart setup
+##
+
+mkdir -p /var/www/html/ks
+cp /root/anaconda-ks.cfg /var/www/html/ks/centos6-ks.cfg
+chmod 644 /var/www/html/ks/centos6-ks.cfg
+
+# Editing the kickstart file.
+sed -i '/cdrom/ c\' /var/www/html/ks/centos6-ks.cfg
+sed -i '/selinux/ c\selinux --disabled' /var/www/html/ks/centos6-ks.cfg
+
+sed -i '/install/ c\install\nclearpart --all --initlabel' /var/www/html/ks/centos6-ks.cfg
+sed -i '/install/ c\install\nzerombr' /var/www/html/ks/centos6-ks.cfg
+sed -i '/install/ c\install\nurl --url=http://'"$HOSTIP"'/centos6' /var/www/html/ks/centos6-ks.cfg
+sed -i '/install/ c\install\nreboot' /var/www/html/ks/centos6-ks.cfg
+sed -i '/install/ c\install\nautostep' /var/www/html/ks/centos6-ks.cfg
+sed -i '/bootproto/ c\network --device '"$private_iface"' --bootproto dhcp' /var/www/html/ks/centos6-ks.cfg
+sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 --size=1024\npart / --fstype ext4 --size=16384\npart swap --size=32768\npart /var --fstype ext4 --size=32768\npart /data --fstype ext4 --size=1024 --grow' /var/www/html/ks/centos6-ks.cfg
+
+
+
+cp /root/node-ks-post /var/www/html/
+chmod 755 /var/www/html/node-ks-post
+
+# Old md5 style passwords
+#openssl passwd -1 > pw.txt
+#PSSWD=$(cat pw.txt)
+#rm -f pw.txt
+
+# New SHA-512 style passwords
+PSSWD=`grub-crypt`
+sed -i '/rootpw/ c\rootpw --iscrypted '"$PSSWD"'' /var/www/html/ks/centos6-ks.cfg 
+
+sed -i '/%packages/,$d' /var/www/html/ks/centos6-ks.cfg 
+
+
+##
+## Setup Keyless SSH (from head node to compute nodes, as root)
+##
+
+cp /root/.ssh/id_rsa.pub /var/www/html/public_key
+
+
+
+##
+## Create Post-install of Kickstart 
+##
+
+./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/centos6-ks.cfg nocomment
+
+sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/centos6-ks.cfg 
+
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/centos6-ks.cfg 
+
+# ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/centos6-ks.cfg nocomment
+# sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/centos6-ks.cfg
+
+# If the head node has several private_iface's, then there will be several "network" lines in /var/www/html/ks/centos6-ks.cfg  
+# The sed substitutions will make them all identical and consecutive, so uniq the file. 
+cat /var/www/html/ks/centos6-ks.cfg | uniq > /var/www/html/ks/centos6-ks.cfg.uniq
+mv /var/www/html/ks/centos6-ks.cfg.uniq /var/www/html/ks/centos6-ks.cfg
+
+
