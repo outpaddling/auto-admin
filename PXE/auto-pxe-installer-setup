@@ -87,6 +87,12 @@ label localboot
   menu label Boot from local disk
   localboot
 
+label install
+  menu label Install CentOS 6
+  kernel centos6/vmlinuz
+  # append initrd=centos6/initrd.img ks=http://10.1.1.253/ks/centos6-ks.cfg ksdevi
+ce=em1
+
 label reboot
   menu label Reboot
   kernel reboot.c32
@@ -209,11 +215,35 @@ EOM
     if [ ! -e $conf.orig ]; then
 	cp $conf $conf.orig
     fi
-    
     boot_filename=gpxelinux.0
     
-    exit
-    
+#
+# DHCP Server Configuration file.
+#   see /usr/share/doc/dhcp*/dhcpd.conf.sample
+#   see 'man 5 dhcpd.conf'
+#
+
+# Example from Avi produced by kickstart-server-setup
+# option domain-name    "hpc.uwm.edu";
+# option domain-name-servers   newavi1.hpc.uwm.edu;
+# default-lease-time    -1;
+# max-lease-time    -1;
+# authoritative;
+# subnet 10.1.1.0 netmask 255.255.255.0 {
+#     range dynamic-bootp 10.1.1.2 10.1.1.200;
+#     use-host-decl-names on;
+#     option broadcast-address 10.1.1.255;
+#     option domain-name-servers 129.89.10.1, 129.89.10.2;
+#     option routers 10.1.1.253;
+# 
+#     host compute-5-36 {
+#         hardware ethernet 00:26:b9:2e:21:3c;
+#         option host-name "compute-5-36";
+#         fixed-address 10.1.1.143;
+#     }
+# filename    "pxelinux.0";
+# next-server    10.1.1.253;
+
     cat << EOM > $conf
 allow booting;
 allow bootp;
@@ -221,18 +251,21 @@ authoritative;
 option domain-name "$domain";
 option subnet-mask $netmask;
 option routers $router;
-default-lease-time $lease_time;
-max-lease-time $lease_time;
 ddns-update-style none;
 log-facility local7;
 local-address $local_ip;
 subnet $subnet netmask $netmask
 {
     range $first_address $last_address;
+    default-lease-time $lease_time;
+    max-lease-time $lease_time;
+    
     # IP of PXE server required by some clients.
     next-server $local_ip;
+    
     # Location of PXE boot image within bootable system
-    filename "$boot_filename";
+    filename "pxelinux.0";
+    
     # Location of bootable system for NFS
     option root-path "$installer_path";
     option domain-name-servers $nameserver;
@@ -247,19 +280,35 @@ Double-check the addresses, etc.
 EOM
     pause
     vi $conf
+
+    # Make the DHCP server only serve to private iface's subnet
+    sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
     
-    auto-append-line 'dhcpd_enable="YES"' /etc/rc.conf $0
-    auto-append-line 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
-    service isc-dhcpd onerestart
+    #service dhcpd restart
+    #chkconfig dhcpd on
 else
+    echo 'Hello!'
     # FIXME: Unfinished
     # Set up for situations where the DHCP server is not running on
     # this server.  ( e.g. DHCP is handled by a hardware router. )
-    pkg install -y pxe-pdhcp
+    # pkg install -y pxe-pdhcp
     # pxe-pdhcp -i bge0
     # What else?
 fi
 
+##########################################################################
+#   Network-insall
+##########################################################################
+
+mkdir -p $prefix/mnt
+if ! mount -t iso9660 -o loop $iso $prefix/mnt; then
+    printf "CD already mounted.\n"
+fi
+mkdir -p $installer_path
+rsync -av --delete $prefix/mnt/ $installer_path
+chmod -R a-w,a+rX $installer_path
+umount $prefix/mnt
+exit
 
 ##########################################################################
 #   Set up NFS
