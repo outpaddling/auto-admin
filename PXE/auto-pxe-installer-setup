@@ -94,8 +94,7 @@ label localboot
 label install
   menu label Install CentOS 6
   kernel $installer_dir/vmlinuz
-  append initrd=$installer_dir/initrd.img
-  # Add to line above ks=http://10.1.1.253/ks/centos6-ks.cfg ksdevice=em1
+  append initrd=$installer_dir/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
 
 label reboot
   menu label Reboot
@@ -151,13 +150,6 @@ prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
 installer_dir=${iso%.iso}
 installer_dir=${installer_dir##*/}
 installer_path=$prefix/images/${installer_dir}
-
-##########################################################################
-#   Set up tftp
-##########################################################################
-
-line
-tftp_xinetd
 
 ##########################################################################
 #   Set up dhcpd
@@ -301,15 +293,23 @@ else
 fi
 
 ##########################################################################
+#   Set up tftp
+##########################################################################
+
+line
+tftp_xinetd
+
+##########################################################################
 #   Network-install
 ##########################################################################
 
+yum install -y rsync
 mkdir -p $prefix/mnt
 if ! mount -t iso9660 -o loop $iso $prefix/mnt; then
     printf "CD already mounted.\n"
 fi
 mkdir -p $installer_path
-rsync -av --delete $prefix/mnt/ $installer_path
+rsync -av $prefix/mnt/ $installer_path
 chmod -R a-w,a+rX $installer_path
 umount $prefix/mnt
 
@@ -325,6 +325,8 @@ cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_dir
 ##########################################################################
 #   Set up NFS
 ##########################################################################
+
+yum install -y nfs-utils
 
 # FIXME: Use proper mask
 auto-append-line "$prefix/images $subnet/24(ro)" \
@@ -360,6 +362,12 @@ pause
 chmod -R a+rX $installer_path
 # chmod 640 $installerconfig      # Will contain an ssh public key
 
+chkconfig rpcbind on
+chkconfig nfslock on
+chkconfig nfs on
+
+service rpcbind restart
+service nfslock restart
 service nfs restart
 exportfs -rv
 
@@ -375,29 +383,44 @@ cat << EOM > $ksconfig
 install
 autostep
 reboot
-# url --url=http:///centos6
+nfs --server $local_ip --dir $installer_path
 zerombr
-clearpart --all --initlabel
+
 lang en_US.UTF-8
 keyboard us
-network --device $iface --bootproto dhcp
-firewall --service=ssh
-authconfig --enableshadow
+
+network --device $iface --onboot yes --bootproto dhcp
+firewall --enabled --service=ssh
+authconfig --enableshadow --enablemd5
+rootpw changeme
 timezone --utc America/Chicago
-bootloader --location=mbr --driveorder=sdb --append="crashkernel=auto rhgb quiet"
+bootloader --location=mbr --driveorder=sda --append="crashkernel=auto rhgb quiet"
 
 # The following is the partition information you requested
 # Note that any partitions you deleted are not expressed
 # here so unless you clear all partitions first, this is
 # not guaranteed to work
 
+clearpart --all --initlabel
 clearpart --linux --drives=sda
-part /boot --fstype ext4 --size=1024
-part / --fstype ext4 --size=16384
-part swap --size=32768
-part /var --fstype ext4 --size=32768
-part /tmp --fstype ext4 --size=32768
-part /data --fstype ext4 --size=1024 --grow
+part swap --size=1024
+part / --fstype ext4 --size=1024 --grow
+
+# part /boot --fstype ext4 --size=1024
+# part swap --size=1024
+# part / --fstype ext4 --size=16384 --grow
+# part swap --size=32768
+# part /var --fstype ext4 --size=32768
+# part /tmp --fstype ext4 --size=32768
+# part /data --fstype ext4 --size=1024 --grow
+
+%post
+sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/sshd_config
+if [ ! -e /root/.ssh/id_dsa.pub ]; then
+    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+fi
+echo '$root_key' >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
 EOM
 
 # cp /root/node-ks-post /var/www/html/
