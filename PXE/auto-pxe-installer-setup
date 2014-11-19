@@ -415,6 +415,8 @@ part / --fstype ext4 --size=1024 --grow
 # part /data --fstype ext4 --size=1024 --grow
 
 %post
+
+# FIXME: selinux is preventing keys from working.
 sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/sshd_config
 if [ ! -e /root/.ssh/id_dsa.pub ]; then
     ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
