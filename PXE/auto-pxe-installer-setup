@@ -72,12 +72,13 @@ tftp_xinetd()
     # FIXME: Skip if already installed
     yum install -y syslinux xinetd tftp-server
 
-    tftp_prefix=/var/lib/tftpboot
-    mkdir -p $tftp_prefix/pxelinux.cfg
-    cp /usr/share/syslinux/pxelinux.0 $tftp_prefix
+    tftpboot=/var/lib/tftpboot
+    mkdir -p $tftpboot/pxelinux.cfg
+    cp /usr/share/syslinux/pxelinux.0 $tftpboot
+    cp /usr/share/syslinux/menu.c32 $tftpboot
 
     # Create a simple PXELINUX boot menu
-    conf=$tftp_prefix/pxelinux.cfg/default
+    conf=$tftpboot/pxelinux.cfg/default
     cat << EOM > $conf
 timeout 600
 ui menu.c32
@@ -297,7 +298,7 @@ else
 fi
 
 ##########################################################################
-#   Network-insall
+#   Network-install
 ##########################################################################
 
 mkdir -p $prefix/mnt
@@ -308,7 +309,12 @@ mkdir -p $installer_path
 rsync -av --delete $prefix/mnt/ $installer_path
 chmod -R a-w,a+rX $installer_path
 umount $prefix/mnt
-exit
+
+# From kickstart-server-setup
+# Why?
+#mkdir -p $tftpboot/centos6
+#cp $installer_path/images/pxeboot/vmlinuz $tftpboot/centos6/
+#cp $installer_path/images/pxeboot/initrd.img $tftpboot/centos6/
 
 ##########################################################################
 #   Set up NFS
@@ -326,36 +332,6 @@ EOM
 pause
 vi /etc/exports
 
-if [ ! -e $installer_path ]; then
-    mkdir -p $installer_path
-    tar -C $installer_path -pxvf $iso
-    chroot $installer_path passwd root
-fi
-
-if [ ! -e $installer_path/usr/sbin/bsdinstall ]; then
-    cat << EOM
-
-Warning: $0 only supports bsdinstall.
-
-Did not find $installer_path/usr/sbin/bsdinstall.
-
-We can continue, but you're on your own as far as setting up unattended
-installation.
-
-EOM
-    pause
-fi
-
-# Prevent mount_nfs: no <host>:<dirpath> nfs-name error during boot
-# https://wiki.koumbit.net/FreeBsd/PxeBootConfiguration
-if [ -e $installer_path/etc/fstab ]; then
-    mv $installer_path/etc/fstab $installer_path/etc/fstab.hide
-fi
-
-# Hack to get around resolution issue with 10.1-RELEASE
-rm -f $installer_path/etc/resolv.conf
-echo "nameserver $nameserver" > $installer_path/etc/resolv.conf
-
 # Add root ssh key from this server to new node
 if [ ! -e /root/.ssh/id_dsa.pub ]; then
     ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
@@ -363,93 +339,21 @@ fi
 root_key=`cat /root/.ssh/id_dsa.pub`
 
 # Create automated install script
-# man bsdinstall lacks an explanation of PARTITIONS
-# http://www.sysadminwiki.net/site/doku.php/os/bsd/freebsd/automating_freebsd_installations
-installerconfig=$installer_path/etc/installerconfig
-
-cat << EOM > $installerconfig
-PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
-DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
-
-#!/bin/sh
-#
-# If you want to unplug the keyboard and display before installation
-# completes and never come back, remove all interactive commands
-# below, like pkg install, read hostname, tzsetup.
-#
-# The new node will accept passwordless root login from this host via ssh
-# after the first reboot, so you can immediately run more post-install
-# options over the network.  If you are running DHCP on this host, the IP
-# addresses of all imaged hosts will be in /var/db/dhcpd/dhcpd.leases.
-# If your netowrk supports it, the hostname should also self-register in DNS.
-
-# Installing any packages here will require another interaction with the
-# new node after installation.  The first run of 'pkg' requires keyboard
-# input to confirm initialization.  ( yes | pkg will not work )
-#
-# pkg install -y rsync
-
-##########################################################################
-#   Set a hostname
-##########################################################################
-
-# Use IP as hostname if you don't care.
-hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0 | sed -e 's|\.|-|g'\`'.local'
-
-# Interactive option
-# printf "Hostname? "
-# read hostname
-
-echo "hostname=\$hostname" >> /etc/rc.conf
-
-##########################################################################
-#   Set time zone
-##########################################################################
-
-cp /usr/share/zoneinfo/America/Chicago /etc/localtime
-
-# Interactive option
-# tzsetup
-
-# Set all available interfaces to DHCP for now.
-for iface in \`dmesg | awk '\$2 == "Ethernet" { print \$1 }'\`; do
-    iface=\${iface%:}
-    echo "ifconfig_\$iface=DHCP" >> /etc/rc.conf
-done
-
-# Configure basic services.  Most configuration can be done after reboot, but
-# a few basics here will save a little hassle.
-echo 'sshd_enable=YES' >> /etc/rc.conf
-echo 'ntpd_enable=YES' >> /etc/rc.conf
-echo 'ntpdate_enable=YES' >> /etc/rc.conf
-echo 'ntpdate_flags="-u pool.ntp.org"' >> /etc/rc.conf
-echo 'dumpdev=NO' >> /etc/rc.conf
-
-sed -i '' 's|#PermitRootLogin no|PermitRootLogin without-password|g' /etc/ssh/sshd_config
-mkdir -p /root/.ssh
-echo '$root_key' >> /root/.ssh/authorized_keys
-
-touch /etc/fstab
-
-EOM
-
 cat << EOM
 
-Opening installerconfig automated install script.
+Opening install script.
 
 Edit partitions, distributions, etc. to taste.
 
 EOM
 pause
-vi $installerconfig
+# vi $installerconfig
 
 # Make sure everything is readable!
 chmod -R a+rX $installer_path
-chmod 640 $installerconfig      # Will contain an ssh public key
+# chmod 640 $installerconfig      # Will contain an ssh public key
 
-auto-append-line 'rpcbind_enable="YES"' /etc/rc.conf $0
-auto-append-line 'mountd_enable="YES"' /etc/rc.conf $0
-auto-append-line 'nfs_server_enable="YES"' /etc/rc.conf $0
-service nfsd restart
-service mountd reload
+service nfs restart
+exportfs -rv
+
 

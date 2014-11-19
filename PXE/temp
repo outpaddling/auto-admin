@@ -1,18 +1,5 @@
 
 ##
-## Network-install setup
-##
-
-mkdir -p /var/pxe/centos6
-mkdir -p /var/lib/tftpboot/centos6
-
-yum install syslinux -y
-
-cp /var/pxe/centos6/images/pxeboot/vmlinuz /var/lib/tftpboot/centos6/
-cp /var/pxe/centos6/images/pxeboot/initrd.img /var/lib/tftpboot/centos6/
-cp /usr/share/syslinux/menu.c32 /var/lib/tftpboot/
-
-##
 ## HTTP server setup
 ##
 
