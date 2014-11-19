@@ -122,6 +122,8 @@ tftp_hpa()
     pause
     service tftpd restart
     save_cwd=`pwd`
+    
+    # FIXME: Use syslinux port
     cd $prefix/Dist
     dist=syslinux-4.04
     if [ ! -e $dist.tar.xz ]; then
@@ -180,7 +182,7 @@ df -h
 cat << EOM
 
 Your PXE installation directory must be on a partition with enough space
-to contain to contents of your install CD or DVD.
+to contain the contents of your install CD or DVD.
 
 EOM
 prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
@@ -255,12 +257,16 @@ EOM
     printf 'Available network interfaces:\n\n'
     ifconfig|fgrep flags
     iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
+
+    default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
+    default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
+
     domain=`auto-ask pxe-domain 'Domain name?' 'local'`
     subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
-    netmask=`auto-ask pxe-netmask 'Net mask?' '255.255.0.0'`
+    netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
     router=`auto-ask pxe-router 'Router?' 10.1.1.1`
     nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
-    local_ip=`auto-ask pxe-local-ip 'IP address of this DHCP server?' ''`
+    local_ip=`auto-ask pxe-local-ip 'IP address of this DHCP server?' $default_ip`
     # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
     first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
     last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`

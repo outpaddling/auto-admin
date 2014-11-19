@@ -7,6 +7,7 @@
 #       http://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
 #       man bsdinstall
 #       http://www.wonkity.com/~wblock/docs/html/pxe.html
+#       http://www.smtps.net/pxe-kickstart.html
 #
 #   Arguments:
 #       Name of ISO image to install.
@@ -18,6 +19,7 @@
 #   Date        Name        Modification
 #   2014-11-15  Jason Bacon Begin
 #                           Based on Jim Wagner's kickstart-server-setup
+#                           and my own FreeBSD auto-pxe-installer-setup
 ##########################################################################
 
 # Test file to paste into command:
