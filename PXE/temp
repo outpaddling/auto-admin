@@ -51,62 +51,14 @@ fi
 /etc/rc.d/init.d/httpd restart
 
 
-##
-## Kickstart setup
-##
-
-mkdir -p /var/www/html/ks
-cp /root/anaconda-ks.cfg /var/www/html/ks/centos6-ks.cfg
-chmod 644 /var/www/html/ks/centos6-ks.cfg
-
-# Editing the kickstart file.
-sed -i '/cdrom/ c\' /var/www/html/ks/centos6-ks.cfg
-sed -i '/selinux/ c\selinux --disabled' /var/www/html/ks/centos6-ks.cfg
-
-sed -i '/install/ c\install\nclearpart --all --initlabel' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nzerombr' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nurl --url=http://'"$HOSTIP"'/centos6' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nreboot' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nautostep' /var/www/html/ks/centos6-ks.cfg
-sed -i '/bootproto/ c\network --device '"$private_iface"' --bootproto dhcp' /var/www/html/ks/centos6-ks.cfg
-sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 --size=1024\npart / --fstype ext4 --size=16384\npart swap --size=32768\npart /var --fstype ext4 --size=32768\npart /data --fstype ext4 --size=1024 --grow' /var/www/html/ks/centos6-ks.cfg
-
-cp /root/node-ks-post /var/www/html/
-chmod 755 /var/www/html/node-ks-post
-
-# Old md5 style passwords
-#openssl passwd -1 > pw.txt
-#PSSWD=$(cat pw.txt)
-#rm -f pw.txt
-
-# New SHA-512 style passwords
-PSSWD=`grub-crypt`
-sed -i '/rootpw/ c\rootpw --iscrypted '"$PSSWD"'' /var/www/html/ks/centos6-ks.cfg 
-
-sed -i '/%packages/,$d' /var/www/html/ks/centos6-ks.cfg 
-
-##
-## Setup Keyless SSH (from head node to compute nodes, as root)
-##
-
-cp /root/.ssh/id_rsa.pub /var/www/html/public_key
 
 ##
 ## Create Post-install of Kickstart 
 ##
 
-./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/centos6-ks.cfg nocomment
-
-sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/centos6-ks.cfg 
-
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/centos6-ks.cfg 
-
-# ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/centos6-ks.cfg nocomment
-# sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/centos6-ks.cfg
-
-# If the head node has several private_iface's, then there will be several "network" lines in /var/www/html/ks/centos6-ks.cfg  
+# If the head node has several private_iface's, then there will be several "network" lines in $ksconfig  
 # The sed substitutions will make them all identical and consecutive, so uniq the file. 
-cat /var/www/html/ks/centos6-ks.cfg | uniq > /var/www/html/ks/centos6-ks.cfg.uniq
-mv /var/www/html/ks/centos6-ks.cfg.uniq /var/www/html/ks/centos6-ks.cfg
+cat $ksconfig | uniq > $ksconfig.uniq
+mv $ksconfig.uniq $ksconfig
 
 
