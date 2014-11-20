@@ -437,10 +437,14 @@ echo '$root_key' >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
 restorecon -R -v /root/.ssh     # Set security context for selinux
 
+# Boot into a secure system right off the bat!
+yum update -y
+
 EOM
 
 sed -i '/%packages/,$d' $ksconfig 
 printf "Editing kickstart config file.\n"
 pause
+
 $EDITOR $ksconfig
 

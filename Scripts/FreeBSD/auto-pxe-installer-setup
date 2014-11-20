@@ -459,6 +459,9 @@ echo '$root_key' >> /root/.ssh/authorized_keys
 
 touch /etc/fstab
 
+# Boot into a secure system right off the bat!
+freebsd-update fetch install
+
 EOM
 
 cat << EOM
