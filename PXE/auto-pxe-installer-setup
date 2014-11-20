@@ -5,9 +5,9 @@
 #       Set up a PXE install server including dhcpd, tftpf, and nfsd.
 #       Primary references:
 #       http://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
-#       man bsdinstall
 #       http://www.wonkity.com/~wblock/docs/html/pxe.html
 #       http://www.smtps.net/pxe-kickstart.html
+#       https://people.redhat.com/sgrubb/files/usgcb/rhel5/workstation-ks.cfg
 #
 #   Arguments:
 #       Name of ISO image to install.
@@ -59,18 +59,23 @@ line()
 
 ##########################################################################
 #   Function description:
-#       
+#       Set up tftp via Linux xinetd
+#
 #   Arguments:
-#       
+#       NA
+#
 #   Returns:
-#       
+#       NA
+#
 #   History:
 #   Date        Name        Modification
 #   2014-11-18  Jason Bacon Begin
 ##########################################################################
 
-tftp_xinetd()
+tftp_pxelinux_setup()
 {
+    local conf
+    
     # FIXME: Skip if already installed
     yum install -y syslinux xinetd tftp-server
 
@@ -83,18 +88,19 @@ tftp_xinetd()
     # Create a simple PXELINUX boot menu
     conf=$tftpboot/pxelinux.cfg/default
     cat << EOM > $conf
+# 600 centiseconds = 60 seconds
 timeout 600
 ui menu.c32
-menu title PXELINUX Boot Menu
+menu title CentOS PXE Installer Boot Menu
 
 label localboot
   menu label Boot from local disk
   localboot
 
 label install
-  menu label Install CentOS 6
-  kernel $installer_dir/vmlinuz
-  append initrd=$installer_dir/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
+  menu label Install CentOS
+  kernel $installer_leaf_dir/vmlinuz
+  append initrd=$installer_leaf_dir/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
 
 label reboot
   menu label Reboot
@@ -105,12 +111,12 @@ EOM
     pause
     vi $conf
 
+    # Enable tftpd
     conf='/etc/xinetd.d/tftp'
     if [ ! -e $conf.orig ]; then
 	cp $conf $conf.orig
     fi
     
-    # Enable tftp
     if [ ! -f /etc/xinetd.d/tftp.orig ]; then
 	cp /etc/xinetd.d/tftp /etc/xinetd.d/tftp.orig
     fi
@@ -146,10 +152,10 @@ Your PXE installation directory must be on a partition with enough space
 to contain the contents of your install CD or DVD.
 
 EOM
-prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /pxeserver`
-installer_dir=${iso%.iso}
-installer_dir=${installer_dir##*/}
-installer_path=$prefix/images/${installer_dir}
+prefix=`auto-ask pxe-prefix 'Prefix for PXE installation files?' /var/lib/tftpboot`
+installer_leaf_dir=${iso%.iso}
+installer_leaf_dir=${installer_leaf_dir##*/}
+installer_path=$prefix/images/${installer_leaf_dir}
 
 ##########################################################################
 #   Set up dhcpd
@@ -292,15 +298,18 @@ else
     # What else?
 fi
 
+
 ##########################################################################
 #   Set up tftp
 ##########################################################################
 
+# Must come after dhcp setup, which sets variables used here
 line
-tftp_xinetd
+tftp_pxelinux_setup
+
 
 ##########################################################################
-#   Network-install
+#   Copy install media to server
 ##########################################################################
 
 yum install -y rsync
@@ -313,14 +322,15 @@ rsync -av $prefix/mnt/ $installer_path
 chmod -R a-w,a+rX $installer_path
 umount $prefix/mnt
 
-# Set root password in install media
+# Set root password in install media?
+# No can do unless it's a live filesystem.
 # chroot $installer_path root
 
-# From kickstart-server-setup
-# Why?
-mkdir -p $tftpboot/$installer_dir
-cp $installer_path/images/pxeboot/vmlinuz $tftpboot/$installer_dir
-cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_dir
+# FIXME: Should not be necessary if $installer_path is under $tftpboot
+mkdir -p $tftpboot/$installer_leaf_dir
+cp $installer_path/images/pxeboot/vmlinuz $tftpboot/$installer_leaf_dir
+cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_leaf_dir
+
 
 ##########################################################################
 #   Set up NFS
@@ -329,38 +339,19 @@ cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_dir
 yum install -y nfs-utils
 
 # FIXME: Use proper mask
-auto-append-line "$prefix/images $subnet/24(ro)" \
-    /etc/exports $0
+auto-append-line "$prefix/images $subnet/$netmask(ro)" /etc/exports $0
 
 cat << EOM
 
 Editing /etc/exports.  Make sure your syntax is correct and that you are
-using -alldirs on the parent of any directories in the same partition.
+properly handling mount points within the same partition.
 
 EOM
 pause
 vi /etc/exports
 
-# Add root ssh key from this server to new node
-if [ ! -e /root/.ssh/id_dsa.pub ]; then
-    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
-fi
-root_key=`cat /root/.ssh/id_dsa.pub`
-
-# Create automated install script
-cat << EOM
-
-Opening install script.
-
-Edit partitions, distributions, etc. to taste.
-
-EOM
-pause
-# vi $installerconfig
-
 # Make sure everything is readable!
 chmod -R a+rX $installer_path
-# chmod 640 $installerconfig      # Will contain an ssh public key
 
 chkconfig rpcbind on
 chkconfig nfslock on
@@ -371,14 +362,27 @@ service nfslock restart
 service nfs restart
 exportfs -rv
 
+
+##########################################################################
+#   Set up ssh keys to new server here and in kickstart script
+##########################################################################
+
+# Add root ssh key from this server to be placed on new node
+if [ ! -e /root/.ssh/id_dsa.pub ]; then
+    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+fi
+root_key=`cat /root/.ssh/id_dsa.pub`
+restorecon -R -v /root/.ssh     # Set security context for selinux
+
+
 ##########################################################################
 #   Kickstart
 ##########################################################################
 
 ksconfig=$installer_path/ks.cfg
-
+root_pw="`awk -F : '$1 == "root" { print $2 }' /etc/shadow`"
 cat << EOM > $ksconfig
-# Kickstart file automatically generated by anaconda.
+# auto-pxe-linux-setup kickstart file
 
 install
 autostep
@@ -391,20 +395,20 @@ keyboard us
 
 network --device $iface --onboot yes --bootproto dhcp
 firewall --enabled --service=ssh
-authconfig --enableshadow --enablemd5
-rootpw changeme
+authconfig --enableshadow --passalgo=sha512
+rootpw --iscrypted "$root_pw"
 timezone --utc America/Chicago
-bootloader --location=mbr --driveorder=sda --append="crashkernel=auto rhgb quiet"
+bootloader --location=mbr --driveorder=sda
+selinux --enforcing
 
-# The following is the partition information you requested
-# Note that any partitions you deleted are not expressed
-# here so unless you clear all partitions first, this is
-# not guaranteed to work
-
+# Minimal
 clearpart --all --initlabel
 clearpart --linux --drives=sda
 part swap --size=1024
 part / --fstype ext4 --size=1024 --grow
+
+# Secure server config, allows partitions writable by users
+# (/var, /tmp, /home) to be mounted with nosuid.
 
 # part /boot --fstype ext4 --size=1024
 # part swap --size=1024
@@ -412,9 +416,12 @@ part / --fstype ext4 --size=1024 --grow
 # part swap --size=32768
 # part /var --fstype ext4 --size=32768
 # part /tmp --fstype ext4 --size=32768
-# part /data --fstype ext4 --size=1024 --grow
+# part /home --fstype ext4 --size=1024 --grow
 
 %post
+
+# Anything done here can more easily be done after the first reboot, so
+# I like to keep it minimal.
 
 # FIXME: selinux is preventing keys from working.
 sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/sshd_config
@@ -423,14 +430,9 @@ if [ ! -e /root/.ssh/id_dsa.pub ]; then
 fi
 echo '$root_key' >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
+restorecon -R -v /root/.ssh     # Set security context for selinux
+
 EOM
-
-# cp /root/node-ks-post /var/www/html/
-# chmod 755 /var/www/html/node-ks-post
-
-# New SHA-512 style passwords
-#PSSWD=`grub-crypt`
-#sed -i '/rootpw/ c\rootpw --iscrypted '"$PSSWD"'' $ksconfig 
 
 sed -i '/%packages/,$d' $ksconfig 
 vi $ksconfig
