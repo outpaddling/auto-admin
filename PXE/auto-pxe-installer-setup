@@ -293,7 +293,8 @@ EOM
     service dhcpd restart
     #chkconfig dhcpd on
 else
-    echo 'Hello!'
+    echo 'Sorry, not yet implemented.\n'
+    exit 1
     # FIXME: Unfinished
     # Set up for situations where the DHCP server is not running on
     # this server.  ( e.g. DHCP is handled by a hardware router. )

@@ -92,7 +92,7 @@ tftp_inetd()
 EOM
     pause
     vi $conf
-    auto-append-line 'inetd_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'inetd_enable' 'inetd_enable="YES"' /etc/rc.conf $0
     service inetd restart
 }
 
@@ -115,7 +115,7 @@ tftp_hpa()
 	pkg install -y tftp-hpa
     fi
     mkdir -p $prefix/pxelinux.cfg $prefix/Dist
-    auto-append-line 'tftpd_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'tftpd_enable' 'tftpd_enable="YES"' /etc/rc.conf $0
     auto-append-line "tftpd_flags=\"-p -s $prefix -B 1024 --ipv4\"" \
 	/etc/rc.conf $0
     printf "Make sure no other tftp servers are running.\n"
@@ -175,6 +175,10 @@ iso="$1"
 if [ ! -e $iso ]; then
     printf "$iso: No such file.\n"
     exit 1
+fi
+
+if [ -z $EDITOR ]; then
+    EDITOR=vi
 fi
 
 line
@@ -317,16 +321,20 @@ EOM
     pause
     vi $conf
     
-    auto-append-line 'dhcpd_enable="YES"' /etc/rc.conf $0
-    auto-append-line 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
+    auto-append-line 'dhcpd_enable' 'dhcpd_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'dhcpd_ifaces' 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
+    # Use onerestart here in case user has it disabled in rc.conf to
+    # prevent conflicts.
     service isc-dhcpd onerestart
 else
     # FIXME: Unfinished
     # Set up for situations where the DHCP server is not running on
     # this server.  ( e.g. DHCP is handled by a hardware router. )
-    pkg install -y pxe-pdhcp
+    # pkg install -y pxe-pdhcp
     # pxe-pdhcp -i bge0
     # What else?
+    printf 'Sorry, not yet implemented.\n'
+    exit 1
 fi
 
 
@@ -467,9 +475,9 @@ vi $installerconfig
 chmod -R a+rX $installer_path
 chmod 640 $installerconfig      # Will contain an ssh public key
 
-auto-append-line 'rpcbind_enable="YES"' /etc/rc.conf $0
-auto-append-line 'mountd_enable="YES"' /etc/rc.conf $0
-auto-append-line 'nfs_server_enable="YES"' /etc/rc.conf $0
+auto-append-line 'rpcbind_enable' 'rpcbind_enable="YES"' /etc/rc.conf $0
+auto-append-line 'mountd_enable' 'mountd_enable="YES"' /etc/rc.conf $0
+auto-append-line 'nfs_server_enable' 'nfs_server_enable="YES"' /etc/rc.conf $0
 service nfsd restart
 service mountd reload
 
