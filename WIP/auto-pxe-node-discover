@@ -75,7 +75,7 @@ leases()
     done
     
     # FIXME: Detect multiple leases with the same IP or MAC
-    awk '$1 == "lease" { print $2 }' $dhcp_file | sort | uniq > $file
+    awk '$1 == "lease" { print $2 }' $dhcp_file | sort -n -t . -k 4 | uniq > $file
     wc -l $file | awk ' { print $1 }'
 }
 
@@ -103,19 +103,16 @@ if [ 0$serial_number = 0 ]; then
     serial_number=$default_serial_number
 fi
 
-initial_leases=`leases initial-leases`
-
-# Debug
-vi initial-leases
-initial_leases=`wc -l initial-leases | awk ' { print $1 }'`
-
-printf '%s leases.\n' $initial_leases
-more initial-leases
-
 #service inetd onestart
 
 again='y'
 while [ 0$again = 0y ]; do
+    initial_leases=`leases initial-leases`
+    
+    # Debug
+    vi initial-leases
+    initial_leases=`wc -l initial-leases | awk ' { print $1 }'`
+    
     cat << EOM
 
 Press return NOW, then PXE boot ONE MACHINE, NO MORE!!!
@@ -188,6 +185,8 @@ EOM
     
     printf 'Image another server? [n] '
     read again
+    
+    serial_number=$(($serial_number + 1))
 done
 
 #service inetd onestop
