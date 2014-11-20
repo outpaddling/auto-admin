@@ -1,0 +1,145 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf 'Press return to continue...'
+    read junk
+}
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-18  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 base-name digits starting-num domain
+
+Example:
+
+    $0 compute 3 1 meadows.local ==>
+	compute-001.meadows.local
+	compute-002.meadows.local
+	...
+	
+    $0 raid 2 2 bigcluster.party.edu ==>
+	raid-02.bigcluster.party.edu
+	raid-03.bigcluster.party.edu
+	...
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-18  Charlie &   Begin
+##########################################################################
+
+leases()
+{
+    if [ $# != 1 ]; then
+	printf 'Usage: leases filename\n'
+	exit 1
+    fi
+    file=$1
+    for dhcp_file in /var/db/dhcpd/dhcpd.leases /var/lib/dhcpd/dhcpd.leases; do
+	if [ -e $dhcp_file ]; then
+	    break
+	fi
+    done
+    
+    # FIXME: Detect multiple leases with the same IP or MAC
+    awk '$1 == "lease" { print $2 }' $dhcp_file | sort | uniq > $file
+    wc -l $file | awk ' { print $1 }'
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    usage
+fi
+
+base_name=$1
+digits=$2
+serial_number=$3
+domain=$4
+
+initial_leases=`leases initial-leases`
+
+# Debug
+vi initial-leases
+initial_leases=`wc -l initial-leases | awk ' { print $1 }'`
+
+printf '%s leases.\n' $initial_leases
+more initial-leases
+
+#service inetd onestart
+
+again='y'
+while [ 0$again = 0y ]; do
+    cat << EOM
+
+Press return NOW, then PXE boot ONE MACHINE, NO MORE!!!
+
+The new machine should be detected as soon as it gets a DHCP lease.
+
+EOM
+    leases=`leases leases`
+    while [ $leases = $initial_leases ]; do
+	printf 'Waiting for another lease to appear...\n'
+	sleep 2
+	leases=`leases leases`
+	# printf '%d leases\n' $leases
+    done
+
+    tail /etc/hosts
+    new_ip=`comm -13 initial-leases leases`
+    printf 'New lease detected: %s.\n' $new_ip
+    if fgrep $new_ip /etc/hosts; then
+	printf "Error: $new_ip already exists in /etc/hosts!\n"
+	exit 1
+    fi
+    
+    # Add to /etc/hosts.
+    default_host_name=`printf "$base_name-%0${digits}d.%s" $serial_number $domain`
+    host_name=`auto-ask '' 'Host name?' $default_host_name`
+    auto-append-line $new_ip "$new_ip\t$host_name\t${host_name%%.*}" \
+	/etc/hosts nocomment
+    
+    # Debug
+    vi -c '$' /etc/hosts
+    
+    printf 'Image another server? [n] '
+    read again
+done
+
+#service inetd onestop
+
