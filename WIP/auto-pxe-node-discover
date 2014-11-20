@@ -110,18 +110,25 @@ while [ 0$again = 0y ]; do
     initial_leases=`leases initial-leases`
     
     # Debug
-    vi initial-leases
+    # vi initial-leases
     initial_leases=`wc -l initial-leases | awk ' { print $1 }'`
     
     cat << EOM
 
-Press return NOW, then PXE boot ONE MACHINE, NO MORE!!!
+Power on ONE MACHINE now, NO MORE!!!
 
-The new machine should be detected as soon as it gets a DHCP lease.
+Plug in a keyboard and monitor, then select PXE boot during the BIOS post.
 
 EOM
+    pause
     leases=`leases leases`
-    printf 'Waiting for another lease to appear...\n'
+    cat << EOM
+
+Waiting for another lease to appear.
+
+It should be detected as soon as it attempts to PXE boot..
+
+EOM
     while [ $leases = $initial_leases ]; do
 	sleep 2
 	leases=`leases leases`
@@ -160,7 +167,7 @@ EOM
     if ! fgrep -w $host_name $conf; then
 	sed -i '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' $conf
     fi
-    vi $conf
+    # vi $conf
     service dhcpd restart
     
     if [ ! -e /etc/ssh/ssh_config.orig ];then
