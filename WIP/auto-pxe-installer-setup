@@ -99,8 +99,8 @@ label localboot
 
 label install
   menu label Install CentOS
-  kernel $installer_leaf_dir/vmlinuz
-  append initrd=$installer_leaf_dir/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
+  kernel images/$installer_leaf_dir/images/pxeboot/vmlinuz
+  append initrd=images/$installer_leaf_dir/images/pxeboot/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
 
 label reboot
   menu label Reboot
@@ -332,10 +332,9 @@ umount $prefix/mnt
 # chroot $installer_path root
 
 # FIXME: Should not be necessary if $installer_path is under $tftpboot
-mkdir -p $tftpboot/$installer_leaf_dir
-cp $installer_path/images/pxeboot/vmlinuz $tftpboot/$installer_leaf_dir
-cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_leaf_dir
-
+#mkdir -p $tftpboot/$installer_leaf_dir
+#cp $installer_path/images/pxeboot/vmlinuz $tftpboot/$installer_leaf_dir
+#cp $installer_path/images/pxeboot/initrd.img $tftpboot/$installer_leaf_dir
 
 ##########################################################################
 #   Set up NFS
@@ -390,6 +389,11 @@ cat << EOM > $ksconfig
 # auto-pxe-linux-setup kickstart file
 
 install
+# ncurses mode
+text
+# terminal mode
+# (CentOS 6.6 minimal fails with "In interactive step tasksel can't continue")
+# cmdline
 autostep
 reboot
 nfs --server $local_ip --dir $installer_path
@@ -406,22 +410,32 @@ timezone --utc America/Chicago
 bootloader --location=mbr --driveorder=sda
 selinux --enforcing
 
-# Minimal
 clearpart --all --initlabel
 clearpart --linux --drives=sda
-part swap --size=1024
-part / --fstype ext4 --size=1024 --grow
 
+############################################################################
+# Minimal partition scheme suitable for a single-user workstation
+# Adjust swap size to taste
+
+# part swap --size=1024
+# part / --fstype ext4 --size=1024 --grow
+
+############################################################################
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
 
-# part /boot --fstype ext4 --size=1024
-# part swap --size=1024
-# part / --fstype ext4 --size=16384 --grow
-# part swap --size=32768
-# part /var --fstype ext4 --size=32768
-# part /tmp --fstype ext4 --size=32768
+part /boot --fstype ext4 --size=1024
+part swap --size=32768
+part / --fstype ext4 --size=16384
+part /var --fstype ext4 --size=32768
+part /tmp --fstype ext4 --size=32768
+
+# For typical machines and head nodes, use all remaining space for /home
 # part /home --fstype ext4 --size=1024 --grow
+
+# For nodes with /home NFS-mounted, such as compute nodes, don't allocate
+# local disk space for /home.
+part /bigtmp --fstype xfs --size=1024 --grow
 
 %post
 
