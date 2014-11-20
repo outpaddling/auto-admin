@@ -121,17 +121,48 @@ EOM
 	# printf '%d leases\n' $leases
     done
 
-    tail /etc/hosts
     new_ip=`comm -13 initial-leases leases`
     printf 'New lease detected: %s.\n' $new_ip
-    if fgrep $new_ip /etc/hosts; then
+    
+    if fgrep -q $new_ip /etc/hosts; then
 	printf "Error: $new_ip already exists in /etc/hosts!\n"
-	exit 1
+	#exit 1
+    fi
+
+    hwaddr=`awk '$1 == "lease" {
+	do
+	{
+	    getline
+	}   while ( $1 != "hardware" );
+	print $3
+    }' /var/lib/dhcpd/dhcpd.leases | cut -d ';' -f 1`
+
+    printf "$hwaddr\n"
+    
+    tail /etc/hosts
+    default_host_name=`printf "$base_name-%0${digits}d.%s" $serial_number $domain`
+    host_name=`auto-ask '' 'Host name?' $default_host_name`
+
+    conf=/etc/dhcp/dhcpd.conf
+    if ! fgrep $host_name $conf; then
+	sed -i'' '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' \
+	    $conf
+    fi
+    vi $conf
+    service dhcpd restart
+    
+    if [ ! -e /etc/ssh/ssh_config.orig ];then
+	cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
+    fi
+    
+    if [ ! `fgrep $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then    
+	sed -i '2iHost '"$host_name"' ' /etc/ssh/ssh_config
+	sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+	sed -i '4iHost '"$new_ip"' ' /etc/ssh/ssh_config
+	sed -i '5i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
     fi
     
     # Add to /etc/hosts.
-    default_host_name=`printf "$base_name-%0${digits}d.%s" $serial_number $domain`
-    host_name=`auto-ask '' 'Host name?' $default_host_name`
     auto-append-line $new_ip "$new_ip\t$host_name\t${host_name%%.*}" \
 	/etc/hosts nocomment
     

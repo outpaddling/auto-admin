@@ -44,6 +44,7 @@ do
 	NODEIP=`grep Wget/ /var/log/httpd/access_log | awk '{print $1}' | tail -1`
 
 	if [ ! `grep "fixed-address $NODEIP" /etc/dhcp/dhcpd.conf | awk '{print $2}'` ];then
+	    # For node name?
 	    NODEIPTAIL=`echo $NODEIP | cut -d "." -f4`
 	    if [ $NODEIPTAIL -lt 10 ];then
 		NODEIPTAIL=00$NODEIPTAIL
