@@ -23,6 +23,7 @@ pause()
 #   History:
 #   Date        Name        Modification
 #   2014-11-18  Jason Bacon Begin
+#                           Based on Jim Wagner's node-discover
 ##########################################################################
 
 usage()
