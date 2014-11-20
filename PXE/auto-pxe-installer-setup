@@ -109,7 +109,7 @@ EOM
     
     printf "Editing $conf\n"
     pause
-    vi $conf
+    $EDITOR $conf
 
     # Enable tftpd
     conf='/etc/xinetd.d/tftp'
@@ -136,6 +136,10 @@ EOM
 
 if [ $# != 1 ]; then
     usage
+fi
+
+if [ -z $EDITOR ]; then
+    EDITOR=vi
 fi
 
 iso="$1"
@@ -281,7 +285,7 @@ Double-check the addresses, etc.
 
 EOM
     pause
-    vi $conf
+    $EDITOR $conf
 
     # Make the DHCP server only serve to private iface's subnet
     sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
@@ -348,7 +352,7 @@ properly handling mount points within the same partition.
 
 EOM
 pause
-vi /etc/exports
+$EDITOR /etc/exports
 
 # Make sure everything is readable!
 chmod -R a+rX $installer_path
@@ -435,5 +439,7 @@ restorecon -R -v /root/.ssh     # Set security context for selinux
 EOM
 
 sed -i '/%packages/,$d' $ksconfig 
-vi $ksconfig
+printf "Editing kickstart config file.\n"
+pause
+$EDITOR $ksconfig
 
