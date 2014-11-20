@@ -30,16 +30,16 @@ usage()
 {
     cat << EOM
 
-Usage: $0 base-name digits starting-num domain
+Usage: $0 base-name digits domain
 
 Example:
 
-    $0 compute 3 1 meadows.local ==>
+    $0 compute 3 meadows.local ==>
 	compute-001.meadows.local
 	compute-002.meadows.local
 	...
 	
-    $0 raid 2 2 bigcluster.party.edu ==>
+    $0 raid 2 bigcluster.party.edu ==>
 	raid-02.bigcluster.party.edu
 	raid-03.bigcluster.party.edu
 	...
@@ -84,14 +84,24 @@ leases()
 #   Main
 ##########################################################################
 
-if [ $# != 4 ]; then
+if [ $# != 3 ]; then
     usage
 fi
 
-base_name=$1
+base_name="$1"
 digits=$2
-serial_number=$3
-domain=$4
+domain=$3
+
+if ! fgrep "$base_name" /etc/hosts; then
+    default_serial_number=1
+else
+    default_serial_number=''
+fi
+printf "Next serial number? [$default_serial_number] "
+read serial_number
+if [ 0$serial_number = 0 ]; then
+    serial_number=$default_serial_number
+fi
 
 initial_leases=`leases initial-leases`
 
@@ -114,39 +124,44 @@ The new machine should be detected as soon as it gets a DHCP lease.
 
 EOM
     leases=`leases leases`
+    printf 'Waiting for another lease to appear...\n'
     while [ $leases = $initial_leases ]; do
-	printf 'Waiting for another lease to appear...\n'
 	sleep 2
 	leases=`leases leases`
-	# printf '%d leases\n' $leases
+	printf '.'
     done
 
     new_ip=`comm -13 initial-leases leases`
     printf 'New lease detected: %s.\n' $new_ip
     
-    if fgrep -q $new_ip /etc/hosts; then
+    if fgrep -wq $new_ip /etc/hosts; then
 	printf "Error: $new_ip already exists in /etc/hosts!\n"
 	#exit 1
     fi
 
-    hwaddr=`awk '$1 == "lease" {
+    hwaddr=`awk -v new_ip=$new_ip '$1 == "lease" && $2 == new_ip {
 	do
 	{
 	    getline
 	}   while ( $1 != "hardware" );
 	print $3
+	exit
     }' /var/lib/dhcpd/dhcpd.leases | cut -d ';' -f 1`
 
     printf "$hwaddr\n"
     
-    tail /etc/hosts
-    default_host_name=`printf "$base_name-%0${digits}d.%s" $serial_number $domain`
-    host_name=`auto-ask '' 'Host name?' $default_host_name`
-
+    default_host_name=`printf "$base_name%0${digits}d.%s" $serial_number $domain`
+    printf "Host name? [$default_host_name] "
+    read host_name
+    if [ 0$host_name = 0 ]; then
+	host_name=$default_host_name
+    fi
+    short_name=${host_name%%.*}
+    printf "$short_name\n"
+    
     conf=/etc/dhcp/dhcpd.conf
-    if ! fgrep $host_name $conf; then
-	sed -i'' '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' \
-	    $conf
+    if ! fgrep -w $host_name $conf; then
+	sed -i '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' $conf
     fi
     vi $conf
     service dhcpd restart
@@ -155,7 +170,9 @@ EOM
 	cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
     fi
     
-    if [ ! `fgrep $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then    
+    if [ ! `fgrep -wq $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then    
+	sed -i '2iHost '"$short_name"' ' /etc/ssh/ssh_config
+	sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
 	sed -i '2iHost '"$host_name"' ' /etc/ssh/ssh_config
 	sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
 	sed -i '4iHost '"$new_ip"' ' /etc/ssh/ssh_config
