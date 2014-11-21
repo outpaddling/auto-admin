@@ -51,15 +51,53 @@ EOM
 
 ##########################################################################
 #   Function description:
-#       
+#       Detect new leases in dhcp.leases that are not in hosts
 #   Arguments:
 #       
 #   Returns:
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-11-18  Charlie &   Begin
+#   2014-11-21  Charlie &   Begin
 ##########################################################################
+
+get_new_leases()
+{
+    local leases lease_file ip state
+    
+    new_leases=''
+    
+    if [ $# != 1 ]; then
+	printf "Usage: get_new_leases lease-file\n"
+	exit 1
+    fi
+    lease_file=$1
+
+    leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
+    
+    # Detect unconfigured servers
+    for ip in $leases; do
+	# Already recorded?
+	if ! egrep -q "^$ip" /etc/hosts; then
+	    printf "$ip not found in /etc/hosts.\n"
+	    
+	    # Get lease state from dhcpd.leases
+	    state=`awk -v ip=$ip '$2 == ip {
+		do
+		{
+		    getline
+		}   while ( $1 != "binding" || $2 != "state" );
+		print $3;
+	    }'  $lease_file`
+	    
+	    # Active leases not already in /etc/hosts must be added
+	    if [ $state = 'active;' ]; then
+		new_leases="$new_leases $ip"
+	    fi
+	fi
+    done
+}
+
 
 ##########################################################################
 #   Main
@@ -74,32 +112,27 @@ digits=$2
 domain=$3
 
 for lease_file in /var/db/dhcpd/dhcpd.leases /var/lib/dhcpd/dhcpd.leases; do
-    if [ -e $lease_file ]; then
+    if [ -e "$lease_file" ]; then
 	break
     fi
 done
-if [ -z $lease_file ]; then
+if [ -z "$lease_file" ]; then
     printf 'Error: No dhcpd.leases found!\n'
     exit 1
 fi
 
 for dhcp_conf in /usr/local/etc/dhcpd.conf /etc/dhcp/dhcpd.conf; do
-    if [ -e $dhcp_conf ]; then
+    if [ -e "$dhcp_conf" ]; then
 	break
     fi
 done
-if [ -z $dhcp_conf ]; then
+if [ -z "$dhcp_conf" ]; then
     printf 'Error: No dhcpd.conf found!\n'
     exit 1
 fi
 
-if ! fgrep "$base_name" /etc/hosts; then
-    default_serial_number=1
-else
-    default_serial_number=''
-fi
-
-printf "Next serial number? [$default_serial_number] "
+fgrep $base_name /etc/hosts | grep $domain
+printf "Next serial number? "
 read serial_number
 if [ 0$serial_number = 0 ]; then
     serial_number=$default_serial_number
@@ -119,37 +152,17 @@ fi
 service $dhcp_service restart
 
 again='y'
-while [ 0$again = 0y ]; do
+while [ 0$again != 0n ]; do
 
-    leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
+    get_new_leases $lease_file
+    printf "New leases: $new_leases\n"
     
-    # Detect unconfigured servers
-    for ip in $leases; do
-	# Already recorded?
-	if ! egrep -q "^$ip" /etc/hosts; then
-	    # Get lease state from dhcpd.leases
-	    state=`awk -v ip=$ip '$2 == ip {
-		do
-		{
-		    getline
-		}   while ( $1 != "binding" || $2 != "state" );
-		print $3;
-	    }'  $lease_file`
-	    
-	    # Active leases not already in /etc/hosts must be added
-	    if [ $state = 'active;' ]; then
-		new_leases="$new_leases $ip"
-	    fi
-	fi
-    done
-
-    if [ -z $new_leases ]; then
+    if [ -z "$new_leases" ]; then
 	printf 'No new leases detected.  Wait for new servers? ([y]/n) '
 	read wait
 	if [ 0$wait != 0n ]; then
-	    new_leases="$leases"
-	    while [ 0"$new_leases" = 0"$leases" ]; do
-		new_leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
+	    while [ -z "$new_leases" ]; do
+		get_new_leases $lease_file
 		sleep 2
 		printf '.'
 	    done
@@ -166,7 +179,7 @@ while [ 0$again = 0y ]; do
 	    exit
 	}' $lease_file | cut -d ';' -f 1`
     
-	printf '\nNew lease detected: %s %s.\n' $new_ip $hwaddr
+	printf '\nNew lease detected: %s %s.\n' "$new_ip" "$hwaddr"
 	
 	default_host_name=`printf "$base_name%0${digits}d.%s" $serial_number $domain`
 	printf "Host name? [$default_host_name] "
@@ -180,10 +193,10 @@ while [ 0$again = 0y ]; do
 	if ! fgrep -w $host_name $dhcp_conf; then
 	    $sed -i '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' $dhcp_conf
 	fi
-	vi $dhcp_conf
+	# vi $dhcp_conf
 	service $dhcp_service restart
 	
-	if [ ! -e /etc/ssh/ssh_config.orig ];then
+	if [ ! -e /etc/ssh/ssh_config.orig ]; then
 	    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
 	fi
 	
@@ -195,18 +208,17 @@ while [ 0$again = 0y ]; do
 	    $sed -i '6iHost '"$new_ip"' ' /etc/ssh/ssh_config
 	    $sed -i '7i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
 	fi
-	vi /etc/ssh/ssh_config
+	# vi /etc/ssh/ssh_config
 	
 	# Add to /etc/hosts.
 	auto-append-line '^$new_ip' "$new_ip\t$host_name\t${host_name%%.*}" \
 	    /etc/hosts nocomment
-	
-	# Debug
 	vi -c '$' /etc/hosts
+	
 	serial_number=$(($serial_number + 1))
     done
     
-    printf 'Image another server? [n] '
+    printf 'Image another server? [y] '
     read again
 done
 
