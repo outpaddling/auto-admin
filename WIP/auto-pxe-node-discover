@@ -123,13 +123,12 @@ while [ 0$again = 0y ]; do
 
     leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
     
-    for new_ip in $leases; do
-    
+    # Detect unconfigured servers
+    for ip in $leases; do
 	# Already recorded?
-	if ! egrep -q "^$new_ip" /etc/hosts; then
-	
+	if ! egrep -q "^$ip" /etc/hosts; then
 	    # Get lease state from dhcpd.leases
-	    state=`awk -v ip=$new_ip '$2 == ip {
+	    state=`awk -v ip=$ip '$2 == ip {
 		do
 		{
 		    getline
@@ -139,55 +138,72 @@ while [ 0$again = 0y ]; do
 	    
 	    # Active leases not already in /etc/hosts must be added
 	    if [ $state = 'active;' ]; then
-		hwaddr=`awk -v new_ip=$new_ip '$1 == "lease" && $2 == new_ip {
-		    do
-		    {
-			getline
-		    }   while ( $1 != "hardware" );
-		    print $3
-		    exit
-		}' $lease_file | cut -d ';' -f 1`
-	    
-		printf '\nNew lease detected: %s %s.\n' $new_ip $hwaddr
-		
-		default_host_name=`printf "$base_name%0${digits}d.%s" $serial_number $domain`
-		printf "Host name? [$default_host_name] "
-		read host_name
-		if [ 0$host_name = 0 ]; then
-		    host_name=$default_host_name
-		fi
-		short_name=${host_name%%.*}
-		printf "$short_name\n"
-		
-		if ! fgrep -w $host_name $dhcp_conf; then
-		    $sed -i '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' $dhcp_conf
-		fi
-		vi $dhcp_conf
-		service $dhcp_service restart
-		
-		if [ ! -e /etc/ssh/ssh_config.orig ];then
-		    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
-		fi
-		
-		if [ ! `fgrep -wq $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then    
-		    $sed -i '2iHost '"$short_name"' ' /etc/ssh/ssh_config
-		    $sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-		    $sed -i '4iHost '"$host_name"' ' /etc/ssh/ssh_config
-		    $sed -i '5i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-		    $sed -i '6iHost '"$new_ip"' ' /etc/ssh/ssh_config
-		    $sed -i '7i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-		fi
-		vi /etc/ssh/ssh_config
-		
-		# Add to /etc/hosts.
-		auto-append-line '^$new_ip' "$new_ip\t$host_name\t${host_name%%.*}" \
-		    /etc/hosts nocomment
-		
-		# Debug
-		vi -c '$' /etc/hosts
-		serial_number=$(($serial_number + 1))
+		new_leases="$new_leases $ip"
 	    fi
 	fi
+    done
+
+    if [ -z $new_leases ]; then
+	printf 'No new leases detected.  Wait for new servers? ([y]/n) '
+	read wait
+	if [ 0$wait != 0n ]; then
+	    new_leases="$leases"
+	    while [ 0"$new_leases" = 0"$leases" ]; do
+		new_leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
+		sleep 2
+		printf '.'
+	    done
+	fi
+    fi
+    
+    for new_ip in $new_leases; do
+	hwaddr=`awk -v new_ip=$new_ip '$1 == "lease" && $2 == new_ip {
+	    do
+	    {
+		getline
+	    }   while ( $1 != "hardware" );
+	    print $3
+	    exit
+	}' $lease_file | cut -d ';' -f 1`
+    
+	printf '\nNew lease detected: %s %s.\n' $new_ip $hwaddr
+	
+	default_host_name=`printf "$base_name%0${digits}d.%s" $serial_number $domain`
+	printf "Host name? [$default_host_name] "
+	read host_name
+	if [ 0$host_name = 0 ]; then
+	    host_name=$default_host_name
+	fi
+	short_name=${host_name%%.*}
+	printf "$short_name\n"
+	
+	if ! fgrep -w $host_name $dhcp_conf; then
+	    $sed -i '/option domain-name-servers/ a\\n    host '"$host_name"' {\n\thardware ethernet '"$hwaddr"';\n\toption host-name \"'"$host_name"'\";\n\tfixed-address '"$new_ip"';\n    }' $dhcp_conf
+	fi
+	vi $dhcp_conf
+	service $dhcp_service restart
+	
+	if [ ! -e /etc/ssh/ssh_config.orig ];then
+	    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
+	fi
+	
+	if [ ! `fgrep -wq $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then    
+	    $sed -i '2iHost '"$short_name"' ' /etc/ssh/ssh_config
+	    $sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+	    $sed -i '4iHost '"$host_name"' ' /etc/ssh/ssh_config
+	    $sed -i '5i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+	    $sed -i '6iHost '"$new_ip"' ' /etc/ssh/ssh_config
+	    $sed -i '7i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+	fi
+	vi /etc/ssh/ssh_config
+	
+	# Add to /etc/hosts.
+	auto-append-line '^$new_ip' "$new_ip\t$host_name\t${host_name%%.*}" \
+	    /etc/hosts nocomment
+	
+	# Debug
+	vi -c '$' /etc/hosts
+	serial_number=$(($serial_number + 1))
     done
     
     printf 'Image another server? [n] '
