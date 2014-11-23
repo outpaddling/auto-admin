@@ -1,0 +1,73 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-06  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 minutes\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+minutes=$1
+
+if [ -d /etc/profile.d ]; then
+    # C shell auto-logout
+    cat << EOM > /etc/profile.d/autologout.csh
+
+# Enable auto-logout after $minutes minutes
+set -r autologout=$minutes
+EOM
+
+    cat << EOM > /etc/profile.d/autologout.sh
+
+# Enable auto-logout after $minutes minutes
+TMOUT=$(($minutes * 60))
+readonly TMOUT
+export TMOUT
+EOM
+    chmod 755 /etc/profile.d/autologout.*
+else
+    for script in /etc/csh.cshrc /etc/csh.login; do
+	if ! fgrep -q autologout $script; then
+	    cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+set -r autologout=$minutes
+EOM
+	fi
+    done
+
+    for script in /etc/profile /etc/bashrc /etc/kshrc /etc/zshrc; do
+	if ! fgrep -q autologout $script; then
+	    cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+TMOUT=$(($minutes * 60))
+readonly TMOUT
+export TMOUT
+EOM
+	fi
+    done
+fi
+
+# SSH
+
