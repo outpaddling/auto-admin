@@ -1,0 +1,33 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-21  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 category/pkg\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+pkg_dir=$1
+cd /usr/pkgsrc-1/$pkg_dir
+env ALLOW_VULNERABLE_PACKAGES=1 bmake install
+
