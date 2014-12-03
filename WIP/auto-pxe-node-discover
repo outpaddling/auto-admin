@@ -131,7 +131,11 @@ if [ -z "$dhcp_conf" ]; then
     exit 1
 fi
 
-fgrep $base_name /etc/hosts | grep $domain
+printf "Using $lease_file and $dhcp_conf...\n"
+
+if ! fgrep $base_name /etc/hosts | grep $domain; then
+    printf "No existing hosts beginnng with $base_name.\n"
+fi
 printf "Next serial number? "
 read serial_number
 if [ 0$serial_number = 0 ]; then
