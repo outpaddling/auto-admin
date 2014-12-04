@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 
+if ! awk '$1 == "vendor_id" { print $3 }' /proc/cpuinfo \
+    | fgrep -q GenuineIntel; then
+    printf "This machine has no Intel cpus.  Nothing to disable.\n"
+    exit
+fi
+
 # http://www.fidian.com/problems-only-tyler-has/disabling-hyperthreading
 
 # Be careful to not skip the space at the beginning nor the end
 CPUS_TO_SKIP=" $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sed 's/[^0-9].*//' | sort | uniq | tr "\r\n" "  ") "
+echo $CPUS_TO_SKIP
 
 for CPU_PATH in /sys/devices/system/cpu/cpu[0-9]*; do
     CPU="$(echo $CPU_PATH | tr -cd "0-9")"
