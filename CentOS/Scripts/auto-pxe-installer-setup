@@ -396,22 +396,22 @@ text
 # cmdline
 autostep
 reboot
-nfs --server $local_ip --dir $installer_path
-zerombr
+# nfs --server 10.1.1.2 --dir /var/lib/tftpboot/images/CentOS-6.6-x86_64-minimal
 
 lang en_US.UTF-8
 keyboard us
 
-network --device $iface --onboot yes --bootproto dhcp
+network --device em1 --onboot yes --bootproto dhcp
 firewall --enabled --service=ssh
 authconfig --enableshadow --passalgo=sha512
-rootpw --iscrypted "$root_pw"
+# rootpw --iscrypted "$6$jjvnzpIkMEF4FGr1$QGuGlDi.hyWuxEakb2Fs/kHfmnbRiQzUNm8/v6tq7NvOrG6k7ceu0UYEozTwhKiHQha7geJ.h3feQb83VHtzy/"
 timezone --utc America/Chicago
 bootloader --location=mbr --driveorder=sda
 selinux --enforcing
 
-clearpart --all --initlabel
-clearpart --linux --drives=sda
+# Use whole disk
+zerombr
+clearpart --all
 
 ############################################################################
 # Minimal partition scheme suitable for a single-user workstation
@@ -442,17 +442,18 @@ part /bigtmp --fstype xfs --size=1024 --grow
 # Anything done here can more easily be done after the first reboot, so
 # I like to keep it minimal.
 
-# FIXME: selinux is preventing keys from working.
+# Allow passwordless root login from the image server after first boot
 sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/sshd_config
 if [ ! -e /root/.ssh/id_dsa.pub ]; then
     ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
 fi
-echo '$root_key' >> /root/.ssh/authorized_keys
+echo 'ssh-dss AAAAB3NzaC1kc3MAAACBAOuhLC8o7QuepqbvDK1yfpxZyWUzI6fvtiO3hn/BNb7GNNXRMqwxfjafbjkhobuZVfwn7wtIy/FeiSNDgOrQDc0oLhESNDLXjjaH+OTvQMPGK/jkYVczjnMAm4z5IA9Lh7vqOlABHBFqA+st5OqfpxF9QmQQFuKY9Cdw3NAkIJMtAAAAFQDi/y603P7MHbbefCZ4iBBjRbykXwAAAIEAn7e6fgWCgrLO7mDk7g2vaM90CL73QyCy9jiHzwk11lS3rirADVnxru6PKrUX2w35plDeQjXlyylCs82JI0S7KLxChGM/gUhxYkgRPKzoa1TasvrI3pYS/dfCvRkgmIiWEFxlMPQGic0AM2mRVQNz5xseW8hTmROulBkUZeOiB8oAAACAKRKP6xs8IIK4QwCM17ufsqrFiDJ0NaD1FglwY4UEsiXE162IcLRiGxgW8/+42GO4ZNmnyoWYiINMLRgxUFP3IcC8RJc2rnF/C5YPqoGfkyegNwhGIZKvifiXjLrE1NufPcHaVrdtEGYH/j8seEmzXUxGSsqVLmR+rSVaB56elgQ= root@login.mortimer.local' >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
 restorecon -R -v /root/.ssh     # Set security context for selinux
 
 # Boot into a secure system right off the bat!
-yum update -y
+# Need to enable em0 first?
+# yum update -y
 
 EOM
 
