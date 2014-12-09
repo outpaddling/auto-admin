@@ -424,18 +424,18 @@ clearpart --all
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
 
-part /boot --fstype ext4 --size=1024
-part swap --size=32768
-part / --fstype ext4 --size=16384
-part /var --fstype ext4 --size=32768
-part /tmp --fstype ext4 --size=32768
+part /boot --fstype ext4 --size=1024 --onpart=sda1
+part swap --size=32768 --onpart=sda5
+part / --fstype ext4 --size=16384 --onpart=sda6
+part /var --fstype ext4 --size=32768 --onpart=sda3
+part /tmp --fstype ext4 --size=32768 --onpart=sda2
 
 # For typical machines and head nodes, use all remaining space for /home
-# part /home --fstype ext4 --size=1024 --grow
+# part /home --fstype ext4 --size=1024 --grow --onpart=sda7
 
 # For nodes with /home NFS-mounted, such as compute nodes, don't allocate
 # local disk space for /home.
-part /bigtmp --fstype xfs --size=1024 --grow
+part /bigtmp --fstype xfs --size=1024 --grow --onpart=sda7
 
 %post
 
