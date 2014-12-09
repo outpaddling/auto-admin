@@ -1,0 +1,681 @@
+#!/bin/sh -e
+
+# TODO
+#   Set GCCBASE?
+#   Carbon.h cannot find SecurityHi.h with non-Xcode gcc
+
+# OS X base compilers.  Use Xcode for now.  The osx-gcc compilers have
+# some limitations due to assumptions that many software apps make about
+# Mac compilers.  ( e.g. the existence of a -no-cpp-precomp flag, which is
+# an obsolete Apple extension. )
+#
+# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.6.pkg
+# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.7-v2.pkg
+# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.7-v2.pkg
+#
+# Precompiled Fortran packages from the GCC project
+#
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.2-x86_64-Lion.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Sno-x86-64.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.1-i686-SnowLeopard.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
+
+# RHEL / CentOS base
+if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/cvs ]; then
+    yum install -y gcc-gfortran gcc-c++ gcc cvs
+fi
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+case $# in
+0)
+    ;;
+1)
+    ;;
+*)
+    printf "Usage: $0 [prefix]\n"
+    exit 1
+    ;;
+esac
+
+# For OS X, we should install a new base gcc using install-base-gcc
+case `uname` in
+'Darwin')
+    if [ ! -e /usr/bin/gcc ]; then
+	cat << EOM
+
+You must install Xcode and GCC command-line tools in order to use pkgsrc.
+
+You may use a different base compiler, but pkgsrc requires headers and
+libraries installed by Xcode in any case.
+
+EOM
+	exit 1
+    fi
+
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.2-x86_64-Lion.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Sno-x86-64.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.1-i686-SnowLeopard.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
+# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
+
+    os_major=`uname -r | cut -d . -f 1`
+    if ! which gfortran; then
+	case $os_major in
+	11|12)
+	    # Lion and Mountain Lion
+	    dmg=gfortran-4.6.2-x86_64-Lion.dmg
+	    fortran_mount=/Volumes/gfortran-4.6.2-x86_64-Lion
+	    pkg=$fortran_mount/gfortran.pkg
+	    ;;
+	10)
+	    # Snow Leopard
+	    dmg=gfortran-4.6.1-i686-SnowLeopard.dmg
+	    fortran_mount=/Volumes/gfortran-4.6.1-i686-SnowLeopard
+	    pkg=$fortran_mount/gfortran-4.6.1-i686-SnowLeopard/gfortran.pkg
+	    ;;
+	9)
+	    # Leopard
+	    if [ `uname -p` = i386 ]; then
+		dmg=gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
+		# Untested
+		fortran_mount='/Volumes/GCC Installer'
+		pkg="$fortran_mount/gfortran-and-gcc-4-6-2-RC20111019-x86d9.pkg"
+	    else
+		dmg=gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
+		fortran_mount='/Volumes/GCC Installer'
+		pkg="$fortran_mount/gfortran-and-gcc-4-6-2-RC20111019-ppcd9.pkg"
+	    fi
+	    ;;
+	*)
+	    printf "Unsupported OS X version: `uname -r`\n"
+	    exit 1
+	    ;;
+	esac
+
+	if [ ! -e $dmg ]; then
+	    printf "Downloading gfortran package...\n"
+	    curl -O http://quatramaran.ens.fr/~coudert/gfortran/$dmg
+	fi
+	if [ ! -e "$fortran_mount" ]; then
+	    hdiutil attach -noautoopen $dmg
+	fi
+	printf "Installing gfortran...\n"
+	sudo installer -target / -pkg "$pkg"
+	hdiutil detach "$fortran_mount"
+	sudo ln -s /usr/local/gfortran/bin/gfortran /usr/bin
+
+    # Suspend this until Fortran packages are tested
+    if false; then
+	    cat << EOM
+No fortran compiler was found in your PATH, which is needed for some
+packages.
+
+The recommended solution is to install a new base compiler suite.  This will
+ensure that your C, C++, Objective-C, and Fortran compilers are all current
+and fully compatible with each other.  Older Xcode installations use GCC 4.2,
+which is outdated.  Newer Xcode uses Clang, which does not have a Fortran
+compiler.
+
+A script for installing GCC 4.6 is available at:
+
+    http://acadix.biz/software.php
+
+After downloading it, run:
+
+    sudo ./install-base-gcc /usr/local
+
+and sit back for 12 hours or so.  Then make sure that /usr/local/bin is
+in your PATH and run pkgsrc-setup again.
+
+EOM
+	    printf "Continue without installing a new compiler suite? (y/[n]) "
+	    read resp
+	    if [ 0$resp != 0y ]; then
+		exit 1
+	    fi
+	fi
+    fi
+    ;;
+CYGWIN*)
+    cat << EOM
+
+You MUST have the following Cygwin packages installed:
+
+    devel/gcc4
+    devel/g++4
+    devel/gfortran4
+    devel/make
+    lib/mpfr4 (required by gcc4, but not installed automatically)
+    net/curl or web/wget
+
+Ideally, no other Cygwin packages should be installed.  Libraries and tools
+installed by Cygwin could be found and used by configure scripts in pkgsrc
+packages.  As with all package systems, It is better if all pkgsrc
+dependencies are installed by pkgsrc.  Pkgsrc does its best to ensure that
+this happens, but configure scripts have minds of their own and pkgsrc cannot
+control them completely.
+
+EOM
+    pause
+    ;;
+esac
+
+if [ -e /opt/local/bin/port ]; then
+    cat << EOM
+
+============================================================================
+You appear to be using MacPorts.  MacPorts and pkgsrc can coexist, but you
+must ensure that your environment is configured to avoid mixing them.  Your
+PATH, LD_LIBRARY_PATH, and any other variables that select components of
+MacPorts or pkgsrc must be configured at all times to use one or the other,
+but never both (unless you know what you're doing).
+============================================================================
+EOM
+    pause
+fi
+
+if [ -e /sw/bin ]; then
+    cat << EOM
+
+============================================================================
+You appear to be using Fink.  Fink and pkgsrc can coexist, but you
+must ensure that your environment is configured to avoid mixing them.  Your
+PATH, LD_LIBRARY_PATH, and any other variables that select components of
+MacPorts or pkgsrc must be configured at all times to use one or the other,
+but never both (unless you know what you're doing).
+============================================================================
+EOM
+    pause
+fi
+
+cat << EOM
+
+============================================================================
+Default responses are shown in [].  Simple press return to accept defaults.
+
+Type Ctrl+c at any time to stop installation.
+============================================================================
+EOM
+
+if [ `whoami` != 'root' ]; then
+    cat << EOM
+
+============================================================================
+Not running as root.  Installing as user $(whoami).  This is fine, but
+is typically only used to install pkgsrc for your own exclusive use
+on a system for which you don't have administrator rights.  If you want
+to install pkgsrc for multiple users, you may prefer to cancel now and
+re-run this script as root.
+============================================================================
+
+EOM
+    default_prefix="$HOME/Pkgsrc"
+else
+    cat << EOM
+    
+============================================================================
+Running as root.  Installing globally.
+============================================================================
+
+EOM
+    default_prefix="/usr"
+fi
+printf "OK to proceed? ([y]/n) "
+read proceed
+if [ "0$proceed" = "0n" ]; then
+    exit
+fi
+
+if [ $# = 0 ]; then
+    printf "Installation prefix? [$default_prefix] "
+    read prefix
+    if [ 0"$prefix" = 0 ]; then
+	prefix=$default_prefix
+    fi
+else
+    prefix=$1
+fi
+
+default_install_num=1
+while [ -e $prefix/pkg-$default_install_num/done ]; do
+    default_install_num=$(($default_install_num + 1))
+done
+cat << EOM
+============================================================================
+Pkgsrc supports multiple installations on the same computer.  Pkgsrc-setup
+handles multiple installations under the same prefix by appending serial
+numbers, beginning with 1.  The default install number shown will be 1
+greater than the highest one under the same prefix.
+
+You can overwrite or update an existing installation by overriding the
+default here and entering a number lower than the default shown.
+============================================================================
+EOM
+printf "Install number? [$default_install_num] "
+read install_num
+if [ 0$install_num = 0 ]; then
+    install_num=$default_install_num
+fi
+
+install_prefix=$prefix/pkg-$install_num
+frameworks_prefix=$prefix/pkgsrc-$install_num
+sys_prefix=$prefix/pkg-$install_num
+
+cat << EOM
+
+============================================================================
+Packages will be installed under
+
+    $install_prefix
+    
+Frameworks for building and installing will be under
+
+    $frameworks_prefix
+
+System files will be under
+
+    $sys_prefix
+============================================================================
+
+EOM
+
+pause
+
+# Base compiler setup
+cat << EOM
+
+============================================================================
+You will need at least a C compiler and a C++ compiler to build most
+pkgsrc packages.  Many packages also require a Fortran compiler.  On
+some systems, such as NetBSD, pkgsrc can build its own Fortran compilers.
+On other systems, you should use a base compiler collection that includes
+Fortran.  GCC 4.5 or later is recommended.
+
+If pkgsrc is bootstrapped to use the GCC compiler collection,
+it will look for gfortran in the PATH when building certain packages.
+============================================================================
+EOM
+printf "Compilers in your current PATH include:\n\n"
+which cc
+which c++
+if ! which gfortran; then
+    # Instead of message, install gfortran package from GNU site
+    # and sudo ln -s /usr/local/bin/gfortran /usr/bin
+    # curl -O 
+    cat << EOM
+
+Warning: No gfortran found in PATH.  You will not be able to build some
+mathematical and scientific packages.
+
+EOM
+fi
+
+printf "These same compilers must be in your PATH when you build packages.\n"
+printf "Proceed? ([y]/n) "
+read proceed
+if [ 0$proceed = 0n ]; then
+    exit 0
+fi
+
+if which curl > /dev/null; then
+    fetch_cmd='curl -O'
+elif which wget > /dev/null; then
+    fetch_cmd='wget';
+elif which fetch > /dev/null; then
+    fetch_cmd='fetch';
+else
+    printf "No fetch command found.\n"
+    exit 1
+fi
+
+# Quarterly snapshot or current?
+
+
+# Download new pkgsrc dist if a new install number was provided
+if [ -e $prefix/Dist/pkgsrc-$install_num.tar.gz ]; then
+    printf "pkgsrc-$install_num.tar.gz already exists.  Replace? (y/[n]) "
+    read download
+else
+    download='y'
+fi
+
+if [ 0$download = 0y ]; then
+    # Replace everything after new download
+    rm -rf $frameworks_prefix $install_prefix $sys_prefix
+    mkdir -p $prefix/Dist
+    cd $prefix/Dist
+    rm -f pkgsrc.tar.gz
+    $fetch_cmd ftp://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc.tar.gz
+    mv pkgsrc.tar.gz pkgsrc-$install_num.tar.gz
+fi
+
+if [ -e $frameworks_prefix ]; then
+    printf "$frameworks_prefix already exists.  Replace? (y/[n]) "
+    read unpack
+else
+    unpack='y'
+fi
+
+# Create a new package tree for this installation
+if [ 0$unpack = 0y ]; then
+    # Replace everything if unpacking again
+    rm -rf $frameworks_prefix $install_prefix $sys_prefix
+    cd $prefix/Dist
+    printf "Unpacking frameworks...\n"
+    # Use of -o and --no-same-permissions is a security requirement.  It
+    # prevents root from installing a tree owned by an ordinary user.
+    tar --no-same-permissions -zoxf pkgsrc-$install_num.tar.gz
+    rm -rf $frameworks_prefix $sys_prefix $install_prefix
+    # Apple's gcc uses a non-standard flag that is not supported by
+    # separately installed gcc.
+    if [ `uname` = 'Darwin' ]; then
+	sed -i '.bak' 's|CPP_PRECOMP_FLAGS?=|# Disabled for /usr/local/bin/gcc CPP_PRECOMP_FLAGS?=|g' pkgsrc/mk/platform/Darwin.mk
+    fi
+    mv pkgsrc $frameworks_prefix
+fi
+
+if [ -e $install_prefix/bin/bmake ]; then
+    printf "$install_prefix already exists.  Rebuild? (y/[n]) "
+    read bootstrap
+else
+    bootstrap='y'
+fi
+
+# Snow Leopard uname reports i386, even on 64-bit Core 2 Duo machines,
+# so check the hardware and force 64-bit ABI if needed
+# Idea:
+#    gcc -v |& grep Target
+#        i386: --abi 32
+#        x86_64: --abi 64
+
+if [ `uname` = 'Darwin' ] && \
+	sysctl -n machdep.cpu.brand_string | grep 'Core(TM)2' ; then
+    abi_flags='-abi 64'
+else
+    abi_flags=''
+fi
+
+# Bootstrap the installation
+if [ 0$bootstrap = '0y' ]; then
+    # Keep old frameworks, but rebuild installation dir and system files
+    rm -rf $sys_prefix $install_prefix
+    cd $frameworks_prefix/bootstrap
+    if [ `whoami` = root ]; then
+	./bootstrap \
+	    ${abi_flags} \
+	    --prefix ${install_prefix} \
+	    --pkgdbdir ${sys_prefix}/var/db/pkg \
+	    --sysconfdir ${sys_prefix}/etc \
+	    --varbase ${sys_prefix}/var \
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap-$install_num.log
+    else
+	./bootstrap \
+	    ${abi_flags} \
+	    --unprivileged \
+	    --prefix ${install_prefix} \
+	    --pkgdbdir ${sys_prefix}/var/db/pkg \
+	    --sysconfdir ${sys_prefix}/etc \
+	    --varbase ${sys_prefix}/var \
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap-$install_num.log
+    fi
+
+    # FIXME: Put full compiler name in mk.conf?
+    
+    # Separate bootstrap settings from our settings
+    printf "\n" >> $sys_prefix/etc/mk.conf
+    
+    # Configure pkgsrc options in mk.conf
+    # Add X11_TYPE=modular tells pkgsrc to use its own X11 packages
+    # PREFER_PKGSRC tells pkgsrc to install depdencies from its own
+    # packages instead of using native tools
+    # RHEL packages tend to be out of date (enterprise Linux values
+    # stability above features)
+    if ! fgrep X11_TYPE ${sys_prefix}/etc/mk.conf; then
+	printf "X11_TYPE=\t\tmodular\n" >> ${sys_prefix}/etc/mk.conf
+	printf "PREFER_NATIVE=\t\tno\n" >> ${sys_prefix}/etc/mk.conf
+	printf "PREFER_PKGSRC=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
+    fi
+    
+    for license in openmotif-license qpl-v1.0 phylip-license eclipse-license; do
+	printf "Allow packages with license $license? ([y]/n) "
+	read accepted
+	if [ 0$accepted != '0n' ]; then
+	    printf "ACCEPTABLE_LICENSES+=\t$license\n" >> ${sys_prefix}/etc/mk.conf
+	fi
+    done
+    
+    cat << EOM
+Allow installation of packages with known security vulnerabilities?
+
+Not recommended on systems with untrusted users or systems on public
+networks.
+
+If you answer NO here, you can still install individual vulnerable
+packages by running
+
+    env ALLOW_VULNERABLE_PACKAGES=yes bmake install
+
+EOM
+    printf "Allow vulnerable packages? (y/[n]) "
+    read allow_vulnerable
+    if [ x$allow_vulnerable = xy ]; then
+	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> ${sys_prefix}/etc/mk.conf
+    fi
+fi
+
+# Install latest security checks
+${install_prefix}/sbin/pkg_admin \
+    -K ${sys_prefix}/var/db/pkg fetch-pkg-vulnerabilities
+
+# Generate shell script segments to source
+cat << EOM > ${sys_prefix}/etc/shrc
+# Generated by pkgsrc-setup
+if ! echo \$PATH | fgrep -q ${install_prefix}; then
+    PKGSRC=$install_prefix; export PKGSRC
+    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH; export PATH
+    MANPATH=\$PKGSRC/man:$(manpath); export MANPATH
+    PKGSRC_INCLUDE=\$PKGSRC/include; export PKGSRC_INCLUDE
+    PKGSRC_LIB=\$PKGSRC/lib; export PKGSRC_LIB
+    # Avoid using LD_LIBRARY_PATH if possible
+    # LD_LIBRARY_PATH=\${PKGSRC_LIB}:\$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
+fi
+EOM
+
+cat << EOM > ${sys_prefix}/etc/cshrc
+# Generated by pkgsrc-setup
+echo \$PATH | fgrep -q ${install_prefix}
+if ( \$status != 0 ) then
+    setenv PKGSRC           $install_prefix
+    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
+    setenv MANPATH          \$PKGSRC/man:$(manpath)
+    setenv PKGSRC_INCLUDE   \$PKGSRC/include
+    setenv PKGSRC_LIB       \$PKGSRC/lib
+    # Avoid using LD_LIBRARY_PATH if possible
+    # setenv LD_LIBRARY_PATH  \${PKGSRC_LIB}:\$LD_LIBRARY_PATH
+endif
+EOM
+
+# Generate module file
+mkdir -p ${sys_prefix}/etc/modulefiles/pkgsrc
+cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${install_num}
+#%Module1.0#####################################################################
+proc ModulesHelp { } {
+    puts stdout "\n\tAll software installed via the pkgsrc package management"
+    puts stdout "\tsystem. This module prepends the pkgsrc directories to"
+    puts stdout "\tappropriate environment variable(s)."
+}
+
+module-whatis   "All software installed via pkgsrc"
+
+set     version         ${install_num}
+set     install_prefix  ${install_prefix}
+
+prepend-path    PATH            \$install_prefix/bin
+prepend-path    PATH            \$install_prefix/sbin
+prepend-path    MANPATH         \$install_prefix/man
+# Avoid using LD_LIBRARY_PATH if possible.
+# prepend-path    LD_LIBRARY_PATH \$install_prefix/lib
+setenv          PKGSRC          \$install_prefix
+setenv          PKGSRC_INCLUDE  \$install_prefix/include
+setenv          PKGSRC_LIB      \$install_prefix/lib
+EOM
+
+# Update PATH for installing packages below
+. ${sys_prefix}/etc/shrc
+echo $PATH
+
+# Basic instructions on installing a package
+if [ $(uname) = NetBSD ] || [ $(uname) = DragonFly ]; then
+    make=make
+else
+    make=bmake
+fi
+
+echo Hello
+
+# Wrap bmake command
+if ! [ -e $install_prefix/bin/bmake.bin ]; then
+    mv $install_prefix/bin/bmake $install_prefix/bin/bmake.bin
+fi
+cat << EOM2 > $install_prefix/bin/bmake
+#!/bin/sh -e
+
+if ! pwd | fgrep $frameworks_prefix; then
+    cat << EOM
+    
+			    ===== Error =====
+
+You are running \$(which bmake) from the wrong directory.
+It should only be used from within $frameworks_prefix.
+Load the correct environment module so that you are using the appropriate
+bmake for \$(pwd) or go to $frameworks_prefix.
+
+EOM
+    exit 1
+fi
+
+#if ! hostname | fgrep -q 'compute-'; then
+#    printf "This pkgsrc insallation should only be used on a compute node.\n"
+#    exit 1
+#fi
+
+umask 022
+bmake.bin \$@
+EOM2
+
+chmod 755 $install_prefix/bin/bmake
+
+# Install key packages
+save_cwd=`pwd`
+cd $frameworks_prefix/net/fetch && $make install
+cd $save_cwd
+
+cd $frameworks_prefix
+
+# cvs sometimes returns non-zero status when it succeeded
+CVS_RSH=ssh
+export CVS_RSH
+set +e
+if [ -d wip ]; then
+    printf "Updating existing wip...\n"
+    cd wip
+    cvs -q update -dP
+else
+    cat << EOM
+If you have a sourceforge account, you can use it to check out pkgsrc-wip,
+the work-in-progress category of pkgsrc packages.
+
+If not, you can check it out anonymously.  This is the default if you just
+press return.
+EOM
+    
+    printf 'Sourceforge user for checking out pkgsrc-wip? [Anonymous] '
+    read username
+    if [ 0$username = 0 ]; then
+	username=Anonymous
+    fi
+    if [ $username = Anonymous ]; then
+	cat << EOM
+============================================================================ 
+Checking out new wip.  Just press return when prompted for the password.
+============================================================================
+EOM
+	cvs -d:pserver:anonymous@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip login
+	cvs -z 3 -d:pserver:anonymous@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip checkout -P wip
+    else
+	cvs -z 3 -d :ext:${username}@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip checkout -P wip
+    fi
+fi
+# Resume exit-on-error after cvs commands are done
+set -e
+
+cat << EOM
+============================================================================
+Users running sh, bash, or ksh should add the following to their startup
+scripts:
+
+    . ${sys_prefix}/etc/shrc
+
+Users running csh or tcsh should add the following to their startup scripts:
+
+    source ${sys_prefix}/etc/cshrc
+
+On systems with the "module" command, users can add the following instead
+of one of the commands above:
+
+    module use ${sys_prefix}/etc/modulefiles
+    module load pkgsrc/${install_num}
+============================================================================
+EOM
+pause
+
+cat << EOM
+============================================================================
+To install a package, type:
+
+    cd $frameworks_prefix/<category>/<package>
+    $make install
+
+Ex.
+    cd $frameworks_prefix/math/blas
+    $make install
+============================================================================
+EOM
+pause
+
+cat << EOM
+============================================================================
+After setting the environment using one of the commands above, to compile
+and link programs using libraries installed by pkgsrc, use:
+
+    -I\$PKGSRC_INCLUDE
+    -L\$PKGSRC_LIB
+
+Ex. Assuming your Makefile uses CFLAGS for compiling and LFLAGS for link:
+
+    make CFLAGS="-Wall -g -I\$PKGSRC_INCLUDE" LFLAGS="-L\$PKGSRC_LIB"
+============================================================================
+For more information, go to http://www.netbsd.org/docs/pkgsrc/
+============================================================================
+EOM
+pause
+
+# Install pkgsrc guide onto desktop
+if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
+    mkdir -p $HOME/Desktop/Guides
+    cd $HOME/Desktop/Guides
+    printf "Fetching manual...\n"
+    $fetch_cmd http://www.netbsd.org/docs/pkgsrc/pkgsrc.pdf
+    printf "A copy of the pkgsrc guide has been placed on your desktop.\n"
+fi
+
+touch $prefix/pkg-$install_num/done
+
