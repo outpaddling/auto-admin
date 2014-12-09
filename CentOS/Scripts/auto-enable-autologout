@@ -29,6 +29,10 @@ fi
 
 minutes=$1
 
+##########################################################################
+#   Login shells
+##########################################################################
+
 if [ -d /etc/profile.d ]; then
     # C shell auto-logout
     cat << EOM > /etc/profile.d/autologout.csh
@@ -42,11 +46,10 @@ EOM
 # Enable auto-logout after $minutes minutes
 TMOUT=$(($minutes * 60))
 readonly TMOUT
-export TMOUT
 EOM
     chmod 755 /etc/profile.d/autologout.*
 else
-    for script in /etc/csh.cshrc /etc/csh.login; do
+    for script in /etc/csh.login; do
 	if ! fgrep -q autologout $script; then
 	    cat << EOM >> $script
 
@@ -56,18 +59,40 @@ EOM
 	fi
     done
 
-    for script in /etc/profile /etc/bashrc /etc/kshrc /etc/zshrc; do
+    for script in /etc/profile; do
 	if ! fgrep -q autologout $script; then
 	    cat << EOM >> $script
 
 # Enable auto-logout after $minutes minutes
 TMOUT=$(($minutes * 60))
 readonly TMOUT
-export TMOUT
 EOM
 	fi
     done
 fi
 
-# SSH
+##########################################################################
+#   Non-login shells
+##########################################################################
+
+for script in /etc/csh.cshrc; do
+    if ! fgrep -q autologout $script; then
+	cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+set -r autologout=$minutes
+EOM
+    fi
+done
+
+for script in /etc/bashrc /etc/kshrc /etc/zshrc; do
+    if ! fgrep -q autologout $script; then
+	cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+TMOUT=$(($minutes * 60))
+readonly TMOUT
+EOM
+    fi
+done
 
