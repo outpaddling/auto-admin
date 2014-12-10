@@ -30,49 +30,7 @@ fi
 minutes=$1
 
 ##########################################################################
-#   Login shells
-##########################################################################
-
-if [ -d /etc/profile.d ]; then
-    # C shell auto-logout
-    cat << EOM > /etc/profile.d/autologout.csh
-
-# Enable auto-logout after $minutes minutes
-set -r autologout=$minutes
-EOM
-
-    cat << EOM > /etc/profile.d/autologout.sh
-
-# Enable auto-logout after $minutes minutes
-TMOUT=$(($minutes * 60))
-readonly TMOUT
-EOM
-    chmod 755 /etc/profile.d/autologout.*
-else
-    for script in /etc/csh.login; do
-	if ! fgrep -q autologout $script; then
-	    cat << EOM >> $script
-
-# Enable auto-logout after $minutes minutes
-set -r autologout=$minutes
-EOM
-	fi
-    done
-
-    for script in /etc/profile; do
-	if ! fgrep -q autologout $script; then
-	    cat << EOM >> $script
-
-# Enable auto-logout after $minutes minutes
-TMOUT=$(($minutes * 60))
-readonly TMOUT
-EOM
-	fi
-    done
-fi
-
-##########################################################################
-#   Non-login shells
+#   Enable for all interactive shells, not just login shells.
 ##########################################################################
 
 for script in /etc/csh.cshrc; do
