@@ -134,15 +134,15 @@ esac
 
 # Idle time limits
 
-# Resource limits to contain fork bombs, etc.
-printf "Maximum processes per user? "
-read maxprocs
-printf "Maximum memory per process? (use 'm' or 'g' suffix) "
-read maxvmem
-
 # FIXME: Move CentOS cluster-admin limit scripts here
 case $(osname) in
 FreeBSD)
+    # Resource limits to contain fork bombs, etc.
+    printf "Maximum processes per user? "
+    read maxprocs
+    printf "Maximum memory per process? (use 'm' or 'g' suffix) "
+    read maxvmem
+    
     sed -i '' \
 	-e "s|vmemoryuse=unlimited|vmemoryuse=$maxvmem|g" \
 	-e "s|maxproc=unlimited|maxproc=$maxprocs|g" \
