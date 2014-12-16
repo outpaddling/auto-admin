@@ -91,7 +91,7 @@ get_new_leases()
 	    }'  $lease_file`
 	    
 	    # Active leases not already in /etc/hosts must be added
-	    if [ $state = 'active;' ]; then
+	    if [ 0$state = 0'active;' ]; then
 		new_leases="$new_leases $ip"
 	    fi
 	fi
