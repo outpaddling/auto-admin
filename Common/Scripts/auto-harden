@@ -146,12 +146,27 @@ FreeBSD)
     sed -i '' \
 	-e "s|vmemoryuse=unlimited|vmemoryuse=$maxvmem|g" \
 	-e "s|maxproc=unlimited|maxproc=$maxprocs|g" \
+	/etc/login.conf
+    cap_mkdb /etc/login.conf
+    ;;
+*)
+    printf "Warning: Setting process and memory limits not yet implemented on $(uname).\n"
+    ;;
+esac
+
+# Umask
+case $(osname) in
+FreeBSD)
+    sed -i '' \
 	-e "s|umask=022|umask=027|g" \
 	/etc/login.conf
     cap_mkdb /etc/login.conf
     sed -i '' -E 's|umask.*22|umask 027|g' /usr/share/skel/dot.*
     ;;
 RHEL)
+    for file in /etc/bashrc /etc/profile /etc/csh.cshrc; do
+	auto-append-line 'umask 027' $file $0
+    done
     ;;
 *)
     printf "Warning: Setting process and memory limits not yet implemented on $(uname).\n"
