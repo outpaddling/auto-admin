@@ -1,0 +1,207 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+osname()
+{
+    # Check ssh binaries for tampering
+    if [ -e /etc/redhat-release ]; then
+	printf "RHEL"
+    else
+	uname
+    fi
+}
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-22  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+echo $(osname)
+export PATH=${PATH}:`dirname $0`
+
+if [ -z $EDITOR ]; then
+    EDITOR=vi
+    export EDITOR
+fi
+
+case $(osname) in
+RHEL)
+    # rpm -Vv keyutils-libs-1.2-1.el5
+    rpm -vV openssh-clients || true
+    pause
+    ;;
+*)
+    printf "Warning: ssh checksum test not yet implemented on $(uname).\n"
+    ;;
+esac
+
+# Install all system updates
+case $(osname) in
+RHEL)
+    yum update
+    ;;
+
+FreeBSD)
+    freebsd-update fetch
+    if ! freebsd-update install | \
+	fgrep -q 'No updates are available to install.'; then
+	reboot='x'
+	while [ 0$reboot != 0yes ] && [ 0$reboot != 0no ]; do
+	    printf "Reboot? (yes/no)\n"
+	    read reboot
+	    if [ 0$reboot == 0yes ]; then
+		shutdown -r now
+	    fi
+	done
+    fi
+    ;;
+*)
+    printf "Warning: OS update not yet implemented on $(uname).\n"
+esac
+
+denyhosts-setup
+
+# Disable all clear-text services
+printf "Disable all clear-text and unnecessary services.\n"
+pause
+
+case $(osname) in
+FreeBSD)
+    $EDITOR /etc/inetd.conf
+    ;;
+*)
+    printf "Warning: Clear-text services disable not yet implemented on $(uname).\n"
+    ;;
+esac    
+
+# Add account for sysadmin
+
+# http://wiki.centos.org/HowTos/OS_Protection
+
+# nosuid, nodev on as many mounts as possible
+printf 'Add nosuid on as many partitions as possible.\n'
+pause
+$EDITOR /etc/fstab
+
+# Update all mounts after changes to fstab
+case $(osname) in
+FreeBSD)
+    mount -au || true
+    ;;
+RHEL|Linux)
+    mount -a -o update
+    ;;
+*)
+    printf "Warning: Remount not yet implemented on $(uname).\n"
+    ;;
+esac    
+
+# Lock screen on idle consoles
+
+# Idle time limits
+
+# Resource limits to contain fork bombs, etc.
+printf "Maximum processes per user? "
+read maxprocs
+printf "Maximum memory per process? (use 'm' or 'g' suffix) "
+read maxvmem
+
+# FIXME: Move CentOS cluster-admin limit scripts here
+case $(osname) in
+FreeBSD)
+    sed -i '' \
+	-e "s|vmemoryuse=unlimited|vmemoryuse=$maxvmem|g" \
+	-e "s|maxproc=unlimited|maxproc=$maxprocs|g" \
+	-e "s|umask=022|umask=027|g" \
+	/etc/login.conf
+    cap_mkdb /etc/login.conf
+    sed -i '' -E 's|umask.*22|umask 027|g' /usr/share/skel/dot.*
+    ;;
+RHEL)
+    ;;
+*)
+    printf "Warning: Setting process and memory limits not yet implemented on $(uname).\n"
+    ;;
+esac
+
+# Disable ICMP redirects from arbitrary sources and tcp timestamps
+case $(osname) in
+RHEL)
+    for rule in \
+	net.ipv4.conf.all.accept_redirects=0 \
+	net.ipv6.conf.all.accept_redirects=0 \
+	net.ipv4.tcp_timestamps=0; do
+	sysctl "$rule"
+	auto-append-line "$rule" /etc/sysctl.conf $0
+    done
+    ;;
+*)
+    printf "Warning: ICMP redirect disable not yet implemented on $(uname).\n"
+    ;;
+esac
+
+if fgrep 'release 6' /etc/redhat-release; then
+    sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' /etc/sysconfig/init
+else
+    printf "Warning: Single-user login protection not yet implemented on $osname.\n"
+fi
+
+for file in /usr/local/etc/apache24/httpd.conf /etc/httpd/conf/httpd.conf; do
+    if [ -e $file ]; then
+	auto-append-line 'TraceEnable Off' $file $0
+    fi
+done
+
+case $osname in
+FreeBSD)
+    # NTPD on FreeBSD
+    auto-append-line 'restrict -4 default nomodify nopeer noquery notrap' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict -6 default nomodify nopeer noquery notrap' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict 127.0.0.1' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict -6 ::1' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict 127.127.1.0' \
+	/etc/ntp.conf nocomment
+    ;;
+*)
+    printf "Warning: NTP security not yet implemented on $osname.\n"
+    ;;
+esac
+
