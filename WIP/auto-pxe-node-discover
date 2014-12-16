@@ -134,7 +134,7 @@ fi
 printf "Using $lease_file and $dhcp_conf...\n"
 
 if ! fgrep $base_name /etc/hosts | grep $domain; then
-    printf "No existing hosts beginnng with $base_name.\n"
+    printf "No existing hosts beginning with $base_name.\n"
 fi
 printf "Next serial number? "
 read serial_number
