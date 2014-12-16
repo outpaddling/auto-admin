@@ -43,6 +43,25 @@ usage()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-12-16  root        Begin
+##########################################################################
+
+line()
+{
+    printf '================================================================\n'
+    return 0
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -58,6 +77,8 @@ if [ -z $EDITOR ]; then
     export EDITOR
 fi
 
+line
+printf 'Verifying openssh checksums...\n'
 case $(osname) in
 RHEL)
     # rpm -Vv keyutils-libs-1.2-1.el5
@@ -69,6 +90,9 @@ RHEL)
     ;;
 esac
 
+pause
+line
+printf 'Installing updates...\n'
 # Install all system updates
 case $(osname) in
 RHEL)
@@ -93,14 +117,20 @@ FreeBSD)
     printf "Warning: OS update not yet implemented on $(uname).\n"
 esac
 
-denyhosts-setup
-
-# Disable all clear-text services
-printf "Disable all clear-text and unnecessary services.\n"
 pause
+line
+printf 'Installing denyhosts...\n'
+auto-denyhosts-setup
 
+pause
+line
+printf 'Disabling clear-text services...\n'
 case $(osname) in
 FreeBSD)
+    # Disable all clear-text services
+    printf "Disable all clear-text and unnecessary services.\n"
+    pause
+
     $EDITOR /etc/inetd.conf
     ;;
 *)
@@ -113,6 +143,9 @@ esac
 # http://wiki.centos.org/HowTos/OS_Protection
 
 # nosuid, nodev on as many mounts as possible
+pause
+line
+printf 'Updating fstab...\n'
 printf 'Add nosuid on as many partitions as possible.\n'
 pause
 $EDITOR /etc/fstab
@@ -134,6 +167,10 @@ esac
 
 # Idle time limits
 
+pause
+line
+printf 'Adding resource limits to prevent fork bombs, etc...\n'
+
 # FIXME: Move CentOS cluster-admin limit scripts here
 case $(osname) in
 FreeBSD)
@@ -154,6 +191,9 @@ FreeBSD)
     ;;
 esac
 
+pause
+line
+printf 'Setting umask to 027...\n'
 # Umask
 case $(osname) in
 FreeBSD)
@@ -173,6 +213,10 @@ RHEL)
     ;;
 esac
 
+pause
+line
+printf 'Disabling ICMP redirects...\n'
+
 # Disable ICMP redirects from arbitrary sources and tcp timestamps
 case $(osname) in
 RHEL)
@@ -189,7 +233,11 @@ RHEL)
     ;;
 esac
 
-if fgrep 'release 6' /etc/redhat-release; then
+pause
+line
+printf 'Enabling password for single-user mode...\n'
+
+if fgrep -q 'release 6' /etc/redhat-release; then
     sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' /etc/sysconfig/init
 else
     printf "Warning: Single-user login protection not yet implemented on $osname.\n"
@@ -201,6 +249,9 @@ for file in /usr/local/etc/apache24/httpd.conf /etc/httpd/conf/httpd.conf; do
     fi
 done
 
+pause
+line
+printf 'Securing ntpd...\n'
 case $osname in
 FreeBSD)
     # NTPD on FreeBSD
