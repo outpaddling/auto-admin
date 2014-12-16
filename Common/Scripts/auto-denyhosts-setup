@@ -30,17 +30,19 @@ FreeBSD)
     pkg install -y denyhosts
     ;;
 Linux)
-    cd /usr/pkgsrc-1
-    if [ -e jb-wip ]; then
-	cd jb-wip
-	svn up
-    else
-	svn co svn+ssh://bacon@jbacon.acadix.biz/home/bacon/SVN/jb-wip
+    if [ ! -e /usr/pkg-1/bin/denyhosts.py ]; then
+	cd /usr/pkgsrc-1
+	if [ -e jb-wip ]; then
+	    cd jb-wip
+	    svn up
+	else
+	    svn co svn+ssh://bacon@jbacon.acadix.biz/home/bacon/SVN/jb-wip
+	fi
+	
+	# Install from pkgsrc
+	cd /usr/pkgsrc-1/jb-wip/denyhosts
+	bmake install
     fi
-    
-    # Install from pkgsrc
-    cd /usr/pkgsrc-1/jb-wip/denyhosts
-    bmake install
     ln -sf /usr/pkg-1/share/denyhosts/daemon-control-dist /etc/init.d/denyhosts
     
     # Enable init script
