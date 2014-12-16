@@ -1,0 +1,56 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Set address space limit limits.d
+#   Arguments:
+#       Virtual memory limit in kilobytes
+#   History:
+#   Date        Name        Modification
+#   2013-12-14  root        Begin
+##########################################################################
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 kilobytes\n"
+    exit 1
+fi
+
+mem_limit=$1
+
+# On controller nodes, set limits fairly high due to recent Linux kernel's
+# method of measuring memory for multithreaded processes.
+#*   soft    as      16777216
+#*   hard    as      16777216
+#*   soft    memlock 16777216
+#*   hard    memlock 16777216
+
+# Note: datasize is also controlled by --mem-per-cpu, so the limits
+# below may not apply.
+
+# Setting stack to all available RAM causes failure in thread startup.
+# Setting to unlimited instead allows it to work.
+# Limit only as (vmemory) and set the rest to unlimited.
+cat << EOM > /etc/security/limits.d/91-memory.conf
+*   soft    as      $mem_limit
+*   hard    as      $mem_limit
+*   soft    data    unlimited
+*   hard    data    unlimited
+*   soft    memlock unlimited
+*   hard    memlock unlimited
+*   soft    stack   unlimited
+*   hard    stack   unlimited
+EOM
+
+cat << EOM > /etc/sysconfig/slurm
+ulimit -v $mem_limit
+ulimit -d unlimited
+ulimit -l unlimited
+ulimit -s unlimited
+
+# Memlocks the slurmd process's memory so that when a node starts swapping,
+# the slurmd will continue to respond
+SLURMD_OPTIONS="-M"
+EOM
+
+chmod 644 /etc/security/limits.d/91-memory.conf /etc/sysconfig/slurm
+
