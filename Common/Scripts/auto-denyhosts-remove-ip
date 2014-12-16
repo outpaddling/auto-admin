@@ -1,0 +1,70 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-07-30  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 ip-address\n"
+    exit 64 # From sysexits.h
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+#
+if [ $# != 1 ]; then
+    usage
+fi
+
+ip=$1
+work_dir='/usr/local/share/denyhosts/data'
+
+# Stop DenyHosts
+/usr/local/etc/rc.d/denyhosts stop
+
+# Remove the IP address from /etc/hosts.deny
+sed -i '' "/$ip/d" /etc/hosts.deniedssh
+
+# Edit WORK_DIR/hosts and remove the lines containing the IP address. Save the file.
+sed -i '' "/$ip/d" $work_dir/hosts
+
+# Edit WORK_DIR/hosts-restricted and remove the lines containing the IP address. Save the file.
+sed -i '' "/$ip/d" $work_dir/hosts-restricted
+
+# Edit WORK_DIR/hosts-root and remove the lines containing the IP address. Save the file.
+sed -i '' "/$ip/d" $work_dir/hosts-root
+
+# Edit WORK_DIR/hosts-valid and remove the lines containing the IP address. Save the file.
+sed -i '' "/$ip/d" $work_dir/hosts-valid
+
+# Edit WORK_DIR/user-hosts and remove the lines containing the IP address. Save the file.
+sed -i '' "/$ip/d" $work_dir/users-hosts
+
+# (optional) Consider adding the IP address to WORK_DIR/allowed-hosts
+cat << EOM
+You can add $ip to the allowed-hosts file to prevent it from being
+blocked again in the future.
+
+Only do this if you trust ALL potential users of $ip.
+EOM
+
+printf "Add $ip to allowed-hosts? (y/n) "
+read add
+if [ 0$add = 0y ] && ! fgrep $ip $work_dir/allowed-hosts; then
+    printf "$ip\n" >> $work_dir/allowed-hosts
+fi
+
+# Start DenyHosts
+/usr/local/etc/rc.d/denyhosts start
+
