@@ -88,6 +88,7 @@ get_new_leases()
 		    getline
 		}   while ( $1 != "binding" || $2 != "state" );
 		print $3;
+		exit;
 	    }'  $lease_file`
 	    
 	    # Active leases not already in /etc/hosts must be added
