@@ -79,7 +79,7 @@ get_new_leases()
     for ip in $leases; do
 	# Already recorded?
 	if ! egrep -q "^$ip" /etc/hosts; then
-	    printf "$ip not found in /etc/hosts.\n"
+	    printf "\n$ip not found in /etc/hosts.\n"
 	    
 	    # Get lease state from dhcpd.leases
 	    state=`awk -v ip=$ip '$2 == ip {
@@ -167,9 +167,9 @@ while [ 0$again != 0n ]; do
 	read wait
 	if [ 0$wait != 0n ]; then
 	    while [ -z "$new_leases" ]; do
-		get_new_leases $lease_file
 		sleep 2
 		printf '.'
+		get_new_leases $lease_file
 	    done
 	fi
     fi
