@@ -28,28 +28,45 @@ if [ $# != 1 ]; then
 fi
 
 ip=$1
-work_dir='/usr/local/share/denyhosts/data'
+for work_dir in /usr/local/share/denyhosts/data \
+		/usr/pkg-1/share/denyhosts/data; do
+    if [ -e $work_dir ]; then
+	break
+    fi
+done
+
+case `uname` in
+FreeBSD)
+    sed="sed -i ''"
+    ;;
+Linux)
+    sed="sed -i"
+    ;;
+*)
+    printf "${0}: Unsuported OS: `uname`\n"
+    exit 1
+esac
 
 # Stop DenyHosts
-/usr/local/etc/rc.d/denyhosts stop
+service denyhosts stop
 
 # Remove the IP address from /etc/hosts.deny
-sed -i '' "/$ip/d" /etc/hosts.deniedssh
+$sed "/$ip/d" /etc/hosts.deniedssh
 
 # Edit WORK_DIR/hosts and remove the lines containing the IP address. Save the file.
-sed -i '' "/$ip/d" $work_dir/hosts
+$sed "/$ip/d" $work_dir/hosts
 
 # Edit WORK_DIR/hosts-restricted and remove the lines containing the IP address. Save the file.
-sed -i '' "/$ip/d" $work_dir/hosts-restricted
+$sed "/$ip/d" $work_dir/hosts-restricted
 
 # Edit WORK_DIR/hosts-root and remove the lines containing the IP address. Save the file.
-sed -i '' "/$ip/d" $work_dir/hosts-root
+$sed "/$ip/d" $work_dir/hosts-root
 
 # Edit WORK_DIR/hosts-valid and remove the lines containing the IP address. Save the file.
-sed -i '' "/$ip/d" $work_dir/hosts-valid
+$sed "/$ip/d" $work_dir/hosts-valid
 
 # Edit WORK_DIR/user-hosts and remove the lines containing the IP address. Save the file.
-sed -i '' "/$ip/d" $work_dir/users-hosts
+$sed "/$ip/d" $work_dir/users-hosts
 
 # (optional) Consider adding the IP address to WORK_DIR/allowed-hosts
 cat << EOM
@@ -66,5 +83,5 @@ if [ 0$add = 0y ] && ! fgrep $ip $work_dir/allowed-hosts; then
 fi
 
 # Start DenyHosts
-/usr/local/etc/rc.d/denyhosts start
+service denyhosts start
 
