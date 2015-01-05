@@ -8,30 +8,67 @@ auto-admin \- Automated systems management tools
 .PP
 .nf 
 .na 
-auto-amd-local-setup
+
+Common:
+
+auto-append-line
+auto-ask
+auto-denyhosts-remove-ip
+auto-denyhosts-setup
+auto-enable-autologout
+auto-harden
+auto-insert-line
+auto-pkgsrc-setup
+auto-pxe-node-discover
+auto-replace-file
+auto-ssh-authorize
+
+FreeBSD:
+
 auto-amd-nfs-setup
-auto-append-line [search-string] line file calling-program-name
-auto-ask tag "question" default-answer
 auto-clean-ports
 auto-config-snd-driver
-auto-disable-service rc.conf-name
+auto-db-dir
+auto-disable-service
 auto-enable-compat32
+auto-enable-hal-mount
 auto-enable-passwdqc
 auto-enable-procfs
-auto-enable-service [-s rc.d-name] rc.conf-name calling-program-name
+auto-enable-service
 auto-fastest-mirror
-auto-install-packages category/port [category/port ...]
-auto-ipfw-gateway-setup public-interface local-interface
-auto-kdm3-toggle on|off
-auto-ldap-adduser [username]
-auto-ldap-client-setup uri ou o cacert-file
-auto-package-installed category/port
-auto-replace-file new old
-auto-service-enabled rc.conf-name
-auto-set-suspend-on-lid
-auto-update-port-framework category/port
+auto-install-packages
+auto-ipfw-gateway-setup
+auto-kdm3-toggle
+auto-ldap-adduser
+auto-ldap-client-setup
+auto-package-installed
+auto-print-make-variable
+auto-pxe-installer-setup
+auto-service-enabled
+auto-set-suspend-mode
+auto-update-port-framework
 auto-update-xorg.conf
-auto-xdm-toggle on|off
+auto-using-pkgng
+auto-xdm-toggle
+
+NetBSD:
+
+auto-desktop-setup
+auto-install-packages
+auto-install-packages-from-source
+auto-install-pkgsrc-tree
+auto-package-installed
+auto-select-pkgsrc-dist
+install-vuln
+
+RHEL/CentOS:
+
+auto-disable-hyperthreading
+auto-ldap-client-setup
+auto-pxe-installer-setup
+auto-register-dhcp-hostname
+auto-set-memory-limits
+
 .ad
 .fi
 
