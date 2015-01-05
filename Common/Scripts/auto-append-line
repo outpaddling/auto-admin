@@ -6,7 +6,7 @@
 #       is not already in the file.
 #
 #   Arguments:
-#       $1 = search key
+#       $1 = search key [optional]
 #       $2 = line to append if search key not found
 #       $3 = filename
 #       $4 = name of calling program, which is placed in a comment
