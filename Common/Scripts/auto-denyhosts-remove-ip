@@ -76,12 +76,6 @@ blocked again in the future.
 Only do this if you trust ALL potential users of $ip.
 EOM
 
-printf "Add $ip to allowed-hosts? (y/n) "
-read add
-if [ 0$add = 0y ] && ! fgrep $ip $work_dir/allowed-hosts; then
-    printf "$ip\n" >> $work_dir/allowed-hosts
-fi
-
 # Start DenyHosts
 service denyhosts start
 
