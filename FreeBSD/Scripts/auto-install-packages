@@ -102,100 +102,57 @@ for port in $*; do
 	    install_from_port
 	    status=$?
 	else
-	    if [ ! -e /usr/sbin/pkg ] || ! auto-using-pkgng; then
-		# Old pkg_add system
-		# Short: pub/FreeBSD/ports/amd64/packages-8.3-release/Latest
-		# Versioned: pub/FreeBSD/ports/amd64/packages-8.3-release/All
-		if [ -e $PKGDIR/$pkg_name.tbz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.tbz"
-		    pkg_flags=''
-		elif [ -e $PKGDIR/$pkg_name.txz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.txz"
-		    pkg_flags=''
-		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.tbz"
-		    pkg_flags=''
-		elif [ -e /dist/packages/All/$pkg_name.txz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.txz"
-		    pkg_flags=''
-		else
-		    pkg_path=$pkg_name
-		    pkg_flags='-FKr'
-		fi
-		printf "pkg_add $pkg_flags $pkg_path\n"
-    
-		# Compensate for network hiccups by retrying
-		tries=2
-		while ! pkg_add $pkg_flags $pkg_path && [ $tries -gt 1 ]; do
+	    # New pkgng system
+	    unset PACKAGESITE
+	    unset PACKAGEROOT
+	    if [ -e $PKGDIR/$pkg_name.tbz ]; then
+		pkg_path="$PKGDIR/$pkg_name.tbz"
+		pkg_flags='add'
+	    elif [ -e $PKGDIR/$pkg_name.txz ]; then
+		pkg_path="$PKGDIR/$pkg_name.txz"
+		pkg_flags='add'
+	    elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
+		pkg_path="/dist/packages/All/$pkg_name.tbz"
+		pkg_flags='add'
+	    elif [ -e /dist/packages/All/$pkg_name.txz ]; then
+		pkg_path="/dist/packages/All/$pkg_name.txz"
+		pkg_flags='add'
+	    else
+		# Package is in /var/cache/pkg or not yet downloaded
+		pkg_path=$pkg_name
+		pkg_flags='install -y'
+		unset PKGDIR    # Let pkgng find it
+	    fi
+	    printf "pkg $pkg_flags $pkg_path\n"
+
+	    # Compensate for network hiccups by retrying
+	    tries=2
+	    # pkg returns 0 when it can't find a package, so grep the
+	    # output to detect failures.
+	    success=0
+	    tmp=auto-install-packages.tmp
+	    while [ $success = 0 ] && [ $tries -gt 1 ]; do
+		pkg $pkg_flags $pkg_path 2>&1 | tee $tmp
+		if fgrep -q 'No package' $tmp; then
 		    tries=$((tries-1))
 		    printf "Error installing $port.  $tries more tries.\n"
 		    sleep 5
-		done
-		if [ $tries -gt 1 ]; then
-		    status=0
 		else
-		    rm -f $PKGDIR/$pkg_name.tbz $PKGDIR/$pkg_name.txz
-		    if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
-			printf "Giving up on binary package.  Attempting to build from source...\n"
-			install_from_port
-			status=$?
-		    else
-			# Better status value (from pkg_add?)
-			status=1
-		    fi
+		    success=1
 		fi
+		rm $tmp
+	    done
+	    if [ $tries -gt 1 ]; then
+		status=0
 	    else
-		# New pkgng system
-		unset PACKAGESITE
-		unset PACKAGEROOT
-		if [ -e $PKGDIR/$pkg_name.tbz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.tbz"
-		    pkg_flags='add'
-		elif [ -e $PKGDIR/$pkg_name.txz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.txz"
-		    pkg_flags='add'
-		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.tbz"
-		    pkg_flags='add'
-		elif [ -e /dist/packages/All/$pkg_name.txz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.txz"
-		    pkg_flags='add'
+		rm -f $PKGDIR/$pkg_name.tbz $PKGDIR/$pkg_name.txz
+		if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
+		    printf "Giving up on binary package.  Attempting to build from source...\n"
+		    install_from_port
+		    status=$?
 		else
-		    pkg_path=$pkg_name
-		    pkg_flags='install -y'
-		    unset PKGDIR    # Let pkgng find it
-		fi
-		printf "pkg $pkg_flags $pkg_path\n"
-    
-		# Compensate for network hiccups by retrying
-		tries=2
-		# pkg returns 0 when it can't find a package, so grep the
-		# output to detect failures.
-		success=0
-		tmp=auto-install-packages.tmp
-		while [ $success = 0 ] && [ $tries -gt 1 ]; do
-		    pkg $pkg_flags $pkg_path 2>&1 | tee $tmp
-		    if fgrep -q 'No package' $tmp; then
-			tries=$((tries-1))
-			printf "Error installing $port.  $tries more tries.\n"
-			sleep 5
-		    else
-			success=1
-		    fi
-		    rm $tmp
-		done
-		if [ $tries -gt 1 ]; then
-		    status=0
-		else
-		    rm -f $PKGDIR/$pkg_name.tbz $PKGDIR/$pkg_name.txz
-		    if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
-			printf "Giving up on binary package.  Attempting to build from source...\n"
-			install_from_port
-			status=$?
-		    else
-			# Better status value (from pkg_add?)
-			status=1
-		    fi
+		    # Better status value (from pkg_add?)
+		    status=1
 		fi
 	    fi
 	fi
