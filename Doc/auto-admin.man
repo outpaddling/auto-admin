@@ -316,6 +316,54 @@ is installed.  Exit status is 0 if installed, and non-zero otherwise.
 In addition, a text message stating whether the port is installed is
 printed to the standard output.
 
+.SH AUTO-PXE-INSTALLER-SETUP
+
+.B auto-pxe-installer-setup FreeBSD-installer.iso
+
+Configures the host as a PXE server for net booting other computers on the
+network and automatically installing the FreeBSD system from the FreeBSD ISO
+install image provided.
+
+FreeBSD-installer.iso is any FreeBSD install image using bsdinstall.
+
+Older installers using sysinstall are not supported.
+
+.B auto-pxe-installer-setup
+enables dhcpd, tftpd, and NFS, and automatically configures them
+to allow other computers on the network to PXE boot and run an automated
+installation.
+
+The newly installed systems will accept passwordless root login from the
+PXE server, to facilitate automated post-install configuration.
+
+.B auto-pxe-installer-setup
+is intended primarily for quickly deploying nodes in a cluster or grid
+using the head node as a PXE server.
+
+.SH AUTO-PXE-NODE-DISCOVER
+
+.B auto-pxe-node-discover basename digits domain
+
+Discovers new DHCP clients on the local network, assigns each a host name,
+adds them to /etc/hosts and creates a static DHCP lease.
+
+Host names take the form basename-#.domain, where # is a 0-padded decimal
+value with 'digits' digits.
+
+For example,
+
+auto-pxe-node-discover compute 3 local
+
+will produce host names compute-001.local, compute-002.local, etc.
+
+Meant to be used in conjunction with
+.B auto-pxe-installer-setup.
+
+It is recommended, but not essential, to start
+.B auto-pxe-node-discover
+before imaging any nodes, and to ensure that each node has been assigned
+the desired host name before PXE booting the next node.
+
 .SH AUTO-REPLACE-FILE
 
 .B auto-replace-file new old
