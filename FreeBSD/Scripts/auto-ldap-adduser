@@ -38,7 +38,7 @@ while [ 0"$comment" = 0 ]; do
     printf "Comment? [default = '$default_comment'] "
     read comment
     if [ 0"$comment" = 0'' ]; then
-	comment=$default_comment
+	comment="$default_comment"
     fi
 done
 
@@ -63,7 +63,7 @@ useradd_cmd="pw useradd $user_name -w random"
 if [ 0$user_id != 0 ]; then
     useradd_cmd="$useradd_cmd -u $user_id"
 fi
-useradd_cmd="$useradd_cmd -c '$comment' -g $primary_group"
+useradd_cmd="$useradd_cmd -c \"$comment\" -g $primary_group"
 if [ 0$othergroups != 0 ]; then
     useradd_cmd="$useradd_cmd -G \"$othergroups\""
 fi
