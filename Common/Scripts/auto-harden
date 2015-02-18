@@ -119,8 +119,9 @@ esac
 
 pause
 line
-printf 'Installing denyhosts...\n'
-auto-denyhosts-setup
+#printf 'Installing denyhosts...\n'
+#auto-denyhosts-setup
+printf "Denyhosts setup is not yet implemented.\n"
 
 pause
 line
