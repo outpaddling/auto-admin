@@ -51,6 +51,18 @@ authconfig --useshadow --enableldap --enableldapauth --enableldaptls \
     --ldapserver="$uri" --ldapbasedn="$basedn" \
     --passalgo=md5 --enablelocauthorize --update
 
+cat << EOM > /etc/openldap/ldap.conf
+
+ssl start tls
+tls_reqcert allow
+
+EOM
+
+if [ -z $EDITOR ]; then
+    export EDITOR=vi
+fi
+$EDITOR /etc/openldap/ldap.conf
+
 cat << EOM
 
 ==========================================================================
