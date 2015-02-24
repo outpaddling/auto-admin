@@ -1,4 +1,10 @@
 
+auto-pxe-installer should back up root ssh keys
+
+profile.d scripts should be 644
+
+Set GATEWAY in sysconfig/network for PXE install?
+
 auto-replace-file should take extension as third arg, otherwise use numbers
 
 Clean ports after successful install
