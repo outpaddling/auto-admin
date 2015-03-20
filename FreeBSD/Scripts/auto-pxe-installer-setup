@@ -24,7 +24,14 @@
 
 usage()
 {
-    printf "Usage: $0 file.iso\n"
+    cat << EOM
+
+Usage: $0 FreeBSD-something.iso
+
+A disc1 or dvd1 ISO is recommended.  The bootonly ISOs are not supported
+at this time.
+
+EOM
     exit 1
 }
 
