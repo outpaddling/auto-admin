@@ -246,7 +246,7 @@ printf 'Available network interfaces:\n\n'
 ifconfig|fgrep flags
 iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
 default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
-local_ip=`auto-ask pxe-local-ip 'IP address of this DHCP server?' $default_ip`
+local_ip=`auto-ask pxe-local-ip 'IP address of this server?' $default_ip`
 subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
 # default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
 default_mask='255.255.0.0'
