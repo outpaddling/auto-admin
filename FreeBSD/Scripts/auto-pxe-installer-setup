@@ -481,6 +481,7 @@ chmod 640 $installerconfig      # Will contain an ssh public key
 auto-append-line 'rpcbind_enable' 'rpcbind_enable="YES"' /etc/rc.conf $0
 auto-append-line 'mountd_enable' 'mountd_enable="YES"' /etc/rc.conf $0
 auto-append-line 'nfs_server_enable' 'nfs_server_enable="YES"' /etc/rc.conf $0
+auto-append-line nfs_server_flags 'nfs_server_flags="-t -u -n 16"' /etc/rc.conf $0
 service nfsd restart
 service mountd reload
 
