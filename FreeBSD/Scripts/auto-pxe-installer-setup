@@ -220,7 +220,7 @@ choose the PXELINUX menu option or find another way to ensure that you
 don't accidentally reimage your computer every time it boots!
 
 EOM
-pxe_boot_menu=`auto-ask pxe-menu "Install a PXE boot menu using syslinux boot images?" n`
+pxe_boot_menu=`auto-ask pxe-menu "Install a PXE boot menu using syslinux boot images?" y`
 if [ $pxe_boot_menu = y ]; then
     tftp_hpa
 else
@@ -350,22 +350,33 @@ EOM
     pause
 fi
 
-
 ##########################################################################
 #   Set up NFS
 ##########################################################################
 
-auto-append-line "$prefix/images -alldirs,ro -network $subnet -mask $netmask" \
-    /etc/exports $0
-
-cat << EOM
+df
+use_zfs=`auto-ask use-zfs "Use ZFS filesystem?" y`
+if [ $use_zfs == 'y' ]; then
+    zfs_pool=`auto-ask zfs-pool "ZFS Pool?" zroot`
+    zfs create -o mountpoint=$prefix/images ${zfs_pool}/pxe-images || true
+    zfs set sharenfs="-maproot=root -network $subnet -mask $netmask" \
+	${zfs_pool}/pxe-images
+    zfs get sharenfs
+    pause
+else
+    auto-append-line \
+	"$prefix/images -alldirs,ro -network $subnet -mask $netmask" \
+	/etc/exports $0
+    
+    cat << EOM
 
 Editing /etc/exports.  Make sure your syntax is correct and that you are
 using -alldirs on the parent of any directories in the same partition.
 
 EOM
-pause
-vi /etc/exports
+    pause
+    vi /etc/exports
+fi
 
 if [ ! -e $installer_path ]; then
     mkdir -p $installer_path
