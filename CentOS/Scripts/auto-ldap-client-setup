@@ -20,13 +20,28 @@
 #   2013-02-12  Jason Bacon Begin
 ##########################################################################
 
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# != 3 ]; then
     printf "Usage: $0 uri basedn cacert-file\n"
-    printf "Example:\n    $0 ldap://ldap.my.domain "ou=people,o=uwm.edu" ./cacert.crt\n"
+    printf "Example:\n    $0 ldap://ldap.my.domain "ou=people,o=my.domain" ./cacert.crt\n"
     exit 1
 fi
 
@@ -51,7 +66,9 @@ authconfig --useshadow --enableldap --enableldapauth --enableldaptls \
     --ldapserver="$uri" --ldapbasedn="$basedn" \
     --passalgo=md5 --enablelocauthorize --update
 
-cat << EOM > /etc/openldap/ldap.conf
+pause
+
+cat << EOM >> /etc/openldap/ldap.conf
 
 ssl start tls
 tls_reqcert allow

@@ -33,6 +33,10 @@ ou=$2
 o=$3
 cacert=$4
 
+if [ -z $EDITOR ]; then
+    export EDITOR=vi
+fi
+
 # Let this install as a dependency pkg_add -r openldap23-client
 auto-install-packages security/pam_ldap net/nss_ldap
 
@@ -50,7 +54,8 @@ tls_cacert /usr/local/etc/openldap/cacert.crt
 tls_reqcert allow
 EOM
 	printf "Updated %s.  Check/correct syntax if necessary.\n" $ldap_conf
-	#vi $ldap_conf
+	pause
+	$EDITOR $ldap_conf
     fi
 done
 
@@ -61,7 +66,8 @@ if ! fgrep -q login_attribute $ldap_conf; then
 fi
 
 # Tell PAM to use LDAP for ssh logins
-if ! fgrep -q pam_ldap.so /etc/pam.d/sshd; then
+for service in sshd system xdm; do
+if ! fgrep -q pam_ldap.so /etc/pam.d/$service; then
     awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
 	    {
 		print "# Attempt and accept LDAP auth before unix auth"
@@ -73,14 +79,11 @@ if ! fgrep -q pam_ldap.so /etc/pam.d/sshd; then
 	    {
 		print $0;
 	    }
-	  }' /etc/pam.d/sshd > /etc/pam.d/temp
-    mv /etc/pam.d/sshd /etc/pam.d/sshd.orig
-    mv /etc/pam.d/temp /etc/pam.d/sshd
+	  }' /etc/pam.d/$service > /etc/pam.d/temp
+    mv /etc/pam.d/$service /etc/pam.d/$service.orig
+    mv /etc/pam.d/temp /etc/pam.d/$service
+    printf "Updated /etc/pam.d/$service.  Check/correct syntax if necessary.\n"
 fi
-
-printf "Updated /etc/pam.d/sshd.  Check/correct syntax if necessary.\n"
-#pause
-#vi /etc/pam.d/sshd
 
 # Tell ssh to use PAM
 # Does not appear to be necessary
@@ -88,4 +91,16 @@ printf "Updated /etc/pam.d/sshd.  Check/correct syntax if necessary.\n"
 # pause
 # vi /etc/ssh/sshd_config
 # /etc/rc.d/sshd restart
+
+cat << EOM
+
+==========================================================================
+
+Make sure forward and reverse DNS are functioning for $(hostname).
+
+Some LDAP servers will reject authentication requests if they cannot
+verify the hostname and IP.
+
+==========================================================================
+EOM
 
