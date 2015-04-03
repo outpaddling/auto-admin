@@ -68,23 +68,24 @@ fi
 
 # Tell PAM to use LDAP for ssh logins
 for service in sshd system xdm; do
-if ! fgrep -q pam_ldap.so /etc/pam.d/$service; then
-    awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
-	    {
-		print "# Attempt and accept LDAP auth before unix auth"
-		printf("auth\t\tsufficient\t/usr/local/lib/pam_ldap.so\tno_warn\n");
-		print "# If LDAP auth fails, unix auth must succeed to grant access"
-		print $0;
-	    }
-	    else
-	    {
-		print $0;
-	    }
-	  }' /etc/pam.d/$service > /etc/pam.d/temp
-    mv /etc/pam.d/$service /etc/pam.d/$service.orig
-    mv /etc/pam.d/temp /etc/pam.d/$service
-    printf "Updated /etc/pam.d/$service.  Check/correct syntax if necessary.\n"
-fi
+    if ! fgrep -q pam_ldap.so /etc/pam.d/$service; then
+	awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
+		{
+		    print "# Attempt and accept LDAP auth before unix auth"
+		    printf("auth\t\tsufficient\t/usr/local/lib/pam_ldap.so\tno_warn\n");
+		    print "# If LDAP auth fails, unix auth must succeed to grant access"
+		    print $0;
+		}
+		else
+		{
+		    print $0;
+		}
+	      }' /etc/pam.d/$service > /etc/pam.d/temp
+	mv /etc/pam.d/$service /etc/pam.d/$service.orig
+	mv /etc/pam.d/temp /etc/pam.d/$service
+	printf "Updated /etc/pam.d/$service.  Check/correct syntax if necessary.\n"
+    fi
+done
 
 # Tell ssh to use PAM
 # Does not appear to be necessary
