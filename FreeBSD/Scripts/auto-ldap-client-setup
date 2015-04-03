@@ -45,6 +45,7 @@ cp $cacert /usr/local/etc/openldap/cacert.crt
 
 # Set up ldap.conf files for openldap and PAM
 for ldap_conf in /usr/local/etc/openldap/ldap.conf /usr/local/etc/ldap.conf; do
+    touch $ldap_conf
     if ! fgrep -q uwm.edu $ldap_conf; then
 	cat << EOM >> $ldap_conf
 base ou=$ou,o=$o
