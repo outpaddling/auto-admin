@@ -529,6 +529,24 @@ setenv          PKGSRC_INCLUDE  \$install_prefix/include
 setenv          PKGSRC_LIB      \$install_prefix/lib
 EOM
 
+if [ -w /etc/profile.d ]; then
+    # Should come alphabetically after modules.sh and modules.csh
+    module_path_script=modulez`echo $install_prefix | tr '/' '-'`
+    
+    cat << EOM > /etc/profile.d/$module_path_script.sh
+MODULEPATH=\${MODULEPATH}:$sys_prefix/etc/modulefiles
+export MODULEPATH
+EOM
+    
+    cat << EOM > /etc/profile.d/$module_path_script.csh
+setenv MODULEPATH \${MODULEPATH}:$sys_prefix/etc/modulefiles
+EOM
+    
+    chmod 644 /etc/profile.d/$module_path_script*
+else
+    printf "Cannot update /etc/profile.d: Permission denied.\n"
+fi
+
 # Update PATH for installing packages below
 . ${sys_prefix}/etc/shrc
 echo $PATH
