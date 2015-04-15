@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -9,25 +9,34 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2012-01-08  Jason Bacon Begin
+#   2015-04-15  Jason Bacon Begin
 ##########################################################################
+
+usage()
+{
+    printf "Usage: $0 filename\n"
+    exit 1
+}
+
 
 ##########################################################################
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
-    printf "Usage: replace_file new old\n"
-    exit 1
+if [ $# != 1 ]; then
+    usage
 fi
 
-new=$1
-old=$2
-bak='orig'
-if cmp -s $new $old; then
-    printf "$new already installed.\n"
-else
-    auto-backup-file $old
-    /bin/cp -f $new $old
-fi
+file=$1
+suffix=1
+while [ -e $file.$suffix ]; do
+    # Avoid creating redundant backups
+    if cmp -s $file $file.$suffix; then
+	printf "This version of $file is already backed up in $file.$suffix.\n"
+	exit 0
+    fi
+    suffix=$(($suffix + 1))
+done
+printf "Backing up to $file.$suffix.\n"
+cp $file $file.$suffix
 
