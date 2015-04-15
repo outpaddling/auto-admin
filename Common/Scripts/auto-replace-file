@@ -23,7 +23,6 @@ fi
 
 new=$1
 old=$2
-bak='orig'
 if cmp -s $new $old; then
     printf "$new already installed.\n"
 else

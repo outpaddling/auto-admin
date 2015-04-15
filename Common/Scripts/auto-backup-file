@@ -28,6 +28,12 @@ if [ $# != 1 ]; then
 fi
 
 file=$1
+
+if [ ! -e $file ]; then
+    printf "$file does not exist.  Skipping backup.\n"
+    exit 0
+fi
+
 suffix=1
 while [ -e $file.$suffix ]; do
     # Avoid creating redundant backups
