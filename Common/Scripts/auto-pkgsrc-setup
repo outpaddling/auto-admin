@@ -380,6 +380,13 @@ if [ 0$unpack = 0y ]; then
     if [ `uname` = 'Darwin' ]; then
 	sed -i '.bak' 's|CPP_PRECOMP_FLAGS?=|# Disabled for /usr/local/bin/gcc CPP_PRECOMP_FLAGS?=|g' pkgsrc/mk/platform/Darwin.mk
     fi
+    
+    # Workaround for botstrap failure 2015-05-05
+    save_cwd=`pwd`
+    cd pkgsrc/pkgtools/libnbcompat
+    cvs up -dP
+    cd $save_cwd
+    
     mv pkgsrc $frameworks_prefix
 fi
 
@@ -428,8 +435,6 @@ if [ 0$bootstrap = '0y' ]; then
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap-$install_num.log
     fi
 
-    # FIXME: Put full compiler name in mk.conf?
-    
     # Separate bootstrap settings from our settings
     printf "\n" >> $sys_prefix/etc/mk.conf
     
@@ -445,7 +450,8 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "PREFER_PKGSRC=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
     fi
     
-    for license in openmotif-license qpl-v1.0 phylip-license eclipse-license; do
+    for license in openmotif-license qpl-v1.0 phylip-license eclipse-license \
+	    lame-license; do
 	printf "Allow packages with license $license? ([y]/n) "
 	read accepted
 	if [ 0$accepted != '0n' ]; then
