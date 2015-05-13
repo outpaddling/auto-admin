@@ -29,9 +29,18 @@ fi
 
 prefix="$1"
 cd "$prefix"
+
+before=`df -m . | awk '$1 != "Filesystem" { print $4 }'`
+printf "Initial free space: %d\n" $before
+
 for dir in */*/work; do
     printf "$dir\n"
     rm -rf $dir
 done
 
+after=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
+printf "Initial free space: %d\n" $before
+printf "Final free space: %d\n" $after
+diff=$(($after - $before))
+printf "%d megabytes freed.\n" $diff
 
