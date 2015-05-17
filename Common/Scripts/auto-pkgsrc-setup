@@ -373,7 +373,11 @@ if [ 0$unpack = 0y ]; then
     printf "Unpacking frameworks...\n"
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
-    tar --no-same-permissions -zoxf pkgsrc-$install_num.tar.gz
+    if [ `uname` = NetBSD ]; then
+	tar -zxf pkgsrc-$install_num.tar.gz
+    else
+	tar --no-same-permissions -zoxf pkgsrc-$install_num.tar.gz
+    fi
     rm -rf $frameworks_prefix $sys_prefix $install_prefix
     # Apple's gcc uses a non-standard flag that is not supported by
     # separately installed gcc.
@@ -558,11 +562,7 @@ fi
 echo $PATH
 
 # Basic instructions on installing a package
-if [ $(uname) = NetBSD ] || [ $(uname) = DragonFly ]; then
-    make=make
-else
-    make=bmake
-fi
+make=bmake
 
 echo Hello
 
