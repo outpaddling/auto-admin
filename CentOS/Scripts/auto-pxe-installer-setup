@@ -384,6 +384,7 @@ restorecon -R -v /root/.ssh     # Set security context for selinux
 ##########################################################################
 
 ksconfig=$installer_path/ks.cfg
+# FIXME: Ue this!
 root_pw="`awk -F : '$1 == "root" { print $2 }' /etc/shadow`"
 cat << EOM > $ksconfig
 # auto-pxe-linux-setup kickstart file
