@@ -62,9 +62,11 @@ certs_dir=/etc/openldap/cacerts
 mkdir -p $certs_dir
 cp $cacert $certs_dir
 
-authconfig --useshadow --enableldap --enableldapauth --enableldaptls \
+# In web example, but should not be needed:
+# --useshadow --passalgo=md5
+authconfig --enableldap --enableldapauth --enableldaptls \
     --ldapserver="$uri" --ldapbasedn="$basedn" \
-    --passalgo=md5 --enablelocauthorize --update
+    --enablelocauthorize --update
 
 pause
 
