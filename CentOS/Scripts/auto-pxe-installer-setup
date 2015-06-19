@@ -214,8 +214,8 @@ EOM
     # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
     first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
     last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
-    # Default lease time 10 years (effectively permanent for cluster nodes)
-    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '315360000'`
+    # Default lease time 20 years (effectively permanent)
+    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
 
     conf='/etc/dhcp/dhcpd.conf'
     if [ ! -e $conf.orig ]; then
