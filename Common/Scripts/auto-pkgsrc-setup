@@ -540,8 +540,11 @@ set     install_prefix  ${install_prefix}
 prepend-path    PATH            \$install_prefix/bin
 prepend-path    PATH            \$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man
-# Avoid using LD_LIBRARY_PATH if possible.
-# prepend-path    LD_LIBRARY_PATH \$install_prefix/lib
+prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
+# Avoid using LD_LIBRARY_PATH if possible.  This should not be necessary
+# since pkgsrc uses -rpath in most builds.
+# prepend-path LD_LIBRARY_PATH \$install_prefix/lib
+
 setenv          PKGSRC          \$install_prefix
 setenv          PKGSRC_INCLUDE  \$install_prefix/include
 setenv          PKGSRC_LIB      \$install_prefix/lib
