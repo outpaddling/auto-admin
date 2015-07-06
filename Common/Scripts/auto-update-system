@@ -1,0 +1,59 @@
+#!/bin/sh -e
+
+os_type=`uname`
+
+case $os_type in
+FreeBSD)
+    printf "Update installed packages? [y]/n "
+    read update
+    if [ 0$update != 0n ]; then
+	pkg update
+	pkg clean -y
+	pkg upgrade -y
+	pkg clean -y
+    fi
+    
+    printf "Update ports tree? [y]/n "
+    read update
+    if [ 0$update != 0n ]; then
+	portsnap fetch
+	if [ -e /usr/ports/CHANGES ]; then
+	    portsnap update
+	else
+	    portsnap extract
+	fi
+    fi
+    
+    printf "Update base system? [y]/n "
+    read update
+    if [ 0$update != 0n ]; then
+	tmpfile=update-system.tmp
+	freebsd-update fetch | tee $tmpfile
+	
+	if ! fgrep -q 'No updates' $tmpfile; then
+	    freebsd-update install
+	fi
+	rm $tmpfile
+    fi
+    ;;
+
+Linux)
+    # Complete interrupted yum updates if the tool is installe and there
+    # are any
+    yum-complete-transaction || true
+    
+    # FIXME: Add clean-up commands?
+    yum update
+    ;;
+    
+*)
+    printf "Error: $os_type is not yet supported.\n"
+    exit 1
+esac
+
+printf "Reboot? ([y]/n) "
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi
+
