@@ -51,9 +51,11 @@ Linux)
     exit 1
 esac
 
-printf "Reboot? ([y]/n) "
-read reboot
-if [ 0$reboot != 0n ]; then
-    shutdown -r now
-fi
+cat << EOM
+
+Be sure to reboot ASAP if the kernel was updated.  If the kernel was not
+updated, restart any services that may have been affected by base library
+or package updates.
+
+EOM
 

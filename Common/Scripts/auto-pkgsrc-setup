@@ -455,7 +455,7 @@ if [ 0$bootstrap = '0y' ]; then
     fi
     
     for license in openmotif-license qpl-v1.0 phylip-license eclipse-license \
-	    lame-license; do
+	    lame-license original-bsd modified-bsd 2-clause-bsd; do
 	printf "Allow packages with license $license? ([y]/n) "
 	read accepted
 	if [ 0$accepted != '0n' ]; then
