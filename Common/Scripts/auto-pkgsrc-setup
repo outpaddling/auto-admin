@@ -388,7 +388,7 @@ if [ 0$unpack = 0y ]; then
     # Workaround for botstrap failure 2015-05-05
     save_cwd=`pwd`
     cd pkgsrc/pkgtools/libnbcompat
-    cvs up -dP
+    echo yes | cvs up -dP
     cd $save_cwd
     
     mv pkgsrc $frameworks_prefix
@@ -455,7 +455,7 @@ if [ 0$bootstrap = '0y' ]; then
     fi
     
     for license in openmotif-license qpl-v1.0 phylip-license eclipse-license \
-	    lame-license original-bsd modified-bsd 2-clause-bsd; do
+	    lame-license original-bsd modified-bsd 2-clause-bsd mit; do
 	printf "Allow packages with license $license? ([y]/n) "
 	read accepted
 	if [ 0$accepted != '0n' ]; then

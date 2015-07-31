@@ -30,7 +30,13 @@ fi
 prefix="$1"
 cd "$prefix"
 
-before=`df -m . | awk '$1 != "Filesystem" { print $4 }'`
+if [ `uname` = Linux ]; then
+    flags=-Pm
+else
+    flags=-m
+fi
+
+before=`df $flags . | awk '$1 != "Filesystem" { print $4 }'`
 printf "Initial free space: %d\n" $before
 
 for dir in */*/work; do
@@ -38,7 +44,7 @@ for dir in */*/work; do
     rm -rf $dir
 done
 
-after=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
+after=`df $flags /usr | awk '$1 != "Filesystem" { print $4 }'`
 printf "Initial free space: %d\n" $before
 printf "Final free space: %d\n" $after
 diff=$(($after - $before))
