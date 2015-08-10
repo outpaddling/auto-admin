@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+os_type=`uname`
+
+case $os_type in
+Linux)
+    if [ -e /etc/redhat-release ]; then
+	# Enable PAM passwdqc
+	# http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
+	yum install -y pam_passwdqc
+	sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
+        /etc/pam.d/system-auth
+	
+	# Prevent authconfig from overwriting changes to the line modified above
+	sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
+    else
+	printf "$0 is only implemented for RHEL/CentOS Linux.\n"
+	exit 1
+    fi
+    ;;
+*)
+    printf "$0 is not yet implemented for $os_type.\n"
+    exit 1
+    ;;
+esac
+
