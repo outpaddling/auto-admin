@@ -40,10 +40,10 @@ FreeBSD)
 Linux)
     # Complete interrupted yum updates if the tool is installed and there
     # are any
-    yum-complete-transaction -y || true
+    yum-complete-transaction || true
     
     # FIXME: Add clean-up commands?
-    yum update -y
+    yum update
     ;;
     
 *)
