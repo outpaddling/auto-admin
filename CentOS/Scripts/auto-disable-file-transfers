@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+chmod o-rwx /usr/bin/scp /usr/bin/sftp /usr/bin/rsync
+
