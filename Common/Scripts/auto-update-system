@@ -7,7 +7,7 @@ FreeBSD)
     printf "Update installed packages? [y]/n "
     read update
     if [ 0$update != 0n ]; then
-	pkg update
+	pkg update -f
 	pkg clean -y
 	pkg upgrade -y
 	pkg clean -y
@@ -16,7 +16,7 @@ FreeBSD)
     printf "Update ports tree? [y]/n "
     read update
     if [ 0$update != 0n ]; then
-	portsnap fetch
+	portsnap --interactive fetch
 	if [ -e /usr/ports/CHANGES ]; then
 	    portsnap update
 	else
@@ -28,10 +28,10 @@ FreeBSD)
     read update
     if [ 0$update != 0n ]; then
 	tmpfile=update-system.tmp
-	freebsd-update fetch | tee $tmpfile
+	freebsd-update --not-running-from-cron fetch | tee $tmpfile
 	
 	if ! fgrep -q 'No updates' $tmpfile; then
-	    freebsd-update install
+	    freebsd-update --not-running-from-cron install
 	fi
 	rm $tmpfile
     fi
@@ -51,11 +51,9 @@ Linux)
     exit 1
 esac
 
-cat << EOM
-
-Be sure to reboot ASAP if the kernel was updated.  If the kernel was not
-updated, restart any services that may have been affected by base library
-or package updates.
-
-EOM
+printf "Reboot? [y]/n "
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi
 
