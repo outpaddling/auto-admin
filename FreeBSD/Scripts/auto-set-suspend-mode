@@ -26,7 +26,7 @@ auto-append-line lid_switch_state "hw.acpi.lid_switch_state=$state" \
 sysctl hw.acpi.lid_switch_state=$state
 
 # FIXME: Run this for all suspend events, not just suspend on lid
-if [ $state == S3 ]; then
+if [ $state = S3 ]; then
     # Remove exit commands and append new ones later
     sed -i '' '/^exit/d' /etc/rc.suspend /etc/rc.resume
     
