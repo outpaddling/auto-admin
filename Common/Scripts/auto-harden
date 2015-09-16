@@ -107,7 +107,7 @@ FreeBSD)
 	while [ 0$reboot != 0yes ] && [ 0$reboot != 0no ]; do
 	    printf "Reboot? (yes/no)\n"
 	    read reboot
-	    if [ 0$reboot == 0yes ]; then
+	    if [ 0$reboot = 0yes ]; then
 		shutdown -r now
 	    fi
 	done

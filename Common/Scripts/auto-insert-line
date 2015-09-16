@@ -43,16 +43,16 @@ touch $file
 
 if ! fgrep "$string" "$file"; then
     if fgrep "$location" "$file"; then
-        if [ 0$caller != 0'nocomment' ]; then
+	if [ 0$caller != 0'nocomment' ]; then
 	    
-            perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n\n# Added by auto-admin from $caller\n$line\n# End auto-admin addition\n"@');' $file
+	    perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n\n# Added by auto-admin from $caller\n$line\n# End auto-admin addition\n"@');' $file
 
-        fi
-        if [ 0$caller == 0'nocomment' ]; then
+	fi
+	if [ 0$caller = 0'nocomment' ]; then
 
-            perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n$line"@');' $file
+	    perl -pi -e '$a=1 if(!$a && s@'"$location"'@'"$location\n$line"@');' $file
 
-        fi
+	fi
     fi
 fi
 

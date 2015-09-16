@@ -359,7 +359,7 @@ df
 # Need -alldirs to allow PXE to mount individual ISO image directories
 # under $prefix/images.
 use_zfs=`auto-ask use-zfs "Use ZFS filesystem?" y`
-if [ $use_zfs == 'y' ]; then
+if [ $use_zfs = 'y' ]; then
     zfs_pool=`auto-ask zfs-pool "ZFS Pool?" zroot`
     zfs create -o mountpoint=$prefix/images ${zfs_pool}/pxe-images || true
     zfs set sharenfs="-alldirs,ro -network $subnet -mask $netmask" \
