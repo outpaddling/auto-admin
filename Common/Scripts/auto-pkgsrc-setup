@@ -454,6 +454,14 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "PREFER_PKGSRC=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
     fi
     
+    printf "Are you a package developer? y/[n] "
+    read developer
+    if [ 0$developer = 0y ]; then
+	if ! fgrep PKG_DEVELOPER ${sys_prefix}/etc/mk.conf; then
+	    printf "PKG_DEVELOPER=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
+	fi
+    fi
+    
     for license in openmotif-license qpl-v1.0 phylip-license eclipse-license \
 	    lame-license original-bsd modified-bsd 2-clause-bsd mit \
 	    unrar-license rar-license; do
