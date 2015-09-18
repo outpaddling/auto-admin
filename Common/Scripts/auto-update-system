@@ -5,17 +5,20 @@ os_type=`uname`
 case $os_type in
 FreeBSD)
     printf "Update installed packages? [y]/n "
-    read update
-    if [ 0$update != 0n ]; then
+    read update_packages
+    printf "Update ports tree? [y]/n "
+    read update_ports
+    printf "Update base system? [y]/n "
+    
+    read update_base
+    if [ 0$update_packages != 0n ]; then
 	pkg update -f
 	pkg clean -y
 	pkg upgrade -y
 	pkg clean -y
     fi
     
-    printf "Update ports tree? [y]/n "
-    read update
-    if [ 0$update != 0n ]; then
+    if [ 0$update_ports != 0n ]; then
 	portsnap --interactive fetch
 	if [ -e /usr/ports/CHANGES ]; then
 	    portsnap update
@@ -24,9 +27,7 @@ FreeBSD)
 	fi
     fi
     
-    printf "Update base system? [y]/n "
-    read update
-    if [ 0$update != 0n ]; then
+    if [ 0$update_base != 0n ]; then
 	tmpfile=update-system.tmp
 	freebsd-update --not-running-from-cron fetch | tee $tmpfile
 	
