@@ -19,7 +19,8 @@ FreeBSD)
     fi
     
     if [ 0$update_ports != 0n ]; then
-	portsnap --interactive fetch
+	# --interactive is only supported on 10.x
+	portsnap fetch
 	if [ -e /usr/ports/CHANGES ]; then
 	    portsnap update
 	else
