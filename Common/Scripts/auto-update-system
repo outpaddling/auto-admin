@@ -4,13 +4,9 @@ os_type=`uname`
 
 case $os_type in
 FreeBSD)
+    # Don't group questions: Need to pause after each step to view output
     printf "Update installed packages? [y]/n "
     read update_packages
-    printf "Update ports tree? [y]/n "
-    read update_ports
-    printf "Update base system? [y]/n "
-    
-    read update_base
     if [ 0$update_packages != 0n ]; then
 	pkg update -f
 	pkg clean -y
@@ -18,6 +14,8 @@ FreeBSD)
 	pkg clean -y
     fi
     
+    printf "Update ports tree? [y]/n "
+    read update_ports
     if [ 0$update_ports != 0n ]; then
 	# --interactive is only supported on 10.x
 	portsnap fetch
@@ -28,6 +26,8 @@ FreeBSD)
 	fi
     fi
     
+    printf "Update base system? [y]/n "
+    read update_base
     if [ 0$update_base != 0n ]; then
 	tmpfile=update-system.tmp
 	freebsd-update --not-running-from-cron fetch | tee $tmpfile
