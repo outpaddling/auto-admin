@@ -38,7 +38,7 @@ for script in /etc/csh.cshrc; do
 	cat << EOM >> $script
 
 # Enable auto-logout after $minutes minutes
-if ( ! $?autologout ) then
+if ( ! \$?autologout ) then
     set -r autologout=$minutes
 endif
 EOM
