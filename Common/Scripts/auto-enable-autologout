@@ -38,7 +38,7 @@ for script in /etc/csh.cshrc; do
 	cat << EOM >> $script
 
 # Enable auto-logout after $minutes minutes
-if ( ! \$?autologout ) then
+if ( ! $?autologout ) then
     set -r autologout=$minutes
 endif
 EOM
@@ -46,11 +46,11 @@ EOM
 done
 
 for script in /etc/bashrc /etc/kshrc /etc/zshrc; do
-    if ! fgrep -q autologout $script; then
+    if ! fgrep -q TMOUT $script; then
 	cat << EOM >> $script
 
 # Enable auto-logout after $minutes minutes
-if [ 0$TMOUT = 0 ]; then
+if [ 0\$TMOUT = 0 ]; then
     TMOUT=$(($minutes * 60))
     readonly TMOUT
 fi
