@@ -8,7 +8,12 @@ FreeBSD)
     printf "Update installed packages? [y]/n "
     read update_packages
     if [ 0$update_packages != 0n ]; then
-	pkg update -f
+	printf "Autoremove unneeded packages? [y]/n "
+	read autoremove
+	if [ 0$autoremove != 0n ]; then
+	    pkg autoremove
+	fi
+	pkg update
 	pkg clean -y
 	pkg upgrade -y
 	pkg clean -y

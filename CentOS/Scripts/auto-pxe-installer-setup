@@ -22,9 +22,6 @@
 #                           and my own FreeBSD auto-pxe-installer-setup
 ##########################################################################
 
-# Test file to paste into command:
-# /home/bacon/CentOS-6.6-x86_64-minimal.iso
-
 usage()
 {
     printf "Usage: $0 file.iso\n"
@@ -100,7 +97,7 @@ label localboot
 label install
   menu label Install CentOS
   kernel images/$installer_leaf_dir/images/pxeboot/vmlinuz
-  append initrd=images/$installer_leaf_dir/images/pxeboot/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:$local_ip:/$installer_path/ks.cfg
+  append initrd=images/$installer_leaf_dir/images/pxeboot/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:${local_ip}:/$installer_path/ks.cfg
 
 label reboot
   menu label Reboot
@@ -116,17 +113,212 @@ EOM
     if [ ! -e $conf.orig ]; then
 	cp $conf $conf.orig
     fi
-    
-    if [ ! -f /etc/xinetd.d/tftp.orig ]; then
-	cp /etc/xinetd.d/tftp /etc/xinetd.d/tftp.orig
-    fi
     sed -i '/disable/ c\\tdisable\t\t\t= no' /etc/xinetd.d/tftp
 
     printf "Make sure no other tftp servers are running.\n"
     pause
 
-    service xinetd restart
     chkconfig xinetd on
+    service xinetd restart
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-16  root        Begin
+##########################################################################
+
+nfs_setup()
+{
+    printf "Configure NFS? [y]/n "
+    read resp
+    if [ 0$resp != 0n ]; then
+	yum install -y nfs-utils
+	
+	# FIXME: Use proper mask
+	auto-append-line "$prefix/images $subnet/$netmask(ro)" /etc/exports $0
+	
+	cat << EOM
+	
+Editing /etc/exports.  Make sure your syntax is correct and that you are
+properly handling mount points within the same partition.
+
+EOM
+	pause
+	$EDITOR /etc/exports
+	
+	# Make sure everything is readable!
+	chmod -R a+rX $installer_path
+	
+	chkconfig rpcbind on
+	chkconfig nfslock on
+	chkconfig nfs on
+	
+	service rpcbind restart
+	service nfslock restart
+	service nfs restart
+	exportfs -rv
+    fi
+    return 0
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-16  root        Begin
+##########################################################################
+
+dhcp_setup()
+{
+    cat << EOM
+
+PXE booting requires a DHCP server on the local network.  You can run it
+on this server or use the DHCP server provided by the network router or
+other device.
+
+***************************************************************************
+*                                WARNING                                  *
+* DO NOT ENABLE A DHCP SERVER ON THIS HOST UNLESS YOU MANAGE THE NETWORK  *
+* AND KNOW WHAT YOU'RE DOING.  ENABLING A "ROGUE" DHCP SERVER CAN CAUSE   *
+* SERIOUS PROBLEMS FOR OTHER USERS ON THE NETWORK.                        *
+***************************************************************************
+
+EOM
+    printf "Configure dhcpd on this host? (y/[n]) "
+    read dhcpd
+    
+    if [ 0$dhcpd = 0y ]; then
+	if [ ! -e /usr/sbin/dhcpd ]; then
+	    yum install -y dhcp
+	fi
+    
+	cat << EOM
+
+Note: Your original dhcpd.conf (from before the first pxe-server-setup)
+run will be saved to dhcpd.conf.orig and your current dhcpd.conf will
+be overwritten.
+
+If you don't like this idea, press Ctrl+C now.
+
+EOM
+	pause
+    
+	default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
+    
+	domain=`auto-ask pxe-domain 'Domain name?' 'local'`
+	subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
+	netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
+	router=`auto-ask pxe-router 'Router?' 10.1.1.1`
+	nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
+	# Reserve 10.1.1.* through 10.1.10.* for static IPs by default
+	first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
+	last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
+	# Default lease time 20 years (effectively permanent)
+	lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
+    
+	conf='/etc/dhcp/dhcpd.conf'
+	if [ ! -e $conf.orig ]; then
+	    cp $conf $conf.orig
+	fi
+	boot_filename=gpxelinux.0
+	
+#
+# DHCP Server Configuration file.
+#   see /usr/share/doc/dhcp*/dhcpd.conf.sample
+#   see 'man 5 dhcpd.conf'
+#
+
+# Example from Avi produced by kickstart-server-setup
+# option domain-name    "hpc.uwm.edu";
+# option domain-name-servers   newavi1.hpc.uwm.edu;
+# default-lease-time    -1;
+# max-lease-time    -1;
+# authoritative;
+# subnet 10.1.1.0 netmask 255.255.255.0 {
+#     range dynamic-bootp 10.1.1.2 10.1.1.200;
+#     use-host-decl-names on;
+#     option broadcast-address 10.1.1.255;
+#     option domain-name-servers 129.89.10.1, 129.89.10.2;
+#     option routers 10.1.1.253;
+# 
+#     host compute-5-36 {
+#         hardware ethernet 00:26:b9:2e:21:3c;
+#         option host-name "compute-5-36";
+#         fixed-address 10.1.1.143;
+#     }
+# filename    "pxelinux.0";
+# next-server    10.1.1.253;
+    
+	cat << EOM > $conf
+allow booting;
+allow bootp;
+authoritative;
+option domain-name "$domain";
+option subnet-mask $netmask;
+option routers $router;
+ddns-update-style none;
+log-facility local7;
+local-address $local_ip;
+subnet $subnet netmask $netmask
+{
+    range $first_address $last_address;
+    default-lease-time $lease_time;
+    max-lease-time $lease_time;
+    
+    # IP of PXE server required by some clients.
+    next-server $local_ip;
+    
+    # Location of PXE boot image within bootable system
+    filename "pxelinux.0";
+    
+    # Location of bootable system for NFS
+    option root-path "$installer_path";
+    option domain-name-servers $nameserver;
+}
+EOM
+	cat << EOM
+
+Editing $conf.
+
+Double-check the addresses, etc.
+
+EOM
+	pause
+	$EDITOR $conf
+    
+	# Make the DHCP server only serve to private iface's subnet
+	sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
+	
+	service dhcpd restart
+	#chkconfig dhcpd on
+    else
+	cat << EOM
+
+You will need to manually configure your DHCP server to point to this PXE
+server.
+
+EOM
+	# FIXME: Unfinished
+	# Set up for situations where the DHCP server is not running on
+	# this server.  ( e.g. DHCP is handled by a hardware router. )
+	# pkg install -y pxe-pdhcp
+	# pxe-pdhcp -i bge0
+	# What else?
+    fi
 }
 
 
@@ -161,148 +353,18 @@ installer_leaf_dir=${iso%.iso}
 installer_leaf_dir=${installer_leaf_dir##*/}
 installer_path=$prefix/images/${installer_leaf_dir}
 
+printf 'Available network interfaces:\n\n'
+ifconfig 2> /dev/null | egrep 'HWaddr|inet'
+iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
+default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
+local_ip=`auto-ask pxe-local-ip 'IP address of this server?' $default_ip`
+
 ##########################################################################
 #   Set up dhcpd
 ##########################################################################
 
 line
-cat << EOM
-
-PXE booting requires a DHCP server on the local network.  You can run it
-on this server or use the DHCP server provided by the network router or
-other device.
-
-***************************************************************************
-*                                WARNING                                  *
-* DO NOT ENABLE A DHCP SERVER ON THIS HOST UNLESS YOU MANAGE THE NETWORK  *
-* AND KNOW WHAT YOU'RE DOING.  ENABLING A "ROGUE" DHCP SERVER CAN CAUSE   *
-* SERIOUS PROBLEMS FOR OTHER USERS ON THE NETWORK.                        *
-***************************************************************************
-
-EOM
-printf "Run dhcpd on this host? ([y]/n) "
-read dhcpd
-
-if [ 0$dhcpd != 0n ]; then
-    if [ ! -e /usr/sbin/dhcpd ]; then
-	yum install -y dhcp
-    fi
-
-    cat << EOM
-
-Note: Your original dhcpd.conf (from before the first pxe-server-setup)
-run will be saved to dhcpd.conf.orig and your current dhcpd.conf will
-be overwritten.
-
-If you don't like this idea, press Ctrl+C now.
-
-EOM
-    pause
-    printf 'Available network interfaces:\n\n'
-    ifconfig 2> /dev/null | egrep 'HWaddr|inet'
-    iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
-
-    default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
-    default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
-
-    domain=`auto-ask pxe-domain 'Domain name?' 'local'`
-    subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
-    netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
-    router=`auto-ask pxe-router 'Router?' 10.1.1.1`
-    nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
-    local_ip=`auto-ask pxe-local-ip 'IP address of this DHCP server?' $default_ip`
-    # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
-    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
-    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
-    # Default lease time 20 years (effectively permanent)
-    lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
-
-    conf='/etc/dhcp/dhcpd.conf'
-    if [ ! -e $conf.orig ]; then
-	cp $conf $conf.orig
-    fi
-    boot_filename=gpxelinux.0
-    
-#
-# DHCP Server Configuration file.
-#   see /usr/share/doc/dhcp*/dhcpd.conf.sample
-#   see 'man 5 dhcpd.conf'
-#
-
-# Example from Avi produced by kickstart-server-setup
-# option domain-name    "hpc.uwm.edu";
-# option domain-name-servers   newavi1.hpc.uwm.edu;
-# default-lease-time    -1;
-# max-lease-time    -1;
-# authoritative;
-# subnet 10.1.1.0 netmask 255.255.255.0 {
-#     range dynamic-bootp 10.1.1.2 10.1.1.200;
-#     use-host-decl-names on;
-#     option broadcast-address 10.1.1.255;
-#     option domain-name-servers 129.89.10.1, 129.89.10.2;
-#     option routers 10.1.1.253;
-# 
-#     host compute-5-36 {
-#         hardware ethernet 00:26:b9:2e:21:3c;
-#         option host-name "compute-5-36";
-#         fixed-address 10.1.1.143;
-#     }
-# filename    "pxelinux.0";
-# next-server    10.1.1.253;
-
-    cat << EOM > $conf
-allow booting;
-allow bootp;
-authoritative;
-option domain-name "$domain";
-option subnet-mask $netmask;
-option routers $router;
-ddns-update-style none;
-log-facility local7;
-local-address $local_ip;
-subnet $subnet netmask $netmask
-{
-    range $first_address $last_address;
-    default-lease-time $lease_time;
-    max-lease-time $lease_time;
-    
-    # IP of PXE server required by some clients.
-    next-server $local_ip;
-    
-    # Location of PXE boot image within bootable system
-    filename "pxelinux.0";
-    
-    # Location of bootable system for NFS
-    option root-path "$installer_path";
-    option domain-name-servers $nameserver;
-}
-EOM
-    cat << EOM
-
-Editing $conf.
-
-Double-check the addresses, etc.
-
-EOM
-    pause
-    $EDITOR $conf
-
-    # Make the DHCP server only serve to private iface's subnet
-    sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
-    
-    service dhcpd restart
-    #chkconfig dhcpd on
-else
-    echo 'Sorry, not yet implemented.\n'
-    exit 1
-    # FIXME: Unfinished
-    # Set up for situations where the DHCP server is not running on
-    # this server.  ( e.g. DHCP is handled by a hardware router. )
-    # pkg install -y pxe-pdhcp
-    # pxe-pdhcp -i bge0
-    # What else?
-fi
-
+dhcp_setup
 
 ##########################################################################
 #   Set up tftp
@@ -311,7 +373,6 @@ fi
 # Must come after dhcp setup, which sets variables used here
 line
 tftp_pxelinux_setup
-
 
 ##########################################################################
 #   Copy install media to server
@@ -340,32 +401,7 @@ umount $prefix/mnt
 #   Set up NFS
 ##########################################################################
 
-yum install -y nfs-utils
-
-# FIXME: Use proper mask
-auto-append-line "$prefix/images $subnet/$netmask(ro)" /etc/exports $0
-
-cat << EOM
-
-Editing /etc/exports.  Make sure your syntax is correct and that you are
-properly handling mount points within the same partition.
-
-EOM
-pause
-$EDITOR /etc/exports
-
-# Make sure everything is readable!
-chmod -R a+rX $installer_path
-
-chkconfig rpcbind on
-chkconfig nfslock on
-chkconfig nfs on
-
-service rpcbind restart
-service nfslock restart
-service nfs restart
-exportfs -rv
-
+nfs_setup
 
 ##########################################################################
 #   Set up ssh keys to new server here and in kickstart script
@@ -375,7 +411,7 @@ exportfs -rv
 if [ ! -e /root/.ssh/id_dsa.pub ]; then
     ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
 fi
-root_key=`cat /root/.ssh/id_dsa.pub`
+root_key="`cat /root/.ssh/id_dsa.pub`"
 restorecon -R -v /root/.ssh     # Set security context for selinux
 
 
@@ -384,8 +420,14 @@ restorecon -R -v /root/.ssh     # Set security context for selinux
 ##########################################################################
 
 ksconfig=$installer_path/ks.cfg
-# FIXME: Ue this!
-root_pw="`awk -F : '$1 == "root" { print $2 }' /etc/shadow`"
+root_pw="`awk -F : '$1 == \"root\" { print $2 }' /etc/shadow`"
+
+printf "Time zone? [America/Chicago] "
+read time_zone
+if [ 0$time_zone = 0 ]; then
+    time_zone='America/Chicago'
+fi
+
 cat << EOM > $ksconfig
 # auto-pxe-linux-setup kickstart file
 
@@ -397,16 +439,16 @@ text
 # cmdline
 autostep
 reboot
-# nfs --server 10.1.1.2 --dir /var/lib/tftpboot/images/CentOS-6.6-x86_64-minimal
+nfs --server 10.1.1.2 --dir $installer_path
 
 lang en_US.UTF-8
 keyboard us
 
-network --device em1 --onboot yes --bootproto dhcp
+network --device $iface --onboot yes --bootproto dhcp
 firewall --enabled --service=ssh
 authconfig --enableshadow --passalgo=sha512
-# rootpw --iscrypted "$6$jjvnzpIkMEF4FGr1$QGuGlDi.hyWuxEakb2Fs/kHfmnbRiQzUNm8/v6tq7NvOrG6k7ceu0UYEozTwhKiHQha7geJ.h3feQb83VHtzy/"
-timezone --utc America/Chicago
+rootpw --iscrypted "$root_pw"
+timezone --utc $time_zone
 bootloader --location=mbr --driveorder=sda
 selinux --enforcing
 
@@ -425,18 +467,18 @@ clearpart --all
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
 
-part /boot --fstype ext4 --size=1024 --onpart=sda1
-part swap --size=32768 --onpart=sda5
-part / --fstype ext4 --size=16384 --onpart=sda6
-part /var --fstype ext4 --size=32768 --onpart=sda3
-part /tmp --fstype ext4 --size=32768 --onpart=sda2
+part /boot --fstype ext4 --size=1024
+part swap --size=32768
+part / --fstype ext4 --size=16384
+part /var --fstype ext4 --size=32768
+part /tmp --fstype ext4 --size=32768
 
 # For typical machines and head nodes, use all remaining space for /home
-# part /home --fstype ext4 --size=1024 --grow --onpart=sda7
+# part /home --fstype ext4 --size=1024 --grow
 
 # For nodes with /home NFS-mounted, such as compute nodes, don't allocate
 # local disk space for /home.
-part /bigtmp --fstype xfs --size=1024 --grow --onpart=sda7
+part /bigtmp --fstype xfs --size=1024 --grow
 
 %post
 
@@ -448,7 +490,7 @@ sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/ss
 if [ ! -e /root/.ssh/id_dsa.pub ]; then
     ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
 fi
-echo 'ssh-dss AAAAB3NzaC1kc3MAAACBAOuhLC8o7QuepqbvDK1yfpxZyWUzI6fvtiO3hn/BNb7GNNXRMqwxfjafbjkhobuZVfwn7wtIy/FeiSNDgOrQDc0oLhESNDLXjjaH+OTvQMPGK/jkYVczjnMAm4z5IA9Lh7vqOlABHBFqA+st5OqfpxF9QmQQFuKY9Cdw3NAkIJMtAAAAFQDi/y603P7MHbbefCZ4iBBjRbykXwAAAIEAn7e6fgWCgrLO7mDk7g2vaM90CL73QyCy9jiHzwk11lS3rirADVnxru6PKrUX2w35plDeQjXlyylCs82JI0S7KLxChGM/gUhxYkgRPKzoa1TasvrI3pYS/dfCvRkgmIiWEFxlMPQGic0AM2mRVQNz5xseW8hTmROulBkUZeOiB8oAAACAKRKP6xs8IIK4QwCM17ufsqrFiDJ0NaD1FglwY4UEsiXE162IcLRiGxgW8/+42GO4ZNmnyoWYiINMLRgxUFP3IcC8RJc2rnF/C5YPqoGfkyegNwhGIZKvifiXjLrE1NufPcHaVrdtEGYH/j8seEmzXUxGSsqVLmR+rSVaB56elgQ= root@login.mortimer.local' >> /root/.ssh/authorized_keys
+printf "$root_key\n" >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
 restorecon -R -v /root/.ssh     # Set security context for selinux
 
