@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -18,7 +18,7 @@
 
 usage()
 {
-    printf "Usage: $0 [ssh flags] remotehost\n"
+    printf "Usage: $0 [ssh flags] [username@]remotehost\n"
     exit 1
 }
 
