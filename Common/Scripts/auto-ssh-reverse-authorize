@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-21  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 host-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+host_name="$1"
+cd
+cd .ssh
+if ! fgrep -q $host_name authorized_keys; then
+    if scp "${host_name}:.ssh/id_dsa.pub" temp; then
+	cat temp >> authorized_keys
+	rm -f temp
+    else
+	printf "No id_dsa.pub found.\n" >> /dev/stderr
+    fi
+else
+    printf "$host_name already authorized.\n"
+fi
+
