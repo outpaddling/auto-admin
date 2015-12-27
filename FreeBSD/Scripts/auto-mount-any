@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -34,9 +34,10 @@ mount_point=$2
 for fs in ufs msdosfs ntfs cd9660; do
     if mount -t $fs $dev $mount_point; then
 	printf "Mounted $fs.\n"
-	exit
+	exit 0
     fi
 done
 
 printf "Unable to mount: Unknown filesystem.\n"
+exit 1
 
