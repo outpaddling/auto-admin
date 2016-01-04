@@ -3,6 +3,12 @@
 rc_file='/etc/rc.conf'
 map_file='/etc/amd.map'
 
+auto-enable-service -s statd rpc_statd $0
+auto-enable-service -s lockd rpc_lockd $0
+
+service lockd restart
+service statd restart
+
 # Add amd_enable="YES" to rc.conf
 if ! fgrep -wq 'amd_enable="YES"' $rc_file; then
     printf "# Added by amd_setup\n" >> $rc_file

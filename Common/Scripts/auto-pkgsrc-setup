@@ -31,8 +31,63 @@ pause()
 {
     local junk
     
-    printf "Press return to continue..."
+    printf "Press Enter to continue..."
     read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Ask user to select a snapshot
+#
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-04  Jason Bacon Begin
+##########################################################################
+
+select_snapshot()
+{
+    cat << EOM
+
+You must now choose a pkgsrc snapshot to install.
+
+Quarterly snapshots such as "2015Q4" have gone through additional quality
+control at the end of each quarter and contain fewer bugs.
+
+The "current" snapshot contains the latest commits of each package.
+
+See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
+
+1.. Install a quarterly snapshot
+2.. Install current
+
+EOM
+    
+    selected=0
+    while [ $selected = 0 ]; do
+	printf "Selection? "
+	read snapshot
+	case $snapshot in
+	1)
+	    printf "Year? "
+	    read year
+	    printf "Quarter? "
+	    read quarter
+	    snapshot=pkgsrc-${year}Q$quarter
+	    selected=1
+	    ;;
+	2)
+	    snapshot=current
+	    selected=1
+	    ;;
+	*)
+	    printf "Error: Valid selections are 1 or 2.\n" >> /dev/stderr
+	    ;;
+	esac
+    done
+    return 0
 }
 
 case $# in
@@ -200,7 +255,7 @@ fi
 cat << EOM
 
 ============================================================================
-Default responses are shown in [].  Simple press return to accept defaults.
+Default responses are shown in [].  Simple press Enter to accept defaults.
 
 Type Ctrl+c at any time to stop installation.
 ============================================================================
@@ -245,11 +300,14 @@ else
     prefix=$1
 fi
 
-default_install_num=1
-while [ -e $prefix/pkg-$default_install_num/done ]; do
-    default_install_num=$(($default_install_num + 1))
-done
-cat << EOM
+select_snapshot
+
+if [ $snapshot = current ]; then
+    default_install_num=1
+    while [ -e $prefix/pkg-$default_install_num/done ]; do
+	default_install_num=$(($default_install_num + 1))
+    done
+    cat << EOM
 ============================================================================
 Pkgsrc supports multiple installations on the same computer.  Pkgsrc-setup
 handles multiple installations under the same prefix by appending serial
@@ -260,10 +318,13 @@ You can overwrite or update an existing installation by overriding the
 default here and entering a number lower than the default shown.
 ============================================================================
 EOM
-printf "Install number? [$default_install_num] "
-read install_num
-if [ 0$install_num = 0 ]; then
-    install_num=$default_install_num
+    printf "Install number? [$default_install_num] "
+    read install_num
+    if [ 0$install_num = 0 ]; then
+	install_num=$default_install_num
+    fi
+else
+    install_num=${snapshot#pkgsrc-}
 fi
 
 install_prefix=$prefix/pkg-$install_num
@@ -337,9 +398,6 @@ else
     exit 1
 fi
 
-# Quarterly snapshot or current?
-
-
 # Download new pkgsrc dist if a new install number was provided
 if [ -e $prefix/Dist/pkgsrc-$install_num.tar.gz ]; then
     printf "pkgsrc-$install_num.tar.gz already exists.  Replace? (y/[n]) "
@@ -354,7 +412,8 @@ if [ 0$download = 0y ]; then
     mkdir -p $prefix/Dist
     cd $prefix/Dist
     rm -f pkgsrc.tar.gz
-    $fetch_cmd ftp://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc.tar.gz
+    
+    $fetch_cmd ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz
     mv pkgsrc.tar.gz pkgsrc-$install_num.tar.gz
 fi
 
@@ -619,39 +678,24 @@ cd $save_cwd
 
 cd $frameworks_prefix
 
-# cvs sometimes returns non-zero status when it succeeded
-CVS_RSH=ssh
-export CVS_RSH
+# git sometimes returns non-zero status when it succeeded
 set +e
 if [ -d wip ]; then
     printf "Updating existing wip...\n"
     cd wip
-    cvs -q update -dP
+    git pull
 else
     cat << EOM
-If you have a sourceforge account, you can use it to check out pkgsrc-wip,
+
+If you have a pkgsrc-wip account, you can use it to check out pkgsrc-wip,
 the work-in-progress category of pkgsrc packages.
 
 If not, you can check it out anonymously.  This is the default if you just
-press return.
+press Enter.
+
 EOM
-    
-    printf 'Sourceforge user for checking out pkgsrc-wip? [Anonymous] '
-    read username
-    if [ 0$username = 0 ]; then
-	username=Anonymous
-    fi
-    if [ $username = Anonymous ]; then
-	cat << EOM
-============================================================================ 
-Checking out new wip.  Just press return when prompted for the password.
-============================================================================
-EOM
-	cvs -d:pserver:anonymous@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip login
-	cvs -z 3 -d:pserver:anonymous@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip checkout -P wip
-    else
-	cvs -z 3 -d :ext:${username}@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip checkout -P wip
-    fi
+
+    auto-pkgsrc-wip-checkout
 fi
 # Resume exit-on-error after cvs commands are done
 set -e
