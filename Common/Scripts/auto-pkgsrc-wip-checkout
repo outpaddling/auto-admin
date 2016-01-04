@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+printf "pkgsrc-wip username? [none] "
+read username
+if [ 0$username = 0 ]; then
+    git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
+else
+    git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+fi
+
