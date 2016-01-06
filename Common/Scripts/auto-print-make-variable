@@ -2,23 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
+#       Print the value of a port/package make variable.
+#
 #   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2013-01-21  Jason Bacon Begin
-##########################################################################
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
+#       [-p prefix]   Defaults to /usr/ports or /usr/pkgsrc
+#
 #   History:
 #   Date        Name        Modification
 #   2013-01-21  Jason Bacon Begin
@@ -26,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 category/${port_or_package} variable-name\n"
+    printf "Usage: $0 [-p prefix] category/${port_or_package} variable-name\n"
     exit 1
 }
 
@@ -42,7 +30,11 @@ if which bmake > /dev/null 2>&1; then
 else
     make=make
     port_or_package=port
-    base_dir=/usr/ports
+    if [ `uname` = FreeBSD ]; then
+	base_dir=/usr/ports
+    else
+	base_dir=/usr/pkgsrc
+    fi
 fi
 
 case $# in
