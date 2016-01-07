@@ -1,0 +1,73 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure FreeBSD WIFI interface as a failover for another
+#       interface.  This is most commonly used to facilitate plugging
+#       a laptop in for better network performance without disrupting
+#       any network connections.
+#
+#   Arguments:
+#       None.
+#
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  Charlie &   Begin
+##########################################################################
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+ifconfig
+printf "Wired interface? "
+read wired
+printf "Wireless interface? "
+read wireless
+
+mac=`ifconfig $wired | awk '$1 == "ether" { print $2 }'`
+
+# FIXME: Do a better job cleaning up rc.conf
+if ! fgrep -q 'cloned_interfaces="lagg0"' /etc/rc.conf; then
+    cat << EOM >> /etc/rc.conf
+# Added by $0
+ifconfig_$wired="up"
+ifconfig_$wireless="ether $mac"
+wlans_$wireless="wlan0"
+ifconfig_wlan0="WPA"
+cloned_interfaces="lagg0"
+ifconfig_lagg0="laggproto failover laggport $wired laggport wlan0 DHCP"
+# End $0 addition
+EOM
+fi
+
+printf 'You may want to remove old network configurations from /etc/rc.conf.\n'
+pause
+
+printf "Reboot to activate the new network configuration.\n"
+pause
+
