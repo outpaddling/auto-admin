@@ -18,7 +18,7 @@
 
 usage()
 {
-    printf "Usage: $0 [ssh flags] [username@]remotehost\n"
+    printf "Usage: $0 [ssh flags] remotehost\n"
     exit 1
 }
 
@@ -34,18 +34,17 @@ fi
 cd
 
 user=`whoami`
-this_host=`hostname`
 
 # Last command-line argument is remote hostname
 eval remotehost="\${$#}"
 
-echo "Authorizing ${user}@$this_host on $remotehost."
+echo "Authorizing ${user}@${HOST} on $remotehost."
 
 if [ ! -f .ssh/id_dsa.pub ] ; then
    ssh-keygen -t dsa -P "" -f "./.ssh/id_dsa"
 fi
 
 key=`cat .ssh/id_dsa.pub`
-ssh $@ "umask 022; mkdir -p .ssh; touch .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; ssh-keygen -R $this_host && echo $key >> .ssh/authorized_keys"
+ssh $@ "umask 022; mkdir -p .ssh; touch .ssh/known_hosts .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; ssh-keygen -R ${HOST} && echo $key >> .ssh/authorized_keys"
 exit $?
 
