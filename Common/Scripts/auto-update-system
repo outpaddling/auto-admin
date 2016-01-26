@@ -1,5 +1,19 @@
 #!/bin/sh -e
 
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
 os_type=`uname`
 
 case $os_type in
@@ -52,6 +66,75 @@ Linux)
     # FIXME: Add clean-up commands?
     yum update
     ;;
+
+NetBSD)
+    # Don't group questions: Need to pause after each step to view output
+    # FIXME: Support pkg_upgrade?
+    printf "Update installed packages? [y]/n "
+    read update_packages
+    if [ 0$update_packages != 0n ]; then
+	printf "Autoremove unneeded packages? y/[n] "
+	read autoremove
+	if [ 0$autoremove = 0y ]; then
+	    pkgin autoremove
+	fi
+	pkgin update
+	pkgin clean -y
+	pkgin upgrade -y
+	pkgin clean -y
+    fi
+    
+    printf "Update ports tree? [y]/n "
+    read update_ports
+    if [ 0$update_ports != 0n ]; then
+	cd /usr/pkgsrc
+	cvs upq -dP
+    fi
+    
+    printf "Update base system? [y]/n "
+    read update_base
+    if [ 0$update_base != 0n ]; then
+	export CVS_RSH=ssh 
+	if [ ! -e src ]; then
+	    cd /usr
+	    cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot co -r netbsd-6-1 -P src
+	    cd src
+	else
+	    cd /usr/src
+	    cvs up -dPq
+	fi
+	mkdir -p obj tools
+	
+	# Build tools
+	./build.sh -O /usr/obj -T /usr/tools -u tools
+	
+	# Build kernel
+	arch=$(uname -m)
+	kern=AUTOUPDATE
+	cp sys/arch/$arch/conf/GENERIC sys/arch/$arch/conf/$kern
+	./build.sh -O ../obj -T ../tools kernel=$kern
+	
+	# Build userland
+	./build.sh -O ../obj -T ../tools -U distribution
+	
+	# Install everything
+	mv /netbsd /netbsd.old
+	mv /usr/obj/sys/arch/$arch/compile/$kern/netbsd /
+
+	cat << EOM
+
+Rebooting...
+
+After reboot, run the following to install the new userland:
+
+cd /usr/src
+./build.sh -O ../obj -T ../tools -U install=/
+EOM
+	pause
+	shutdown -r now
+    fi
+    ;;
+
     
 *)
     printf "Error: $os_type is not yet supported.\n"
