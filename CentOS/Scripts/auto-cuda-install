@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+# http://r.search.yahoo.com/_ylt=A0LEVinue69WStIAKfYnnIlQ;_ylu=X3oDMTBydWNmY2MwBGNvbG8DYmYxBHBvcwM0BHZ0aWQDBHNlYwNzcg--/RV=2/RE=1454369903/RO=10/RU=http%3a%2f%2fdeveloper.download.nvidia.com%2fcompute%2fcuda%2f6_0%2frc%2fdocs%2fCUDA_Getting_Started_Linux.pdf/RK=0/RS=9HopwYdfJ7a7Wmz7NZGFZAOPGA8-
+# https://developer.nvidia.com/cuda-downloads
+
+if ! lspci | fgrep -i nvidia; then  
+    printf "No nVidia GPUs found.\n"
+    exit 1
+fi
+
+# Enable EPEL repository to supply libvdpau and dkms
+rpm=epel-release-latest-6.noarch.rpm
+curl -O https://dl.fedoraproject.org/pub/epel/$rpm
+rpm -i $rpm || true
+
+# Enable CUDA repository
+rpm=cuda-repo-rhel6-7.5-18.x86_64.rpm
+if [ ! -e $rpm ]; then
+    curl -O http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64/$rpm
+fi
+rpm -i $rpm || true
+
+# Install CUDA and all dependencies
+yum clean all
+yum install cuda
+
