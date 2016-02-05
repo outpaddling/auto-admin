@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Required by bash
+auto-append-line /compat/linux/proc 'linproc\t\t/compat/linux/proc\t\t\tlinprocfs\trw\t\t0\t0' /etc/fstab $0
+mount /compat/linux/proc

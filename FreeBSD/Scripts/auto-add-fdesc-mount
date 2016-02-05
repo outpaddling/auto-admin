@@ -1,6 +1,6 @@
 #!/bin/sh
 
 # Required by bash
-auto-append-line fdesc 'fdesc\t\t/dev/fd\t\t\tfdescfs\trw\t\t0\t0' /etc/fstab $0
-mount fdesc
+auto-append-line /dev/fd 'fdesc\t\t/dev/fd\t\t\tfdescfs\trw\t\t0\t0' /etc/fstab $0
+mount /dev/fd
 
