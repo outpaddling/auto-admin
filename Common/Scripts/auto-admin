@@ -1,0 +1,58 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+# 
+while true
+do
+    clear
+    cat << EOM
+
+1.. Add user
+2.. Update system
+Q.. Quit
+
+EOM
+
+    read resp
+    case 0$resp in
+    01)
+	printf "Username? "
+	printf "Add $user_name to wheel group? y/[n] "
+	printf "Add $user_name to operator group? y/[n] "
+	;;
+    02)
+	auto-update-system
+	;;
+    0Q|0q)
+	exit 0
+	;;
+    esac
+done
+EOM
+
