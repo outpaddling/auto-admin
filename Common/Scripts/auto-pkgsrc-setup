@@ -22,9 +22,9 @@
 # http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
 
 # RHEL / CentOS base
-if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/cvs ]; then
+if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
     printf "Installing base development tools via yum...\n"
-    yum install -y gcc-gfortran gcc-c++ gcc cvs
+    yum install -y gcc-gfortran gcc-c++ gcc
 fi
 
 pause()
@@ -366,8 +366,18 @@ it will look for gfortran in the PATH when building certain packages.
 ============================================================================
 EOM
 printf "Compilers in your current PATH include:\n\n"
-which cc
-which c++
+if ! which cc; then
+    if ! which gcc; then
+	printf "No C compiler found.  Aborting...\n"
+	exit 1
+    fi
+fi
+if ! which c++; then
+    if ! which g++; then
+	printf "No C++ compiler found.  Aborting...\n"
+	exit 1
+    fi
+fi
 if ! which gfortran; then
     # Instead of message, install gfortran package from GNU site
     # and sudo ln -s /usr/local/bin/gfortran /usr/bin
@@ -697,7 +707,6 @@ EOM
 
     auto-pkgsrc-wip-checkout
 fi
-# Resume exit-on-error after cvs commands are done
 set -e
 
 cat << EOM
