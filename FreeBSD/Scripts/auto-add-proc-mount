@@ -2,4 +2,7 @@
 
 # Required by bash
 auto-append-line /proc 'proc\t\t/proc\t\t\tprocfs\trw\t\t0\t0' /etc/fstab $0
-mount /proc
+if ! mount | fgrep -qw procfs; then
+    mount proc
+fi
+

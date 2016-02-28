@@ -600,6 +600,14 @@ if ( \$status != 0 ) then
 endif
 EOM
 
+if [ -e /etc/profile.d ]; then
+    printf "Add this pkgsrc installation to default path for all users? y/[n] "
+    read add2path
+    if [ 0$add2path = 0y ]; then
+        cp ${sys_prefix}/etc/pkgsrc.*sh /etc/profile.d
+    fi
+fi
+
 # Generate module file
 mkdir -p ${sys_prefix}/etc/modulefiles/pkgsrc
 cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${install_num}
