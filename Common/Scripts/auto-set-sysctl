@@ -1,0 +1,34 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-10  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 variable value\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+variable=$1
+value="$2"
+sysctl "$variable=$value"
+auto-append-line "$variable=$value" /etc/sysctl.conf $0
+

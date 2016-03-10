@@ -1,0 +1,11 @@
+#!/bin/sh
+
+case `uname` in
+FreeBSD)
+    auto-set-sysctl net.inet.tcp.rfc1323 0
+    ;;
+Linux)
+    auto-set-sysctl net.ipv4.tcp_timestamps 0
+    ;;
+esac
+
