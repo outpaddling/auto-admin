@@ -217,7 +217,7 @@ pause
 line
 printf 'Disabling ICMP redirects...\n'
 
-# Disable ICMP redirects from arbitrary sources and tcp timestamps
+# Disable ICMP redirects from arbitrary sources
 case $(osname) in
 RHEL)
     for rule in \
@@ -232,6 +232,9 @@ RHEL)
     printf "Warning: ICMP redirect disable not yet implemented on $(uname).\n"
     ;;
 esac
+
+# Disable tcp timestamps
+auto-disable-tcp-timestamps
 
 pause
 line

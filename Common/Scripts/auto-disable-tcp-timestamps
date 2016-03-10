@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Prevent discovery of last boot time
 case `uname` in
 FreeBSD)
     auto-set-sysctl net.inet.tcp.rfc1323 0
@@ -7,5 +8,8 @@ FreeBSD)
 Linux)
     auto-set-sysctl net.ipv4.tcp_timestamps 0
     ;;
+*)
+    printf "Not yet supported for `uname`.\n"
+    exit 1
 esac
 
