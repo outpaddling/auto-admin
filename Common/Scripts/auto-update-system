@@ -36,6 +36,36 @@ pause()
     read junk
 }
 
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-11  Charlie &   Begin
+##########################################################################
+
+abuse_warning()
+{
+    cat << EOM
+****************************************************************************
+
+    Running auto-update-system non-interactively can overload the update
+    servers if done in parallel.
+    
+    Run only one instance at a time.
+    
+    DO NOT ABUSE THIS FEATURE!!
+
+****************************************************************************
+EOM
+    return 0
+}
+
 os_type=`uname`
 mode=interactive
 if [ $# = 1 ]; then
@@ -50,22 +80,18 @@ fi
 
 case $os_type in
 FreeBSD)
+    if [ ! -t 0 ]; then
+	# Input redirected.  Being fed y/n responses.
+	portsnap_flags=--interactive
+	freebsd_update_flags=--not-running-from-cron
+	abuse_warning
+    fi
+    
     # Don't group questions: Need to pause after each step to view output
     case $mode in
     defaults|yes)
 	update_packages=y
-	cat << EOM
-****************************************************************************
-
-    Running auto-update-system non-interactively can overload the update
-    servers if done in parallel.
-    
-    Run only one instance at a time.
-    
-    DO NOT ABUSE THIS FEATURE!!
-
-****************************************************************************
-EOM
+	abuse_warning
 	;;
     interactive)
 	printf "Update installed packages? [y]/n "
