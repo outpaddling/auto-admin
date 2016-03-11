@@ -262,6 +262,6 @@ interactive)
 esac
 if [ 0$reboot != 0n ]; then
     printf "Rebooting...\n"
-    #shutdown -r now
+    shutdown -r now
 fi
 
