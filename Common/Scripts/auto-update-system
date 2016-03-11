@@ -1,5 +1,27 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-11  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--defaults | --yes]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
 
 ##########################################################################
 #   Function description:
@@ -15,44 +37,106 @@ pause()
 }
 
 os_type=`uname`
+mode=interactive
+if [ $# = 1 ]; then
+    if [ $1 = --defaults ]; then
+	mode=defaults
+    elif [ $1 = --yes ]; then
+	mode=yes
+    else
+	usage
+    fi
+fi
 
 case $os_type in
 FreeBSD)
     # Don't group questions: Need to pause after each step to view output
-    printf "Update installed packages? [y]/n "
-    read update_packages
+    case $mode in
+    defaults|yes)
+	update_packages=y
+	cat << EOM
+****************************************************************************
+
+    Running auto-update-system non-interactively can overload the update
+    servers if done in parallel.
+    
+    Run only one instance at a time.
+    
+    DO NOT ABUSE THIS FEATURE!!
+
+****************************************************************************
+EOM
+	;;
+    interactive)
+	printf "Update installed packages? [y]/n "
+	read update_packages
+	;;
+    esac
+    
     if [ 0$update_packages != 0n ]; then
-	printf "Autoremove unneeded packages? y/[n] "
-	read autoremove
+	case $mode in
+	yes)
+	    autoremove=y
+	    ;;
+	defaults)
+	    autoremove=n
+	    ;;
+	interactive)
+	    printf "Autoremove unneeded packages? y/[n] "
+	    read autoremove
+	esac
+    
 	if [ 0$autoremove = 0y ]; then
+	    printf "\nRemoving unneeded dependencies...\n"
 	    pkg autoremove
 	fi
+	
+	printf "\nUpdating binary packages...\n"
 	pkg update
 	pkg clean -y
 	pkg upgrade -y
 	pkg clean -y
     fi
     
-    printf "Update ports tree? [y]/n "
-    read update_ports
+    case $mode in
+    defaults|yes)
+	update_ports=y
+	portsnap_flags=--interactive
+	;;
+    interactive)
+	printf "Update ports tree? [y]/n "
+	read update_ports
+	;;
+    esac
+    
     if [ 0$update_ports != 0n ]; then
+	printf "\nUpdating ports tree...\n"
 	# --interactive is only supported on 10.x
 	portsnap fetch
 	if [ -e /usr/ports/CHANGES ]; then
-	    portsnap update
+	    portsnap $portsnap_flags update
 	else
-	    portsnap extract
+	    portsnap $portsnap_flags extract
 	fi
     fi
     
-    printf "Update base system? [y]/n "
-    read update_base
+    case $mode in
+    defaults|yes)
+	update_base=y
+	freebsd_update_flags=--not-running-from-cron
+	;;
+    interactive)
+	printf "Update base system? [y]/n "
+	read update_base
+	;;
+    esac
     if [ 0$update_base != 0n ]; then
+	printf "\nUpdating base system...\n"
 	tmpfile=update-system.tmp
-	freebsd-update --not-running-from-cron fetch | tee $tmpfile
+	freebsd-update $freebsd_update_flags fetch | tee $tmpfile
 	
 	if ! fgrep -q 'No updates' $tmpfile; then
-	    freebsd-update --not-running-from-cron install
+	    freebsd-update $freebsd_update_flags install
 	fi
 	rm $tmpfile
     fi
@@ -141,9 +225,17 @@ EOM
     exit 1
 esac
 
-printf "Reboot? [y]/n "
-read reboot
+case $mode in
+defaults|yes)
+    reboot=yes
+    ;;
+interactive)
+    printf "Reboot? [y]/n "
+    read reboot
+    ;;
+esac
 if [ 0$reboot != 0n ]; then
-    shutdown -r now
+    printf "Rebooting...\n"
+    #shutdown -r now
 fi
 
