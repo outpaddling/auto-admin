@@ -116,7 +116,14 @@ FreeBSD)
     
 	if [ 0$autoremove = 0y ]; then
 	    printf "\nRemoving unneeded dependencies...\n"
-	    pkg autoremove
+	    case $mode in
+	    yes)
+		pkg autoremove -y
+		;;
+	    *)
+		pkg autoremove
+		;;
+	    esac
 	fi
 	
 	printf "\nUpdating binary packages...\n"
