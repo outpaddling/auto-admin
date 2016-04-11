@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--defaults | --defaults+reboot | --yes]\n"
+    printf "Usage: $0 [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]\n"
     exit 1
 }
 
@@ -66,10 +66,14 @@ EOM
     return 0
 }
 
-os_type=`uname`
+os_type=`auto-ostype`
 mode=interactive
 if [ $# = 1 ]; then
-    if [ $1 = --defaults+reboot ]; then
+    if [ $1 = --binary ]; then
+	mode=binary
+    elif [ $1 = --binary+reboot ]; then
+	mode=binary+reboot
+    elif [ $1 = --defaults+reboot ]; then
 	mode=defaults+reboot
     elif [ $1 = --defaults ]; then
 	mode=defaults
@@ -91,7 +95,7 @@ FreeBSD)
     
     # Don't group questions: Need to pause after each step to view output
     case $mode in
-    defaults+reboot|defaults|yes)
+    binary|binary+reboot|defaults|defaults+reboot|yes)
 	update_packages=y
 	abuse_warning
 	;;
@@ -106,12 +110,13 @@ FreeBSD)
 	yes)
 	    autoremove=y
 	    ;;
-	defaults+reboot|defaults)
-	    autoremove=n
-	    ;;
 	interactive)
 	    printf "Autoremove unneeded packages? y/[n] "
 	    read autoremove
+	    ;;
+	*)
+	    autoremove=n
+	    ;;
 	esac
     
 	if [ 0$autoremove = 0y ]; then
@@ -134,9 +139,12 @@ FreeBSD)
     fi
     
     case $mode in
-    defaults+reboot|defaults|yes)
+    defaults|defaults+reboot|yes)
 	update_ports=y
 	portsnap_flags=--interactive
+	;;
+    binary|binary+reboot)
+	update_ports=n
 	;;
     interactive)
 	printf "Update ports tree? [y]/n "
@@ -156,7 +164,7 @@ FreeBSD)
     fi
     
     case $mode in
-    defaults+reboot|defaults|yes)
+    binary|binary+reboot|defaults|defaults+reboot|yes)
 	update_base=y
 	freebsd_update_flags=--not-running-from-cron
 	;;
@@ -177,12 +185,26 @@ FreeBSD)
     fi
     ;;
 
-Linux)
+RHEL)
     # Complete interrupted yum updates if the tool is installed and there
     # are any
-    yum-complete-transaction || true
-    yum clean all
-    yum update
+    case $mode in
+    interactive)
+	yum-complete-transaction || true
+	yum clean all
+	yum update
+	;;
+    binary|defaults)
+	yum-complete-transaction || true
+	yum clean -y all
+	yum update -y
+	;;
+    binary+reboot|defaults+reboot|yes)
+	yes | yum-complete-transaction || true
+	yum clean -y all
+	yes | yum update -y
+	;;
+    esac
     ;;
 
 NetBSD)
@@ -261,10 +283,10 @@ EOM
 esac
 
 case $mode in
-defaults)
+binary|defaults)
     reboot=n
     ;;
-defaults+reboot|yes)
+binary+reboot|defaults+reboot|yes)
     reboot=y
     ;;
 interactive)
