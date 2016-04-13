@@ -9,7 +9,7 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-01-01  Charlie &   Begin
+#   2016-04-13  Jason Bacon Begin
 ##########################################################################
 
 usage()
@@ -27,39 +27,23 @@ if [ $# != 0 ]; then
     usage
 fi
 
-# 
-while true
-do
-    clear
+case `auto-ostype` in
+FreeBSD)
     cat << EOM
 
-			    *****************************
-			    *   Auto Admin Main Menu    *
-			    *****************************
+Notes:
 
-1.. Add user
-2.. Update system
-3.. Configure XScreensaver
-Q.. Quit
+Users must be in the operator group to access USB ports and other
+hardware.
+
+Users must be in the wheel group in order to "su" to root.
 
 EOM
-
-    printf "Selection? "
-    read resp
-    case 0$resp in
-    01)
-	auto-adduser
-	;;
-    02)
-	auto-update-system
-	;;
-    03)
-	xscreensaver-command -prefs
-	;;
-    0Q|0q)
-	exit 0
-	;;
-    esac
-done
-EOM
+    adduser
+    ;;
+*)
+    printf "$0: `auto-ostype` is not yet supported.\n"
+    exit 1
+    ;;
+esac
 
