@@ -13,22 +13,13 @@ pause()
     read junk
 }
 
-osname()
-{
-    # Check ssh binaries for tampering
-    if [ -e /etc/redhat-release ]; then
-	printf "RHEL"
-    else
-	uname
-    fi
-}
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Set up some basic security measures.  This is by no means enough
+#       but will block most naive hacking attempts.
+#
+#       http://wiki.centos.org/HowTos/OS_Protection
 #       
 #   History:
 #   Date        Name        Modification
@@ -56,7 +47,7 @@ usage()
 
 line()
 {
-    printf '================================================================\n'
+    printf '\n===========================================================\n\n'
     return 0
 }
 
@@ -69,7 +60,8 @@ if [ $# != 0 ]; then
     usage
 fi
 
-echo $(osname)
+os_type=`auto-ostype`
+
 export PATH=${PATH}:`dirname $0`
 
 if [ -z $EDITOR ]; then
@@ -77,102 +69,102 @@ if [ -z $EDITOR ]; then
     export EDITOR
 fi
 
-line
+clear
 printf 'Verifying openssh checksums...\n'
-case $(osname) in
+case $os_type in
 RHEL)
     # rpm -Vv keyutils-libs-1.2-1.el5
     rpm -vV openssh-clients || true
     pause
     ;;
 *)
-    printf "Warning: ssh checksum test not yet implemented on $(uname).\n"
+    printf "Warning: ssh checksum test not yet implemented on $os_type.\n"
     ;;
 esac
 
 pause
-line
-printf 'Installing updates...\n'
-# Install all system updates
-case $(osname) in
-RHEL)
-    yum update
-    ;;
-
-FreeBSD)
-    freebsd-update fetch
-    if ! freebsd-update install | \
-	fgrep -q 'No updates are available to install.'; then
-	reboot='x'
-	while [ 0$reboot != 0yes ] && [ 0$reboot != 0no ]; do
-	    printf "Reboot? (yes/no)\n"
-	    read reboot
-	    if [ 0$reboot = 0yes ]; then
-		shutdown -r now
-	    fi
-	done
-    fi
-    ;;
-*)
-    printf "Warning: OS update not yet implemented on $(uname).\n"
-esac
+clear
+printf 'Install updates (may require reboot)? y/[n] '
+read update
+if [ 0$update = 0y ]; then
+    auto-update-system
+fi
 
 pause
-line
+clear
 printf 'Installing denyhosts...\n'
 auto-denyhosts-setup
 
 pause
-line
-printf 'Disabling clear-text services...\n'
-case $(osname) in
+clear
+case $os_type in
 FreeBSD)
     # Disable all clear-text services
-    printf "Disable all clear-text and unnecessary services.\n"
+    printf "Opening inetd.conf.\n"
+    printf "Disable all clear-text services.\n"
     pause
 
     $EDITOR /etc/inetd.conf
     ;;
 *)
-    printf "Warning: Clear-text services disable not yet implemented on $(uname).\n"
+    printf "Warning: Clear-text services disable not yet implemented on $os_type.\n"
     ;;
 esac    
 
-# Add account for sysadmin
+clear
+printf "Disable other unneeded services.\n"
+pause
 
-# http://wiki.centos.org/HowTos/OS_Protection
+clear
+printf "Add a sysadmin account and disable sysadmin rights for other users.\n"
+pause
 
 # nosuid, nodev on as many mounts as possible
-pause
-line
+clear
 printf 'Updating fstab...\n'
 printf 'Add nosuid on as many partitions as possible.\n'
 pause
 $EDITOR /etc/fstab
 
 # Update all mounts after changes to fstab
-case $(osname) in
+case $os_type in
 FreeBSD)
     mount -au || true
     ;;
-RHEL|Linux)
+RHEL)
     mount -a -o update
     ;;
 *)
-    printf "Warning: Remount not yet implemented on $(uname).\n"
+    printf "Warning: Remount not yet implemented on $os_type.\n"
     ;;
 esac    
 
 # Lock screen on idle consoles
+clear
+cat << EOM
+
+Configure your screensaver to lock the screen after maybe 10 minutes of
+idle time.
+
+EOM
+pause
 
 # Idle time limits
-
+clear
+default_autologout=15
+printf "Minutes to autologout? [$default_autologout] "
+read autologout
+if [ 0$autologout = 0 ]; then
+    autologout=$default_autologout
+fi
+auto-enable-autologout $autologout
 pause
-line
+
+clear
 printf 'Adding resource limits to prevent fork bombs, etc...\n'
 
 # FIXME: Move CentOS cluster-admin limit scripts here
-case $(osname) in
+case $os_type in
 FreeBSD)
     # Resource limits to contain fork bombs, etc.
     printf "Maximum processes per user? "
@@ -187,15 +179,15 @@ FreeBSD)
     cap_mkdb /etc/login.conf
     ;;
 *)
-    printf "Warning: Setting process and memory limits not yet implemented on $(uname).\n"
+    printf "Warning: Setting process and memory limits not yet implemented on $os_type.\n"
     ;;
 esac
-
 pause
-line
+
+clear
 printf 'Setting umask to 027...\n'
 # Umask
-case $(osname) in
+case $os_type in
 FreeBSD)
     sed -i '' \
 	-e "s|umask=022|umask=027|g" \
@@ -209,53 +201,71 @@ RHEL)
     done
     ;;
 *)
-    printf "Warning: Setting process and memory limits not yet implemented on $(uname).\n"
+    printf "Warning: Setting process and memory limits not yet implemented on $os_type.\n"
     ;;
 esac
-
 pause
-line
-printf 'Disabling ICMP redirects...\n'
+
+clear
+printf 'Disabling ICMP redirects and other network vulnerabilities...\n'
 
 # Disable ICMP redirects from arbitrary sources
-case $(osname) in
+# Flagged by Nexpose
+case $os_type in
 RHEL)
     for rule in \
 	net.ipv4.conf.all.accept_redirects=0 \
 	net.ipv6.conf.all.accept_redirects=0 \
-	net.ipv4.tcp_timestamps=0; do
+	net.ipv4.conf.default.accept_redirects=0 \
+	net.ipv4.conf.all.secure_redirects=0 \
+	net.ipv4.conf.default.secure_redirects=0; do
+	net.ipv4.tcp_timestamps=0 \
+	net.ipv4.conf.default.forwarding=0 \
+	
 	sysctl "$rule"
 	auto-append-line "$rule" /etc/sysctl.conf $0
     done
     ;;
 *)
-    printf "Warning: ICMP redirect disable not yet implemented on $(uname).\n"
+    for rule in \
+	net.inet.icmp.drop_redirect=1 \
+	net.inet.ip.sourceroute=0 \
+	net.inet.ip.accept_sourceroute=0; do
+
+	sysctl "$rule"
+	auto-append-line "$rule" /etc/sysctl.conf $0
+    done
     ;;
 esac
-
 # Disable tcp timestamps
 auto-disable-tcp-timestamps
-
 pause
-line
-printf 'Enabling password for single-user mode...\n'
 
-if fgrep -q 'release 6' /etc/redhat-release; then
-    sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' /etc/sysconfig/init
-else
-    printf "Warning: Single-user login protection not yet implemented on $osname.\n"
-fi
+clear
+printf 'Enabling password for single-user mode...\n'
+case `auto-ostype` in
+RHEL)
+    sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' \
+	/etc/sysconfig/init
+    ;;
+FreeBSD)
+    sed -i '.bak' -e '/^console/s|secure|insecure|g' /etc/ttys
+    ;;
+*)
+    printf "Warning: Single-user login protection not yet implemented on $os_type.\n"
+    ;;
+esac
 
 for file in /usr/local/etc/apache24/httpd.conf /etc/httpd/conf/httpd.conf; do
     if [ -e $file ]; then
 	auto-append-line 'TraceEnable Off' $file $0
     fi
 done
-
 pause
-line
+
+clear
 printf 'Securing ntpd...\n'
-case $osname in
+case $os_type in
 FreeBSD)
     # NTPD on FreeBSD
     auto-append-line 'restrict -4 default nomodify nopeer noquery notrap' \
@@ -270,7 +280,7 @@ FreeBSD)
 	/etc/ntp.conf nocomment
     ;;
 *)
-    printf "Warning: NTP security not yet implemented on $osname.\n"
+    printf "Warning: NTP security not yet implemented on $os_type.\n"
     ;;
 esac
 
