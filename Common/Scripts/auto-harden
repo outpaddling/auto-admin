@@ -211,6 +211,7 @@ printf 'Disabling ICMP redirects and other network vulnerabilities...\n'
 
 # Disable ICMP redirects from arbitrary sources
 # Flagged by Nexpose
+# Breaks starccm+ license on Avi: net.ipv4.conf.default.forwarding=0
 case $os_type in
 RHEL)
     for rule in \
@@ -220,7 +221,6 @@ RHEL)
 	net.ipv4.conf.all.secure_redirects=0 \
 	net.ipv4.conf.default.secure_redirects=0; do
 	net.ipv4.tcp_timestamps=0 \
-	net.ipv4.conf.default.forwarding=0 \
 	
 	sysctl "$rule"
 	auto-append-line "$rule" /etc/sysctl.conf $0
