@@ -9,7 +9,7 @@ pause()
 {
     local junk
     
-    printf "Press return to continue..."
+    printf 'Press return to continue...'
     read junk
 }
 
@@ -51,6 +51,29 @@ line()
     return 0
 }
 
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-04-21  Jason Bacon Begin
+##########################################################################
+
+unimplemented()
+{
+    if [ $# != 2 ]; then
+	printf "Usage: $0 os_type 'feature'\n"
+	exit 1
+    fi
+    local os_type=$1
+    shift
+    printf "INFO: $@ not yet imlpemented on $os_type.\n"
+}
+
 
 ##########################################################################
 #   Main
@@ -61,8 +84,8 @@ if [ $# != 0 ]; then
 fi
 
 os_type=`auto-ostype`
-
 export PATH=${PATH}:`dirname $0`
+sysctl_conf=/etc/sysctl.conf
 
 if [ -z $EDITOR ]; then
     EDITOR=vi
@@ -70,7 +93,7 @@ if [ -z $EDITOR ]; then
 fi
 
 clear
-printf 'Verifying openssh checksums...\n'
+printf '\nVerifying openssh checksums...\n\n'
 case $os_type in
 RHEL)
     # rpm -Vv keyutils-libs-1.2-1.el5
@@ -78,13 +101,13 @@ RHEL)
     pause
     ;;
 *)
-    printf "Warning: ssh checksum test not yet implemented on $os_type.\n"
+    unimplemented $os_type 'ssh checksum test'
     ;;
 esac
 
 pause
 clear
-printf 'Install updates (may require reboot)? y/[n] '
+printf '\nInstall updates (may require reboot)? y/[n] '
 read update
 if [ 0$update = 0y ]; then
     auto-update-system
@@ -92,7 +115,7 @@ fi
 
 pause
 clear
-printf 'Installing denyhosts...\n'
+printf '\nInstalling denyhosts...\n\n'
 auto-denyhosts-setup
 
 pause
@@ -100,29 +123,33 @@ clear
 case $os_type in
 FreeBSD)
     # Disable all clear-text services
-    printf "Opening inetd.conf.\n"
-    printf "Disable all clear-text services.\n"
+    cat << EOM
+
+Opening inetd.conf.
+Disable all clear-text services.
+
+EOM
     pause
 
     $EDITOR /etc/inetd.conf
     ;;
 *)
-    printf "Warning: Clear-text services disable not yet implemented on $os_type.\n"
+    unimplemented $os_type 'Clear-text services disable'
     ;;
 esac    
 
 clear
-printf "Disable other unneeded services.\n"
+printf '\nIn another terminal, disable other unneeded services.\n\n'
 pause
 
 clear
-printf "Add a sysadmin account and disable sysadmin rights for other users.\n"
+printf '\nIn another terminal, add a sysadmin account and disable sysadmin rights for other users.\n\n'
 pause
 
 # nosuid, nodev on as many mounts as possible
+# FIXME: Add support for ZFS
 clear
-printf 'Updating fstab...\n'
-printf 'Add nosuid on as many partitions as possible.\n'
+printf '\nUpdating fstab. Add nosuid on as many partitions as possible.\n\n'
 pause
 $EDITOR /etc/fstab
 
@@ -135,7 +162,7 @@ RHEL)
     mount -a -o update
     ;;
 *)
-    printf "Warning: Remount not yet implemented on $os_type.\n"
+    unimplemented $os_type 'Remount'
     ;;
 esac    
 
@@ -152,7 +179,7 @@ pause
 # Idle time limits
 clear
 default_autologout=15
-printf "Minutes to autologout? [$default_autologout] "
+printf "\nMinutes to autologout? [$default_autologout] "
 read autologout
 if [ 0$autologout = 0 ]; then
     autologout=$default_autologout
@@ -161,16 +188,22 @@ auto-enable-autologout $autologout
 pause
 
 clear
-printf 'Adding resource limits to prevent fork bombs, etc...\n'
+printf '\nAdding resource limits to prevent fork bombs, etc...\n\n'
 
 # FIXME: Move CentOS cluster-admin limit scripts here
 case $os_type in
 FreeBSD)
     # Resource limits to contain fork bombs, etc.
-    printf "Maximum processes per user? "
+    printf 'Maximum processes per user? [256] '
     read maxprocs
-    printf "Maximum memory per process? (use 'm' or 'g' suffix) "
+    if [ 0$maxprocs = 0 ]; then
+	maxprocs=256
+    fi
+    printf 'Maximum memory per process? (use 'm' or 'g' suffix) [4g] '
     read maxvmem
+    if [ 0$maxvmem = 0 ]; then
+	maxvmem=4g
+    fi
     
     sed -i '' \
 	-e "s|vmemoryuse=unlimited|vmemoryuse=$maxvmem|g" \
@@ -179,18 +212,18 @@ FreeBSD)
     cap_mkdb /etc/login.conf
     ;;
 *)
-    printf "Warning: Setting process and memory limits not yet implemented on $os_type.\n"
+    unimplemented $os_type 'Setting process and memory limits'
     ;;
 esac
 pause
 
 clear
-printf 'Setting umask to 027...\n'
+printf '\nSetting umask to 027...\n\n'
 # Umask
 case $os_type in
 FreeBSD)
     sed -i '' \
-	-e "s|umask=022|umask=027|g" \
+	-e 's|umask=022|umask=027|g' \
 	/etc/login.conf
     cap_mkdb /etc/login.conf
     sed -i '' -E 's|umask.*22|umask 027|g' /usr/share/skel/dot.*
@@ -201,19 +234,20 @@ RHEL)
     done
     ;;
 *)
-    printf "Warning: Setting process and memory limits not yet implemented on $os_type.\n"
+    unimplemented $os_type 'Setting process and memory limits'
     ;;
 esac
 pause
 
 clear
-printf 'Disabling ICMP redirects and other network vulnerabilities...\n'
+printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 
 # Disable ICMP redirects from arbitrary sources
 # Flagged by Nexpose
 # Breaks starccm+ license on Avi: net.ipv4.conf.default.forwarding=0
 case $os_type in
 RHEL)
+    printf "# Added by $0\n" >> $sysctl_conf
     for rule in \
 	net.ipv4.conf.all.accept_redirects=0 \
 	net.ipv6.conf.all.accept_redirects=0 \
@@ -223,18 +257,26 @@ RHEL)
 	net.ipv4.tcp_timestamps=0 \
 	
 	sysctl "$rule"
-	auto-append-line "$rule" /etc/sysctl.conf $0
+	auto-append-line "$rule" $sysctl_conf nocomment
     done
+    printf "# End $0 addition\n" >> $sysctl_conf
     ;;
-*)
+
+FreeBSD)
+    printf "# Added by $0\n" >> $sysctl_conf
     for rule in \
 	net.inet.icmp.drop_redirect=1 \
 	net.inet.ip.sourceroute=0 \
 	net.inet.ip.accept_sourceroute=0; do
 
 	sysctl "$rule"
-	auto-append-line "$rule" /etc/sysctl.conf $0
+	auto-append-line "$rule" $sysctl_conf nocomment
     done
+    printf "# End $0 addition\n" >> $sysctl_conf
+    ;;
+
+*)
+    unimplemented $os_type 'Sysctl fixes'
     ;;
 esac
 # Disable tcp timestamps
@@ -242,17 +284,17 @@ auto-disable-tcp-timestamps
 pause
 
 clear
-printf 'Enabling password for single-user mode...\n'
+printf '\nEnabling password for single-user mode...\n\n'
 case `auto-ostype` in
 RHEL)
     sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' \
 	/etc/sysconfig/init
     ;;
 FreeBSD)
-    sed -i '.bak' -e '/^console/s|secure|insecure|g' /etc/ttys
+    sed -i '.bak' -e '/^console/s|[ \t]secure| insecure|g' /etc/ttys
     ;;
 *)
-    printf "Warning: Single-user login protection not yet implemented on $os_type.\n"
+    unimplemented 'Single-user login protection'
     ;;
 esac
 
@@ -264,7 +306,7 @@ done
 pause
 
 clear
-printf 'Securing ntpd...\n'
+printf '\nSecuring ntpd...\n\n'
 case $os_type in
 FreeBSD)
     # NTPD on FreeBSD
@@ -280,7 +322,7 @@ FreeBSD)
 	/etc/ntp.conf nocomment
     ;;
 *)
-    printf "Warning: NTP security not yet implemented on $os_type.\n"
+    unimplemented 'NTP security fixes'
     ;;
 esac
 
