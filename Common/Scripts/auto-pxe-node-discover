@@ -78,7 +78,7 @@ get_new_leases()
     # Detect unconfigured servers
     for ip in $leases; do
 	# Already recorded?
-	if ! egrep -q "^$ip" /etc/hosts; then
+	if ! egrep -q "^#? ?$ip" /etc/hosts; then
 	    printf "\n$ip not found in /etc/hosts.\n"
 	    
 	    # Get lease state from dhcpd.leases

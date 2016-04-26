@@ -531,9 +531,19 @@ if [ 0$bootstrap = '0y' ]; then
 	fi
     fi
     
-    for license in openmotif-license qpl-v1.0 phylip-license eclipse-license \
-	    lame-license original-bsd modified-bsd 2-clause-bsd mit \
-	    unrar-license rar-license gnu-lgpl-3; do
+    tmpfile=auto-pkgsrc-setup-license-list
+    awk '{
+    if ( $1 == "DEFAULT_ACCEPTABLE_LICENSES=" )
+	while ( $NF == "\\" )
+	{
+	    getline;
+	    for (c=1; c<NF; ++c) printf("%s ", $c);
+	}
+    }' $frameworks_prefix/mk/license.mk > $tmpfile
+    licenses=`cat $tmpfile`
+    rm -f $tmpfile
+
+    for license in $licenses; do
 	printf "Allow packages with license $license? ([y]/n) "
 	read accepted
 	if [ 0$accepted != '0n' ]; then
@@ -604,7 +614,7 @@ if [ -e /etc/profile.d ]; then
     printf "Add this pkgsrc installation to default path for all users? y/[n] "
     read add2path
     if [ 0$add2path = 0y ]; then
-        cp ${sys_prefix}/etc/pkgsrc.*sh /etc/profile.d
+	cp ${sys_prefix}/etc/pkgsrc.*sh /etc/profile.d
     fi
 fi
 
