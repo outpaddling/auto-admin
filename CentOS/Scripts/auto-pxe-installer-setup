@@ -408,10 +408,10 @@ nfs_setup
 ##########################################################################
 
 # Add root ssh key from this server to be placed on new node
-if [ ! -e /root/.ssh/id_dsa.pub ]; then
-    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+if [ ! -e /root/.ssh/id_rsa.pub ]; then
+    ssh-keygen -f /root/.ssh/id_rsa -N ''
 fi
-root_key="`cat /root/.ssh/id_dsa.pub`"
+root_key="`cat /root/.ssh/id_rsa.pub`"
 restorecon -R -v /root/.ssh     # Set security context for selinux
 
 
@@ -487,8 +487,8 @@ part /bigtmp --fstype xfs --size=1024 --grow
 
 # Allow passwordless root login from the image server after first boot
 sed -i'' 's|#PermitRootLogin yes|PermitRootLogin without-password|g' /etc/ssh/sshd_config
-if [ ! -e /root/.ssh/id_dsa.pub ]; then
-    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+if [ ! -e /root/.ssh/id_rsa.pub ]; then
+    ssh-keygen -f /root/.ssh/id_rsa -N ''
 fi
 printf "$root_key\n" >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys

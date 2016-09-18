@@ -1,4 +1,33 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-08-11  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 <prefix of this script, e.g. /usr/local>\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+prefix="$1"
 
 if ! awk '$1 == "vendor_id" { print $3 }' /proc/cpuinfo \
     | fgrep -q GenuineIntel; then
@@ -25,5 +54,6 @@ for CPU_PATH in /sys/devices/system/cpu/cpu[0-9]*; do
     fi
 done 
 
-auto-append-line /usr/local/sbin/auto-disable-hyperthreading /etc/rc.local $0
+auto-append-line "$prefix/sbin/auto-disable-hyperthreading" /etc/rc.d/rc.local $0
+chmod a+x /etc/rc.d/rc.local
 

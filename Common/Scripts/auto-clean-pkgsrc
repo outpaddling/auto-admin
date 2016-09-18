@@ -50,7 +50,7 @@ if [ 0$dist = 0y ]; then
     rm -rf distfiles/*
 fi
 
-after=`df $flags /usr | awk '$1 != "Filesystem" { print $4 }'`
+after=`df $flags . | awk '$1 != "Filesystem" { print $4 }'`
 printf "Initial free space: %d\n" $before
 printf "Final free space: %d\n" $after
 diff=$(($after - $before))

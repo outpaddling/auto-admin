@@ -66,7 +66,7 @@ line()
 unimplemented()
 {
     if [ $# != 2 ]; then
-	printf "Usage: $0 os_type 'feature'\n"
+	printf "Usage: unimplemented os_type 'feature'\n"
 	exit 1
     fi
     local os_type=$1
@@ -245,16 +245,17 @@ printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 # Disable ICMP redirects from arbitrary sources
 # Flagged by Nexpose
 # Breaks starccm+ license on Avi: net.ipv4.conf.default.forwarding=0
+# One or more of these break iptables gateway functionality
+#        net.ipv4.conf.all.accept_redirects=0 \
+#        net.ipv6.conf.all.accept_redirects=0 \
+#        net.ipv4.conf.default.accept_redirects=0 \
+#        net.ipv4.conf.all.secure_redirects=0 \
+#        net.ipv4.conf.default.secure_redirects=0
 case $os_type in
 RHEL)
     printf "# Added by $0\n" >> $sysctl_conf
     for rule in \
-	net.ipv4.conf.all.accept_redirects=0 \
-	net.ipv6.conf.all.accept_redirects=0 \
-	net.ipv4.conf.default.accept_redirects=0 \
-	net.ipv4.conf.all.secure_redirects=0 \
-	net.ipv4.conf.default.secure_redirects=0; do
-	net.ipv4.tcp_timestamps=0 \
+	net.ipv4.tcp_timestamps=0; do
 	
 	sysctl "$rule"
 	auto-append-line "$rule" $sysctl_conf nocomment
@@ -294,7 +295,7 @@ FreeBSD)
     sed -i '.bak' -e '/^console/s|[ \t]secure| insecure|g' /etc/ttys
     ;;
 *)
-    unimplemented 'Single-user login protection'
+    unimplemented $os_type 'Single-user login protection'
     ;;
 esac
 
@@ -322,7 +323,7 @@ FreeBSD)
 	/etc/ntp.conf nocomment
     ;;
 *)
-    unimplemented 'NTP security fixes'
+    unimplemented $os_type 'NTP security fixes'
     ;;
 esac
 

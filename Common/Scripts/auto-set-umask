@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+case `auto-ostype` in
+FreeBSD)
+    sed -i '' -e "s|umask=022|umask=$umask|g" /etc/login.conf
+    cap_mkdb /etc/login.conf
+    ;;
+RHEL)
+    sed -i -e "s|umask 002|umask 027|g" -e "s|umask 022|umask 027|g" \
+	/etc/profile /etc/csh.cshrc /etc/bashrc
+    ;;
+esac
+

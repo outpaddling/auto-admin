@@ -28,12 +28,8 @@ if [ $# != 1 ]; then
 fi
 
 ip=$1
-for work_dir in /usr/local/share/denyhosts/data \
-		/usr/pkg-1/share/denyhosts/data; do
-    if [ -e $work_dir ]; then
-	break
-    fi
-done
+# Replace /usr/local with PREFIX in port/package if necessary
+work_dir=/usr/local/share/denyhosts/data
 
 case `uname` in
 FreeBSD)

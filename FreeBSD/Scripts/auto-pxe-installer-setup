@@ -19,6 +19,9 @@
 #   2014-11-15  Jason Bacon Begin
 ##########################################################################
 
+# FIXME: Add option to change all config files and restart services instead
+# of just regenerating them or doing nothing.
+
 # Test file to paste into command:
 # /home/bacon/Save/FreeBSD-10.1-RELEASE-amd64-disc1.iso
 
@@ -98,7 +101,7 @@ tftp_inetd()
     
 EOM
     pause
-    vi $conf
+    $EDITOR $conf
     auto-append-line 'inetd_enable' 'inetd_enable="YES"' /etc/rc.conf $0
     service inetd restart
 }
@@ -167,8 +170,9 @@ label reboot
 EOM
     printf "Editing $config\n"
     pause
-    vi $config
+    $EDITOR $config
 }
+
 
 ##########################################################################
 #   Main
@@ -258,8 +262,17 @@ subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
 # default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
 default_mask='255.255.0.0'
 netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
+conf='/usr/local/etc/dhcpd.conf'
 
-dhcpd=`auto-ask run-dhcpd "Run dhcpd on this host?" y`
+cat << EOM
+
+The DHCP server can run on this host or elsewherem, such as a router.  
+If not running on this host, be sure that IP address assignments are
+permanent.  A long lease time is *not* permanent.  Addresses may still
+change for various reasons regardless of lease time.
+
+EOM
+dhcpd=`auto-ask run-dhcpd "[Re]configure dhcpd on this host?" y`
 if [ 0$dhcpd != 0n ]; then
     if [ ! -e /usr/local/sbin/dhcpd ]; then
 	pkg install -y isc-dhcp$isc_version-server
@@ -285,7 +298,6 @@ EOM
     # Default lease time 20 years (effectively permanent)
     lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
 
-    conf='/usr/local/etc/dhcpd.conf'
     if [ ! -e $conf.orig ]; then
 	cp $conf $conf.orig
     fi
@@ -327,7 +339,7 @@ Double-check the addresses, etc.
 
 EOM
     pause
-    vi $conf
+    $EDITOR $conf
     
     auto-append-line 'dhcpd_enable' 'dhcpd_enable="YES"' /etc/rc.conf $0
     auto-append-line 'dhcpd_ifaces' 'dhcpd_ifaces="'$iface'"' /etc/rc.conf $0
@@ -346,44 +358,54 @@ o root-path:            $installer_path
 
 * root-path is important if you are not using a pxelinux menu.
 
+If you're running DHCP on this host and chose not to reconfigure it, be
+sure to edit $conf and restart dhcpd if necessary.
+
 EOM
     pause
 fi
+
 
 ##########################################################################
 #   Set up NFS
 ##########################################################################
 
-df
+printf "[Re]configure NFS? y/[n] "
+read do_nfs
 
-# Need -alldirs to allow PXE to mount individual ISO image directories
-# under $prefix/images.
-use_zfs=`auto-ask use-zfs "Use ZFS filesystem?" y`
-if [ $use_zfs = 'y' ]; then
-    zfs_pool=`auto-ask zfs-pool "ZFS Pool?" zroot`
-    zfs create -o mountpoint=$prefix/images ${zfs_pool}/pxe-images || true
-    zfs set sharenfs="-alldirs,ro -network $subnet -mask $netmask" \
-	${zfs_pool}/pxe-images
-    zfs get sharenfs
-    pause
-else
-    auto-append-line \
-	"$prefix/images -alldirs,ro -network $subnet -mask $netmask" \
-	/etc/exports $0
+if [ 0$do_nfs = 0y ]; then
+    df
     
-    cat << EOM
+    # Need -alldirs to allow PXE to mount individual ISO image directories
+    # under $prefix/images.
+    use_zfs=`auto-ask use-zfs "Use ZFS filesystem?" y`
+    if [ $use_zfs = 'y' ]; then
+	zfs_pool=`auto-ask zfs-pool "ZFS Pool?" zroot`
+	zfs create -o mountpoint=$prefix/images ${zfs_pool}/pxe-images || true
+	zfs set sharenfs="-alldirs,ro -network $subnet -mask $netmask" \
+	    ${zfs_pool}/pxe-images
+	zfs get sharenfs
+	pause
+    else
+	auto-append-line \
+	    "$prefix/images -alldirs,ro -network $subnet -mask $netmask" \
+	    /etc/exports $0
+	
+	cat << EOM
 
 Editing /etc/exports.  Make sure your syntax is correct and that you are
 using -alldirs on the parent of any directories in the same partition.
 
 EOM
-    pause
-    vi /etc/exports
+	pause
+	$EDITOR /etc/exports
+    fi
 fi
 
+printf "Unpacking ISO...\n"
 if [ ! -e $installer_path ]; then
     mkdir -p $installer_path
-    tar -C $installer_path -pxvf $iso
+    tar -C $installer_path -pxf $iso
     chroot $installer_path passwd root
     root_pw="`awk -F : '$1 == \"root\" { print $2 }' /etc/master.passwd`"
 fi
@@ -413,10 +435,10 @@ rm -f $installer_path/etc/resolv.conf
 echo "nameserver $nameserver" > $installer_path/etc/resolv.conf
 
 # Add root ssh key from this server to new node
-if [ ! -e /root/.ssh/id_dsa.pub ]; then
-    ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ''
+if [ ! -e /root/.ssh/id_rsa.pub ]; then
+    ssh-keygen -f /root/.ssh/id_rsa -N ''
 fi
-root_key=`cat /root/.ssh/id_dsa.pub`
+root_key=`cat /root/.ssh/id_rsa.pub`
 
 # Create automated install script
 # man bsdinstall lacks an explanation of PARTITIONS
@@ -516,7 +538,7 @@ Edit partitions, distributions, etc. to taste.
 EOM
 
 pause
-vi $installerconfig
+$EDITOR $installerconfig
 
 # Make sure everything is readable!
 chmod -R a+rX $installer_path

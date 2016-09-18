@@ -1,23 +1,34 @@
 #!/bin/sh -e
 
-os_type=`uname`
+os_type=`auto-ostype`
 
 case $os_type in
-Linux)
-    if [ -e /etc/redhat-release ]; then
-	# Enable PAM passwdqc
-	# http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
-	yum install -y pam_passwdqc
-	sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
-        /etc/pam.d/system-auth
-	
-	# Prevent authconfig from overwriting changes to the line modified above
-	sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
-    else
-	printf "$0 is only implemented for RHEL/CentOS Linux.\n"
-	exit 1
-    fi
+RHEL)
+    # Enable PAM passwdqc
+    # http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
+    yum install -y pam_passwdqc
+    sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
+    /etc/pam.d/system-auth
+    
+    # Prevent authconfig from overwriting changes to the line modified above
+    sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
     ;;
+
+FreeBSD)
+    cd /etc/pam.d
+    awk ' { if ($3 == "pam_passwdqc.so")
+	    {
+		printf("password\t%s\t%s\t\t%s\n", $2, $3,
+		    "min=disabled,disabled,16,12,10 retry=3");
+	    }
+	    else
+	    {
+		print $0;
+	    }
+	}' passwd > passwd.tmp
+    mv -f passwd.tmp passwd
+    ;;
+
 *)
     printf "$0 is not yet implemented for $os_type.\n"
     exit 1

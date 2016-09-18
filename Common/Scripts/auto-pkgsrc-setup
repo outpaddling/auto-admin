@@ -22,7 +22,7 @@
 # http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
 
 # RHEL / CentOS base
-if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
+if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ] && [ `whoami` = root ]; then
     printf "Installing base development tools via yum...\n"
     yum install -y gcc-gfortran gcc-c++ gcc
 fi
@@ -123,7 +123,9 @@ EOM
 # http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
 
     os_major=`uname -r | cut -d . -f 1`
-    if ! which gfortran; then
+    # Obsolete
+    #if ! which gfortran; then
+    if false; then
 	case $os_major in
 	11|12)
 	    # Lion and Mountain Lion
@@ -168,38 +170,9 @@ EOM
 	hdiutil detach "$fortran_mount"
 	sudo ln -s /usr/local/gfortran/bin/gfortran /usr/bin
 
-    # Suspend this until Fortran packages are tested
-    if false; then
-	    cat << EOM
-No fortran compiler was found in your PATH, which is needed for some
-packages.
-
-The recommended solution is to install a new base compiler suite.  This will
-ensure that your C, C++, Objective-C, and Fortran compilers are all current
-and fully compatible with each other.  Older Xcode installations use GCC 4.2,
-which is outdated.  Newer Xcode uses Clang, which does not have a Fortran
-compiler.
-
-A script for installing GCC 4.6 is available at:
-
-    http://acadix.biz/software.php
-
-After downloading it, run:
-
-    sudo ./install-base-gcc /usr/local
-
-and sit back for 12 hours or so.  Then make sure that /usr/local/bin is
-in your PATH and run pkgsrc-setup again.
-
-EOM
-	    printf "Continue without installing a new compiler suite? (y/[n]) "
-	    read resp
-	    if [ 0$resp != 0y ]; then
-		exit 1
-	    fi
-	fi
     fi
     ;;
+
 CYGWIN*)
     cat << EOM
 
@@ -303,33 +276,36 @@ fi
 select_snapshot
 
 if [ $snapshot = current ]; then
-    default_install_num=1
-    while [ -e $prefix/pkg-$default_install_num/done ]; do
-	default_install_num=$(($default_install_num + 1))
-    done
-    cat << EOM
-============================================================================
-Pkgsrc supports multiple installations on the same computer.  Pkgsrc-setup
-handles multiple installations under the same prefix by appending serial
-numbers, beginning with 1.  The default install number shown will be 1
-greater than the highest one under the same prefix.
-
-You can overwrite or update an existing installation by overriding the
-default here and entering a number lower than the default shown.
-============================================================================
-EOM
-    printf "Install number? [$default_install_num] "
-    read install_num
-    if [ 0$install_num = 0 ]; then
-	install_num=$default_install_num
-    fi
+    dist_suffix="-`date +%Y-%m-%d`"
 else
-    install_num=${snapshot#pkgsrc-}
+    dist_suffix="${snapshot#pkgsrc}"
 fi
 
-install_prefix=$prefix/pkg-$install_num
-frameworks_prefix=$prefix/pkgsrc-$install_num
-sys_prefix=$prefix/pkg-$install_num
+cat << EOM
+============================================================================
+Pkgsrc supports multiple installations on the same computer.  Pkgsrc-setup
+handles multiple installations under the same prefix by appending the date
+of a current snapshot or the name of a quarterly snapshot.
+
+It is recommended that you use an install suffix unless you are sure that
+you will not need another pkgsrc tree under 
+
+    $prefix
+    
+It also helps identify the version of each tree.
+============================================================================
+EOM
+printf "Add $dist_suffix to installation directories? [y]/n "
+read use_install_suffix
+if [ 0$use_install_suffix != 0n ]; then
+    install_suffix="$dist_suffix"
+else
+    install_suffix=''
+fi
+
+install_prefix=$prefix/pkg$install_suffix
+frameworks_prefix=$prefix/pkgsrc$install_suffix
+sys_prefix=$prefix/pkg$install_suffix
 
 cat << EOM
 
@@ -378,23 +354,61 @@ if ! which c++; then
 	exit 1
     fi
 fi
-if ! which gfortran; then
-    # Instead of message, install gfortran package from GNU site
-    # and sudo ln -s /usr/local/bin/gfortran /usr/bin
-    # curl -O 
-    cat << EOM
-
-Warning: No gfortran found in PATH.  You will not be able to build some
-mathematical and scientific packages.
-
-EOM
-fi
 
 printf "These same compilers must be in your PATH when you build packages.\n"
 printf "Proceed? ([y]/n) "
 read proceed
 if [ 0$proceed = 0n ]; then
     exit 0
+fi
+
+if ! which gfortran; then
+    cat << EOM
+
+============================================================================
+No Fortran compiler was found in your PATH, which is needed for some
+packages.
+
+If possible, you should install a Fortran compiler outside pkgsrc before
+continuing with this installation.  This will ensure compatibility with
+the other compilers being used for the bootstrap.
+
+On RHEL, CentOS, etc. you can use
+
+    yum install gcc-gfortran
+
+Otherwise, pkgsrc will attempt to install a Fortran compiler when needed,
+using g95 as the default.  For better performance and support of newer Fortran
+code, you may want to use one of the GCC packages instead of g95.
+
+Note that the GCC packages are much larger than g95 and may not build on
+all platforms.  On NetBSD, you can install them quickly using pkgin to avoid
+a long dependency build.
+
+EOM
+    printf "Continue without Fortran in the base compiler suite? (y/[n]) "
+    read resp
+    if [ 0$resp != 0y ]; then
+	exit 1
+    fi
+    
+    printf "Use GCC packages instead of g95? y/[n] "
+    read use_gfortran
+
+    cat << EOM
+
+You can change this later by setting
+
+    PKGSRC_FORTRAN=gfortran
+
+or
+
+    PKGSRC_FORTRAN=g95
+
+in etc/mk.conf.\n"
+============================================================================
+
+EOM
 fi
 
 if which curl > /dev/null; then
@@ -409,14 +423,15 @@ else
 fi
 
 # Download new pkgsrc dist if a new install number was provided
-if [ -e $prefix/Dist/pkgsrc-$install_num.tar.gz ]; then
-    printf "pkgsrc-$install_num.tar.gz already exists.  Replace? (y/[n]) "
+if [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
+    printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? (y/[n]) "
     read download
 else
     download='y'
 fi
 
 if [ 0$download = 0y ]; then
+    printf "Downloading dist...\n\n"
     # Replace everything after new download
     rm -rf $frameworks_prefix $install_prefix $sys_prefix
     mkdir -p $prefix/Dist
@@ -424,7 +439,7 @@ if [ 0$download = 0y ]; then
     rm -f pkgsrc.tar.gz
     
     $fetch_cmd ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz
-    mv pkgsrc.tar.gz pkgsrc-$install_num.tar.gz
+    mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
 fi
 
 if [ -e $frameworks_prefix ]; then
@@ -433,6 +448,9 @@ if [ -e $frameworks_prefix ]; then
 else
     unpack='y'
 fi
+
+# Make sure everything from here on is world-readable
+umask 022
 
 # Create a new package tree for this installation
 if [ 0$unpack = 0y ]; then
@@ -443,9 +461,9 @@ if [ 0$unpack = 0y ]; then
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
     if [ `uname` = NetBSD ]; then
-	tar -zxf pkgsrc-$install_num.tar.gz
+	tar -zxf pkgsrc$dist_suffix.tar.gz
     else
-	tar --no-same-permissions -zoxf pkgsrc-$install_num.tar.gz
+	tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
     fi
     rm -rf $frameworks_prefix $sys_prefix $install_prefix
     # Apple's gcc uses a non-standard flag that is not supported by
@@ -496,7 +514,7 @@ if [ 0$bootstrap = '0y' ]; then
 	    --pkgdbdir ${sys_prefix}/var/db/pkg \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
-	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap-$install_num.log
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     else
 	./bootstrap \
 	    ${abi_flags} \
@@ -505,11 +523,13 @@ if [ 0$bootstrap = '0y' ]; then
 	    --pkgdbdir ${sys_prefix}/var/db/pkg \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
-	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap-$install_num.log
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
 
+    mk_conf=$sys_prefix/etc/mk.conf
+    
     # Separate bootstrap settings from our settings
-    printf "\n" >> $sys_prefix/etc/mk.conf
+    printf "\n" >> $mk_conf
     
     # Configure pkgsrc options in mk.conf
     # Add X11_TYPE=modular tells pkgsrc to use its own X11 packages
@@ -517,18 +537,27 @@ if [ 0$bootstrap = '0y' ]; then
     # packages instead of using native tools
     # RHEL packages tend to be out of date (enterprise Linux values
     # stability above features)
-    if ! fgrep X11_TYPE ${sys_prefix}/etc/mk.conf; then
-	printf "X11_TYPE=\t\tmodular\n" >> ${sys_prefix}/etc/mk.conf
-	printf "PREFER_NATIVE=\t\tno\n" >> ${sys_prefix}/etc/mk.conf
-	printf "PREFER_PKGSRC=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
+    if ! fgrep X11_TYPE $mk_conf; then
+	printf "X11_TYPE=\t\tmodular\n" >> $mk_conf
+	printf "PREFER_NATIVE=\t\tno\n" >> $mk_conf
+	printf "PREFER_PKGSRC=\t\tyes\n" >> $mk_conf
+    fi
+
+    if [ 0$use_gfortran = 0y ]; then
+	printf "PKGSRC_FORTRAN=\t\tgfortran\n" >> $mk_conf
     fi
     
     printf "Are you a package developer? y/[n] "
     read developer
     if [ 0$developer = 0y ]; then
-	if ! fgrep PKG_DEVELOPER ${sys_prefix}/etc/mk.conf; then
-	    printf "PKG_DEVELOPER=\t\tyes\n" >> ${sys_prefix}/etc/mk.conf
+	if ! fgrep PKG_DEVELOPER $mk_conf; then
+	    printf "PKG_DEVELOPER=\t\tyes\n" >> $mk_conf
 	fi
+    fi
+    
+    # Github and some other sites are inaccessible via ftp
+    if [ `uname` != NetBSD ]; then
+	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
     fi
     
     tmpfile=auto-pkgsrc-setup-license-list
@@ -547,7 +576,7 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "Allow packages with license $license? ([y]/n) "
 	read accepted
 	if [ 0$accepted != '0n' ]; then
-	    printf "ACCEPTABLE_LICENSES+=\t$license\n" >> ${sys_prefix}/etc/mk.conf
+	    printf "ACCEPTABLE_LICENSES+=\t$license\n" >> $mk_conf
 	fi
     done
     
@@ -565,8 +594,8 @@ packages by running
 EOM
     printf "Allow vulnerable packages? (y/[n]) "
     read allow_vulnerable
-    if [ x$allow_vulnerable = xy ]; then
-	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> ${sys_prefix}/etc/mk.conf
+    if [ 0$allow_vulnerable = 0y ]; then
+	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
     fi
 fi
 
@@ -579,16 +608,13 @@ ${install_prefix}/sbin/pkg_admin \
 #   Some improvements to the base installation
 ##########################################################################
 
-# Make sure everything from here on is world-readable
-umask 022
-
 # Generate shell script segments to source
 cat << EOM > ${sys_prefix}/etc/pkgsrc.sh
 # Generated by pkgsrc-setup
-if ! echo \$PATH | fgrep -q ${install_prefix}; then
+if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     PKGSRC=$install_prefix; export PKGSRC
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH; export PATH
-    MANPATH=\$PKGSRC/man:$(manpath); export MANPATH
+    MANPATH=\$PKGSRC/man:\$(echo \$MANPATH); export MANPATH
     PKGSRC_INCLUDE=\$PKGSRC/include; export PKGSRC_INCLUDE
     PKGSRC_LIB=\$PKGSRC/lib; export PKGSRC_LIB
     # Avoid using LD_LIBRARY_PATH if possible
@@ -598,11 +624,11 @@ EOM
 
 cat << EOM > ${sys_prefix}/etc/pkgsrc.csh
 # Generated by pkgsrc-setup
-echo \$PATH | fgrep -q ${install_prefix}
+echo \$PATH | fgrep -q "${install_prefix}:"
 if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
-    setenv MANPATH          \$PKGSRC/man:$(manpath)
+    setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
     # Avoid using LD_LIBRARY_PATH if possible
@@ -620,7 +646,7 @@ fi
 
 # Generate module file
 mkdir -p ${sys_prefix}/etc/modulefiles/pkgsrc
-cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${install_num}
+cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
 #%Module1.0#####################################################################
 proc ModulesHelp { } {
     puts stdout "\n\tAll software installed via the pkgsrc package management"
@@ -630,7 +656,7 @@ proc ModulesHelp { } {
 
 module-whatis   "All software installed via pkgsrc"
 
-set     version         ${install_num}
+set     version         ${dist_suffix#-}
 set     install_prefix  ${install_prefix}
 
 prepend-path    PATH            \$install_prefix/bin
@@ -646,27 +672,25 @@ setenv          PKGSRC_INCLUDE  \$install_prefix/include
 setenv          PKGSRC_LIB      \$install_prefix/lib
 EOM
 
-if [ -w /etc/profile.d ]; then
-    # Should come alphabetically after modules.sh and modules.csh
-    module_path_script=modulez`echo $install_prefix | tr '/' '-'`
-    
-    cat << EOM > /etc/profile.d/$module_path_script.sh
+##########################################################################
+#   Generate profile.d scripts for updating MODULEPATH
+##########################################################################
+
+profile_dir="$sys_prefix/etc/profile.d"
+mkdir -p $profile_dir
+# Should come alphabetically after modules.sh and modules.csh
+module_path_script=modulez`echo $install_prefix | tr '/' '-'`
+cat << EOM > $profile_dir/$module_path_script.sh
 MODULEPATH=\${MODULEPATH}:$sys_prefix/etc/modulefiles
 export MODULEPATH
 EOM
-    
-    cat << EOM > /etc/profile.d/$module_path_script.csh
+cat << EOM > $profile_dir/$module_path_script.csh
 setenv MODULEPATH \${MODULEPATH}:$sys_prefix/etc/modulefiles
 EOM
-    
-    chmod 644 /etc/profile.d/$module_path_script*
-else
-    printf "Cannot update /etc/profile.d: Permission denied.\n"
-fi
+chmod 644 $profile_dir/$module_path_script*
 
 # Update PATH for installing packages below
 . ${sys_prefix}/etc/pkgsrc.sh
-echo $PATH
 
 # Basic instructions on installing a package
 make=bmake
@@ -699,21 +723,24 @@ EOM2
 
 chmod 755 $install_prefix/bin/bmake
 
-# Install key packages
-save_cwd=`pwd`
-cd $frameworks_prefix/net/fetch && $make install
-cd $save_cwd
-
 cd $frameworks_prefix
 
-# git sometimes returns non-zero status when it succeeded
-set +e
-if [ -d wip ]; then
-    printf "Updating existing wip...\n"
-    cd wip
-    git pull
-else
+if ! which git; then
     cat << EOM
+
+No git command found.  Skipping pkgsrc-wip install for now.
+
+See https://pkgsrc.org/wip/ for instructions on installing it later.
+
+EOM
+    pause
+else
+    # git sometimes returns non-zero status when it succeeded
+    set +e
+    if [ -d wip ]; then
+	printf "pkgsrc-wip alreading installed.\n"
+    else
+	cat << EOM
 
 If you have a pkgsrc-wip account, you can use it to check out pkgsrc-wip,
 the work-in-progress category of pkgsrc packages.
@@ -723,9 +750,19 @@ press Enter.
 
 EOM
 
-    auto-pkgsrc-wip-checkout
+	# NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
+	# It is here so that this script can work as a standalone.
+	# Be sure to keep this in sync with the separate script!
+	printf "pkgsrc-wip username? [none] "
+	read username
+	if [ 0$username = 0 ]; then
+	    git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
+	else
+	    git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+	fi
+    fi
+    set -e
 fi
-set -e
 
 cat << EOM
 ============================================================================
@@ -742,7 +779,7 @@ On systems with the "module" command, users can add the following instead
 of one of the commands above:
 
     module use ${sys_prefix}/etc/modulefiles
-    module load pkgsrc/${install_num}
+    module load pkgsrc/${dist_suffix#-}
 ============================================================================
 EOM
 pause
@@ -787,5 +824,5 @@ if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
     printf "A copy of the pkgsrc guide has been placed on your desktop.\n"
 fi
 
-touch $prefix/pkg-$install_num/done
+touch $prefix/pkg$install_suffix/done
 

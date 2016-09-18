@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 prefix license\n\nEx. $0 /usr/pkg-1 acm-license\n"
+    printf "Usage: $0 prefix license\n\nEx. $0 /usr/pkg acm-license\n"
     exit 1
 }
 

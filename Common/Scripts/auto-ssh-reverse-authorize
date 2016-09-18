@@ -31,11 +31,11 @@ host_name="$1"
 cd
 cd .ssh
 if ! fgrep -q $host_name authorized_keys; then
-    if scp "${host_name}:.ssh/id_dsa.pub" temp; then
+    if scp "${host_name}:.ssh/id_rsa.pub" temp; then
 	cat temp >> authorized_keys
 	rm -f temp
     else
-	printf "No id_dsa.pub found.\n" >> /dev/stderr
+	printf "No id_rsa.pub found.\n" >> /dev/stderr
     fi
 else
     printf "$host_name already authorized.\n"

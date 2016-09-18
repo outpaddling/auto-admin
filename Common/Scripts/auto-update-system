@@ -153,12 +153,13 @@ FreeBSD)
     esac
     
     if [ 0$update_ports != 0n ]; then
-	printf "\nUpdating ports tree...\n"
-	# --interactive is only supported on 10.x
+	printf "\nFetching latest ports...\n"
 	portsnap fetch
 	if [ -e /usr/ports/CHANGES ]; then
+	    printf "Applying updates...\n"
 	    portsnap $portsnap_flags update
 	else
+	    printf "Extracting...\n"
 	    portsnap $portsnap_flags extract
 	fi
     fi

@@ -38,10 +38,10 @@ Pkgsrc can be installed via auto-pkgsrc-setup.
 EOM
     pause
     
-    printf "Prefix of denyhoss installation? [/usr/pkg-1] "
+    printf "Prefix of denyhoss installation? [/usr/pkg] "
     read prefix
     if [ 0$prefix = 0 ]; then
-	prefix=/usr/pkg-1
+	prefix=/usr/pkg
     fi
     
     ln -sf $prefix/share/denyhosts/daemon-control-dist /etc/init.d/denyhosts
@@ -69,10 +69,12 @@ if ! fgrep -q 'Your old rules are below' /etc/hosts.allow; then
     cp /etc/hosts.allow /etc/hosts.allow.$c
     cat << EOM > /etc/hosts.allow
 
+# Uncomment and edit the rules below
+
 all : /etc/hosts.deniedssh : deny
-ALL : 127.0.0. : allow
-ALL : PARANOID : RFC931 20 : deny
-all : all : deny
+#ALL : 127.0.0. : allow
+#ALL : PARANOID : RFC931 20 : deny
+#all : all : deny
 
 # Your old rules are below.  BE CAREFUL WHICH OF THEM YOU RESTORE!
 EOM
@@ -106,7 +108,7 @@ FreeBSD)
     /etc/rc.d/syslogd restart
     ;;
 Linux)
-    $EDITOR /usr/pkg-1/share/denyhosts/denyhosts.cfg
+    $EDITOR $prefix/share/denyhosts/denyhosts.cfg
     ;;
 esac
 service denyhosts restart
