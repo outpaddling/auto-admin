@@ -126,6 +126,7 @@ tftp_hpa()
     fi
     mkdir -p $prefix/pxelinux.cfg $prefix/Dist
     auto-append-line 'tftpd_enable' 'tftpd_enable="YES"' /etc/rc.conf $0
+    # FIXME: Change to --permissive --secure --blocksize
     auto-append-line "tftpd_flags=\"-p -s $prefix -B 1024 --ipv4\"" \
 	/etc/rc.conf $0
     printf "Make sure no other tftp servers are running.\n"
@@ -258,9 +259,11 @@ ifconfig|egrep 'flags|inet'
 iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
 default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
 local_ip=`auto-ask pxe-local-ip 'IP address of this server?' $default_ip`
-subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
+default_subnet=`echo $local_ip | awk -F . '{ printf("%s.%s.0.0\n", $1, $2); }'`
+subnet=`auto-ask pxe-subnet 'Subnet?' $default_subnet`
+# Cannot use hex notation
 # default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
-default_mask='255.255.0.0'
+default_mask='255.255.128.0'
 netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
 conf='/usr/local/etc/dhcpd.conf'
 
@@ -290,11 +293,11 @@ EOM
     pause
 
     domain=`auto-ask pxe-domain 'Domain name?' 'local'`
-    router=`auto-ask pxe-router 'Router?' 10.1.1.1`
-    nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
+    router=`auto-ask pxe-router 'Router?' 192.168.0.1`
+    nameserver=`auto-ask pxe-nameserver 'Name server?' 192.168.0.1`
     # Reserve 10.1.1.* through 10.1.10.* for static IPs by default
-    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
-    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
+    first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 192.168.1.1`
+    last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 192.168.63.255`
     # Default lease time 20 years (effectively permanent)
     lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
 

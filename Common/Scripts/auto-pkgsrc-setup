@@ -53,7 +53,7 @@ select_snapshot()
 
 You must now choose a pkgsrc snapshot to install.
 
-Quarterly snapshots such as "2015Q4" have gone through additional quality
+Quarterly snapshots such as "2016Q2" have gone through additional quality
 control at the end of each quarter and contain fewer bugs.
 
 The "current" snapshot contains the latest commits of each package.
@@ -354,6 +354,10 @@ if ! which c++; then
 	exit 1
     fi
 fi
+if ! which gfortran; then
+    printf "No gfortran compiler found.  Aborting...\n"
+    exit 1
+fi
 
 printf "These same compilers must be in your PATH when you build packages.\n"
 printf "Proceed? ([y]/n) "
@@ -560,25 +564,39 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
     fi
     
-    tmpfile=auto-pkgsrc-setup-license-list
-    awk '{
-    if ( $1 == "DEFAULT_ACCEPTABLE_LICENSES=" )
-	while ( $NF == "\\" )
-	{
-	    getline;
-	    for (c=1; c<NF; ++c) printf("%s ", $c);
-	}
-    }' $frameworks_prefix/mk/license.mk > $tmpfile
-    licenses=`cat $tmpfile`
-    rm -f $tmpfile
+    cat << EOM
 
-    for license in $licenses; do
-	printf "Allow packages with license $license? ([y]/n) "
-	read accepted
-	if [ 0$accepted != '0n' ]; then
-	    printf "ACCEPTABLE_LICENSES+=\t$license\n" >> $mk_conf
-	fi
-    done
+============================================================================
+You can configure pkgsrc to install any package regardless of the license
+type.  Do this only if you are certain that your organization has no
+restrictions on the allowable types of licenses.
+
+EOM
+    printf "Accept all software licenses? y/[n] "
+    read skip_license_check
+    if [ 0$skip_license_check = 0y ]; then
+	printf "SKIP_LICENSE_CHECK=\tyes\n" >> $mk_conf
+    else
+	tmpfile=auto-pkgsrc-setup-license-list
+	awk '{
+	if ( $1 == "DEFAULT_ACCEPTABLE_LICENSES=" )
+	    while ( $NF == "\\" )
+	    {
+		getline;
+		for (c=1; c<NF; ++c) printf("%s ", $c);
+	    }
+	}' $frameworks_prefix/mk/license.mk > $tmpfile
+	licenses=`cat $tmpfile`
+	rm -f $tmpfile
+    
+	for license in $licenses; do
+	    printf "Allow packages with license $license? ([y]/n) "
+	    read accepted
+	    if [ 0$accepted != '0n' ]; then
+		printf "ACCEPTABLE_LICENSES+=\t$license\n" >> $mk_conf
+	    fi
+	done
+    fi
     
     cat << EOM
 Allow installation of packages with known security vulnerabilities?
@@ -723,24 +741,38 @@ EOM2
 
 chmod 755 $install_prefix/bin/bmake
 
-cd $frameworks_prefix
+cat << EOM
 
-if ! which git; then
-    cat << EOM
+============================================================================
+The pkgsrc-wip (work in progress) project is a worldwide centralized
+repository of packages currently under development.  You can use the
+packages here to test the latest features of software or get access to
+packages that don't yet exist in the official pkgsrc collection.
+
+You can also contribute your own packages and bug fixes.
+
+EOM
+printf "Install pkgsrc-wip? [y]/n "
+read install_wip
+if [ 0$install_wip != 0n ]; then
+    cd $frameworks_prefix
+    
+    if ! which git; then
+	cat << EOM
 
 No git command found.  Skipping pkgsrc-wip install for now.
 
 See https://pkgsrc.org/wip/ for instructions on installing it later.
 
 EOM
-    pause
-else
-    # git sometimes returns non-zero status when it succeeded
-    set +e
-    if [ -d wip ]; then
-	printf "pkgsrc-wip alreading installed.\n"
+	pause
     else
-	cat << EOM
+	# git sometimes returns non-zero status when it succeeded
+	set +e
+	if [ -d wip ]; then
+	    printf "pkgsrc-wip alreading installed.\n"
+	else
+	    cat << EOM
 
 If you have a pkgsrc-wip account, you can use it to check out pkgsrc-wip,
 the work-in-progress category of pkgsrc packages.
@@ -750,18 +782,19 @@ press Enter.
 
 EOM
 
-	# NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
-	# It is here so that this script can work as a standalone.
-	# Be sure to keep this in sync with the separate script!
-	printf "pkgsrc-wip username? [none] "
-	read username
-	if [ 0$username = 0 ]; then
-	    git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
-	else
-	    git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+	    # NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
+	    # It is here so that this script can work as a standalone.
+	    # Be sure to keep this in sync with the separate script!
+	    printf "pkgsrc-wip username? [none] "
+	    read username
+	    if [ 0$username = 0 ]; then
+		git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
+	    else
+		git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+	    fi
 	fi
+	set -e
     fi
-    set -e
 fi
 
 cat << EOM

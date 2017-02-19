@@ -19,12 +19,15 @@ if ! sysctl hw.acpi.supported_sleep_state | fgrep -q $state && \
 fi
 
 # FIXME: Not a clean removal - may leave comments from append-line
-fgrep -v lid_switch_state /etc/sysctl.conf > /etc/sysctl.conf.desktop-installer
-mv -f /etc/sysctl.conf.desktop-installer /etc/sysctl.conf
+fgrep -v lid_switch_state /etc/sysctl.conf > /etc/sysctl.conf.auto-set-suspend-mode
+mv -f /etc/sysctl.conf.auto-set-suspend-mode /etc/sysctl.conf
 auto-append-line lid_switch_state "hw.acpi.lid_switch_state=$state" \
-    /etc/sysctl.conf desktop-installer
+    /etc/sysctl.conf $0
 sysctl hw.acpi.lid_switch_state=$state
 
+exit
+
+# FIXME: The code below is currently unmaintained
 # FIXME: Run this for all suspend events, not just suspend on lid
 if [ $state = S3 ]; then
     # Remove exit commands and append new ones later

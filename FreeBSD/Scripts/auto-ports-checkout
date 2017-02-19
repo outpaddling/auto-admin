@@ -1,0 +1,72 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-02-15  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [portsnap|svn]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ -e /usr/ports/CHANGES ]; then
+    printf 'Ports tree already installed.\n'
+    exit 1
+fi
+
+case $# in
+0)
+    selection=''
+    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
+	cat << EOM
+	
+1.. portsnap
+2.. svn
+
+EOM
+	printf "Enter your selection: "
+	read selection
+    done
+    if [ $selection = 1 ]; then
+	method=portsnap
+    else
+	method=svn
+    fi
+    ;;
+
+1)
+    method=$1
+    ;;
+
+*)
+    usage
+esac
+
+case $method in
+svn)
+    svn checkout https://svn.FreeBSD.org/ports/head /usr/ports
+    ;;
+
+portsnap)
+    portsnap fetch extract
+    ;;
+
+*)
+    usage
+    ;;
+
+esac

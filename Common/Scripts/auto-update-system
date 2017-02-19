@@ -153,14 +153,17 @@ FreeBSD)
     esac
     
     if [ 0$update_ports != 0n ]; then
-	printf "\nFetching latest ports...\n"
-	portsnap fetch
 	if [ -e /usr/ports/CHANGES ]; then
-	    printf "Applying updates...\n"
-	    portsnap $portsnap_flags update
+	    if [ -e /usr/ports/.svn ]; then
+		svn update /usr/ports
+	    else
+		printf "\nFetching latest ports...\n"
+		portsnap fetch
+		printf "Applying updates...\n"
+		portsnap $portsnap_flags update
+	    fi
 	else
-	    printf "Extracting...\n"
-	    portsnap $portsnap_flags extract
+	    auto-ports-checkout
 	fi
     fi
     
@@ -236,25 +239,28 @@ NetBSD)
     read update_base
     if [ 0$update_base != 0n ]; then
 	export CVS_RSH=ssh 
-	if [ ! -e src ]; then
+	if [ ! -e /usr/src ]; then
 	    cd /usr
 	    release=netbsd-`uname -r | cut -d . -f 1,2 | tr . - `
+	    printf "Checking out $release src...\n"
+	    pause
 	    cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot co -r $release -P src
 	    cd src
 	else
 	    cd /usr/src
 	    cvs -q up -dP
 	fi
-	mkdir -p obj tools
+	mkdir -p /usr/obj /usr/tools
 	
 	# Build tools
-	./build.sh -O /usr/obj -T /usr/tools -u tools
+	# Added -U to silence warning
+	./build.sh -O /usr/obj -T /usr/tools -U -u tools
 	
 	# Build kernel
 	arch=$(uname -m)
 	kern=AUTOUPDATE
 	cp sys/arch/$arch/conf/GENERIC sys/arch/$arch/conf/$kern
-	./build.sh -O ../obj -T ../tools kernel=$kern
+	./build.sh -O ../obj -T ../tools -U kernel=$kern
 	
 	# Build userland
 	./build.sh -O ../obj -T ../tools -U distribution

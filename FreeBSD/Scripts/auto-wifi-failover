@@ -43,10 +43,10 @@ if [ $# != 0 ]; then
     usage
 fi
 
-ifconfig
+ifconfig | grep -A 4 flags
 printf "Wired interface? "
 read wired
-printf "Wireless interface? "
+printf "Wireless interface (raw, not wlan0)? "
 read wireless
 
 mac=`ifconfig $wired | awk '$1 == "ether" { print $2 }'`
@@ -64,6 +64,9 @@ ifconfig_lagg0="laggproto failover laggport $wired laggport wlan0 DHCP"
 # End $0 addition
 EOM
 fi
+
+kldload if_lagg || true
+auto-append-line if_lagg_load="YES" /boot/loader.conf $0
 
 printf 'You may want to remove old network configurations from /etc/rc.conf.\n'
 pause
