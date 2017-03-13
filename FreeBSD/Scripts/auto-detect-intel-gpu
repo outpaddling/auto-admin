@@ -19,7 +19,7 @@
 if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
     printf "Intel GPU detected.\n"
     # drm module loaded automatically as a dep
-    auto-append-line i915kms_load="YES" /etc/loader.conf $0
+    auto-append-line "kldlist=${kld_list} \"i915kms\"" /etc/rc.conf $0
     # or in rc.conf: kld_list="i915kms"
     pkg install -y xf86-video-intel
 fi

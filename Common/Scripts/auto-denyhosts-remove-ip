@@ -49,6 +49,9 @@ service denyhosts stop
 # Remove the IP address from /etc/hosts.deny
 $sed "/$ip/d" /etc/hosts.deniedssh
 
+# Remove the IP address from /etc/hosts.deny
+$sed "/$ip/d" /usr/local/etc/hosts.deniedssh
+
 # Edit WORK_DIR/hosts and remove the lines containing the IP address. Save the file.
 $sed "/$ip/d" $work_dir/hosts
 
