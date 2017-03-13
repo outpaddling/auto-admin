@@ -682,6 +682,7 @@ module-whatis   "All software installed via pkgsrc"
 set     version         ${dist_suffix#-}
 set     install_prefix  ${install_prefix}
 
+# Scrub PATH before adding pkgsrc to prevent leakage during builds
 setenv  PATH    /bin:/usr/bin:/sbin:/usr/sbin
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man
