@@ -1,0 +1,42 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-03-15  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [days-old: default=180]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+1)
+    days=$1
+    ;;
+0)
+    days=180
+    ;;
+*)
+    usage
+    ;;
+esac
+
+for dir in /tmp /var/tmp /usr/tmp; do
+    if [ -d $dir ]; then
+	find $dir -depth -atime +days -print -exec rm -rf '{}' \;
+    fi
+done
