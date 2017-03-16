@@ -327,3 +327,5 @@ FreeBSD)
     ;;
 esac
 
+# Strong passwords
+auto-enable-passwdqc
