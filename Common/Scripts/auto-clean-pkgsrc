@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 prefix\n"
+    printf "Usage: $0 [prefix]\n"
     exit 1
 }
 
@@ -23,11 +23,18 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+case $# in
+0)
+    prefix=/usr/pkgsrc
+    ;;
+1)
+    prefix="$1"
+    ;;
+*)
     usage
-fi
+    ;;
+esac
 
-prefix="$1"
 cd "$prefix"
 
 if [ `uname` = Linux ]; then
@@ -37,7 +44,6 @@ else
 fi
 
 before=`df $flags . | awk '$1 != "Filesystem" { print $4 }'`
-printf "Initial free space: %d\n" $before
 
 for dir in */*/work; do
     printf "$dir\n"
