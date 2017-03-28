@@ -35,6 +35,7 @@ case $# in
     ;;
 esac
 
+printf "Cleaning $prefix...\n"
 cd "$prefix"
 
 if [ `uname` = Linux ]; then
