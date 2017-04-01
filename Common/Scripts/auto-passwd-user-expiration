@@ -40,8 +40,8 @@ ostype=`auto-ostype`
 case $ostype in
 FreeBSD)
     # FIXME: Warning days unused.  Can this be controlled?
-    pw usermod $user_name -p $days
-    pw usershow $user_name
+    pw usermod $user_name -p +${days}d
+    pw usershow $user_name -P
     ;;
 RHEL)
     chage -M $days -W $warning $user_name
