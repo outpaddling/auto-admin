@@ -1,0 +1,99 @@
+#!/bin/sh -e
+
+if [ `whoami` != 'root' ]; then
+    printf "Only root can run $0.\n"
+    exit 1
+fi
+
+#
+if [ $# -lt 2 ]; then
+    printf "Usage: $0 username new-uid [directory ...]\n"
+    exit 1
+fi
+
+if [ $1 = --silent ]; then
+    silent=1
+    shift
+    find_print=""
+else
+    find_print=-print
+fi
+
+user_name=$1
+new_uid=$2
+shift
+shift
+
+# Verify that all dirs exits before changing anything!
+dirs="$@"
+for dir in $dirs; do
+    if [ ! -e $dir ]; then
+	printf "$0: ${dir}: No such file or directory.\n"
+	exit 1
+    fi
+done
+
+ostype=`auto-ostype`
+if [ $ostype = Darwin ]; then
+    old_uid=`dscl . -read /Users/$user_name UniqueID | cut -d ' ' -f 2`
+else
+    old_uid=`awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' /etc/passwd`
+fi
+
+# Verify that user exists
+if [ 0$old_uid = 0 ]; then
+    printf "$0: ${user_name}: No such user.\n"
+    exit 1
+fi
+
+# Verify that new uid is not taken
+old_user_name=`awk -F : -v uid=$new_uid '$3 == uid { print $1 }' /etc/passwd`
+if [ 0$old_user_name != 0 ]; then
+    printf "$0: UID $new_uid is in use by user $old_user_name.\n"
+    exit 1
+fi
+
+if [ 0$silent != 01 ]; then
+    cat << EOM
+
+Changing user $user_name from $old_uid to $new_uid.
+
+Files owned by user $old_uid will be updated to $new_uid under the
+following directories:
+
+    $dirs
+
+Files in other directories will retain ownership $old_uid and will
+have to be fixed manually.
+
+EOM
+
+    printf "Are you sure you want to continue? yes/[no] "
+    read continue
+    if [ 0$continue != 0yes ]; then
+	exit 0
+    fi
+fi
+
+case $ostype in
+Darwin)
+    dscl . -change /Users/$user_name UniqueID $old_uid $new_uid
+    ;;
+
+FreeBSD)
+    pw usermod $user_name -u $new_uid
+    ;;
+
+RHEL)
+    usermod -u $new_uid $user_name
+    ;;
+
+*)
+    printf "$0: $(uname) is not currently supported.\n"
+    ;;
+esac
+
+# Fix ownership of files in specified directories
+if [ 0"$dirs" != 0 ]; then
+    find -L $dirs -user $old_uid $find_print -exec chown $user_name '{}' \;
+fi

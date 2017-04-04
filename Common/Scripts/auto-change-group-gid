@@ -1,0 +1,141 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Change the gid of an existing group.
+#
+#   Arguments:
+#       1)  Group name
+#           FreeBSD pw accepts group name or gid, but we require name
+#           here to simplify the Linux groupmod interface.
+#       2)  New gid (numeric)
+#
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-04-03  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--silent] groupname new-gid [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ `whoami` != 'root' ]; then
+    printf "Only root can run $0.\n"
+    exit 1
+fi
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+if [ $1 = --silent ]; then
+    silent=1
+    shift
+    find_print=""
+else
+    find_print=-print
+fi
+
+group_name=$1
+new_gid=$2
+shift
+shift
+
+# Verify that all dirs exits before changing anything!
+dirs="$@"
+for dir in $dirs; do
+    if [ ! -e $dir ]; then
+	printf "$0: ${dir}: No such file or directory.\n"
+	exit 1
+    fi
+done
+
+# Verify group name existence
+old_gid=`awk -F : -v group_name=$group_name '$1 == group_name { print $3 }' /etc/group`
+if [ 0$old_gid = 0 ]; then
+    printf "$0: ${group_name}: No such group.\n"
+    exit 1
+fi
+
+# Verify that new gid is not taken
+old_group_name=`awk -F : -v new_gid=$new_gid '$3 == new_gid { print $1 }' /etc/group`
+if [ 0$group_name = 0 ]; then
+    printf "$0: GID $new_gid is in use by group $old_group_name.\n"
+    exit 1
+fi
+
+# Get list of users whose primary group is the old gid
+primary_users=`awk -F : -v old_gid=$old_gid '$4 == old_gid { print $1 }' /etc/passwd`
+secondary_users=`awk -F : -v group_name=$group_name '$1 == group_name { print $4 }' /etc/group | tr ',' ' '`
+
+if [ 0$silent != 01 ]; then
+    cat << EOM
+The following users have "$group_name" as their primary group:
+
+    $primary_users
+
+The primary group of these users will be updated.
+
+The following users are also members of "$group_name":
+
+    $secondary_users
+
+These users should not be running any processes when this gid is changed.
+
+Files owned by group $old_gid will be updated to $new_gid under the
+following directories:
+
+    $@
+
+Files in other directories will retain group ownership $old_gid and will
+have to be fixed manually.
+
+EOM
+
+    printf "Are you sure you want to continue? yes/[no] "
+    read continue
+    if [ 0$continue != 0yes ]; then
+	exit 0
+    fi
+fi
+
+ostype=`auto-ostype`
+case $ostype in
+FreeBSD)
+    pw groupmod $group_name -g $new_gid
+    ;;
+
+RHEL)
+    groupmod -g $new_gid $group_name
+    ;;
+
+*)
+    printf "$0: Not yet implemented for $ostype.\n"
+    exit 1
+    ;;
+
+esac
+
+# Fix primary groups
+for user in $primary_users $secondary_users; do
+    if [ 0$silent != 01 ]; then
+	printf "Changing primary group for $user...\n"
+    fi
+    # Does not seem necessary on RHEL.  How about other systems?
+    # Is necesary on FreeBSD.
+    auto-change-primary-group $user $new_gid
+done
+
+# Fix file ownership
+if [ 0"$dirs" != 0 ]; then
+    find -L $dirs -group $old_gid $find_print -exec chgrp $group_name '{}' \;
+fi
