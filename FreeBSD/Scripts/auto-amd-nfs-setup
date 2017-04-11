@@ -1,5 +1,19 @@
 #!/bin/sh
 
+cat << EOM
+
+The amd service has been deprecated and replaced by autofs.
+
+Please use auto-autofs-nfs-setup instead.
+
+EOM
+
+printf 'Are you sure you want to continue? y/[n] '
+read continue
+if [ 0$continue != 0y ]; then
+    exit
+fi
+
 rc_file='/etc/rc.conf'
 map_file='/etc/amd.map'
 
@@ -46,4 +60,3 @@ fi
 
 printf "FreeBSD 7.2, 7.3, and 8.0 users should consult security advisory\n"
 printf "FreeBSD-SA-10:06.nfsclient.\n"
-
