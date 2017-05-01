@@ -824,7 +824,7 @@ fi
 cat << EOM2 > $install_prefix/bin/bmake
 #!/bin/sh -e
 
-if ! pwd | fgrep $frameworks_prefix; then
+if ! pwd | fgrep -q $frameworks_prefix; then
     cat << EOM
     
 			    ===== Error =====
@@ -838,7 +838,8 @@ EOM
     exit 1
 fi
 
-# Make sure software installed by root is world-readable
+# Make sure software installed is world-readable on systems with tighter
+# default umask.
 umask 022
 bmake.bin \$@
 EOM2
