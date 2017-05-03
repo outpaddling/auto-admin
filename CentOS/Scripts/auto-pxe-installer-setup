@@ -220,13 +220,13 @@ EOM
 	default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
     
 	domain=`auto-ask pxe-domain 'Domain name?' 'local'`
-	subnet=`auto-ask pxe-subnet 'Subnet?' 10.1.0.0`
+	subnet=`auto-ask pxe-subnet 'Subnet?' 192.168.0.0`
 	netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
-	router=`auto-ask pxe-router 'Router?' 10.1.1.1`
-	nameserver=`auto-ask pxe-nameserver 'Name server?' 10.1.1.1`
-	# Reserve 10.1.1.* through 10.1.10.* for static IPs by default
-	first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 10.1.11.1`
-	last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 10.1.254.254`
+	router=`auto-ask pxe-router 'Router?' 192.168.1.1`
+	nameserver=`auto-ask pxe-nameserver 'Name server?' 192.168.1.1`
+	# Reserve 192.168.1.* through 192.168.10.* for static IPs by default
+	first_address=`auto-ask pxe-first-dhcp 'First DHCP address?' 192.168.11.1`
+	last_address=`auto-ask pxe-last-dhcp 'Last DHCP address?' 192.168.254.254`
 	# Default lease time 20 years (effectively permanent)
 	lease_time=`auto-ask pxe-lease 'Lease time (seconds)?' '630720000'`
     
@@ -248,20 +248,20 @@ EOM
 # default-lease-time    -1;
 # max-lease-time    -1;
 # authoritative;
-# subnet 10.1.1.0 netmask 255.255.255.0 {
-#     range dynamic-bootp 10.1.1.2 10.1.1.200;
+# subnet 192.168.1.0 netmask 255.255.255.0 {
+#     range dynamic-bootp 192.168.1.2 192.168.1.200;
 #     use-host-decl-names on;
-#     option broadcast-address 10.1.1.255;
-#     option domain-name-servers 129.89.10.1, 129.89.10.2;
-#     option routers 10.1.1.253;
+#     option broadcast-address 192.168.1.255;
+#     option domain-name-servers 129.89.192.168, 129.89.10.2;
+#     option routers 192.168.1.253;
 # 
 #     host compute-5-36 {
 #         hardware ethernet 00:26:b9:2e:21:3c;
 #         option host-name "compute-5-36";
-#         fixed-address 10.1.1.143;
+#         fixed-address 192.168.1.143;
 #     }
 # filename    "pxelinux.0";
-# next-server    10.1.1.253;
+# next-server    192.168.1.253;
     
 	cat << EOM > $conf
 allow booting;
@@ -439,7 +439,7 @@ text
 # cmdline
 autostep
 reboot
-nfs --server 10.1.1.2 --dir $installer_path
+nfs --server 192.168.1.2 --dir $installer_path
 
 lang en_US.UTF-8
 keyboard us
