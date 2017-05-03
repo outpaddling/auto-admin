@@ -263,6 +263,27 @@ if [ "0$proceed" = "0n" ]; then
     exit
 fi
 
+cat << EOM
+
+============================================================================
+Binary packages are available for CentOS 6 and 7 if you choose a quarterly
+snapshot and install under /sharedapps, e.g. /sharedapps/pkg-2017Q1.
+
+This will allow packages to be installed using a simple command like
+
+    pkg_add hmmer
+
+instead of building from source with
+
+    cd biology/hmmer
+    bmake install
+
+To use this feature, enter /sharedapps for the prefix below and choose a
+quarterly snapshot of 2017Q1 or later.
+============================================================================
+
+EOM
+
 if [ $# = 0 ]; then
     printf "Installation prefix? [$default_prefix] "
     read prefix
@@ -515,7 +536,7 @@ if [ 0$bootstrap = '0y' ]; then
 	./bootstrap \
 	    ${abi_flags} \
 	    --prefix ${install_prefix} \
-	    --pkgdbdir ${sys_prefix}/var/db/pkg \
+	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
@@ -524,7 +545,7 @@ if [ 0$bootstrap = '0y' ]; then
 	    ${abi_flags} \
 	    --unprivileged \
 	    --prefix ${install_prefix} \
-	    --pkgdbdir ${sys_prefix}/var/db/pkg \
+	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
@@ -619,8 +640,7 @@ fi
 
 # Install latest security checks
 ${install_prefix}/sbin/pkg_admin \
-    -K ${sys_prefix}/var/db/pkg fetch-pkg-vulnerabilities
-
+    -K ${sys_prefix}/pkgdb fetch-pkg-vulnerabilities
 
 ##########################################################################
 #   Some improvements to the base installation
@@ -952,6 +972,18 @@ For more information, go to http://www.netbsd.org/docs/pkgsrc/
 ============================================================================
 EOM
 pause
+
+printf "Package server (leave blank for none)? "
+read package_server
+if [ 0$package_server != 0 ]; then
+    if [ -e /etc/redhat-release ]; then
+	os=RHEL$(cut -d ' ' -f 4 /etc/redhat-release | cut -d '.' -f 1)
+    else
+	os=$(uname)$(uname -r | cut -d '.' -f 1)
+    fi
+    printf "PKG_PATH=http://$package_server/pkgsrc/packages/sharedapps/pkg-2017Q1/$os/All\n" \
+	>> $install_prefix/etc/pkg_install.conf
+fi
 
 # Install pkgsrc guide onto desktop
 if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
