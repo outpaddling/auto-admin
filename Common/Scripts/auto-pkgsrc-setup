@@ -663,7 +663,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     PATH=/bin:/usr/bin:/sbin:/usr/sbin
     unset LD_LIBRARY_PATH
     
-    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:$PATH
+    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
     MANPATH=\$PKGSRC/man:\$(echo \$MANPATH)
     export MANPATH
@@ -681,7 +681,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     PKGSRC=$install_prefix
     export PKGSRC
 
-    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:$PATH
+    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
     MANPATH=\$PKGSRC/man:\$(echo \$MANPATH)
     export MANPATH
@@ -714,7 +714,7 @@ if ( \$status != 0 ) then
     setenv PATH             /bin:/usr/bin:/sbin:/usr/sbin
     unsetenv LD_LIBRARY_PATH
 
-    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:$PATH
+    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
@@ -728,7 +728,7 @@ echo \$PATH | fgrep -q "${install_prefix}:"
 if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
 
-    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:$PATH
+    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
