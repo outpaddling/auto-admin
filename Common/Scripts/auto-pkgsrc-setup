@@ -660,7 +660,8 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     export PKGSRC
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin
+    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    PATH=/usr/bin:/usr/sbin:/bin:/sbin
     unset LD_LIBRARY_PATH
     
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
@@ -711,7 +712,8 @@ if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
-    setenv PATH             /bin:/usr/bin:/sbin:/usr/sbin
+    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
     unsetenv LD_LIBRARY_PATH
 
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
