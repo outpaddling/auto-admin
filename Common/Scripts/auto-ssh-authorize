@@ -38,13 +38,13 @@ user=`whoami`
 # Last command-line argument is remote hostname
 eval remotehost="\${$#}"
 
-echo "Authorizing ${user}@${HOST} on $remotehost."
+echo "Authorizing ${user}@$(hostname) on $remotehost."
 
 if [ ! -f .ssh/id_rsa.pub ] ; then
    ssh-keygen -P "" -f "./.ssh/id_rsa"
 fi
 
 key=`cat .ssh/id_rsa.pub`
-ssh $@ "umask 022; mkdir -p .ssh; touch .ssh/known_hosts .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; ssh-keygen -R ${HOST} && echo $key >> .ssh/authorized_keys"
+ssh $@ "umask 022; mkdir -p .ssh; touch .ssh/known_hosts .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; ssh-keygen -R $(hostname) && echo $key >> .ssh/authorized_keys"
 exit $?
 
