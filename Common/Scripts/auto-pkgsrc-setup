@@ -96,7 +96,7 @@ case $# in
 esac
 
 # AD servers might add funky stuff to IDs
-if id -gn | fgrep ' ' || id -gn | fgrep '\'; then
+if id -gn | fgrep -q ' ' || id -gn | fgrep -q '\'; then
     cat << EOM
 
 Your primary group ID, "`id -gn`", contains whitespace or special
