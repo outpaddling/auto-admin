@@ -1,32 +1,5 @@
 #!/bin/sh -e
 
-# TODO
-#   Set GCCBASE?
-#   Carbon.h cannot find SecurityHi.h with non-Xcode gcc
-
-# OS X base compilers.  Use Xcode for now.  The osx-gcc compilers have
-# some limitations due to assumptions that many software apps make about
-# Mac compilers.  ( e.g. the existence of a -no-cpp-precomp flag, which is
-# an obsolete Apple extension. )
-#
-# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.6.pkg
-# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.7-v2.pkg
-# https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.7-v2.pkg
-#
-# Precompiled Fortran packages from the GCC project
-#
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.2-x86_64-Lion.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Sno-x86-64.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.1-i686-SnowLeopard.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
-
-# RHEL / CentOS base
-if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ] && [ `whoami` = root ]; then
-    printf "Installing base development tools via yum...\n"
-    yum install -y gcc-gfortran gcc-c++ gcc
-fi
-
 pause()
 {
     local junk
@@ -90,6 +63,27 @@ EOM
     return 0
 }
 
+
+##########################################################################
+#   Script description:
+#       Automatically install and configure pkgsrc.
+#
+#   History:
+#   Date        Name        Modification
+#   2014-05-19  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
 case $# in
 0)
     ;;
@@ -100,6 +94,31 @@ case $# in
     exit 1
     ;;
 esac
+
+# AD servers might add funky stuff to IDs
+if id -gn | fgrep ' ' || id -gn | fgrep '\'; then
+    cat << EOM
+
+Your primary group ID, "`id -gn`", contains whitespace or special
+characters.
+
+This will cause the pkgsrc bootstrap to fail.  Please install as
+a different user with no special characters in the user or group names.
+
+EOM
+    exit 1
+fi
+
+# RHEL / CentOS base
+if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
+    if [ `whoami` = root ]; then
+	printf "Installing base development tools via yum...\n"
+	yum install -y gcc-gfortran gcc-c++ gcc
+    else
+	printf "You must run 'yum install gcc-gfortran gcc-c++ gcc' first.\n"
+	exit 1
+    fi
+fi
 
 # For OS X, we should install a new base gcc using install-base-gcc
 case `uname` in
@@ -115,62 +134,7 @@ libraries installed by Xcode in any case.
 EOM
 	exit 1
     fi
-
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.2-x86_64-Lion.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Sno-x86-64.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-4.6.1-i686-SnowLeopard.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
-# http://quatramaran.ens.fr/~coudert/gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
-
     os_major=`uname -r | cut -d . -f 1`
-    # Obsolete
-    #if ! which gfortran; then
-    if false; then
-	case $os_major in
-	11|12)
-	    # Lion and Mountain Lion
-	    dmg=gfortran-4.6.2-x86_64-Lion.dmg
-	    fortran_mount=/Volumes/gfortran-4.6.2-x86_64-Lion
-	    pkg=$fortran_mount/gfortran.pkg
-	    ;;
-	10)
-	    # Snow Leopard
-	    dmg=gfortran-4.6.1-i686-SnowLeopard.dmg
-	    fortran_mount=/Volumes/gfortran-4.6.1-i686-SnowLeopard
-	    pkg=$fortran_mount/gfortran-4.6.1-i686-SnowLeopard/gfortran.pkg
-	    ;;
-	9)
-	    # Leopard
-	    if [ `uname -p` = i386 ]; then
-		dmg=gfortran/gfortran-and-gcc-4-6-2-RC20111019-Leopard-x86.dmg
-		# Untested
-		fortran_mount='/Volumes/GCC Installer'
-		pkg="$fortran_mount/gfortran-and-gcc-4-6-2-RC20111019-x86d9.pkg"
-	    else
-		dmg=gfortran-and-gcc-4-6-2-RC20111019-Leopard-ppc.dmg
-		fortran_mount='/Volumes/GCC Installer'
-		pkg="$fortran_mount/gfortran-and-gcc-4-6-2-RC20111019-ppcd9.pkg"
-	    fi
-	    ;;
-	*)
-	    printf "Unsupported OS X version: `uname -r`\n"
-	    exit 1
-	    ;;
-	esac
-
-	if [ ! -e $dmg ]; then
-	    printf "Downloading gfortran package...\n"
-	    curl -O http://quatramaran.ens.fr/~coudert/gfortran/$dmg
-	fi
-	if [ ! -e "$fortran_mount" ]; then
-	    hdiutil attach -noautoopen $dmg
-	fi
-	printf "Installing gfortran...\n"
-	sudo installer -target / -pkg "$pkg"
-	hdiutil detach "$fortran_mount"
-	sudo ln -s /usr/local/gfortran/bin/gfortran /usr/bin
-
-    fi
     ;;
 
 CYGWIN*)
