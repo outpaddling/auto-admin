@@ -99,7 +99,7 @@ esac
 if id -gn | fgrep -q ' ' || id -gn | fgrep -q '\'; then
     cat << EOM
 
-Your primary group ID, "`id -gn`", contains whitespace or special
+Your primary group ID, "`id -gn`", contains white space or special
 characters.
 
 This will cause the pkgsrc bootstrap to fail.  Please install as
