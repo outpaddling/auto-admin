@@ -340,8 +340,7 @@ if ! which c++; then
     fi
 fi
 if ! which gfortran; then
-    printf "No gfortran compiler found.  Aborting...\n"
-    exit 1
+    printf "Warning: No gfortran compiler found.\n"
 fi
 
 printf "These same compilers must be in your PATH when you build packages.\n"
