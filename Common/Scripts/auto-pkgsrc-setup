@@ -556,7 +556,7 @@ if [ 0$bootstrap = '0y' ]; then
 	;;
     *)
 	;;
-    fi
+    esac
     
     cat << EOM
 
