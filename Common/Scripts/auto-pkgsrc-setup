@@ -326,6 +326,11 @@ If pkgsrc is bootstrapped to use the GCC compiler collection,
 it will look for gfortran in the PATH when building certain packages.
 ============================================================================
 EOM
+
+# Avoid software from other package managers or cave-man installs
+PATH=/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+
 printf "Compilers in your current PATH include:\n\n"
 if ! which cc; then
     if ! which gcc; then
@@ -747,7 +752,7 @@ set     version         ${dist_suffix#-}
 set     install_prefix  ${install_prefix}
 
 # Scrub PATH before adding pkgsrc to prevent leakage during builds
-setenv  PATH    /bin:/usr/bin:/sbin:/usr/sbin
+setenv  PATH    /usr/bin:/usr/sbin:/bin:/sbin
 unsetenv        LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
