@@ -495,6 +495,9 @@ if [ 0$bootstrap = '0y' ]; then
     # Keep old frameworks, but rebuild installation dir and system files
     rm -rf $sys_prefix $install_prefix
     cd $frameworks_prefix/bootstrap
+    CC=cc
+    CXX=c++
+    export CC CXX
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -544,8 +547,15 @@ if [ 0$bootstrap = '0y' ]; then
     fi
     
     # Github and some other sites are inaccessible via ftp
-    if [ `uname` != NetBSD ]; then
+    case `uname` in
+    FreeBSD|NetBSD)
+	printf "FETCH_USING=\t\tfetch\n" >> $mk_conf
+	;;
+    Linux)
 	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
+	;;
+    *)
+	;;
     fi
     
     cat << EOM
