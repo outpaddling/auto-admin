@@ -328,6 +328,8 @@ it will look for gfortran in the PATH when building certain packages.
 EOM
 
 # Avoid software from other package managers or cave-man installs
+# This may need alteration on some platforms, but it works on CentOS,
+# FreeBSD, NetBSD, and OS X.
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
 
