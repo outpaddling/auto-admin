@@ -332,6 +332,7 @@ EOM
 # FreeBSD, NetBSD, and OS X.
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
+unset LD_LIBRARY_PATH
 
 printf "Compilers in your current PATH include:\n\n"
 if ! which cc; then
