@@ -318,9 +318,8 @@ cat << EOM
 ============================================================================
 You will need at least a C compiler and a C++ compiler to build most
 pkgsrc packages.  Many packages also require a Fortran compiler.  On
-some systems, such as NetBSD, pkgsrc can build its own Fortran compilers.
-On other systems, you should use a base compiler collection that includes
-Fortran.  GCC 4.5 or later is recommended.
+many systems, such as NetBSD, pkgsrc can build its own Fortran compilers.
+On RHEL/CentOS, using the gfortran compiler provided via Yum works well.
 
 If pkgsrc is bootstrapped to use the GCC compiler collection,
 it will look for gfortran in the PATH when building certain packages.
