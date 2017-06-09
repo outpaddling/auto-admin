@@ -331,7 +331,7 @@ EOM
 # FreeBSD, NetBSD, and OS X.
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
-unset LD_LIBRARY_PATH
+unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
 printf "Compilers in your current PATH include:\n\n"
 if ! which cc; then
@@ -504,7 +504,9 @@ if [ 0$bootstrap = '0y' ]; then
     cd $frameworks_prefix/bootstrap
     CC=cc
     CXX=c++
-    export CC CXX
+    CPP=cpp
+    unset CFLAGS CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    export CC CXX CPP
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -642,7 +644,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
     # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
-    unset LD_LIBRARY_PATH
+    unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
@@ -694,7 +696,7 @@ if ( \$status != 0 ) then
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
     # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
-    unsetenv LD_LIBRARY_PATH
+    unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
@@ -755,7 +757,7 @@ set     install_prefix  ${install_prefix}
 
 # Scrub PATH before adding pkgsrc to prevent leakage during builds
 setenv  PATH    /usr/bin:/usr/sbin:/bin:/sbin
-unsetenv        LD_LIBRARY_PATH
+unsetenv        CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man
