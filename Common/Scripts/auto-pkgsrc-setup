@@ -757,7 +757,17 @@ set     install_prefix  ${install_prefix}
 
 # Scrub PATH before adding pkgsrc to prevent leakage during builds
 setenv  PATH    /usr/bin:/usr/sbin:/bin:/sbin
-unsetenv        CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+unsetenv        CC
+unsetenv        CFLAGS
+unsetenv        CXX
+unsetenv        CXXFLAGS
+unsetenv        CPP
+unsetenv        CPPFLAGS
+unsetenv        FC
+unsetenv        FFLAGS
+unsetenv        LD
+unsetenv        LDFLAGS
+unsetenv        LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man
