@@ -502,10 +502,10 @@ if [ 0$bootstrap = '0y' ]; then
     # Keep old frameworks, but rebuild installation dir and system files
     rm -rf $sys_prefix $install_prefix
     cd $frameworks_prefix/bootstrap
+    unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     CC=cc
     CXX=c++
     CPP=cpp
-    unset CFLAGS CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     export CC CXX CPP
     if [ `whoami` = root ]; then
 	./bootstrap \
