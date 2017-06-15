@@ -221,7 +221,7 @@ Running as root.  Installing globally.
 EOM
     default_prefix="/usr"
 fi
-printf "OK to proceed? ([y]/n) "
+printf "OK to proceed? [y]/n "
 read proceed
 if [ "0$proceed" = "0n" ]; then
     exit
@@ -350,8 +350,8 @@ if ! which gfortran; then
     printf "Warning: No gfortran compiler found.\n"
 fi
 
-printf "These same compilers must be in your PATH when you build packages.\n"
-printf "Proceed? ([y]/n) "
+printf "\nThese same compilers must be first in PATH when building packages.\n"
+printf "\nProceed? [y]/n "
 read proceed
 if [ 0$proceed = 0n ]; then
     exit 0
@@ -381,7 +381,7 @@ all platforms.  On NetBSD, you can install them quickly using pkgin to avoid
 a long dependency build.
 
 EOM
-    printf "Continue without Fortran in the base compiler suite? (y/[n]) "
+    printf "Continue without Fortran in the base compiler suite? y/[n] "
     read resp
     if [ 0$resp != 0y ]; then
 	exit 1
@@ -419,7 +419,7 @@ fi
 
 # Download new pkgsrc dist if a new install number was provided
 if [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
-    printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? (y/[n]) "
+    printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
     read download
 else
     download='y'
@@ -438,7 +438,7 @@ if [ 0$download = 0y ]; then
 fi
 
 if [ -e $frameworks_prefix ]; then
-    printf "$frameworks_prefix already exists.  Replace? (y/[n]) "
+    printf "$frameworks_prefix already exists.  Replace? y/[n] "
     read unpack
 else
     unpack='y'
@@ -477,7 +477,7 @@ if [ 0$unpack = 0y ]; then
 fi
 
 if [ -e $install_prefix/bin/bmake ]; then
-    printf "$install_prefix already exists.  Rebuild? (y/[n]) "
+    printf "$install_prefix already exists.  Rebuild? y/[n] "
     read bootstrap
 else
     bootstrap='y'
@@ -593,7 +593,7 @@ EOM
 	rm -f $tmpfile
     
 	for license in $licenses; do
-	    printf "Allow packages with license $license? ([y]/n) "
+	    printf "Allow packages with license $license? [y]/n "
 	    read accepted
 	    if [ 0$accepted != '0n' ]; then
 		printf "ACCEPTABLE_LICENSES+=\t$license\n" >> $mk_conf
@@ -613,7 +613,7 @@ packages by running
     env ALLOW_VULNERABLE_PACKAGES=yes bmake install
 
 EOM
-    printf "Allow vulnerable packages? (y/[n]) "
+    printf "Allow vulnerable packages? y/[n] "
     read allow_vulnerable
     if [ 0$allow_vulnerable = 0y ]; then
 	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
@@ -922,42 +922,65 @@ if [ -e /etc/redhat-release ]; then
     release=${release%%.*}
     release=${release##*release }
     os=RHEL$release
-else
+elif [ $(uname) = Darwin ]; then
     os=$(uname)$(uname -r | cut -d '.' -f 1)
+else
+    os=$(uname)-$(uname -r)
 fi
 
 cat << EOM
 
-If there are binary packages available for $install_prefix and $os,
-enter the web server host name here.
+============================================================================
+
+UWM provides binary packages for quarterly snapshots under /sharedapps,
+e.g. /sharedapps/pkg-2017Q1.
+
+If you know there are binary packages available for
+
+    $install_prefix
+    
+on
+
+    $os
+
+enter the web server host name and port here, e.g.
+
+    http://unixdev.ceas.uwm.edu:8085
+
+The default PKG_PATH will be set to
+
+    <server>/pkgsrc/packages/$install_prefix/$os/All
+
+Edit
+
+    $install_prefix/etc/pkg_install.conf
+
+if this is incorrect.
 
 EOM
 
-printf "Package server (include http:// or https://, leave blank for none)? "
+printf "Package server? (include http:// or https://, leave blank for none)\n"
 read package_server
 if [ 0$package_server != 0 ]; then
     pkg_path=$package_server/pkgsrc/packages/$install_prefix/$os/All
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
-    printf "PKG_PATH set to $pkg_path.\n"
-    printf "Edit $install_prefix/etc/pkg_install.conf if this is incorrect.\n"
 fi
 
 cat << EOM
 ============================================================================
-Users running sh, bash, or ksh should add the following to their startup
-scripts:
+Users running sh-compatible shells can use the following to configure the
+environment for this installation:
 
     . ${sys_prefix}/etc/pkgsrc.sh
 
-Users running csh or tcsh should add the following to their startup scripts:
+Users running csh-compatible shells can use the following:
 
     source ${sys_prefix}/etc/pkgsrc.csh
 
-On systems with the "module" command, users can add the following instead
+On systems with the "module" command, users can use the following instead
 of one of the commands above:
 
-    module use ${sys_prefix}/etc/modulefiles
-    module load pkgsrc/${dist_suffix#-}
+    module load ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
 ============================================================================
 EOM
 pause
