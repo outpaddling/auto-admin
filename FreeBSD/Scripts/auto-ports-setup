@@ -16,6 +16,9 @@
 #       ruby-2.3.4,1 couldn't find it's own shared lib
 #           Added ${PREFIX}/lib to LD_LIBRARY_PATH in module
 #           Using $PREFIX/sbin/ldconfig does not work
+#       Some ports assume root priveleges
+#           Try USES+=uidfix
+#           May also need USES+=fakeroot
 ##########################################################################
 
 usage()
@@ -279,18 +282,4 @@ if [ -d $install_dir/var/db/pkg/local.sqlite.lock ]; then
     printf "NFS_WITH_PROPER_LOCKING=yes\n" >> $install_dir/etc/pkg.conf
 fi
 
-# FIXME:
-# autoreconf not found for ruby22
-# Looking for /home/bacon/Ports/install-2016-10-11/bin/autoreconf
-# Should be looking for autoreconf-version?  See autoconf plist.
-
-# FIXME:
-# May need USES+=uidfix fakeroot
-# if [ `whoami` != root ]; then
-#   # Add USES to the appropriate place.  make.conf?
-# fi
-
-# FIXME:
-# Perl 5.20 does not package bin/perl5.20.3 although it is in stagedir
-# env: /home/bacon/Ports/install-2016-10-12/bin/perl5.20.3: No such file or directory
 
