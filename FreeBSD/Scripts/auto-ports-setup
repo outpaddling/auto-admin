@@ -265,9 +265,19 @@ printf "Generating $install_dir/sbin/ldconfig...\n"
 cat << EOM > $install_dir/sbin/ldconfig
 #!/bin/sh
 
-/sbin/ldconfig -i -f $install_dir/var/run/ld-elf.so.hints $@
+/sbin/ldconfig -i -f $install_dir/var/run/ld-elf.so.hints \$@
 EOM
 chmod 755 $install_dir/sbin/ldconfig
+
+# Set default LDCONFIG in port make fragments
+sed -i '' "s|LDCONFIG?=.*/sbin/ldconfig|LDCONFIG?= $install_dir/sbin/ldconfig|g" \
+    $ports_dir/Mk/bsd.commands.mk
+
+# FIXME: Patch other critical variables into .mk files to protect against
+# env corruption.  PKG_DBDIR, ...
+
+# Preload standard lib directories into hints file
+$install_dir/sbin/ldconfig -m /lib /usr/lib
 
 . $install_dir/etc/ports.sh
 printenv
@@ -281,5 +291,3 @@ if [ -d $install_dir/var/db/pkg/local.sqlite.lock ]; then
     rmdir $install_dir/var/db/pkg/local.sqlite.lock
     printf "NFS_WITH_PROPER_LOCKING=yes\n" >> $install_dir/etc/pkg.conf
 fi
-
-
