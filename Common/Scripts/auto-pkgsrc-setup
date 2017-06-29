@@ -831,7 +831,7 @@ chmod 644 $profile_dir/$module_path_script*
 # Basic instructions on installing a package
 make=bmake
 
-# Wrap bmake command
+# Wrap bmake and pkg_add commands
 if ! [ -e $install_prefix/bin/bmake.bin ]; then
     mv $install_prefix/bin/bmake $install_prefix/bin/bmake.bin
 fi
@@ -857,6 +857,18 @@ fi
 umask 022
 bmake.bin \$@
 EOM2
+
+if ! [ -e $install_prefix/sbin/pkg_add.bin ]; then
+    mv $install_prefix/sbin/pkg_add $install_prefix/sbin/pkg_add.bin
+fi
+cat << EOM > $install_prefix/sbin/pkg_add
+#!/bin/sh -e
+
+# Make sure software installed is world-readable on systems with tighter
+# default umask.
+umask 022
+pkg_add.bin \$@
+EOM
 
 chmod 755 $install_prefix/bin/bmake
 
