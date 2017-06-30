@@ -361,36 +361,20 @@ if ! which gfortran; then
     cat << EOM
 
 ============================================================================
-No Fortran compiler was found in your PATH, which is needed for some
-packages.
+No Fortran compiler was found in your PATH.
 
-If possible, you should install a Fortran compiler outside pkgsrc before
-continuing with this installation.  This will ensure compatibility with
-the other compilers being used for the bootstrap.
-
-On RHEL, CentOS, etc. you can use
+On RHEL compatible systems, it's best to install gfortran with
 
     yum install gcc-gfortran
+
+before bootstrapping pkgsrc.
 
 Otherwise, pkgsrc will attempt to install a Fortran compiler when needed,
 using g95 as the default.  For better performance and support of newer Fortran
 code, you may want to use one of the GCC packages instead of g95.
 
 Note that the GCC packages are much larger than g95 and may not build on
-all platforms.  On NetBSD, you can install them quickly using pkgin to avoid
-a long dependency build.
-
-EOM
-    printf "Continue without Fortran in the base compiler suite? [y]/n "
-    read resp
-    if [ 0$resp = 0n ]; then
-	exit 1
-    fi
-    
-    printf "Use GCC packages instead of g95? y/[n] "
-    read use_gfortran
-
-    cat << EOM
+all platforms.
 
 You can change this later by setting
 
@@ -400,10 +384,19 @@ or
 
     PKGSRC_FORTRAN=g95
 
-in etc/mk.conf.\n"
+in $install_prefix/etc/mk.conf.
 ============================================================================
 
 EOM
+    printf "Continue without Fortran in the base compiler suite? [y]/n "
+    read resp
+    if [ 0$resp = 0n ]; then
+	exit 1
+    fi
+    
+    printf "Use GCC packages instead of g95? [y]/n "
+    read use_gfortran
+
 fi
 
 if which curl > /dev/null; then
@@ -543,7 +536,7 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "PREFER_PKGSRC=\t\tyes\n" >> $mk_conf
     fi
 
-    if [ 0$use_gfortran = 0y ]; then
+    if [ 0$use_gfortran != 0n ]; then
 	printf "PKGSRC_FORTRAN=\t\tgfortran\n" >> $mk_conf
     fi
     
