@@ -381,9 +381,9 @@ all platforms.  On NetBSD, you can install them quickly using pkgin to avoid
 a long dependency build.
 
 EOM
-    printf "Continue without Fortran in the base compiler suite? y/[n] "
+    printf "Continue without Fortran in the base compiler suite? [y]/n "
     read resp
-    if [ 0$resp != 0y ]; then
+    if [ 0$resp = 0n ]; then
 	exit 1
     fi
     
@@ -648,7 +648,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
     
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
-    MANPATH=\$PKGSRC/man:\$(echo \$MANPATH)
+    MANPATH=\$PKGSRC/man:/usr/share/man
     export MANPATH
     PKGSRC_INCLUDE=\$PKGSRC/include
     export PKGSRC_INCLUDE
@@ -666,7 +666,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}:"; then
 
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
-    MANPATH=\$PKGSRC/man:\$(echo \$MANPATH)
+    MANPATH=\$PKGSRC/man:/usr/share/man
     export MANPATH
     PKGSRC_INCLUDE=\$PKGSRC/include
     export PKGSRC_INCLUDE
@@ -699,7 +699,7 @@ if ( \$status != 0 ) then
     unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
-    setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
+    setenv MANPATH          \$PKGSRC/man:/usr/share/man
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
 endif
@@ -713,7 +713,7 @@ if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
 
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
-    setenv MANPATH          \$PKGSRC/man:\`echo \$MANPATH\`
+    setenv MANPATH          \$PKGSRC/man:/usr/share/man
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
 endif
@@ -770,7 +770,7 @@ unsetenv        LDFLAGS
 unsetenv        LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
-prepend-path    MANPATH         \$install_prefix/man
+prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
 prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
 
 setenv          PKGSRC          \$install_prefix
@@ -800,7 +800,7 @@ set     version         ${dist_suffix#-}
 set     install_prefix  ${install_prefix}
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
-prepend-path    MANPATH         \$install_prefix/man
+prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
 prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
 
 setenv          PKGSRC          \$install_prefix
@@ -870,7 +870,7 @@ umask 022
 pkg_add.bin \$@
 EOM
 
-chmod 755 $install_prefix/bin/bmake
+chmod 755 $install_prefix/bin/bmake $install_prefix/sbin/pkg_add
 
 cat << EOM
 
