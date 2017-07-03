@@ -1056,6 +1056,8 @@ if [ `uname` = Linux ]; then
     empty(PKGPATH:Mmisc/p5-Locale-libintl) && \\
     empty(PKGPATH:Mtextproc/p5-Text-Unidecode) && \\
     empty(PKGPATH:Mdevel/gtexinfo) && \\
+    empty(PKGPATH:Mdevel/gettext-tools) && \\
+    empty(PKGPATH:Mdevel/gettext-lib) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mmath/mpfr) && \\
     empty(PKGPATH:Mmath/mpcomplex)
