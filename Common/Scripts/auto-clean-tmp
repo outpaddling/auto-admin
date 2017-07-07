@@ -37,6 +37,6 @@ esac
 
 for dir in /tmp /var/tmp /usr/tmp; do
     if [ -d $dir ]; then
-	find $dir -depth -atime +$days -print -exec rm -rf '{}' \;
+	find $dir -depth -type f -atime +$days -print -exec rm -f '{}' \;
     fi
 done
