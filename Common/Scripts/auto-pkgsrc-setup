@@ -1060,8 +1060,8 @@ if [ `uname` = Linux ]; then
     empty(PKGPATH:Mdevel/gettext-lib) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mmath/mpfr) && \\
-    empty(PKGPATH:Mmath/cloog) && \
-    empty(PKGPATH:Mmath/isl) && \
+    empty(PKGPATH:Mmath/cloog) && \\
+    empty(PKGPATH:Mmath/isl) && \\
     empty(PKGPATH:Mmath/mpcomplex)
 
 GCC_REQD+=4.8
