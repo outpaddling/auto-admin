@@ -449,18 +449,6 @@ if [ 0$unpack = 0y ]; then
 	tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
     fi
     rm -rf $frameworks_prefix $sys_prefix $install_prefix
-    # Apple's gcc uses a non-standard flag that is not supported by
-    # separately installed gcc.
-    if [ `uname` = 'Darwin' ]; then
-	sed -i '.bak' 's|CPP_PRECOMP_FLAGS?=|# Disabled for /usr/local/bin/gcc CPP_PRECOMP_FLAGS?=|g' pkgsrc/mk/platform/Darwin.mk
-    fi
-    
-    # Workaround for botstrap failure 2015-05-05
-    #save_cwd=`pwd`
-    #cd pkgsrc/pkgtools/libnbcompat
-    #echo yes | cvs up -dP
-    #cd $save_cwd
-    
     mv pkgsrc $frameworks_prefix
 fi
 
