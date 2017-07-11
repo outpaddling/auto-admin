@@ -13,8 +13,6 @@ pause()
 #   Function description:
 #       Ask user to select a snapshot
 #
-#   Returns:
-#       
 #   History:
 #   Date        Name        Modification
 #   2016-01-04  Jason Bacon Begin
@@ -126,10 +124,7 @@ case `uname` in
     if [ ! -e /usr/bin/gcc ]; then
 	cat << EOM
 
-You must install Xcode and GCC command-line tools in order to use pkgsrc.
-
-You may use a different base compiler, but pkgsrc requires headers and
-libraries installed by Xcode in any case.
+You must install Xcode command-line tools in order to use pkgsrc.
 
 EOM
 	exit 1
@@ -499,7 +494,10 @@ if [ 0$bootstrap = '0y' ]; then
     CC=cc
     CXX=c++
     CPP=cpp
-    export CC CXX CPP
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    PKGSRC_USE_FORTIFY=no
+    export CC CXX CPP PKGSRC_USE_FORTIFY
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -611,6 +609,9 @@ EOM
     if [ 0$allow_vulnerable = 0y ]; then
 	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
     fi
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
 fi
 
 # Install latest security checks
