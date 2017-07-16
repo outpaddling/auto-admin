@@ -73,7 +73,7 @@ EOM
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0 [--extract-only]\n"
     exit 1
 }
 
@@ -86,10 +86,14 @@ case $# in
 0)
     ;;
 1)
+    if [ $1 = --extract-only ]; then
+	EXTRACT_ONLY=yes
+    else
+	usage
+    fi
     ;;
 *)
-    printf "Usage: $0 [prefix]\n"
-    exit 1
+    usage
     ;;
 esac
 
@@ -243,14 +247,10 @@ quarterly snapshot of 2017Q1 or later.
 
 EOM
 
-if [ $# = 0 ]; then
-    printf "Installation prefix? [$default_prefix] "
-    read prefix
-    if [ 0"$prefix" = 0 ]; then
-	prefix=$default_prefix
-    fi
-else
-    prefix=$1
+printf "Installation prefix? [$default_prefix] "
+read prefix
+if [ 0"$prefix" = 0 ]; then
+    prefix=$default_prefix
 fi
 
 select_snapshot
@@ -397,9 +397,11 @@ fi
 if which curl > /dev/null; then
     fetch_cmd='curl -O'
 elif which wget > /dev/null; then
-    fetch_cmd='wget';
+    fetch_cmd=wget
 elif which fetch > /dev/null; then
-    fetch_cmd='fetch';
+    fetch_cmd=fetch
+elif [ -e /usr/pkg/bin/fetch ]; then
+    fetch_cmd=/usr/pkg/bin/fetch
 else
     printf "No fetch command found.\n"
     exit 1
@@ -450,6 +452,9 @@ if [ 0$unpack = 0y ]; then
     fi
     rm -rf $frameworks_prefix $sys_prefix $install_prefix
     mv pkgsrc $frameworks_prefix
+    if [ 0$EXTRACT_ONLY != 0 ]; then
+	exit 0
+    fi
 fi
 
 if [ -e $install_prefix/bin/bmake ]; then
@@ -484,8 +489,10 @@ if [ 0$bootstrap = '0y' ]; then
     CPP=cpp
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
-    PKGSRC_USE_FORTIFY=no
-    export CC CXX CPP PKGSRC_USE_FORTIFY
+    # PKGSRC_USE_FORTIFY=no
+    # Leave fortify on and just disable -Werror
+    NOGCCERROR=yes
+    export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -599,7 +606,9 @@ EOM
     fi
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
-    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
+    # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
+    # Leave fortify on and just disable -Werror
+    printf "NOGCCERROR=\tyes\n" >> $mk_conf
 fi
 
 # Install latest security checks
