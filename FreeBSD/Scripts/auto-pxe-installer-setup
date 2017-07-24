@@ -450,6 +450,7 @@ installerconfig=$installer_path/etc/installerconfig
 
 cat << EOM > $installerconfig
 PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
+#PARTITIONS="mfid0 { 8G freebsd-swap, auto freebsd-ufs / }"
 DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
 
 #!/bin/sh
