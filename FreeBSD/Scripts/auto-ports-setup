@@ -54,8 +54,33 @@ read prefix
 if [ 0$prefix = 0 ]; then
     prefix=$default_prefix
 fi
-snapshot_suffix=`date +%Y-%m-%d`
-printf "Add -$snapshot_suffix to installation directories? [y]/n "
+
+snapshot=''
+while [ 0$snapshot != 01 ] && [ 0$snapshot != 02 ]; do
+    cat << EOM
+
+1.. Install quarterly snapshot
+2.. Install latest ports (head)
+
+EOM
+    printf "Selection? "
+    read snapshot
+    case $snapshot in
+    1)
+	printf "Year: "
+	read year
+	printf "Quarter: "
+	read quarter
+	snapshot_suffix=${year}Q$quarter
+	;;
+    
+    2)
+	snapshot_suffix=`date +%Y-%m-%d`
+	;;
+    esac
+done
+
+printf "\nAdd -$snapshot_suffix to installation directories? [y]/n "
 read add_suffix
 if [ 0$add_suffix = 0n ]; then
     ports_dir="$prefix/ports"
@@ -94,22 +119,45 @@ if [ 0$proceed = 0n ]; then
     exit
 fi
 
-mkdir -p $install_dir/etc $install_dir/var/db/portsnap $install_dir/var/run
+mkdir -p $install_dir/etc $install_dir/var/run
 
 # Start clean
 unset CC CFLAGS CPP CPPFLAGS CXX CXXFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
 
-# Generate portsnap.conf
-printf "Generating $install_dir/etc/portsnap.conf...\n"
-sed -e "s|# PORTSDIR=.*|PORTSDIR=$ports_dir|" \
-    -e "s|# WORKDIR=.*|WORKDIR=$install_dir/var/db/portsnap|" \
-    /etc/portsnap.conf > $install_dir/etc/portsnap.conf
-
 # Download ports snapshot
+svn=/usr/local/bin/svn
 if [ ! -e $ports_dir/Makefile ]; then
-    portsnap -f $install_dir/etc/portsnap.conf fetch extract
+    if [ 0$year != 0 ]; then
+	$svn co https://svn.FreeBSD.org/ports/branches/${year}Q$quarter $ports_dir
+    else
+	checkout=''
+	while [ 0$checkout != 01 ] && [ 0$checkout != 02 ]; do
+	    cat << EOM
+
+1.. Use portsnap
+2.. Use subversion
+
+EOM
+	    printf "Selection? "
+	    read checkout
+	done
+	case $checkout in
+	1)
+	    # Generate portsnap.conf
+	    mkdir -p $install_dir/var/db/portsnap
+	    printf "Generating $install_dir/etc/portsnap.conf...\n"
+	    sed -e "s|# PORTSDIR=.*|PORTSDIR=$ports_dir|" \
+		-e "s|# WORKDIR=.*|WORKDIR=$install_dir/var/db/portsnap|" \
+		/etc/portsnap.conf > $install_dir/etc/portsnap.conf
+	    portsnap -f $install_dir/etc/portsnap.conf fetch extract
+	    ;;
+	2)
+	    $svn co https://svn.FreeBSD.org/ports/head $ports_dir
+	    ;;
+	esac
+    fi
 else
     cat << EOM
 
