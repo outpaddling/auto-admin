@@ -67,9 +67,9 @@ EOM
     read snapshot
     case $snapshot in
     1)
-	printf "Year: "
+	printf "Year? "
 	read year
-	printf "Quarter: "
+	printf "Quarter? "
 	read quarter
 	snapshot_suffix=${year}Q$quarter
 	;;
