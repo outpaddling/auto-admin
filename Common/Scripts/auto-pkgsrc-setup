@@ -286,6 +286,7 @@ fi
 install_prefix=$prefix/pkg$install_suffix
 frameworks_prefix=$prefix/pkgsrc$install_suffix
 sys_prefix=$prefix/pkg$install_suffix
+mk_conf=$sys_prefix/etc/mk.conf
 
 cat << EOM
 
@@ -512,11 +513,6 @@ if [ 0$bootstrap = '0y' ]; then
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
 
-    mk_conf=$sys_prefix/etc/mk.conf
-    
-    # Separate bootstrap settings from our settings
-    printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n" >> $mk_conf
-    
     # Configure pkgsrc options in mk.conf
     # Add X11_TYPE=modular tells pkgsrc to use its own X11 packages
     # PREFER_PKGSRC tells pkgsrc to install depdencies from its own
@@ -962,10 +958,15 @@ if this is incorrect.
 
 EOM
 
-printf "Package server? (include http:// or https://, leave blank for none)\n"
-read package_server
-if [ 0$package_server != 0 ]; then
-    pkg_path=$package_server/pkgsrc/packages/$install_prefix/$os/All
+package_server='x'
+while [ 0$package_server != 0 ]; do
+    printf "Enter another server (include http:// or https://), or just press enter if done.\n"
+    read package_server
+    if [ 0$package_server != 0 ]; then
+	pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
+    fi
+done
+if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
 fi
 
@@ -1067,7 +1068,5 @@ GCC_REQD+=4.8
 .endif  # GCC_REQD
 EOM
 fi
-
-printf "\n.endif   # Pkgsrc customizations\n" >> $mk_conf
 
 touch $prefix/pkg$install_suffix/done
