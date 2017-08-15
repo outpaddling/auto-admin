@@ -942,7 +942,7 @@ on
 
     $os
 
-enter the web server host name and port here, e.g.
+enter the web server URL(s) including any non-standard TCP port(s) here, e.g.
 
     http://unixdev.ceas.uwm.edu:8085
 
@@ -964,10 +964,25 @@ while [ 0$package_server != 0 ]; do
     read package_server
     if [ 0$package_server != 0 ]; then
 	pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
+	pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$install_prefix/$os/All\n"
     fi
 done
 if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
+
+    if pkg_add pkgin; then
+	printf "${pkgin_path}" >> $install_prefix/etc/pkgin/repositories.conf
+	pkgin update
+	cat << EOM
+
+Pkgin initialized sucessfully.  You can use pkgin to install and remove
+binary packages, list available packages, etc.  Run "man pkgin" for details.
+
+EOM
+    else
+	printf "Failed to install pkgin.\nCheck $install_prefix/etc/pkg_install.conf.\n"
+    fi
+    pause
 fi
 
 cat << EOM
