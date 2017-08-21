@@ -45,7 +45,7 @@ auto-package-installed
 auto-print-make-variable
 auto-pxe-installer-setup
 auto-service-enabled
-auto-set-suspend-mode
+auto-set-lid-switch-mode
 auto-update-port-framework
 auto-update-xorg.conf
 auto-using-pkgng
@@ -395,9 +395,9 @@ fi
 .ad
 .fi
 
-.SH AUTO-SET-SUSPEND-ON-LID
+.SH AUTO-SET-LID-SWITCH-MODE
 
-.B auto-set-suspend-on-lid S1|S2|S3|S4|S5|NONE
+.B auto-set-lid-switch-mode S1|S2|S3|S4|S5|NONE
 
 Configures laptop lid switch action to the specified ACPI mode.
 
