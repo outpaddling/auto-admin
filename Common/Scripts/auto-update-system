@@ -107,26 +107,23 @@ FreeBSD)
     
     if [ 0$update_packages != 0n ]; then
 	case $mode in
-	yes)
-	    autoremove=y
-	    ;;
 	interactive)
-	    printf "Autoremove unneeded packages? y/[n] "
+	    printf "Autoremove unneeded packages? [y]/n "
 	    read autoremove
 	    ;;
 	*)
-	    autoremove=n
+	    autoremove=y
 	    ;;
 	esac
     
-	if [ 0$autoremove = 0y ]; then
+	if [ 0$autoremove != 0n ]; then
 	    printf "\nRemoving unneeded dependencies...\n"
 	    case $mode in
-	    yes)
-		pkg autoremove -y
+	    interactive)
+		pkg autoremove
 		;;
 	    *)
-		pkg autoremove
+		pkg autoremove -y
 		;;
 	    esac
 	fi
