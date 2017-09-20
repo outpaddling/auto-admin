@@ -12,16 +12,31 @@
 #   2012-01-08  Jason Bacon Begin
 ##########################################################################
 
+usage()
+{
+    printf "Usage: $0 on|off\n"
+    exit 1
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# != 1 ]; then
-    printf "Usage: $0 on|off\n"
-    exit 1
+    usage
 fi
 
 new_state=$1
+
+case $new_state in
+off|on)
+    ;;
+*)
+    usage
+    ;;
+esac
+
 # In case something is left over from a crashed run
 rm -f /tmp/ttys.auto-xdm-toggle
 awk -v new_state=$new_state \
@@ -36,3 +51,7 @@ awk -v new_state=$new_state \
       }' /etc/ttys > /tmp/ttys.auto-xdm-toggle
 mv -f /tmp/ttys.auto-xdm-toggle /etc/ttys
 
+kill -HUP 1
+if [ $new_state = off ]; then
+    killall xdm
+fi

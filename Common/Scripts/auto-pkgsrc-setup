@@ -487,7 +487,8 @@ if [ 0$bootstrap = '0y' ]; then
     unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     CC=cc
     CXX=c++
-    CPP=cpp
+    # OS X 10.12.6 needs full path for bmake build
+    CPP=`which cpp`
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
     # PKGSRC_USE_FORTIFY=no

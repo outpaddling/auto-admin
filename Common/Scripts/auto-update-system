@@ -189,6 +189,9 @@ FreeBSD)
 RHEL)
     # Complete interrupted yum updates if the tool is installed and there
     # are any
+    if ! which yum-complete-transaction; then
+	yum install -y yum-utils
+    fi
     case $mode in
     interactive)
 	yum-complete-transaction || true
