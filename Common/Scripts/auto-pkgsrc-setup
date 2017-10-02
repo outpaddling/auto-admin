@@ -218,7 +218,11 @@ Running as root.  Installing globally.
 ============================================================================
 
 EOM
-    default_prefix="/usr"
+    if [ `uname` = Darwin ]; then
+	default_prefix="/opt"
+    else
+	default_prefix="/usr"
+    fi
 fi
 printf "OK to proceed? [y]/n "
 read proceed
