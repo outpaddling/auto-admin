@@ -488,17 +488,23 @@ if [ 0$bootstrap = '0y' ]; then
     # Keep old frameworks, but rebuild installation dir and system files
     rm -rf $sys_prefix $install_prefix
     cd $frameworks_prefix/bootstrap
+    
+    # Scrub env to prevent leakage of nonstandard tools into pkgsrc
     unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     CC=cc
     CXX=c++
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
+    
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
-    # PKGSRC_USE_FORTIFY=no
+    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     # Leave fortify on and just disable -Werror
-    NOGCCERROR=yes
+    # gcc49,5,6 fail on CentOS 7 with just this
+    # gcc49,5 on CentOS 6
+    # printf "NOGCCERROR=\t\tyes\n" >> $mk_conf
     export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
+    
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -605,11 +611,6 @@ EOM
     if [ 0$allow_vulnerable = 0y ]; then
 	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
     fi
-    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
-    # Enable it in the future if/when most of the issues are resolved
-    # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
-    # Leave fortify on and just disable -Werror
-    printf "NOGCCERROR=\tyes\n" >> $mk_conf
 fi
 
 # Install latest security checks
