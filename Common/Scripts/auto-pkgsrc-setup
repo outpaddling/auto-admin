@@ -495,7 +495,7 @@ if [ 0$bootstrap = '0y' ]; then
     CXX=c++
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
-    export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
+    export CC CXX CPP
     
     if [ `whoami` = root ]; then
 	./bootstrap \
