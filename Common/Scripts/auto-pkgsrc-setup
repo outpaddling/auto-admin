@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 pause()
 {
@@ -495,7 +495,12 @@ if [ 0$bootstrap = '0y' ]; then
     CXX=c++
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
-    export CC CXX CPP
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    # PKGSRC_USE_FORTIFY=no
+    # Leave fortify on and just disable -Werror.  Sufficient for cwrappers.
+    NOGCCERROR=yes
+    export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
     
     if [ `whoami` = root ]; then
 	./bootstrap \
