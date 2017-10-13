@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 pause()
 {
@@ -495,14 +495,6 @@ if [ 0$bootstrap = '0y' ]; then
     CXX=c++
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
-    
-    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
-    # Enable it in the future if/when most of the issues are resolved
-    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
-    # Leave fortify on and just disable -Werror
-    # gcc49,5,6 fail on CentOS 7 with just this
-    # gcc49,5 on CentOS 6
-    # printf "NOGCCERROR=\t\tyes\n" >> $mk_conf
     export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
     
     if [ `whoami` = root ]; then
@@ -523,6 +515,14 @@ if [ 0$bootstrap = '0y' ]; then
 	    --varbase ${sys_prefix}/var \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
+    
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
+    # Leave fortify on and just disable -Werror
+    # gcc49,5,6 fail on CentOS 7 with just this
+    # gcc49,5 on CentOS 6
+    # printf "NOGCCERROR=\t\tyes\n" >> $mk_conf
 
     # Configure pkgsrc options in mk.conf
     # Add X11_TYPE=modular tells pkgsrc to use its own X11 packages
