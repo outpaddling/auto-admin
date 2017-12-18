@@ -162,6 +162,10 @@ FreeBSD)
 	else
 	    auto-ports-checkout
 	fi
+	
+	if which wip-update; then
+	    wip-update
+	fi
     fi
     
     case $mode in

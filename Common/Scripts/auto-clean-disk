@@ -1,0 +1,58 @@
+#!/bin/sh
+
+if [ `whoami` != 'root' ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+case `auto-ostype` in
+FreeBSD)
+    printf "Clean package cache? [y]/n "
+    read clean
+    if [ 0$clean != 0n ]; then
+	pkg clean -a
+    fi
+    
+    printf "Clean ports tree? [y]/n "
+    read clean
+    if [ 0$clean != 0n ]; then
+	auto-clean-ports
+    fi
+    
+    mount_points=`awk '$3 == "ufs" { print $2 }' /etc/fstab`
+    set +e
+    for dir in $mount_points; do
+	printf "Zero free block on $dir? [y]/n "
+	read zero
+	if [ 0$zero != 0n ]; then
+	    cd $dir
+	    dd if=/dev/zero of=zero-temp bs=1m
+	    rm zero-temp
+	fi
+    done
+    ;;
+
+RHEL)
+    printf "Clean package cache? [y]/n "
+    read clean
+    if [ 0$clean != 0n ]; then
+	yum clean all
+    fi
+    
+    mount_points=`awk '$3 ~ "ext" || $3 ~ "xfs" { print $2 }' /etc/fstab`
+    set +e
+    for dir in $mount_points; do
+	printf "Zero free blocks on $dir? [y]/n "
+	read zero
+	if [ 0$zero != 0n ]; then
+	    cd $dir
+	    dd if=/dev/zero of=zero-temp bs=1M
+	    rm zero-temp
+	fi
+    done
+    ;;
+
+*)
+    printf "Not yet implemented for `auto-ostype`.\n"
+    exit 1
+esac

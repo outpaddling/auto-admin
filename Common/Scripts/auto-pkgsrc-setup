@@ -1087,6 +1087,7 @@ if [ `uname` = Linux ]; then
     empty(PKGPATH:Mmath/mpfr) && \\
     empty(PKGPATH:Mmath/cloog) && \\
     empty(PKGPATH:Mmath/isl) && \\
+    empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
     empty(PKGPATH:Mmath/mpcomplex)
 
 GCC_REQD+=4.8

@@ -56,11 +56,11 @@ if ! fgrep -q 'cloned_interfaces="lagg0"' /etc/rc.conf; then
     cat << EOM >> /etc/rc.conf
 # Added by $0
 ifconfig_$wired="up"
-ifconfig_$wireless="ether $mac"
 wlans_$wireless="wlan0"
 ifconfig_wlan0="WPA"
+create_args_wlan0="wlanaddr $mac"
 cloned_interfaces="lagg0"
-ifconfig_lagg0="laggproto failover laggport $wired laggport wlan0 DHCP"
+ifconfig_lagg0="up laggproto failover laggport $wired laggport wlan0 DHCP"
 # End $0 addition
 EOM
 fi
