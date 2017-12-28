@@ -407,6 +407,8 @@ elif which fetch > /dev/null; then
     fetch_cmd=fetch
 elif [ -e /usr/pkg/bin/fetch ]; then
     fetch_cmd=/usr/pkg/bin/fetch
+elif which ftp > /dev/null; then
+    fetch_cmd=ftp
 else
     printf "No fetch command found.\n"
     exit 1
