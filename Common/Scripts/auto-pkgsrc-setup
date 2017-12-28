@@ -953,13 +953,13 @@ on
 
     $os
 
-enter the web server URL(s) including any non-standard TCP port(s) here, e.g.
+enter the full web server URL(s) here, e.g.:
 
-    http://unixdev.ceas.uwm.edu:8085
+    http://mirror1.hpc.uwm.edu
 
 The default PKG_PATH will be set to
 
-    <server>/pkgsrc/packages/$install_prefix/$os/All
+    <URL>/pkgsrc/packages/$install_prefix/$os/All
 
 Edit
 
@@ -1055,42 +1055,89 @@ if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
     printf "A copy of the pkgsrc guide has been placed on your desktop.\n"
 fi
 
-# FIXME: Verify that this is the minimal list of gcc48 deps
+# FIXME: Verify that this is the minimal list of $base_gcc deps
 # Pkgsrc 2017Q2 assumes a c++11 compiler.  Force CentOS 6 to build everything
 # using a pkgsrc GCC instead of its native GCC 4.4.7, which has only partial
 # c++11 support and does not support the -std=c++11 flag.
 # Hopefully pkgsrc will handle cases like this automatically in the near
 # future and this hack will no longer be needed.
 if [ `uname` = Linux ]; then
+
+    cat << EOM
+    
+Select a minimum GCC version.  Many packages will not build with older
+GCC suites such as the GCC 4.4 provided by RHEL/CentOS 6.  When you select
+a newer compiler here, a pkgsrc gcc will be used to build all packages
+except itself.
+
+1.. 4.8
+2.. 4.9
+3.. 5.0
+4.. 6.0
+5.. 7.0
+
+EOM
+    printf "Selection? [3] "
+    read selection
+    if [ 0$selection = 0 ]; then
+	selection=3
+    fi
+    case $selection in
+    1)
+	base_gcc=gcc48
+	gcc_version=4.8
+	;;
+    2)
+	base_gcc=gcc49
+	gcc_version=4.9
+	;;
+    3)
+	base_gcc=gcc5
+	gcc_version=5.0
+	;;
+    4)
+	base_gcc=gcc6
+	gcc_version=6.0
+	;;
+    5)
+	base_gcc=gcc7
+	gcc_version=7.0
+	;;
+    esac
+
     cat << EOM >> $mk_conf
 
-.if empty(PKGPATH:Mlang/gcc48) && \\
-    empty(PKGPATH:Mpkgtools/cwrappers) && \\
-    empty(PKGPATH:Mdevel/nbpatch) && \\
-    empty(PKGPATH:Mpkgtools/digest) && \\
-    empty(PKGPATH:Msysutils/checkperms) && \\
-    empty(PKGPATH:Mlang/perl5) && \\
-    empty(PKGPATH:Mdevel/p5-gettext) && \\
-    empty(PKGPATH:Mconverters/help2man) && \\
-    empty(PKGPATH:Mdevel/autoconf) && \\
-    empty(PKGPATH:Mconverters/p5-Unicode-EastAsianWidth) && \\
-    empty(PKGPATH:Mdevel/libtool-base) && \\
+.if \
+    empty(PKGPATH:Marchivers/bzip2) && \\
     empty(PKGPATH:Marchivers/pax) && \\
-    empty(PKGPATH:Mlang/gcc48-libs) && \\
-    empty(PKGPATH:Mdevel/ncurses) && \\
-    empty(PKGPATH:Mmisc/p5-Locale-libintl) && \\
-    empty(PKGPATH:Mtextproc/p5-Text-Unidecode) && \\
-    empty(PKGPATH:Mdevel/gtexinfo) && \\
-    empty(PKGPATH:Mdevel/gettext-tools) && \\
+    empty(PKGPATH:Marchivers/xz) && \\
+    empty(PKGPATH:Mconverters/help2man) && \\
+    empty(PKGPATH:Mconverters/p5-Unicode-EastAsianWidth) && \\
+    empty(PKGPATH:Mdevel/autoconf) && \\
     empty(PKGPATH:Mdevel/gettext-lib) && \\
+    empty(PKGPATH:Mdevel/gettext-tools) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
-    empty(PKGPATH:Mmath/mpfr) && \\
+    empty(PKGPATH:Mdevel/gtexinfo) && \\
+    empty(PKGPATH:Mdevel/libtool-base) && \\
+    empty(PKGPATH:Mdevel/m4) && \\
+    empty(PKGPATH:Mdevel/ncurses) && \\
+    empty(PKGPATH:Mdevel/nbpatch) && \\
+    empty(PKGPATH:Mdevel/p5-gettext) && \\
+    empty(PKGPATH:Mlang/$base_gcc) && \\
+    empty(PKGPATH:Mlang/$base_gcc-libs) && \\
+    empty(PKGPATH:Mlang/perl5) && \\
     empty(PKGPATH:Mmath/cloog) && \\
     empty(PKGPATH:Mmath/isl) && \\
+    empty(PKGPATH:Mmath/mpcomplex) && \\
+    empty(PKGPATH:Mmath/mpfr) && \\
+    empty(PKGPATH:Mmisc/p5-Locale-libintl) && \\
+    empty(PKGPATH:Mpkgtools/cwrappers) && \\
+    empty(PKGPATH:Mpkgtools/digest) && \\
     empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
-    empty(PKGPATH:Mmath/mpcomplex)
+    empty(PKGPATH:Msysutils/checkperms) && \\
+    empty(PKGPATH:Mtextproc/p5-Text-Unidecode)
 
-GCC_REQD+=4.8
+GCC_REQD+=$gcc_version
 
 .endif  # GCC_REQD
 EOM

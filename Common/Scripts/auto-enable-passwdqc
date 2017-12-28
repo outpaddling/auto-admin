@@ -4,14 +4,17 @@ os_type=`auto-ostype`
 
 case $os_type in
 RHEL)
-    # Enable PAM passwdqc
-    # http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
-    yum install -y pam_passwdqc
-    sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
-    /etc/pam.d/system-auth
-    
-    # Prevent authconfig from overwriting changes to the line modified above
-    sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
+    # pam_pwquality enabled by default on RHEL/CentOS 7
+    if cat /etc/redhat-release | fgrep 'release 6'; then
+	# Enable PAM passwdqc
+	# http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
+	yum install -y pam_passwdqc
+	sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
+	/etc/pam.d/system-auth
+	
+	# Prevent authconfig from overwriting changes to the line modified above
+	sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
+    fi
     ;;
 
 FreeBSD)

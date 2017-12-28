@@ -3,6 +3,7 @@ auto-pkgsrc-setup
     Check for BSD compatibility in echo (fails on Ubuntu)
 	Set sh to /bin/bash
     Don't ask about adding to path for all users unless running as root
+    Set MAKE_JOBS in mk.conf (detect cores, ask user for limit)
 
 auto-pxe-installer should back up root ssh keys
 

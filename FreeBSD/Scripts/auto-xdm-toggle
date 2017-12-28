@@ -53,5 +53,5 @@ mv -f /tmp/ttys.auto-xdm-toggle /etc/ttys
 
 kill -HUP 1
 if [ $new_state = off ]; then
-    killall xdm
+    killall xdm || true
 fi
