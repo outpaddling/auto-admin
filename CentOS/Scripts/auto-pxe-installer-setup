@@ -217,11 +217,7 @@ If you don't like this idea, press Ctrl+C now.
 EOM
 	pause
     
-	default_mask=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $4}' | cut -d : -f 2`
-    
 	domain=`auto-ask pxe-domain 'Domain name?' 'local'`
-	subnet=`auto-ask pxe-subnet 'Subnet?' 192.168.0.0`
-	netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
 	router=`auto-ask pxe-router 'Router?' 192.168.1.1`
 	nameserver=`auto-ask pxe-nameserver 'Name server?' 192.168.1.1`
 	# Reserve 192.168.1.* through 192.168.10.* for static IPs by default
@@ -354,10 +350,17 @@ installer_leaf_dir=${installer_leaf_dir##*/}
 installer_path=$prefix/images/${installer_leaf_dir}
 
 printf 'Available network interfaces:\n\n'
-ifconfig 2> /dev/null | egrep 'HWaddr|inet'
+ip addr 2> /dev/null | egrep 'mtu|inet'
 iface=`auto-ask pxe-iface '\nNetwork interface?' ''`
-default_ip=`ifconfig 2> /dev/null $iface | awk '$1 == "inet" {print $2}' | cut -d : -f 2`
+default_ip=`ip addr 2> /dev/null show dev $iface | \
+    awk '$1 == "inet" { print $2 }' | cut -d / -f 1`
 local_ip=`auto-ask pxe-local-ip 'IP address of this server?' $default_ip`
+
+# Needed by both dhcp_setup and nfs_setup
+default_mask=`ip address show dev $iface 2> /dev/null | \
+    awk '$1 == "inet" { print $2 }' | cut -d / -f 2`
+subnet=`auto-ask pxe-subnet 'Subnet?' 192.168.0.0`
+netmask=`auto-ask pxe-netmask 'Net mask?' $default_mask`
 
 ##########################################################################
 #   Set up dhcpd
@@ -428,6 +431,13 @@ if [ 0$time_zone = 0 ]; then
     time_zone='America/Chicago'
 fi
 
+# RHEL/CentOS 6 cannot boot from xfs, while 7 defaults to it
+if fgrep 'release 6' /etc/redhat-release; then
+    boot_fs=ext4
+else
+    boot_fs=xfs
+fi
+
 cat << EOM > $ksconfig
 # auto-pxe-linux-setup kickstart file
 
@@ -461,20 +471,20 @@ clearpart --all
 # Adjust swap size to taste
 
 # part swap --size=1024
-# part / --fstype ext4 --size=1024 --grow
+# part / --fstype $boot_fs --size=1024 --grow
 
 ############################################################################
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
 
-part /boot --fstype ext4 --size=1024
-part swap --size=32768
-part / --fstype ext4 --size=16384
-part /var --fstype ext4 --size=32768
-part /tmp --fstype ext4 --size=32768
+part /boot --fstype $boot_fs --size=1024
+part swap --size=4096
+part / --fstype $boot_fs --size=32768
+part /var --fstype $boot_fs --size=32768
+part /tmp --fstype $boot_fs --size=32768
 
 # For typical machines and head nodes, use all remaining space for /home
-# part /home --fstype ext4 --size=1024 --grow
+# part /home --fstype $boot_fs --size=1024 --grow
 
 # For nodes with /home NFS-mounted, such as compute nodes, don't allocate
 # local disk space for /home.
