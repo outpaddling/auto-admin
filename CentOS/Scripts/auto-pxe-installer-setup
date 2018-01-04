@@ -449,7 +449,7 @@ text
 # cmdline
 autostep
 reboot
-nfs --server 192.168.1.2 --dir $installer_path
+nfs --server $local_ip --dir $installer_path
 
 lang en_US.UTF-8
 keyboard us
@@ -460,7 +460,7 @@ authconfig --enableshadow --passalgo=sha512
 rootpw --iscrypted "$root_pw"
 timezone --utc $time_zone
 bootloader --location=mbr --driveorder=sda
-selinux --enforcing
+selinux --permissive
 
 # Use whole disk
 zerombr
@@ -470,7 +470,7 @@ clearpart --all
 # Minimal partition scheme suitable for a single-user workstation
 # Adjust swap size to taste
 
-# part swap --size=1024
+# part swap --size=4096
 # part / --fstype $boot_fs --size=1024 --grow
 
 ############################################################################
@@ -508,11 +508,12 @@ restorecon -R -v /root/.ssh     # Set security context for selinux
 # Need to enable em0 first?
 # yum update -y
 
+%end
 EOM
 
-sed -i '/%packages/,$d' $ksconfig 
+chmod 755 $ksconfig
+sed -i '/%packages/,$d' $ksconfig
 printf "Editing kickstart config file.\n"
 pause
 
 $EDITOR $ksconfig
-
