@@ -354,12 +354,11 @@ else
 
 Be sure to set up your DHCP server with the following parameters:
 
-o Enable PXE booting
+o Enable PXE/Network booting
+o Default BIOS filename gpxelinux.0
 o tftp server:          $local_ip
 o next-server:          $local_ip
 o root-path:            $installer_path
-
-* root-path is important if you are not using a pxelinux menu.
 
 If you're running DHCP on this host and chose not to reconfigure it, be
 sure to edit $conf and restart dhcpd if necessary.
@@ -408,10 +407,11 @@ fi
 printf "Unpacking ISO...\n"
 if [ ! -e $installer_path ]; then
     mkdir -p $installer_path
-    tar -C $installer_path -pxf $iso
-    chroot $installer_path passwd root
-    root_pw="`awk -F : '$1 == \"root\" { print $2 }' /etc/master.passwd`"
+    tar -C $installer_path -pxf $iso || true
 fi
+printf "Set a root password for the PXE installed systems:\n"
+chroot $installer_path passwd root
+root_pw="`awk -F : '$1 == \"root\" { print $2 }' /etc/master.passwd`"
 
 if [ ! -e $installer_path/usr/sbin/bsdinstall ]; then
     cat << EOM
@@ -449,21 +449,53 @@ root_key=`cat /root/.ssh/id_rsa.pub`
 installerconfig=$installer_path/etc/installerconfig
 
 cat << EOM > $installerconfig
-PARTITIONS="ada0 { 4G freebsd-swap, auto freebsd-ufs / }"
-#PARTITIONS="mfid0 { 8G freebsd-swap, auto freebsd-ufs / }"
+##########################################################################
+# PREAMBLE: Executed before install
+# Use this section only to set up the environment for bsdinstall.
+##########################################################################
+
+# Add additional potential boot devices here if needed
+for DISK in ada0 da0 mfid0; do
+    if [ -e /dev/\$DISK ]; then
+	break
+    fi
+done
+
+# Note: / must come first in PARTITIONS, or the new system will not boot
+
+# Reasonable default partitions for most users.  Edit to taste.
+PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 16G freebsd-ufs /tmp, 16G freebsd-ufs /var, auto freebsd-ufs /usr }"
+
+# Alternative: Very basic partition scheme with auto-sized swap and / only.
+# PARTITIONS="\$DISK"
+
+# Remove DISTRIBUTIONS you don't need to speed up install.
+# ports can be installed later with svn or portsnap.
+# src is only needed if you plan to rebuild the kernel or userland.
 DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
 
+# These should be sufficient for most users.
+# DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
+
+##########################################################################
+#   Post-install
+#
+#   Commands below are executed on the newly installed system after
+#   installation is complete and before the first reboot.
+#
+#   If you want to unplug the keyboard and display before installation
+#   completes and never come back, do not add interactive commands
+#   below, like pkg install, tzsetup.
+#
+#   With the default non-interactive config below, the new node will
+#   accept passwordless root login from this host via ssh after the first
+#   reboot, so you can immediately run more post-install options over the
+#   network.  If you are running DHCP on this host, the IP address
+#   will be in /var/db/dhcpd/dhcpd.leases.  If your network supports it,
+#   the hostname should also self-register in DNS.
+##########################################################################
+
 #!/bin/sh
-#
-# If you want to unplug the keyboard and display before installation
-# completes and never come back, remove all interactive commands
-# below, like pkg install, read hostname, tzsetup.
-#
-# The new node will accept passwordless root login from this host via ssh
-# after the first reboot, so you can immediately run more post-install
-# options over the network.  If you are running DHCP on this host, the IP
-# addresses of all imaged hosts will be in /var/db/dhcpd/dhcpd.leases.
-# If your netowrk supports it, the hostname should also self-register in DNS.
 
 # Installing any packages here will require another interaction with the
 # new node after installation.  The first run of 'pkg' requires keyboard
@@ -475,13 +507,8 @@ DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz
 #   Set a hostname
 ##########################################################################
 
-# Use IP as hostname if you don't care.
+# Use IP as a unique hostname temporarily
 hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0 | sed -e 's|\.|-|g'\`'.local'
-
-# Interactive option
-# printf "Hostname? "
-# read hostname
-
 echo "hostname=\$hostname" >> /etc/rc.conf
 
 ##########################################################################
@@ -553,4 +580,3 @@ auto-append-line 'nfs_server_enable' 'nfs_server_enable="YES"' /etc/rc.conf $0
 auto-append-line nfs_server_flags 'nfs_server_flags="-t -u -n 16"' /etc/rc.conf $0
 service nfsd restart
 service mountd reload
-
