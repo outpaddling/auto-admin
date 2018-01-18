@@ -111,6 +111,8 @@ EOM
     exit 1
 fi
 
+start_dir=`pwd`
+
 # RHEL / CentOS base
 if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
     if [ `whoami` = root ]; then
@@ -1151,6 +1153,8 @@ fi
 
 touch $prefix/pkg$install_suffix/done
 
+# Generate bootstrap kit
+cd $start_dir
 bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
 tar zcvf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
 cat << EOM
