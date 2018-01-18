@@ -958,6 +958,7 @@ on
 enter the full web server URL(s) here, e.g.:
 
     http://mirror1.hpc.uwm.edu
+    http://mirror2.hpc.uwm.edu
 
 The default PKG_PATH will be set to
 
@@ -1143,6 +1144,20 @@ GCC_REQD+=$gcc_version
 
 .endif  # GCC_REQD
 EOM
+    compiler=gcc-$gcc_version
+else
+    compiler=cc
 fi
 
 touch $prefix/pkg$install_suffix/done
+
+bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
+tar zcvf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
+cat << EOM
+
+Bootstrap image saved to $bootstrap_archive.
+
+You can unpack this file to / on other identical `uname` systems in order to
+quickly replicate this installation.
+
+EOM
