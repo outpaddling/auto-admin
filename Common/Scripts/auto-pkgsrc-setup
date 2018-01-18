@@ -890,6 +890,8 @@ read install_wip
 if [ 0$install_wip != 0n ]; then
     cd $frameworks_prefix
     
+    PATH=${PATH}:/usr/pkg/bin
+    export PATH
     if ! which git; then
 	cat << EOM
 
@@ -938,6 +940,8 @@ if [ -e /etc/redhat-release ]; then
     os=RHEL$release
 elif [ $(uname) = Darwin ]; then
     os=$(uname)$(uname -r | cut -d '.' -f 1)
+elif [ $(uname) = NetBSD ]; then
+    os=$(uname)-$(uname -r | cut -d '.' -f 1,2)
 else
     os=$(uname)-$(uname -r)
 fi
