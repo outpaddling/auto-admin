@@ -92,6 +92,7 @@ $EDITOR /etc/hosts.allow
 touch /etc/hosts.deniedssh
 
 line
+
 cat << EOM
 
 Opening denyhosts.conf in $EDITOR.
@@ -102,6 +103,8 @@ pause
 
 case `uname` in
 FreeBSD)
+    sed -i .orig 's|#BLOCK_SERVICE = ALL|BLOCK_SERVICE = ALL|' \
+	/usr/local/etc/denyhosts.conf
     $EDITOR /usr/local/etc/denyhosts.conf
     auto-enable-service denyhosts $0
     auto-append-line 'syslogd_flags="-c"' 'syslogd_flags="-c"' /etc/rc.conf $0
