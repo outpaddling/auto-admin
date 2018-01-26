@@ -505,7 +505,7 @@ if [ 0$bootstrap = '0y' ]; then
     # Leave fortify on and just disable -Werror.  Sufficient for cwrappers.
     NOGCCERROR=yes
     export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
-    
+
     if [ `whoami` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
@@ -524,7 +524,10 @@ if [ 0$bootstrap = '0y' ]; then
 	    --varbase ${sys_prefix}/var \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
-    
+ 
+    # Separate bootstrap settings
+    printf "\n" >> $mk_conf
+
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
     printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
@@ -549,7 +552,7 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "PKGSRC_FORTRAN=\t\tgfortran\n" >> $mk_conf
     fi
     
-    printf "Are you a package developer? y/[n] "
+    printf "Will you be using this installation for package development? y/[n] "
     read developer
     if [ 0$developer = 0y ]; then
 	if ! fgrep PKG_DEVELOPER $mk_conf; then
@@ -620,7 +623,8 @@ EOM
     if [ 0$allow_vulnerable = 0y ]; then
 	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
     fi
-fi
+    printf "PKG_OPTIONS.libfetch=\tinet6 openssl\n" >> $mk_conf
+fi  # bootstrap
 
 # Install latest security checks
 ${install_prefix}/sbin/pkg_admin \
@@ -857,7 +861,7 @@ fi
 # Make sure software installed is world-readable on systems with tighter
 # default umask.
 umask 022
-bmake.bin \$@
+bmake.bin "\$@"
 EOM2
 
 if ! [ -e $install_prefix/sbin/pkg_add.bin ]; then
@@ -890,8 +894,6 @@ read install_wip
 if [ 0$install_wip != 0n ]; then
     cd $frameworks_prefix
     
-    PATH=${PATH}:/usr/pkg/bin
-    export PATH
     if ! which git; then
 	cat << EOM
 
@@ -940,8 +942,6 @@ if [ -e /etc/redhat-release ]; then
     os=RHEL$release
 elif [ $(uname) = Darwin ]; then
     os=$(uname)$(uname -r | cut -d '.' -f 1)
-elif [ $(uname) = NetBSD ]; then
-    os=$(uname)-$(uname -r | cut -d '.' -f 1,2)
 else
     os=$(uname)-$(uname -r)
 fi
@@ -995,7 +995,7 @@ if [ 0$pkg_path != 0 ]; then
 	pkgin update
 	cat << EOM
 
-Pkgin initialized sucessfully.  You can use pkgin to install and remove
+Pkgin initialized successfully.  You can use pkgin to install and remove
 binary packages, list available packages, etc.  Run "man pkgin" for details.
 
 EOM
@@ -1160,7 +1160,8 @@ touch $prefix/pkg$install_suffix/done
 # Generate bootstrap kit
 cd $start_dir
 bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
-tar zcvf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
+printf "Creating bootstrap kit: $bootstrap_archive...\n"
+tar zcf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
 cat << EOM
 
 Bootstrap image saved to $bootstrap_archive.
