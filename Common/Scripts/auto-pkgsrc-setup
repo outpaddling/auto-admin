@@ -963,8 +963,8 @@ on
 
 enter the full web server URL(s) here, e.g.:
 
-    http://mirror1.hpc.uwm.edu
-    http://mirror2.hpc.uwm.edu
+    https://mirror1.hpc.uwm.edu
+    https://mirror2.hpc.uwm.edu
 
 The default PKG_PATH will be set to
 
@@ -990,7 +990,18 @@ done
 if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
 
-    if pkg_add pkgin; then
+    # Install numerous deps to save time
+    pkg_add pkgin
+    
+    # Reinstall libfetch and pkgin from source to enable SSL.
+    # mk.conf should contain "PKG_OPTIONS.libfetch=inet6 openssl" by now
+    pkg_delete -f libfetch pkgin
+    save_cwd=`pwd`
+    cd $frameworks_prefix/pkgtools/pkgin
+    bmake clean
+    bmake clean-depends
+    bmake install
+    if [ $? = 0 ]; then
 	printf "${pkgin_path}" >> $install_prefix/etc/pkgin/repositories.conf
 	pkgin update
 	cat << EOM
@@ -1002,6 +1013,7 @@ EOM
     else
 	printf "Failed to install pkgin.\nCheck $install_prefix/etc/pkg_install.conf.\n"
     fi
+    cd $save_cwd
     pause
 fi
 
