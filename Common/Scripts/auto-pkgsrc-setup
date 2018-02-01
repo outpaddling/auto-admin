@@ -991,7 +991,11 @@ if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
 
     # Install numerous deps to save time
+    # SSL is not enabled yet, so override PKG_PATH to be safe
+    PKG_PATH=`echo $pkg_path | sed -e 's|https:|http:|g'`
+    export PKG_PATH
     pkg_add pkgin
+    unset PKG_PATH
     
     # Reinstall libfetch and pkgin from source to enable SSL.
     # mk.conf should contain "PKG_OPTIONS.libfetch=inet6 openssl" by now
