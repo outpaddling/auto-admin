@@ -68,12 +68,10 @@ WITHOUT_GNOME=  yes
 print-variable:
 	@echo \${$2}
 
-.include "$base_dir/$1/Makefile"
 EOM
+cat "$base_dir/$1/Makefile" >> $makefile
 
 # cat $makefile
 cd $base_dir/$1
-# bmake echoes pwd, so filter it out
-${make} -f $makefile print-variable | fgrep -v $base_dir
+${make} -f $makefile print-variable
 rm -f $makefile
-

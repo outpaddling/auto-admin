@@ -5,7 +5,7 @@ os_type=`auto-ostype`
 case $os_type in
 RHEL)
     # pam_pwquality enabled by default on RHEL/CentOS 7
-    if cat /etc/redhat-release | fgrep 'release 6'; then
+    if fgrep -q 'release 6' /etc/redhat-release; then
 	# Enable PAM passwdqc
 	# http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
 	yum install -y pam_passwdqc
@@ -14,6 +14,22 @@ RHEL)
 	
 	# Prevent authconfig from overwriting changes to the line modified above
 	sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
+    elif fgrep -q 'release 7' /etc/redhat-release && \
+	! fgrep -q auto-enable-passwdqc /etc/security/pwquality.conf; then
+	cat << EOM >> /etc/security/pwquality.conf
+	
+# auto-enable-passwdqc additions
+minlen = 15
+minclass = 3
+maxrepeat = 2
+gecoscheck = 1
+dcredit = 2
+ucredit = 2
+lcredit = 2
+ocredit = 2
+# End auto-enable-passwdqc
+
+EOM
     fi
     ;;
 
@@ -37,4 +53,3 @@ FreeBSD)
     exit 1
     ;;
 esac
-
