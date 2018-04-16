@@ -688,6 +688,7 @@ EOM
     empty(PKGPATH:Marchivers/pax) && \\
     empty(PKGPATH:Marchivers/xz) && \\
     empty(PKGPATH:Mconverters/help2man) && \\
+    empty(PKGPATH:Mconverters/libiconv) && \\
     empty(PKGPATH:Mconverters/p5-Unicode-EastAsianWidth) && \\
     empty(PKGPATH:Mdevel/autoconf) && \\
     empty(PKGPATH:Mdevel/gettext-lib) && \\
