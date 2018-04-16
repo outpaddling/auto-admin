@@ -692,6 +692,7 @@ EOM
     empty(PKGPATH:Mdevel/autoconf) && \\
     empty(PKGPATH:Mdevel/gettext-lib) && \\
     empty(PKGPATH:Mdevel/gettext-tools) && \\
+    empty(PKGPATH:Mdevel/gmake) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mdevel/gtexinfo) && \\
     empty(PKGPATH:Mdevel/libtool-base) && \\
