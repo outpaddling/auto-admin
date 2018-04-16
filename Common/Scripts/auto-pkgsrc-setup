@@ -560,13 +560,18 @@ if [ 0$bootstrap = '0y' ]; then
 	fi
     fi
     
-    # Github and some other sites are inaccessible via ftp
+    # Github and some other sites are inaccessible via ftp on Linux
+    # Try to use a native tool rather than one that pkgsrc has to install
+    # as a dependency
     case `uname` in
-    FreeBSD|NetBSD)
+    FreeBSD)
 	printf "FETCH_USING=\t\tfetch\n" >> $mk_conf
 	;;
     Linux)
 	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
+	;;
+    NetBSD)
+	printf "FETCH_USING=\t\tftp\n" >> $mk_conf
 	;;
     *)
 	;;
@@ -968,9 +973,9 @@ EOM
 
 done    # for gcc in
 if [ ! -z $base_gcc ]; then
-    ln ${sys_prefix}/etc/$base_gcc.sh ${sys_prefix}/etc/gcc-base.sh
-    ln ${sys_prefix}/etc/$base_gcc.csh ${sys_prefix}/etc/gcc-base.csh
-    ln ${sys_prefix}/etc/modulefiles/pkgsrc/$base_gcc \
+    ln -f ${sys_prefix}/etc/$base_gcc.sh ${sys_prefix}/etc/gcc-base.sh
+    ln -f ${sys_prefix}/etc/$base_gcc.csh ${sys_prefix}/etc/gcc-base.csh
+    ln -f ${sys_prefix}/etc/modulefiles/pkgsrc/$base_gcc \
 	${sys_prefix}/etc/modulefiles/pkgsrc/gcc-base
 fi
 
