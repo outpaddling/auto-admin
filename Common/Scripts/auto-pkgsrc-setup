@@ -637,6 +637,9 @@ fi  # bootstrap
 # c++11 support and does not support the -std=c++11 flag.
 # Hopefully pkgsrc will handle cases like this automatically in the near
 # future and this hack will no longer be needed.
+#
+# gmake, gsed, and libiconv are for NetBSD
+
 if [ `uname` = Linux ] || [ `uname` = NetBSD ]; then
 
     cat << EOM
@@ -715,6 +718,7 @@ EOM
     empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
     empty(PKGPATH:Mpkgtools/pkgin) && \\
     empty(PKGPATH:Msysutils/checkperms) && \\
+    empty(PKGPATH:Mtextproc/gsed) && \\
     empty(PKGPATH:Mtextproc/p5-Text-Unidecode)
 
 GCC_REQD+=$gcc_version
