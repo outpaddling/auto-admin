@@ -181,6 +181,22 @@ FreeBSD)
 	fi
     fi
     
+    plugin=/usr/local/etc/auto-update-system-post-ports
+    if [ -e $plugin ]; then
+	owner=`stat -L $plugin | awk '{ print $5 }'`
+	group_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 6`
+	world_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 9`
+	if [ $owner != root ]; then
+	    printf "ERROR: $plugin is not owned by root!  You may have been hacked!\n"
+	elif [ $group_write != - ]; then
+	    printf "ERROR: $plugin is group writable!  You may have been hacked!\n"
+	elif [ $world_write != - ]; then
+	    printf "ERROR: $plugin is world writable!  You may have been hacked!\n"
+	else
+	    $plugin
+	fi
+    fi
+    
     case $mode in
     binary|binary+reboot|defaults|defaults+reboot|yes)
 	update_base=y
