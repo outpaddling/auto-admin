@@ -1,0 +1,70 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-05-13  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [pkgsrc-dir]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+0)
+    pkgsrc=`pkgsrc-dir`
+    ;;
+1)
+    pkgsrc="$1"
+    ;;
+*)
+    usage
+    ;;
+esac
+
+
+if which pkgin; then
+    printf "Cleaning pkg cache...\n"
+    pkgin clean
+fi
+
+cd "$pkgsrc"
+
+printf "Cleaning $pkgsrc...\n"
+if [ `uname` = Linux ]; then
+    df_flags=-Pm
+else
+    df_flags=-m
+fi
+
+before=`df $df_flags . | awk '$1 != "Filesystem" { print $4 }'`
+
+for dir in */*/work; do
+    printf "$dir\n"
+    rm -rf $dir
+done
+
+printf "Remove distfiles? y/[n] "
+read dist
+if [ 0$dist = 0y ]; then
+    rm -rf distfiles/*
+fi
+
+after=`df $df_flags . | awk '$1 != "Filesystem" { print $4 }'`
+printf "Initial free space: %d\n" $before
+printf "Final free space: %d\n" $after
+diff=$(($after - $before))
+printf "%d megabytes freed.\n" $diff
