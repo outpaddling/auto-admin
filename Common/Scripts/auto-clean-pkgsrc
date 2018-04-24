@@ -25,7 +25,7 @@ usage()
 
 case $# in
 0)
-    pkgsrc=`pkgsrc-dir`
+    pkgsrc=`auto-pkgsrc-dir`
     ;;
 1)
     pkgsrc="$1"
