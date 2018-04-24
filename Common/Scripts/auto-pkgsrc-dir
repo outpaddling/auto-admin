@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+prefix=`auto-pkgsrc-prefix`
+printf ${prefix} | sed 's|pkg|pkgsrc|'

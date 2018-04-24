@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+pkg_add=`which pkg_add`
+prefix=${pkg_add%/sbin/pkg_add}
+if [ $prefix = /usr ] && [ -e /usr/pkg/sbin/pkg_add ]; then
+    prefix=/usr/pkg
+fi
+printf "$prefix\n"
