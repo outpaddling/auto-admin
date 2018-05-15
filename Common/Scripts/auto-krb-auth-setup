@@ -1,0 +1,68 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure a FreeBSD or RHEL server to use KRB for sshd auth.
+#
+#   Arguments:
+#       KRB server ( may be an AD server )
+#
+#   History:
+#   Date        Name        Modification
+#   2018-05-14  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 <KRB-server>
+
+Note: Active Directory servers may need to be specified in all CAPS.
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+server=$1
+
+case $(auto-ostype) in
+RHEL)
+    # Shawn Kwang
+    yum -t install krb5-workstation pam_krb5
+    authconfig --enablekrb5 --krb5kdc=$server --krb5adminserver=$server \
+	--krb5realm=$server --update
+    ;;
+    
+FreeBSD)
+    # Sort of from here:
+    # https://serverfault.com/questions/744918/ssh-kerberos-ad-how-where-to-config-etc-pam-d-password-auth
+    for file in sshd system xdm; do
+	sed -i '' -e '/pam_krb5.so/s|#auth|auth|' /etc/pam.d/$file
+    done
+
+    cat << EOM >> /etc/krb5.conf
+[libdefaults]
+    default_realm = $server
+    dns_lookup_realm = true
+    dns_lookup_kdc = true
+    ticket_lifetime = 24h
+    renew_lifetime = 7d
+    forwardable = yes
+EOM
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+esac
