@@ -28,8 +28,14 @@ line()
 case `uname` in
 FreeBSD)
     pkg install -y denyhosts
+    if [ -z $LOCALBASE ]; then
+	prefix=/usr/local
+    else
+	prefix=$LOCALBASE
+    fi
     ;;
-Linux)
+
+Linux|NetBSD)
     cat << EOM
 
 Install denyhosts using your favorite package manager, e.g. pkgsrc.
@@ -37,11 +43,12 @@ Pkgsrc can be installed via auto-pkgsrc-setup.
 
 EOM
     pause
+    default_prefix=`auto-pkgsrc-prefix`
     
-    printf "Prefix of denyhoss installation? [/usr/pkg] "
+    printf "Prefix of denyhoss installation? [$default_prefix] "
     read prefix
     if [ 0$prefix = 0 ]; then
-	prefix=/usr/pkg
+	prefix=$default_prefix
     fi
     
     ln -sf $prefix/share/denyhosts/daemon-control-dist /etc/init.d/denyhosts
@@ -104,15 +111,17 @@ pause
 case `uname` in
 FreeBSD)
     sed -i .orig 's|#BLOCK_SERVICE = ALL|BLOCK_SERVICE = ALL|' \
-	/usr/local/etc/denyhosts.conf
-    $EDITOR /usr/local/etc/denyhosts.conf
+	$prefix/etc/denyhosts.conf
+    $EDITOR $prefix/etc/denyhosts.conf
     auto-enable-service denyhosts $0
     auto-append-line 'syslogd_flags="-c"' 'syslogd_flags="-c"' /etc/rc.conf $0
     /etc/rc.d/syslogd restart
     ;;
+
 Linux)
     $EDITOR $prefix/share/denyhosts/denyhosts.cfg
     ;;
+
 esac
 service denyhosts restart
 

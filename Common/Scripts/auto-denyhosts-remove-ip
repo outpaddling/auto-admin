@@ -28,20 +28,29 @@ if [ $# != 1 ]; then
 fi
 
 ip=$1
-# Replace /usr/local with PREFIX in port/package if necessary
-work_dir=/usr/local/share/denyhosts/data
+
 
 case `uname` in
 FreeBSD)
     sed="sed -i ''"
+    if [ -z $LOCALBASE ]; then
+	prefix=/usr/local
+    else
+	prefix=$LOCALBASE
+    fi
     ;;
-Linux)
+
+Linux|NetBSD)
     sed="sed -i"
+    prefix=`auto-pkgsrc-prefix`
     ;;
+
 *)
     printf "${0}: Unsuported OS: `uname`\n"
     exit 1
 esac
+
+work_dir=$prefix/share/denyhosts/data
 
 # Stop DenyHosts
 service denyhosts stop
@@ -50,7 +59,7 @@ service denyhosts stop
 $sed "/$ip/d" /etc/hosts.deniedssh
 
 # Remove the IP address from /etc/hosts.deny
-$sed "/$ip/d" /usr/local/etc/hosts.deniedssh
+$sed "/$ip/d" $prefix/etc/hosts.deniedssh
 
 # Edit WORK_DIR/hosts and remove the lines containing the IP address. Save the file.
 $sed "/$ip/d" $work_dir/hosts

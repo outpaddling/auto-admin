@@ -5,7 +5,7 @@
 #       Print the value of a port/package make variable.
 #
 #   Arguments:
-#       [-p prefix]   Defaults to /usr/ports or /usr/pkgsrc
+#       [-p prefix]   Defaults to prefix of active ports/pkgsrc tree
 #
 #   History:
 #   Date        Name        Modification
@@ -26,14 +26,18 @@ usage()
 if which bmake > /dev/null 2>&1; then
     make=bmake
     port_or_package=package
-    base_dir=/usr/pkgsrc
+    base_dir=`auto-pkgsrc-dir`
 else
     make=make
     port_or_package=port
     if [ `uname` = FreeBSD ]; then
-	base_dir=/usr/ports
+	if [ -z $PORTSDIR ]; then
+	    base_dir=/usr/ports
+	else
+	    base_dir=$PORTSDIR
+	fi
     else
-	base_dir=/usr/pkgsrc
+	base_dir=`auto-pkgsrc-dir`
     fi
 fi
 
