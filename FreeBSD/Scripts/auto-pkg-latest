@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+dir=/usr/local/etc/pkg/repos
+file=$dir/bleeding-edge.conf
+
+mkdir -p $dir
+auto-backup-file $file
+cat << EOM > $file
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
+}
+EOM
+auto-update-system
