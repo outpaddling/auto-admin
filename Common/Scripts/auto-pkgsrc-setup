@@ -124,6 +124,12 @@ if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
     fi
 fi
 
+# Debian dash is not compatible
+if [ -e /etc/debian_version ] && [ -e /bin/bash ]; then
+    SH=/bin/bash
+    export SH
+fi
+
 # For OS X, we should install a new base gcc using install-base-gcc
 case `uname` in
 'Darwin')
