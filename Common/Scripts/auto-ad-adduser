@@ -10,21 +10,25 @@ else
     user_name=''
 fi
 
-while [ 0$server = 0 ]; do
-    printf "KRB (or AD) server? "
-    read server
-done
+this_host=`hostname`
+default_server=ad.${this_host#*.*.}:3268
+printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
+read server
+if [ 0$server = 0 ]; then
+    server=$default_server
+fi
 
 while [ 0$user_name = 0 ]; do
     printf "Username? "
     read user_name
 done
 
-while [ 0$ad_user_name = 0 ]; do
-    printf "YOUR AD Username for user query? "
-    read ad_user_name
-done
-
+default_ad_user=$USER
+printf "YOUR AD Username for user query? [$default_ad_user] "
+read ad_user_name
+if [ 0$ad_user_name = 0 ]; then
+    ad_user_name=$default_ad_user
+fi
 
 case `uname` in
     Linux)
@@ -39,8 +43,7 @@ case `uname` in
 esac
 
 # Flag usernames not in LDAP
-#ldap_verified_uid=`ldapsearch -x uid=$user_name | awk '$1 == "uid:" { print $2 }'`
-#ldapsearch -H ldap://$server -x -W -D "AD\\$ad_user_name" cn=$user_name
+#ldapsearch -H ldap://$server -x -W -D "AD\\$ad_user_name" CN=$user_name
 ldap_verified_uid=`ldapsearch -H ldap://$server -x -W -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
 #echo $ldap_verified_uid
 if [ 0$ldap_verified_uid != 0$user_name ]; then
