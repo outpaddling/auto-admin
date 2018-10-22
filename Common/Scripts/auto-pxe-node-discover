@@ -143,12 +143,11 @@ if [ 0$serial_number = 0 ]; then
     serial_number=$default_serial_number
 fi
 
-# Restart the service to clean up outdated leases
 if [ `uname` = FreeBSD ]; then
-    if ! which gsed > /dev/null; then
-	pkg install gsed
-    fi
     dhcp_service=isc-dhcpd
+    if ! which gsed > /dev/null 2>&1; then
+	pkg install -y gsed
+    fi
     sed=gsed
 elif [ -e /etc/redhat-release ]; then
     dhcp_service=dhcpd
@@ -157,6 +156,8 @@ else
     printf 'Only FreeBSD and CentOS are supported at this time.\n'
     exit 1
 fi
+
+# Restart the service to clean up outdated leases
 service $dhcp_service restart
 
 again='y'
@@ -204,19 +205,8 @@ while [ 0$again != 0n ]; do
 	# vi $dhcp_conf
 	service $dhcp_service restart
 	
-	if [ ! -e /etc/ssh/ssh_config.orig ]; then
-	    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
-	fi
-	
-	if [ ! `fgrep -wq $host_name /etc/ssh/ssh_config | awk '{print $1}'` ];then
-	    $sed -i '2iHost '"$short_name"' ' /etc/ssh/ssh_config
-	    $sed -i '3i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-	    $sed -i '4iHost '"$host_name"' ' /etc/ssh/ssh_config
-	    $sed -i '5i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-	    $sed -i '6iHost '"$new_ip"' ' /etc/ssh/ssh_config
-	    $sed -i '7i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
-	fi
-	# vi /etc/ssh/ssh_config
+	# Disable prompt for first ssh
+	auto-disable-host-key-prompt $short_name $host_name $new_ip
 	
 	# Add to /etc/hosts.
 	auto-append-line '^$new_ip' "$new_ip\t$host_name\t${host_name%%.*}" \

@@ -242,6 +242,12 @@ RHEL)
 	yes | yum update -y
 	;;
     esac
+    
+    if [ `auto-os-release` != RHEL6 ]; then
+	needs-restarting -r || true
+    fi
+    printf "Services that need restarting:\n"
+    needs-restarting
     ;;
 
 NetBSD)
@@ -339,6 +345,7 @@ interactive)
 esac
 if [ 0$reboot = 0y ]; then
     printf "Rebooting...\n"
+    sync    # Attempt to prevent Linux kernel update failures
     shutdown -r now
 else
     cat << EOM

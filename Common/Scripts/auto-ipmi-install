@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+case `auto-ostype` in
+FreeBSD)
+    pkg install -y ipmitool
+    auto-append-line 'ipmi_load="YES"' /boot/loader.conf $0
+    kldload ipmi
+    ;;
+RHEL)
+    yum install -y OpenIPMI ipmitool
+    chkconfig ipmi on
+    service ipmi start
+    ;;
+esac
+

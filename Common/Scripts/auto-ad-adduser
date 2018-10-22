@@ -30,6 +30,12 @@ if [ 0$ad_user_name = 0 ]; then
     ad_user_name=$default_ad_user
 fi
 
+printf "AD password? "
+stty -echo
+read ad_pw
+printf '\n'
+stty echo
+
 case `uname` in
     Linux)
 	default_shell="/bin/bash"
@@ -44,7 +50,7 @@ esac
 
 # Flag usernames not in LDAP
 #ldapsearch -H ldap://$server -x -W -D "AD\\$ad_user_name" CN=$user_name
-ldap_verified_uid=`ldapsearch -H ldap://$server -x -W -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
+ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
 #echo $ldap_verified_uid
 if [ 0$ldap_verified_uid != 0$user_name ]; then
     printf "User $user_name is not in the AD directory.  Continue? y/[n] "
@@ -63,7 +69,7 @@ fi
 printf "Other groups (separated by commas)? "
 read othergroups
 
-default_comment=`ldapsearch -H ldap://$server -x -W -D "AD\\\\$ad_user_name" cn=$user_name |
+default_comment=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name |
     awk '$1 == "displayName:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
 comment=''
 while [ 0"$comment" = 0 ]; do

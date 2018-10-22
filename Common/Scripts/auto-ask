@@ -32,6 +32,10 @@ Usage: $0 tag "question" default-answer
     'default-answer' must also be encloded in quotes if it contains
     spaces or special characters.
 
+    If AUTO_ASK_USE_DEFAULTS is set (to anything), the user will
+    not be prompted, and auto-ask will echo the default response
+    from auto-ask-responses if possible, otherwise from argument 3.
+
 EOM
     exit 1
 fi
@@ -47,17 +51,19 @@ if [ 0"$default_response" = 0 ]; then
     default_response="$3"
 fi
 
-valid=0
-while [ $valid = 0 ]; do
-    printf "$question [$default_response] " > $tty
-    read resp
-    # resp cannot contain '|'
-    if echo "$resp" | fgrep '|'; then
-	printf "Sorry, responses cannot contain '|'.\n" > $tty
-    else
-	valid=1
-    fi
-done
+if [ -z $AUTO_ASK_USE_DEFAULTS ]; then
+    valid=0
+    while [ $valid = 0 ]; do
+	printf "$question [$default_response] " > $tty
+	read resp
+	# resp cannot contain '|'
+	if echo "$resp" | fgrep '|'; then
+	    printf "Sorry, responses cannot contain '|'.\n" > $tty
+	else
+	    valid=1
+	fi
+    done
+fi
 
 if [ 0"$resp" = 0 ]; then
     resp="$default_response"
@@ -68,4 +74,3 @@ mv -f $response_file.temp $response_file
 printf "${tag}|${resp}\n" >> $response_file
 
 printf "$resp\n"
-

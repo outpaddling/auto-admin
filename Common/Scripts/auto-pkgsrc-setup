@@ -33,6 +33,7 @@ See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
 
 1.. Install a quarterly snapshot
 2.. Install current
+3.. Install from a custom source tree
 
 EOM
     
@@ -51,6 +52,10 @@ EOM
 	    ;;
 	2)
 	    snapshot=current
+	    selected=1
+	    ;;
+	3)
+	    snapshot=custom
 	    selected=1
 	    ;;
 	*)
@@ -287,8 +292,13 @@ you will not need another pkgsrc tree under
 It also helps identify the version of each tree.
 ============================================================================
 EOM
-printf "Add $dist_suffix to installation directories? [y]/n "
-read use_install_suffix
+
+if [ $snapshot = custom ]; then
+    use_install_suffix=n
+else
+    printf "Add $dist_suffix to installation directories? [y]/n "
+    read use_install_suffix
+fi
 if [ 0$use_install_suffix != 0n ]; then
     install_suffix="$dist_suffix"
 else
@@ -440,7 +450,17 @@ else
 fi
 
 # Download new pkgsrc dist if a new install number was provided
-if [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
+if [ $snapshot = custom ]; then
+    download='n'
+    cat << EOM
+
+===========================================================================
+Place your custom source tree in $frameworks_prefix now.
+===========================================================================
+
+EOM
+    pause
+elif [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
     printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
     read download
 else
@@ -459,7 +479,9 @@ if [ 0$download = 0y ]; then
     mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
 fi
 
-if [ -e $frameworks_prefix ]; then
+if [ $snapshot = custom ]; then
+    unpack='n'
+elif [ -e $frameworks_prefix ]; then
     printf "$frameworks_prefix already exists.  Replace? y/[n] "
     read unpack
 else
@@ -526,8 +548,9 @@ if [ 0$bootstrap = '0y' ]; then
     # Enable it in the future if/when most of the issues are resolved
     # PKGSRC_USE_FORTIFY=no
     # Leave fortify on and just disable -Werror.  Sufficient for cwrappers.
-    NOGCCERROR=yes
-    export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
+    # NOGCCERROR=yes
+    # export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
+    export CC CXX CPP
 
     if [ `whoami` = root ]; then
 	./bootstrap \
@@ -553,7 +576,7 @@ if [ 0$bootstrap = '0y' ]; then
 
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
-    printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
+    # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     # Leave fortify on and just disable -Werror
     # gcc49,5,6 fail on CentOS 7 with just this
     # gcc49,5 on CentOS 6
@@ -677,12 +700,13 @@ except itself.
 3.. 5.0
 4.. 6.0
 5.. 7.0
+6.. 8.0
 
 EOM
-    printf "Selection? [3] "
+    printf "Selection? [4] "
     read selection
     if [ 0$selection = 0 ]; then
-	selection=3
+	selection=4
     fi
     case $selection in
     1)
@@ -705,8 +729,14 @@ EOM
 	base_gcc=gcc7
 	gcc_version=7.0
 	;;
+    6)
+	base_gcc=gcc8
+	gcc_version=8.0
+	;;
     esac
 
+    # Keep this in sync with pbulk-setup for installations that use both
+    # binary packages and build from source.
     cat << EOM >> $mk_conf
 
 .if \
@@ -723,6 +753,7 @@ EOM
     empty(PKGPATH:Mdevel/gmake) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mdevel/gtexinfo) && \\
+    empty(PKGPATH:Mdevel/pkgconf) && \\
     empty(PKGPATH:Mdevel/libtool-base) && \\
     empty(PKGPATH:Mdevel/m4) && \\
     empty(PKGPATH:Mdevel/ncurses) && \\
@@ -748,6 +779,16 @@ EOM
 GCC_REQD+=$gcc_version
 
 .endif  # GCC_REQD
+
+# RHEL systems may have an outdated "as" that cannot translate instructions
+# from current GCC code generators, so force pkgsrc binutils.
+.if exists(/etc/redhat-release) && !empty(PKGPATH:Mlang/gcc*)
+CONFIGURE_ARGS+=        --with-gnu-as --with-as=\${PREFIX}/bin/gas
+CONFIGURE_ARGS+=        --with-gnu-ld --with-ld=\${PREFIX}/bin/gld
+BUILDLINK_DEPMETHOD.binutils=   full
+.  include "../../devel/binutils/buildlink3.mk"
+.endif
+
 EOM
     compiler=gcc-$gcc_version
 else
@@ -1058,6 +1099,9 @@ fi
 umask 022
 bmake.bin "\$@"
 EOM2
+# Save a copy in case bmake gets clobbered by pkgin upgrade
+# Should move the check into bmake proper so this wrapper is unnecessary
+cp $install_prefix/bin/bmake $install_prefix/bin/bmake-wrapper
 
 if ! [ -e $install_prefix/sbin/pkg_add.bin ]; then
     mv $install_prefix/sbin/pkg_add $install_prefix/sbin/pkg_add.bin

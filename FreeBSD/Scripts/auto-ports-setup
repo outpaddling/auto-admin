@@ -91,8 +91,11 @@ else
 fi
 
 if [ -e $install_dir ]; then
-    printf "Error: $install_dir already exists.\n"
-    exit 1
+    printf "$install_dir already exists.  Overwrite? y/[n] "
+    read overwrite
+    if [ 0$overwrite != 0y ]; then
+	exit
+    fi
 fi
 
 cat << EOM
@@ -172,7 +175,7 @@ etcdir=$install_dir/etc
 mkdir -p $etcdir
 
 ##########################################################################
-#   Generate sh rc script
+#   Generate sh rc scripts
 ##########################################################################
 
 printf "Generating $etcdir/ports.sh...\n"
@@ -208,8 +211,57 @@ export PORTS PORTS_INCLUDE PORTS_LIB PORTSDIR LOCALBASE PORT_DBDIR PKG_DBDIR \
     LDCONFIG LD_LIBRARY_PATH PATH MANPATH
 EOM
 
+printf "Generating $etcdir/ports-non-exclusive.sh...\n"
+cat << EOM > $etcdir/ports-non-exclusive.sh
+
+unset CC CFLAGS CPP CPPFLAGS CXX CXXFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+
+PORTS=$install_dir
+PORTS_INCLUDE=$install_dir/include
+PORTS_LIB=$install_dir/lib
+
+# Redirect port builds
+PORTSDIR=$ports_dir
+LOCALBASE=$install_dir
+PORT_DBDIR=$install_dir/var/db/ports
+PKG_DBDIR=$install_dir/var/db/pkg
+PKG_CACHEDIR=$install_dir/var/cache/pkg
+PKG_PLUGINS_DIR=$install_dir/lib/pkg
+PLUGINS_CONF_DIR=$install_dir/etc/pkg
+REPOS_DIR=$install_dir/etc/pkg/repos
+INSTALL_AS_USER=yes
+LDCONFIG=$install_dir/sbin/ldconfig
+
+# FIXME: Needed for ruby.  Why?
+LD_LIBRARY_PATH=$install_dir/lib:/usr/lib:/lib
+
+# Remove /usr/local from PATH for dependencies that use "which"
+PATH=$install_dir/bin:$install_dir/sbin:\$PATH
+MANPATH=$install_dir/man:/usr/local/man:/usr/share/man
+
+export PORTS PORTS_INCLUDE PORTS_LIB PORTSDIR LOCALBASE PORT_DBDIR PKG_DBDIR \
+    PKG_CACHEDIR PKG_PLUGINS_DIR PLUGINS_CONF_DIR REPOS_DIR INSTALL_AS_USER \
+    LDCONFIG LD_LIBRARY_PATH PATH MANPATH
+
+cat << EOW
+
+==============================================================================
+WARNING:
+
+ports-non-exclusive.sh allows programs and libraries that are not part of
+this ports tree or the base system to remain in PATH and LD_LIBRARY_PATH.
+This may cause some programs to malfunction.
+
+DO NOT USE ports-non-exclusive.sh while building ports!!!
+
+Use with caution when running programs from $install_dir.
+==============================================================================
+
+EOW
+EOM
+
 ##########################################################################
-#   Generate csh rc script
+#   Generate csh rc scripts
 ##########################################################################
 
 printf "Generating $etcdir/ports.csh...\n"
@@ -241,8 +293,53 @@ setenv          PATH                $install_dir/bin:$install_dir/sbin:/bin:/sbi
 setenv          MANPATH             $install_dir/man:/usr/share/man
 EOM
 
+printf "Generating $etcdir/ports-non-exclusive.csh...\n"
+cat << EOM > $etcdir/ports-non-exclusive.csh
+
+unsetenv CC CFLAGS CPP CPPFLAGS CXX CXXFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+
+setenv          PORTS               $install_dir
+setenv          PORTS_INCLUDE       $install_dir/include
+setenv          PORTS_LIB           $install_dir/lib
+
+# Redirect port builds
+setenv          PORTSDIR            $ports_dir
+setenv          LOCALBASE           $install_dir
+setenv          PORT_DBDIR          $install_dir/var/db/ports
+setenv          PKG_DBDIR           $install_dir/var/db/pkg
+setenv          PKG_CACHEDIR        $install_dir/var/cache/pkg
+setenv          PKG_PLUGINS_DIR     $install_dir/lib/pkg
+setenv          PLUGINS_CONF_DIR    $install_dir/etc/pkg
+setenv          REPOS_DIR           $install_dir/etc/pkg/repos
+setenv          INSTALL_AS_USER     yes
+setenv          LDCONFIG            $install_dir/sbin/ldconfig
+
+# FIXME: Needed for ruby.  Why?
+setenv          LD_LIBRARY_PATH     $install_dir/lib:/usr/lib:/lib
+
+# Remove /usr/local from PATH for dependencies that use "which"
+setenv          PATH                $install_dir/bin:$install_dir/sbin:\$PATH
+setenv          MANPATH             $install_dir/man:/usr/local/man:/usr/share/man
+
+cat << EOW
+
+==============================================================================
+WARNING:
+
+ports-non-exclusive.csh allows programs and libraries that are not part of
+this ports tree or the base system to remain in PATH and LD_LIBRARY_PATH.
+This may cause some programs to malfunction.
+
+DO NOT USE ports-non-exclusive.csh while building ports!!!
+
+Use with caution when running programs from $install_dir.
+==============================================================================
+
+EOW
+EOM
+
 ##########################################################################
-#   Generate module file
+#   Generate module files
 ##########################################################################
 
 modules_dir=$install_dir/etc/modulefiles/ports
@@ -300,6 +397,67 @@ setenv          LD_LIBRARY_PATH     \$install_dir/lib:/usr/lib:/lib
 # Remove /usr/local from PATH for dependencies that use "which"
 setenv          PATH                \$install_dir/bin:\$install_dir/sbin:/bin:/sbin:/usr/bin:/usr/sbin
 setenv          MANPATH             \$install_dir/man:/usr/share/man
+EOM
+
+printf "Generating $modules_dir/$snapshot_suffix-non-exclusive...\n"
+cat << EOM > $modules_dir/$snapshot_suffix-non-exclusive
+#%Module1.0#####################################################################
+proc ModulesHelp { } {
+    puts stdout "\n\tAll software installed via the FreeBSD ports in"
+    puts stdout "\t$ports_dir"
+    puts stdout "\tThis module prepends the ports directories to"
+    puts stdout "\tappropriate environment variable(s)."
+}
+
+module-whatis   "All software installed via FreeBSD ports in $ports_dir"
+
+puts stderr "\n======================================================================"
+puts stderr "WARNING:\n"
+puts stderr "ports/${snapshot_suffix#-}-non-exclusive allows programs and libraries"
+puts stderr "that are not part of this pkgsrc tree or the base system to remain in"
+puts stderr "PATH and LD_LIBRARY_PATH.  This may cause some programs to malfunction."
+puts stderr "======================================================================\n"
+
+set     version         $snapshot_suffix
+set     ports_dir       $ports_dir
+set     install_dir     $install_dir
+
+prepend-path    MODULEPATH          \$install_dir/etc/modulefiles
+
+unsetenv        CC
+unsetenv        CFLAGS
+unsetenv        CPP
+unsetenv        CPPFLAGS
+unsetenv        CXX
+unsetenv        CXXFLAGS
+unsetenv        FC
+unsetenv        FFLAGS
+unsetenv        LD
+unsetenv        LDFLAGS
+unsetenv        LD_LIBRARY_PATH
+
+setenv          PORTS               \$install_dir
+setenv          PORTS_INCLUDE       \$install_dir/include
+setenv          PORTS_LIB           \$install_dir/lib
+
+# Redirect port builds
+setenv          PORTSDIR            \$ports_dir
+setenv          LOCALBASE           \$install_dir
+setenv          PORT_DBDIR          \$install_dir/var/db/ports
+setenv          PKG_DBDIR           \$install_dir/var/db/pkg
+setenv          PKG_CACHEDIR        \$install_dir/var/cache/pkg
+setenv          PKG_PLUGINS_DIR     \$install_dir/lib/pkg
+setenv          PLUGINS_CONF_DIR    \$install_dir/etc/pkg
+setenv          REPOS_DIR           \$install_dir/etc/pkg/repos
+setenv          INSTALL_AS_USER     yes
+setenv          LDCONFIG            \$install_dir/sbin/ldconfig
+
+# FIXME: Needed for ruby.  Why?
+setenv          LD_LIBRARY_PATH     \$install_dir/lib:/usr/lib:/lib
+
+# Remove /usr/local from PATH for dependencies that use "which"
+prepend-path    PATH                \$install_dir/bin:\$install_dir/sbin
+setenv          MANPATH             \$install_dir/man:/usr/local/man:/usr/share/man
 EOM
 
 # May need something like this to avoid picking up /usr/local/lib

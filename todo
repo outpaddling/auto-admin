@@ -1,4 +1,6 @@
 
+Use sysrc to edit rc.conf?
+
 auto-pkgsrc-setup
     Check for BSD compatibility in echo (fails on Ubuntu)
 	Set sh to /bin/bash

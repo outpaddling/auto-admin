@@ -21,5 +21,6 @@ if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
     # drm module loaded automatically as a dep
     auto-append-line "kld_list=\"i915kms $kldlist\"" /etc/rc.conf $0
     # or in rc.conf: kld_list="i915kms"
-    pkg install -y xf86-video-intel
+    # Superseded by modesetting driver
+    # pkg install -y xf86-video-intel
 fi

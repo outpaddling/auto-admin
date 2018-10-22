@@ -1,0 +1,42 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check a directory for security problems.
+#
+#   Arguments:
+#       dir
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-10-15  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+dir="$1"
+
+# Find world-writable files and fix them
+# Leave a note for the user explaining the proper way to share access
+cat << EOM
+
+World-writable files are a major security risk, since any other user on
+the system can modify them, possibly turning them into Trojan horses
+(malicious programs).
+
+EOM
+printf "Checking for world-writable files...\n"
+find "$dir" -perm -o+w -a \! -type l -exec chmod o-w '{}' \; -exec echo '{}' \;
