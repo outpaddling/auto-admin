@@ -686,7 +686,7 @@ fi  # bootstrap
 #
 # gmake, gsed, and libiconv are for NetBSD
 
-if [ `uname` = Linux ] || [ `uname` = NetBSD ]; then
+if [ `uname` = Linux ]; then
 
     cat << EOM
     
