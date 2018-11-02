@@ -859,18 +859,6 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PKGSRC_LIB=\$PKGSRC/lib
     export PKGSRC_LIB
 fi
-
-cat << EOW
-
-==============================================================================
-WARNING:
-
-pkgsrc-non-exclusive.sh allows programs and libraries that are not part of
-this pkgsrc tree or the base system to remain in PATH and LD_LIBRARY_PATH.
-This may cause some programs to malfunction.
-==============================================================================
-
-EOW
 EOM
 
 cat << EOM > ${sys_prefix}/etc/pkgsrc.csh
@@ -903,18 +891,6 @@ if ( \$status != 0 ) then
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
 endif
-
-cat << EOW
-
-==============================================================================
-WARNING:
-
-pkgsrc-non-exclusive.sh allows programs and libraries that are not part of
-this pkgsrc tree or the base system to remain in PATH and LD_LIBRARY_PATH.
-This may cause some programs to malfunction.
-==============================================================================
-
-EOW
 EOM
 
 if [ -e /etc/profile.d ]; then
