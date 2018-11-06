@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Lock a user account to prevent future logins
+#
+#   Arguments:
+#       Username
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-06  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+user_name=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    pw unlock $user_name
+    ;;
+
+RHEL)
+    passwd -u $user_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

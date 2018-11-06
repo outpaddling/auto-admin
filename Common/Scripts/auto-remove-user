@@ -1,0 +1,47 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Remove a user account
+#
+#   Arguments:
+#       User-name
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-06  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+user_name=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    rmuser -y $user_name
+    rm -rf /home/$user_name
+    ;;
+
+RHEL)
+    userdel -r $user_name
+    rm -rf /home/$user_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac
