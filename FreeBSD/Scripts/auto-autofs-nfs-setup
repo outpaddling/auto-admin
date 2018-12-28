@@ -20,3 +20,5 @@ fi
 for service in automount automountd autounmountd; do
     service $service start
 done
+
+# Add automount -u to /etc/rc.suspend

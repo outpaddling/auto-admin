@@ -96,7 +96,7 @@ EOM
 pause
 $EDITOR /etc/hosts.allow
 
-touch /etc/hosts.deniedssh
+touch $prefix/etc/hosts.deniedssh
 
 line
 

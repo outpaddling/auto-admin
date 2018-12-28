@@ -228,17 +228,14 @@ RHEL)
     case $mode in
     interactive)
 	yum-complete-transaction || true
-	yum clean all
 	yum update
 	;;
     binary|defaults)
 	yum-complete-transaction || true
-	yum clean -y all
 	yum update -y
 	;;
     binary+reboot|defaults+reboot|yes)
 	yes | yum-complete-transaction || true
-	yum clean -y all
 	yes | yum update -y
 	;;
     esac

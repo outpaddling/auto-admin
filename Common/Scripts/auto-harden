@@ -71,7 +71,7 @@ unimplemented()
     fi
     local os_type=$1
     shift
-    printf "INFO: $@ not yet imlpemented on $os_type.\n"
+    printf "INFO: $@ not yet implemented on $os_type.\n"
 }
 
 

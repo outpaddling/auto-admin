@@ -1,0 +1,81 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       FreeBSD requires a kernel module and driver to support nVidia
+#       GPUs.  This script automatically detects the presence of an
+#       nVidia GPU and performs the necessary system configuration to
+#       enable it in Xorg.
+#
+#   History:
+#   Date        Name        Modification
+#   2018-02-24  J Bacon     Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+#exit
+# https://forums.freebsd.org/threads/howto-setup-xorg-with-nvidias-driver.52311/
+pciconf -lv|grep -B 2 display
+
+if pciconf -lv | grep -B 2 display | grep vendor | grep -iq nvidia; then
+    cat << EOM
+
+nVidia GPU detected.
+
+Check the nVidia docs to determine which driver version[s] support[s] the
+device shown above.  Then choose a compatible driver version from the
+list of ports below.
+
+EOM
+    ls -d /usr/ports/x11/nvidia-driver*
+    cat << EOM
+
+Press enter for the current driver or enter just the version number
+(the number after the final '-') from the list above.
+
+EOM
+    printf "Driver version? "
+    read driver
+    
+    cat << EOM
+
+The nVidia driver binary packages include Linux support.  We will now
+install the Linux compatibility system of your choice.  Enter '6'
+for CentOS 6 compatibility or '7' for CentOS 7.  Some packages such
+as Linux Flash plugin may require CentOS 6.
+
+EOM
+    printf "6 or 7? "
+    read linux_base
+    auto-install-linux_base $linux_base
+    if [ 0$driver = 0 ]; then
+	pkg install -y nvidia-driver
+	kld=nvidia-modeset
+    else
+	pkg install -y nvidia-driver-$driver
+	if [ $driver -le 340 ]; then
+	    kld=nvidia
+	else
+	    kld=nvidia-modeset
+	fi
+    fi
+    
+    auto-append-line "kld_list=\"$kld \$kld_list\"" /etc/rc.conf $0
+    kldload $kld || true
+    
+    dir=/usr/local/etc/X11/xorg.conf.d
+    fragment=$dir/nvidia.conf
+    if [ ! -e $fragment ]; then
+	mkdir -p $dir
+	cat << EOM > $fragment
+Section "Device"
+Identifier "NVIDIA Card"
+VendorName "NVIDIA Corporation"
+Driver "nvidia"
+EndSection
+EOM
+    fi
+fi

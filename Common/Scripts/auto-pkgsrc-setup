@@ -485,9 +485,27 @@ if [ 0$download = 0y ]; then
     mkdir -p $prefix/Dist
     cd $prefix/Dist
     rm -f pkgsrc.tar.gz
-    
-    $fetch_cmd ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz
-    mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
+
+    fetched=no
+    for dist in \
+	ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz \
+	http://mirror1.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz \
+	http://mirror2.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz; do
+	
+	echo $dist
+	if $fetch_cmd $dist; then
+	    fetched=yes
+	    break
+	fi
+    done
+    if [ $fetched = no ]; then
+	printf "Unable to fetch $snapshot from any mirror.  Giving up...\n"
+	exit 1
+    fi
+    # Make sure dist is in the form pkgsrc-yearQquarter.tar.gz
+    if echo $dist | fgrep ftp.netbsd.org; then
+	mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
+    fi
 fi
 
 if [ $snapshot = custom ] || [ $snapshot = git ]; then
@@ -583,7 +601,7 @@ if [ 0$bootstrap = '0y' ]; then
     fi
  
     # Separate bootstrap settings
-    printf "\n" >> $mk_conf
+    printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n\n" >> $mk_conf
 
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
@@ -805,6 +823,8 @@ EOM
 else
     compiler=cc
 fi
+
+printf ".endif   # Pkgsrc customizations\n" >> $mk_conf
 
 # Install latest security checks
 ${install_prefix}/sbin/pkg_admin \
@@ -1204,15 +1224,18 @@ if this is incorrect.
 
 EOM
 
-package_server='x'
-while [ 0$package_server != 0 ]; do
-    printf "Enter another server (include http:// or https://), or just press enter if done.\n"
-    read package_server
-    if [ 0$package_server != 0 ]; then
-	pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
-	pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$install_prefix/$os/All\n"
-    fi
-done
+cat << EOM
+
+Enter the binary package server name (include http:// or https://), or
+just press enter if you won't be using binary packages.
+
+EOM
+read package_server
+if [ 0$package_server != 0 ]; then
+    pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
+    pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$install_prefix/$os/All\n"
+fi
+
 if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
 

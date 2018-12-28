@@ -34,12 +34,12 @@ Usage: $0 base-name digits domain
 
 Example:
 
-    $0 compute 3 meadows.local ==>
+    $0 compute- 3 local ==>
 	compute-001.meadows.local
 	compute-002.meadows.local
 	...
 	
-    $0 raid 2 bigcluster.party.edu ==>
+    $0 raid- 2 bigcluster.party.edu ==>
 	raid-02.bigcluster.party.edu
 	raid-03.bigcluster.party.edu
 	...
@@ -78,7 +78,9 @@ get_new_leases()
     # Detect unconfigured servers
     for ip in $leases; do
 	# Already recorded?
-	if ! egrep -q "^#? ?$ip" /etc/hosts; then
+	# Escape periods to 192.168.1.3 doesn't match 192.168.193
+	search_ip=$(echo $ip | sed -e 's|\.|\\\.|g')
+	if ! egrep -q "^#? *$search_ip" /etc/hosts; then
 	    printf "\n$ip not found in /etc/hosts.\n"
 	    
 	    # Get lease state from dhcpd.leases
@@ -209,8 +211,37 @@ while [ 0$again != 0n ]; do
 	auto-disable-host-key-prompt $short_name $host_name $new_ip
 	
 	# Add to /etc/hosts.
-	auto-append-line '^$new_ip' "$new_ip\t$host_name\t${host_name%%.*}" \
+	if ! fgrep -q "$new_ip" /etc/hosts; then
+	    printf '\n' >> /etc/hosts
+	fi
+	
+	# Escape periods to 192.168.1.3 doesn't match 192.168.193
+	search_ip=$(echo $new_ip | sed -e 's|\.|\\\.|g')
+	auto-append-line "^$search_ip" "$new_ip\t$host_name\t\t${host_name%%.*}" \
 	    /etc/hosts nocomment
+	f3=$(echo $new_ip | awk -F . '{ print $3 }')
+
+	mgmt_ip=$(echo $new_ip | awk -F . -v f3=$((f3 + 64)) '{ printf("%s.%s.%s.%s", $1, $2, f3, $4) }')
+	mgmt_name=${host_name%.*}-mgmt.${host_name##*.}
+	# Escape periods to 192.168.1.3 doesn't match 192.168.193
+	search_ip=$(echo $mgmt_ip | sed -e 's|\.|\\\.|g')
+	auto-append-line "^$search_ip" "$mgmt_ip\t$mgmt_name\t${mgmt_name%%.*}" \
+	    /etc/hosts nocomment
+	
+	hpc_ip=$(echo $new_ip | awk -F . -v f3=$((f3 + 128)) '{ printf("%s.%s.%s.%s", $1, $2, f3, $4) }')
+	hpc_name=${host_name%.*}-hpc.${host_name##*.}
+	# Escape periods to 192.168.1.3 doesn't match 192.168.193
+	search_ip=$(echo $hpc_ip | sed -e 's|\.|\\\.|g')
+	auto-append-line "^$search_ip" "$hpc_ip\t$hpc_name\t${hpc_name%%.*}" \
+	    /etc/hosts nocomment
+	
+	aux_ip=$(echo $new_ip | awk -F . -v f3=$((f3 + 192)) '{ printf("%s.%s.%s.%s", $1, $2, f3, $4) }')
+	aux_name=${host_name%.*}-aux.${host_name##*.}
+	# Escape periods to 192.168.1.3 doesn't match 192.168.193
+	search_ip=$(echo $aux_ip | sed -e 's|\.|\\\.|g')
+	auto-append-line "^$search_ip" "$aux_ip\t$aux_name\t${aux_name%%.*}" \
+	    /etc/hosts nocomment
+	
 	vi -c '$' /etc/hosts
 	
 	serial_number=$(($serial_number + 1))

@@ -85,6 +85,7 @@ else
 	;;
     Linux)
 	mv $master_pw.tmp $master_pw
+	restorecon $master_pw
 	;;
     *)
 	;;

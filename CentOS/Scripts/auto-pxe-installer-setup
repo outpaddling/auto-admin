@@ -118,6 +118,7 @@ EOM
     printf "Make sure no other tftp servers are running.\n"
     pause
 
+    # FIXME: Use systemctl?
     chkconfig xinetd on
     service xinetd restart
 }
@@ -157,13 +158,33 @@ EOM
 	# Make sure everything is readable!
 	chmod -R a+rX $installer_path
 	
-	chkconfig rpcbind on
-	chkconfig nfslock on
-	chkconfig nfs on
+	case $(auto-ostype) in
+	RHEL6)
+	    chkconfig rpcbind on
+	    chkconfig nfslock on
+	    chkconfig nfs on
+	    
+	    service rpcbind restart
+	    service nfslock restart
+	    service nfs restart
+	    ;;
 	
-	service rpcbind restart
-	service nfslock restart
-	service nfs restart
+	RHEL7)
+	    systemctl enable rpcbind
+	    systemctl enable nfs-server
+	    systemctl enable nfs-lock
+	    systemctl enable nfs-idmap
+	    
+	    systemctl restart rpcbind
+	    systemctl restart nfs-server
+	    systemctl restart nfs-lock
+	    systemctl restart nfs-idmap
+	    ;;
+	
+	*)
+	    ;;
+	
+	esac
 	exportfs -rv
     fi
     return 0
@@ -299,8 +320,16 @@ EOM
 	# Make the DHCP server only serve to private iface's subnet
 	sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
 	
-	service dhcpd restart
-	#chkconfig dhcpd on
+	case $(auto-ostype) in
+	RHEL6)
+	    chkconfig dhcpd on
+	    service dhcpd restart
+	    ;;
+	RHEL7)
+	    systemctl enable dhcpd.service
+	    systemctl start dhcpd.service
+	    ;;
+	esac
     else
 	cat << EOM
 
@@ -464,36 +493,45 @@ firewall --enabled --service=ssh
 authconfig --enableshadow --passalgo=sha512
 rootpw --iscrypted "$root_pw"
 timezone --utc $time_zone
-bootloader --location=mbr --driveorder=sda
-selinux --permissive
 
-# Use whole disk
+# Default: --location=mbr
+bootloader --driveorder=sda
+
+# selinux --permissive
+
+# Remove known partitions
+clearpart --drives=sda
+
+# Remove invalid partition tables
 zerombr
-clearpart --all
 
 ############################################################################
 # Minimal partition scheme suitable for a single-user workstation
 # Adjust swap size to taste
+#
+# Warning: If you do not specify which device(s) to use, kickstart will
+# reformat and use all available disks.
 
 # part swap --size=4096
-# part / --fstype $boot_fs --size=1024 --grow
+# part / --fstype $boot_fs --size=1024 --grow --onpart=sda
 
 ############################################################################
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
+# Use hda instead of sda for IDE drives
 
-part /boot --fstype $boot_fs --size=1024
-part swap --size=4096
-part / --fstype $boot_fs --size=32768
-part /var --fstype $boot_fs --size=32768
-part /tmp --fstype $boot_fs --size=32768
+part /boot --fstype $boot_fs --size=1024 --onpart=sda
+part swap --size=4096 --onpart=sda
+part / --fstype $boot_fs --size=32768 --onpart=sda
+part /var --fstype $boot_fs --size=32768 --onpart=sda --fsoptions=rw,nosuid
+part /tmp --fstype $boot_fs --size=32768 --onpart=sda --fsoptions=rw,nosuid
 
 # For typical machines and head nodes, use all remaining space for /home
-# part /home --fstype $boot_fs --size=1024 --grow
+# part /home --fstype $boot_fs --size=1024 --grow --onpart=sda --fsoptions=rw,nosuid
 
 # For nodes with /home NFS-mounted, such as compute nodes, don't allocate
-# local disk space for /home.
-part /bigtmp --fstype xfs --size=1024 --grow
+# local disk space for /home.  Use the space for local scratch.
+part /bigtmp --fstype xfs --size=1024 --grow --onpart=sda --fsoptions=rw,nosuid
 
 %post
 

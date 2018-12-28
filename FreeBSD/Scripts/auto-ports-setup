@@ -48,6 +48,9 @@ else
     default_prefix=$HOME/Ports
 fi
 
+# Make sure things are readable when they should be
+umask 022
+
 # Determine paths
 printf "Installation prefix? [$default_prefix] "
 read prefix
