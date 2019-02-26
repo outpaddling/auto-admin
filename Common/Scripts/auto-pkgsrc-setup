@@ -439,6 +439,29 @@ EOM
 
 fi
 
+cat << EOM
+
+============================================================================
+Compiling with -march=native can result in executables that run up to 30%
+faster in many cases, sometimes even more.  The binary packages created
+will not be portable, however, and will only run on CPUs with all the
+features of this one.
+
+If you are using this system to generate binary packages for use on other
+systems, answer 'n' here.
+
+If you want executables optimized for maximum speed on this system, answer
+'y'.  This will append -march=native to CFLAGS, CXXFLAGS, and FFLAGS in
+
+    $install_prefix/etc/mk.conf
+
+You can add additional compiler flags here as well, all of which will be
+applied to every pkgsrc build.
+
+EOM
+printf "Build all compiled packages with -march=native? y/[n] "
+read march_native
+
 if which curl > /dev/null; then
     fetch_cmd='curl -O'
 elif which wget > /dev/null; then
@@ -704,6 +727,12 @@ EOM
 	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
     fi
     printf "PKG_OPTIONS.libfetch=\tinet6 openssl\n" >> $mk_conf
+    
+    if [ 0$march_native = 0y ]; then
+	printf "CFLAGS+=\t\t-march=native\n" >> $mk_conf
+	printf "CXXFLAGS+=\t\t-march=native\n" >> $mk_conf
+	printf "FFLAGS+=\t\t-march=native\n" >> $mk_conf
+    fi
 fi  # bootstrap
 
 # FIXME: Verify that this is the minimal list of $base_gcc deps
@@ -824,7 +853,7 @@ else
     compiler=cc
 fi
 
-printf ".endif   # Pkgsrc customizations\n" >> $mk_conf
+printf "\n.endif   # Pkgsrc customizations\n" >> $mk_conf
 
 # Install latest security checks
 ${install_prefix}/sbin/pkg_admin \

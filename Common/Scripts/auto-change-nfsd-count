@@ -1,0 +1,61 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Change NFSD count on a file server
+#
+#   History:
+#   Date        Name        Modification
+#   2019-02-08  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 min-server-count max-server-count\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+min_count=$1
+max_count=$2
+
+case $(auto-ostype) in
+FreeBSD)
+
+    # Add/update --minthreads, remove -n count if present
+    if egrep -q 'nfs_server_flags.*-n [0-9]+' /etc/rc.conf; then
+	sed -i '' -E "/^nfs_server_flags/s|-n [0-9]+|--minthreads $min_count|g" /etc/rc.conf
+    elif egrep -q 'nfs_server_flags.*--minthreads [0-9]+' /etc/rc.conf; then
+	sed -i '' -E "/^nfs_server_flags/s|--minthreads [0-9]+|--minthreads $min_count|g" /etc/rc.conf
+    else
+	sysrc nfs_server_flags+=" --minthreads $min_count"
+    fi
+    
+    # Add/update --maxthreads
+    if egrep -q 'nfs_server_flags.*--maxthreads [0-9]+' /etc/rc.conf; then
+	sed -i '' -E "/^nfs_server_flags/s|--maxthreads [0-9]+|--maxthreads $max_count|g" /etc/rc.conf
+    else
+	sysrc nfs_server_flags+=" --maxthreads $max_count"
+    fi
+    ;;
+
+RHEL)
+    printf "Info: Using $max_count as RHEL does not support min/max.\n"
+    sed -i'' -e "s|.*RPCNFSDCOUNT=.*|RPCNFSDCOUNT=$max_count|g" /etc/sysconfig/nfs
+    systemctl restart nfs
+    ;;
+
+*)
+    printf "Error: Unsupported OS: $(auto-ostype).\n"
+    exit 1
+
+esac
+auto-nfs-restart

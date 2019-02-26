@@ -1,0 +1,188 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       FreeBSD requires a kernel module to support modern Intel
+#       GPUs.  This script automatically detects the presence of an
+#       Intel GPU and performs the necessary system configuration to
+#       enable it in Xorg.
+#
+#   History:
+#   Date        Name        Modification
+#   2017-02-14  Charlie &   Begin
+##########################################################################
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+cat << EOM
+
+Given the wide variety of graphics chipsets available, it is virtually
+impossible to automatically configure the graphics environment automatically.
+
+We will attempt to configure Xorg with reasonable defaults.  If this fails,
+you can try some of the options that follow.
+
+EOM
+pause
+
+if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
+    printf "Intel GPU detected.\n"
+    pciconf -lv | grep -B 2 display
+    cat << EOM
+
+1.. For recent Intel GPUs, you can try
+
+    pkg install drm-kmod
+    Add "kld_list=/boot/modules/i915mks.ko" to /etc/rc.conf
+
+2.. For older Intel GPUs, you can try
+
+    If /boot/kernel/i915kms.ko exists, add kld_list="i915kms" to /etc/rc.conf
+    
+    Otherwise:
+    
+    pkg install drm-legacy-kmod
+    Add "kld_list=/boot/modules/i915kms.ko" to /etc/rc.conf
+
+3.. For very old Intel GPUs, try
+
+    pkg install xf86-video-intel
+
+EOM
+    pause
+    # drm module loaded automatically as a dep
+    # or in rc.conf: kld_list="i915kms"
+    # Superseded by modesetting driver
+    # pkg install -y xf86-video-intel
+    
+fi
+
+if pciconf -lv | grep -B 2 display | grep vendor | grep -iq amd; then
+    printf "AMD GPU detected.\n"
+    pciconf -lv | grep -B 2 display
+    # drm module loaded automatically as a dep
+    # auto-append-line "kld_list=\"i915kms $kldlist\"" /etc/rc.conf $0
+    # or in rc.conf: kld_list="i915kms"
+    # Superseded by modesetting driver
+    # pkg install -y xf86-video-intel
+    cat << EOM
+
+Attempting to configure without preloading a DRM kernel module.  If this
+fails, you can try one of three things:
+
+1.. For recent AMD GPUs, you can try
+
+    pkg install drm-kmod
+    Add "kld_list=/boot/modules/amdgpu.ko" to /etc/rc.conf
+
+2.. For older AMD GPUs, you can try
+
+    pkg install drm-kmod
+    Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
+
+    or
+    
+    If /boot/kernel/radeonkms.ko exists, add kld_list="radeonkms" to /etc/rc.conf
+    
+    Otherwise:
+    
+    pkg install drm-legacy-kmod
+    Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
+
+3.. For very old Intel GPUs, try
+
+    pkg install xf86-video-intel
+
+EOM
+    pause
+fi
+
+##########################################################################
+#   Script description:
+#       FreeBSD requires a kernel module and driver to support nVidia
+#       GPUs.  This script automatically detects the presence of an
+#       nVidia GPU and performs the necessary system configuration to
+#       enable it in Xorg.
+#
+#   History:
+#   Date        Name        Modification
+#   2018-02-24  J Bacon     Begin
+##########################################################################
+
+# https://forums.freebsd.org/threads/howto-setup-xorg-with-nvidias-driver.52311/
+
+if pciconf -lv | grep -B 2 display | grep vendor | grep -iq nvidia; then
+    pciconf -lv|grep -B 2 display
+    cat << EOM
+
+nVidia GPU detected.
+
+Check the nVidia docs to determine which driver version[s] support[s] the
+device shown above.  Then choose a compatible driver version from the
+list of ports below.
+
+EOM
+    ls -d /usr/ports/x11/nvidia-driver*
+    cat << EOM
+
+Press enter for the current driver or enter just the version number
+(the number after the final '-') from the list above.
+
+EOM
+    printf "Driver version? "
+    read driver
+    
+    cat << EOM
+
+The nVidia driver binary packages include Linux support.  We will now
+install the Linux compatibility system of your choice.  Enter '6'
+for CentOS 6 compatibility or '7' for CentOS 7.  Some packages such
+as Linux Flash plugin may require CentOS 6.
+
+EOM
+    printf "6 or 7? "
+    read linux_base
+    auto-install-linux_base $linux_base
+    if [ 0$driver = 0 ]; then
+	pkg install -y nvidia-driver
+	kld=nvidia-modeset
+    else
+	pkg install -y nvidia-driver-$driver
+	if [ $driver -le 340 ]; then
+	    kld=nvidia
+	else
+	    kld=nvidia-modeset
+	fi
+    fi
+    
+    auto-append-line "kld_list=\"$kld \$kld_list\"" /etc/rc.conf $0
+    kldload $kld || true
+    
+    dir=/usr/local/etc/X11/xorg.conf.d
+    fragment=$dir/nvidia.conf
+    if [ ! -e $fragment ]; then
+	mkdir -p $dir
+	cat << EOM > $fragment
+Section "Device"
+Identifier "NVIDIA Card"
+VendorName "NVIDIA Corporation"
+Driver "nvidia"
+EndSection
+EOM
+    fi
+fi

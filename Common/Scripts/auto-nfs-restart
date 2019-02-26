@@ -1,0 +1,30 @@
+#!/bin/sh
+
+case $(auto-os-release) in
+FreeBSD*)
+    # http://havokmon.blogspot.com/2012/07/proper-nfs-server-service-restart.html
+    # killall -9 mountd
+    # service nfsd stop
+    # service rpcbind onestop
+    # service rpcbind onestart
+    # service nfsd start
+    
+    # Should suffice on modern FreeBSD
+    service nfsd restart
+    service mountd onereload
+    ;;
+
+RHEL6)
+    service nfs restart
+    ;;
+
+RHEL7)
+    systemctl restart nfs
+    ;;
+
+*)
+    printf "$(auto-ostype) is not yet supported.\n"
+    exit 1
+    ;;
+
+esac

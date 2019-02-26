@@ -326,8 +326,8 @@ EOM
 	    service dhcpd restart
 	    ;;
 	RHEL7)
-	    systemctl enable dhcpd.service
-	    systemctl start dhcpd.service
+	    systemctl enable dhcpd
+	    systemctl start dhcpd
 	    ;;
 	esac
     else
@@ -504,6 +504,14 @@ clearpart --drives=sda
 
 # Remove invalid partition tables
 zerombr
+
+# Protect existing data on all but primary disk.  If you want kickstart to
+# spread partitions across all disks, comment this out.  Note that in some
+# cases, RHEL/CentOS 7 assigns different hardware to sda during install
+# than it does afterward.  (e.g. our PowerEdge systems sda=USB during install
+# even when installing via PXE with no USB drives present, sda=1st hard
+# disk after install.  --only-use=sdb works in this case.)
+ignoredisk --only-use=sda
 
 ############################################################################
 # Minimal partition scheme suitable for a single-user workstation

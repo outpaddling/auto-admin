@@ -123,5 +123,7 @@ Linux)
     ;;
 
 esac
+# denyhosts will crash without this
+touch /etc/hosts.deniedssh
 service denyhosts restart
 

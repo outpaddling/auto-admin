@@ -2,17 +2,17 @@
 
 ##########################################################################
 #   Script description:
-#       Search directories for files owned by a particular user and
-#       group and change the group ownership.
+#       Search directories for files owned by a user and chown to
+#       a new user.
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-05-21  Jason Bacon - UITS/CEAS - Systems Manager,EMS 974Begin
+#   2019-02-05  Jason Bacon - UITS/CEAS - Systems Manager,EMS 974Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 username|uid old-groupname|gid new-groupname|gid directory [directory ...]\n"
+    printf "Usage: $0 old-username|uid new-username|uid directory [directory ...]\n"
     exit 1
 }
 
@@ -21,14 +21,12 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# -lt 4 ]; then
+if [ $# -lt 3 ]; then
     usage
 fi
 
-user=$1
-old_group=$2
-new_group=$3
-shift
+old_user=$1
+new_user=$2
 shift
 shift
 
@@ -37,4 +35,4 @@ dirs="$@"
 # BSD and GNU find allow a name or id with -user and -group.
 # GNU find requires a UID with -uid or -gid.  Use -user and -group to
 # be flexible and portable.
-find -L $dirs -user $user -group $old_group -print -exec chgrp $new_group '{}' \;
+find -L $dirs -user $old_user -print -exec chown $new_user '{}' \;
