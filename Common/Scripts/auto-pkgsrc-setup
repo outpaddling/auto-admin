@@ -733,6 +733,26 @@ EOM
 	printf "CXXFLAGS+=\t\t-march=native\n" >> $mk_conf
 	printf "FFLAGS+=\t\t-march=native\n" >> $mk_conf
     fi
+    
+    case $(uname) in
+    Linux)
+	make_jobs=$(grep '^processor' /proc/cpuinfo|wc -l)
+	;;
+    Darwin|FreeBSD|NetBSD)
+	make_jobs=$(sysctl -n hw.ncpu)
+	;;
+    *)
+	cat << EOM
+
+Not sure how to determine the number of cores under $(uname).
+Set MAKE_JOBS manually in mk.conf if desired and send us a patch if
+you know how to fix this.
+
+EOM
+	make_jobs=1
+	;;
+    esac
+    printf "MAKE_JOBS=\t\t$make_jobs\n" >> $mk_conf
 fi  # bootstrap
 
 # FIXME: Verify that this is the minimal list of $base_gcc deps
@@ -761,10 +781,11 @@ except itself.
 6.. 8.0
 
 EOM
-    printf "Selection? [4] "
+    default_minimum=5
+    printf "Selection? [$default_minimum] "
     read selection
     if [ 0$selection = 0 ]; then
-	selection=4
+	selection=$default_minimum
     fi
     case $selection in
     1)
@@ -805,6 +826,7 @@ EOM
     empty(PKGPATH:Mconverters/help2man) && \\
     empty(PKGPATH:Mconverters/libiconv) && \\
     empty(PKGPATH:Mconverters/p5-Unicode-EastAsianWidth) && \\
+    empty(PKGPATH:Mdatabases/db4) && \\
     empty(PKGPATH:Mdevel/autoconf) && \\
     empty(PKGPATH:Mdevel/binutils) && \\
     empty(PKGPATH:Mdevel/gettext-lib) && \\
@@ -812,15 +834,25 @@ EOM
     empty(PKGPATH:Mdevel/gmake) && \\
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mdevel/gtexinfo) && \\
+    empty(PKGPATH:Mdevel/libffi) && \\
+    empty(PKGPATH:Mdevel/makedepend) && \\
     empty(PKGPATH:Mdevel/pkgconf) && \\
     empty(PKGPATH:Mdevel/libtool-base) && \\
     empty(PKGPATH:Mdevel/m4) && \\
     empty(PKGPATH:Mdevel/ncurses) && \\
     empty(PKGPATH:Mdevel/nbpatch) && \\
+    empty(PKGPATH:Mdevel/p5-CPAN-Meta) && \\
+    empty(PKGPATH:Mdevel/p5-Module-Build) && \\
+    empty(PKGPATH:Mdevel/p5-Perl4-CoreLibs) && \\
+    empty(PKGPATH:Mdevel/p5-Scalar-List-Utils) && \\
     empty(PKGPATH:Mdevel/p5-gettext) && \\
+    empty(PKGPATH:Mdevel/p5-inc-latest) && \\
+    empty(PKGPATH:Mdevel/readline) && \\
+    empty(PKGPATH:Mdevel/zlib) && \\
     empty(PKGPATH:Mlang/$base_gcc) && \\
     empty(PKGPATH:Mlang/$base_gcc-libs) && \\
     empty(PKGPATH:Mlang/perl5) && \\
+    empty(PKGPATH:Mlang/python27) && \\
     empty(PKGPATH:Mmath/cloog) && \\
     empty(PKGPATH:Mmath/isl) && \\
     empty(PKGPATH:Mmath/mpcomplex) && \\
@@ -831,9 +863,12 @@ EOM
     empty(PKGPATH:Mpkgtools/digest) && \\
     empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
     empty(PKGPATH:Mpkgtools/pkgin) && \\
+    empty(PKGPATH:Msecurity/mozilla-rootcerts) && \\
+    empty(PKGPATH:Msecurity/openssl) && \\
     empty(PKGPATH:Msysutils/checkperms) && \\
     empty(PKGPATH:Mtextproc/gsed) && \\
-    empty(PKGPATH:Mtextproc/p5-Text-Unidecode)
+    empty(PKGPATH:Mtextproc/p5-Text-Unidecode) && \\
+    empty(PKGPATH:Mx11/xorgproto)
 
 GCC_REQD+=$gcc_version
 
