@@ -1,4 +1,0 @@
-
-Scripts under the Linux directory should either work on all Linux distributions
-or print a message stating that the distribution running the script is not
-supported.

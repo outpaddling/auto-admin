@@ -1,4 +1,7 @@
 
+Eliminate all platform-specific directories and add platform checks
+(auto-os-release) to each script that doesn't support all platforms.
+
 Use sysrc to edit rc.conf?
 
 auto-pkgsrc-setup
