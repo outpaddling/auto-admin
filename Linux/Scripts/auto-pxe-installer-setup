@@ -351,6 +351,20 @@ EOM
 #   Main
 ##########################################################################
 
+case $(auto-os-release) in
+RHEL6)
+    ;;
+
+RHEL7)
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-os-release)\n"
+    exit 1
+    ;;
+
+esac
+
 if [ $# != 1 ]; then
     usage
 fi

@@ -10,6 +10,20 @@
 #   2013-12-14  root        Begin
 ##########################################################################
 
+case $(auto-os-release) in
+RHEL6)
+    ;;
+
+RHEL7)
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-os-release)\n"
+    exit 1
+    ;;
+
+esac
+
 if [ $# != 1 ]; then
     printf "Usage: $0 kilobytes\n"
     exit 1
@@ -53,4 +67,3 @@ SLURMD_OPTIONS="-M"
 EOM
 
 chmod 644 /etc/security/limits.d/91-memory.conf /etc/sysconfig/slurm
-
