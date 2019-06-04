@@ -2,20 +2,31 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Common admin tasks
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-01-01  Charlie &   Begin
+#   2016-01-01  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0\n"
     exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
 }
 
 
@@ -27,7 +38,16 @@ if [ $# != 0 ]; then
     usage
 fi
 
-# 
+case $(auto-ostype) in
+FreeBSD|NetBSD)
+    poweroff=-p
+    ;;
+
+*)
+    poweroff=-h
+    ;;
+esac
+
 while true
 do
     clear
@@ -37,29 +57,71 @@ do
 			    *   Auto Admin Main Menu    *
 			    *****************************
 
-1.. Add user
+1.. Shut down system
 2.. Update system
-3.. Configure XScreensaver
+3.. User management
 Q.. Quit
 
 EOM
 
-    printf "Selection? "
-    read resp
+    read -p 'Selection? ' resp
     case 0$resp in
     01)
-	auto-adduser
+	printf '\n'
+	w
+	printf '\nProceed? y/[n] '
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Minutes to shutdown? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    shutdown $poweroff +$minutes
+	fi
 	;;
+    
     02)
-	auto-update-system
+	printf '\n'
+	w
+	printf '\nProceed? y/[n] '
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    cat << EOM | wall
+
+This server may need to be rebooted shortly to complete the installation of
+important security updates.  An additional notice will follow if a reboot
+is necessary.
+
+EOM
+	    auto-update-system --defaults
+	    read -p 'Reboot? [y]/n ' reboot
+	    if [ 0$reboot != 0n ]; then
+		read -p "Minutes before reboot? [2] " minutes
+		if [ 0$minutes = 0 ]; then
+		    minutes=2
+		fi
+		cat << EOM | wall
+
+This server will be rebooted shortly to complete the installation of
+important security updates.  It should be available again after about
+$((minutes + 5)) minutes.
+
+EOM
+		shutdown -r +$minutes
+	    fi
+	fi
 	;;
+    
     03)
-	xscreensaver-command -prefs
+	auto-user-admin
 	;;
+    
     0Q|0q)
 	exit 0
 	;;
-    esac
-done
-EOM
 
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+    pause
+done
