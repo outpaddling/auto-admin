@@ -62,12 +62,15 @@ EOM
 	;;
     
     2)
+	printf "Not yet implemented.\n"
 	;;
     
     3)
+	printf "Not yet implemented.\n"
 	;;
     
     4)
+	printf "Not yet implemented.\n"
 	;;
     
     Q|q)
@@ -78,4 +81,3 @@ EOM
     esac
     pause
 done
-

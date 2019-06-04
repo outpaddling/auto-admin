@@ -20,11 +20,6 @@ usage()
 #   Main
 ##########################################################################
 
-if [ `hostname -s` != 'login' ]; then
-    printf "$0 can only be run on the primary login node.\n"
-    exit 1
-fi
-
 if [ `whoami` != root ]; then                                                   
     printf "$0 must be run as root.\n"                                          
     exit 1                                                                      
