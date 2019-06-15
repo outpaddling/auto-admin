@@ -472,7 +472,7 @@ PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 16G freebsd-ufs /tmp, 16
 # Remove DISTRIBUTIONS you don't need to speed up install.
 # ports can be installed later with svn or portsnap.
 # src is only needed if you plan to rebuild the kernel or userland.
-DISTRIBUTIONS="base.txz doc.txz games.txz kernel.txz lib32.txz ports.txz src.txz"
+DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
 
 # These should be sufficient for most users.
 # DISTRIBUTIONS="base.txz kernel.txz lib32.txz"

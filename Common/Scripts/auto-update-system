@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Update all components of the system (packages, ports, base...)
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-03-11  Charlie &   Begin
+#   2016-03-11  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -229,14 +226,22 @@ RHEL)
     interactive)
 	yum-complete-transaction || true
 	yum update
+	if [ $(auto-os-release) = RHEL7 ]; then
+	    read -p 'Auto-remove unneeded dependencies? [y]/n ' autoremove
+	    if [ 0$autoremove != 0n ]; then
+		yum autoremove -y || true
+	    fi
+	fi
 	;;
     binary|defaults)
 	yum-complete-transaction || true
 	yum update -y
+	yum autoremove -y
 	;;
     binary+reboot|defaults+reboot|yes)
 	yes | yum-complete-transaction || true
 	yes | yum update -y
+	yum autoremove -y
 	;;
     esac
     

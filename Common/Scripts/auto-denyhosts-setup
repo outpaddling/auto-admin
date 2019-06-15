@@ -45,7 +45,7 @@ EOM
     pause
     default_prefix=`auto-pkgsrc-prefix`
     
-    printf "Prefix of denyhoss installation? [$default_prefix] "
+    printf "Prefix of denyhost installation? [$default_prefix] "
     read prefix
     if [ 0$prefix = 0 ]; then
 	prefix=$default_prefix
