@@ -26,15 +26,19 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
-format=$1
 
 case $(auto-ostype) in
 FreeBSD)
-    site=$(auto-fastest-mirror)
-    image=$(auto-install-media-distname $format)
     release=$(uname -r | awk -F - '{ print $1 }')
-    url=$site/pub/FreeBSD/releases/ISO-IMAGES/$release/$image.xz
-    fetch $url
+    processor=$(uname -p)
+    format=$1
+    if echo $format | fgrep -q memstick; then
+	format=$format.img
+    else
+	format=$format.iso
+    fi
+    image=FreeBSD-${release}-RELEASE-$processor-$format
+    echo $image
     ;;
 
 *)
