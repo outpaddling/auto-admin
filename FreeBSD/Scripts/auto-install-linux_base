@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 6|7\n"
+    printf "Usage: $0 [-64] 6|7\n"
     exit 1
 }
 
@@ -20,9 +20,24 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+case $# in
+2)
+    if [ $1 = -64 ]; then
+	linux64=y
+	shift
+    else
+	usage
+    fi
+    ;;
+
+1)
+    ;;
+
+*)
     usage
-fi
+    ;;
+
+esac
 
 # FIXME: Support $PORTSDIR
 MAKE_CONF=/etc/make.conf
@@ -35,7 +50,9 @@ linux_base=c$centos_version
 major=`uname -r | cut -d . -f 1`
 minor=`uname -r | cut -d . -f 2 | cut -d - -f 1`
 if [ `uname -m` = amd64 ]; then
-    linux64=`auto-ask linux64 'Use 64-bit Linux compatibility? (y/n)' y`
+    if [ -z $linux64 ]; then
+	linux64=`auto-ask linux64 'Use 64-bit Linux compatibility? (y/n)' y`
+    fi
 else
     linux64=n
 fi
@@ -44,7 +61,7 @@ if [ $linux64 = y ]; then
     #auto-append-line OVERRIDE_LINUX_BASE_PORT=c${centos_version}_64 $MAKE_CONF $0
     #auto-append-line OVERRIDE_LINUX_NONBASE_PORTS=c${centos_version}_64 $MAKE_CONF $0
     auto-append-line DEFAULT_VERSIONS+=linux=c${centos_version}_64 $MAKE_CONF $0
-    kldload linux || true
+    # kldload linux || true
     kldload linux64 || true
 else
     touch $MAKE_CONF    # Prevent no such file error below
@@ -53,5 +70,17 @@ else
     sed -i '.bak' -e '/DEFAULT_VERSIONS+=linux=c${centos_version}_64/d' $MAKE_CONF
     kldload linux || true
 fi
-cd /usr/ports/emulators/linux_base-$linux_base
-make clean reinstall
+pkg install -y linux_base-$linux_base
+
+auto-append-line 'linux_enable="YES"' /etc/rc.conf $0
+
+auto-append-line "linprocfs\t/compat/linux/proc\tlinprocfs\trw\t0\t0" /etc/fstab $0
+mount /compat/linux/proc
+
+auto-append-line "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777    0       0" /etc/fstab $0
+mount /compat/linux/dev/shm
+
+if [ $linux_base = c7 ]; then
+    auto-append-line "linsysfs    /compat/linux/sys   linsysfs        rw      0       0" /etc/fstab $0
+    mount /compat/linux/sys
+fi
