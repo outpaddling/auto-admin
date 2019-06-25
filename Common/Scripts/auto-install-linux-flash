@@ -1,0 +1,35 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    : ${PORTSDIR:=/usr/ports}
+    
+    # Use www/flashplayer now.  Will install linux-flashplayer as dep
+    flash=flashplayer
+    
+    if ! auto-package-installed www/$flash; then
+	# Check which linux_base flashplayer installs as a dep, then
+	# run auto-install-linux_base to update fstab, etc.
+	pkg remove -y linux_base-c6 linux_base-c7 || true
+	if pkg install -y --dry-run $flash | fgrep linux_base-c6; then
+	    auto-install-linux_base 6
+	else
+	    auto-install-linux_base 7
+	fi
+	
+	# Must install from source to pull linux-flashplayer dep
+	cd $PORTSDIR/www/$flash
+	make -DBATCH install
+	
+	rm -f $LOCALBASE/lib/firefox/plugins/libflash*
+	rm -f $LOCALBASE/lib/firefox3/plugins/libflash*
+	rm -f $LOCALBASE/lib/seamonkey/plugins/libflash*
+    fi
+    ;;
+
+*)
+    printf "$0: Unsupported OS: $(auto-ostype)\n"
+    exit 1
+
+esac

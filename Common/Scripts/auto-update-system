@@ -211,6 +211,14 @@ FreeBSD)
 	
 	if ! fgrep -q 'No updates' $tmpfile; then
 	    freebsd-update $freebsd_update_flags install
+	    if [ -e /boot/modules/ibcore.ko ]; then
+		cat << EOM
+
+Infiniband kernal modules detected.  Run auto-update-infiniband-modules, after
+rebooting if a reboot is needed.
+
+EOM
+	    fi
 	fi
 	rm $tmpfile
     fi
@@ -327,7 +335,6 @@ EOM
     fi
     ;;
 
-    
 *)
     printf "Error: $os_type is not yet supported.\n"
     exit 1
@@ -357,4 +364,3 @@ affected by package upgrades.
 
 EOM
 fi
-
