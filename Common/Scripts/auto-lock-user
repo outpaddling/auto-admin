@@ -34,7 +34,9 @@ FreeBSD)
     ;;
 
 RHEL)
-    passwd -l $user_name
+    # FIXME: Is there a way in Linux to lock an account and restore to
+    # exact config (shell and expiration date) later?
+    chsh -s /sbin/nologin $user_name
     ;;
 
 *)

@@ -4,11 +4,20 @@ case $(auto-ostype) in
 FreeBSD)
     : ${LOCALBASE:=/usr/local}
     : ${PORTSDIR:=/usr/ports}
+
+    # Speed up dependency installs
+    pkg install -y pkgconf
     
     # Use www/flashplayer now.  Will install linux-flashplayer as dep
     flash=flashplayer
     
     if ! auto-package-installed www/$flash; then
+	printf "Flash plugin may not install unless some vulnerable linux RPMs are allowed.\n"
+	allow_vuln=`auto-ask vuln-flash 'Allow vulnerable linux RPMs? (y/n)' n`
+	if [ $allow_vuln = y ]; then
+	    linux_install_flags='DISABLE_VULNERABILITIES=1'
+	fi
+
 	# Check which linux_base flashplayer installs as a dep, then
 	# run auto-install-linux_base to update fstab, etc.
 	pkg remove -y linux_base-c6 linux_base-c7 || true
@@ -20,7 +29,7 @@ FreeBSD)
 	
 	# Must install from source to pull linux-flashplayer dep
 	cd $PORTSDIR/www/$flash
-	make -DBATCH install
+	make -DBATCH $linux_install_flags clean deinstall reinstall
 	
 	rm -f $LOCALBASE/lib/firefox/plugins/libflash*
 	rm -f $LOCALBASE/lib/firefox3/plugins/libflash*
