@@ -61,7 +61,7 @@ if [ $linux64 = y ]; then
     #auto-append-line OVERRIDE_LINUX_BASE_PORT=c${centos_version}_64 $MAKE_CONF $0
     #auto-append-line OVERRIDE_LINUX_NONBASE_PORTS=c${centos_version}_64 $MAKE_CONF $0
     auto-append-line DEFAULT_VERSIONS+=linux=c${centos_version}_64 $MAKE_CONF $0
-    # kldload linux || true
+    kldload linux || true
     kldload linux64 || true
 else
     touch $MAKE_CONF    # Prevent no such file error below

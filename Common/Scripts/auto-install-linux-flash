@@ -21,6 +21,7 @@ FreeBSD)
 	# Check which linux_base flashplayer installs as a dep, then
 	# run auto-install-linux_base to update fstab, etc.
 	pkg remove -y linux_base-c6 linux_base-c7 || true
+	pkg remove linux-flashplayer nspluginwrapper || true
 	if pkg install -y --dry-run $flash | fgrep linux_base-c6; then
 	    auto-install-linux_base 6
 	else
