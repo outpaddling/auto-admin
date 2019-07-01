@@ -34,6 +34,8 @@ while read mount; do
     if awk '{ print $2 }' /etc/fstab | fgrep -qw $dir; then
 	printf "$dir is already in fstab.\n"
     else
+	# FIXME: Make sure mount dir is empty
+	
 	printf "Adding $dir to fstab...\n"
 	printf "$mount\n" >> /etc/fstab
 	mkdir -p $dir
