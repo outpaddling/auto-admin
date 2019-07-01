@@ -237,7 +237,6 @@ fi
 #   Set up dhcpd
 ##########################################################################
 
-isc_version=42
 line
 cat << EOM
 
@@ -278,7 +277,9 @@ EOM
 dhcpd=`auto-ask run-dhcpd "[Re]configure dhcpd on this host?" y`
 if [ 0$dhcpd != 0n ]; then
     if [ ! -e /usr/local/sbin/dhcpd ]; then
-	pkg install -y isc-dhcp$isc_version-server
+	pkg_dir=$(echo /usr/ports/net/isc-dhcp*-server)
+	pkg_name=$(basename $pkg_dir)
+	pkg install -y $pkg_name
     fi
     
     cat << EOM
