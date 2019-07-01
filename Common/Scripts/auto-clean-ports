@@ -1,43 +1,46 @@
-#!/bin/csh
+#!/bin/sh -e
 
 ##########################################################################
 #   Description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Clean FreeBSD or MacPorts work directories
 #       
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
 ##########################################################################
 
-switch(`uname`)
-case    FreeBSD:
-    set before=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
+: ${PORTSDIR:=/usr/ports}
+
+case $(auto-ostype) in
+FreeBSD)
+    before=$(df -m $PORTSDIR | awk '$1 != "Filesystem" { print $4 }')
     printf "Initial free space: %d\n" $before
-    cd /usr/ports
-    rm -rf distfiles/* >& /dev/null
-    foreach dir ( `ls -d */*/work`)
+    cd $PORTSDIR
+    rm -rf distfiles/* > /dev/null 2>&1
+    for dir in $(ls -d */*/work); do
 	# Make sure it still exists - may have been wiped by a recursive clean
-	if ( -e $dir ) then
+	if [ -e $dir ]; then
 	    echo "Cleaning $dir..."
 	    cd $dir/..
 	    make clean
-	    cd /usr/ports
-	endif
-    end
-    set after=`df -m /usr | awk '$1 != "Filesystem" { print $4 }'`
+	    cd $PORTSDIR
+	fi
+    done
+    after=$(df -m $PORTSDIR | awk '$1 != "Filesystem" { print $4 }')
     printf "Initial free space: %d\n" $before
     printf "Final free space: %d\n" $after
-    @ diff = $after - $before
+    diff=$(($after - $before))
     printf "%d megabytes freed.\n" $diff
-    breaksw
-case    Darwin:
+    ;;
+
+Darwin)
     port clean --all installed
-    breaksw
-default:
-    echo "OS `uname` is not supported by $0."
+    ;;
+
+*)
+    echo "OS $(uname) is not supported by $0."
     exit 1
-endsw
+    ;;
+
+esac
 
