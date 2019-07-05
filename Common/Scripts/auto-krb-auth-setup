@@ -38,12 +38,13 @@ server=$1
 case $(auto-ostype) in
 RHEL)
     # Shawn Kwang
-    yum -t install krb5-workstation pam_krb5
+    yum -t install krb5-workstation pam_krb5 openldap-clients
     authconfig --enablekrb5 --krb5kdc=$server --krb5adminserver=$server \
 	--krb5realm=$server --update
     ;;
     
 FreeBSD)
+    pkg install -y openldap-client
     # Sort of from here:
     # https://serverfault.com/questions/744918/ssh-kerberos-ad-how-where-to-config-etc-pam-d-password-auth
     for file in sshd system xdm; do

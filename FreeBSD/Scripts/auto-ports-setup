@@ -48,6 +48,9 @@ else
     default_prefix=$HOME/Ports
 fi
 
+# PATH will be scrubbed during setup
+auto_append_line=`which auto-append-line`
+
 # Make sure things are readable when they should be
 umask 022
 
@@ -119,6 +122,9 @@ System files will be under
 ============================================================================
 EOM
 
+printf "Add -march=native to all builds? y/[n] "
+read native
+
 printf "Proceed? [y]/n "
 read proceed
 if [ 0$proceed = 0n ]; then
@@ -176,6 +182,11 @@ fi
 
 etcdir=$install_dir/etc
 mkdir -p $etcdir
+if [ 0$native = 0y ]; then
+    for flags in CFLAGS CXXFLAGS FFLAGS; do
+	$auto_append_line $flags "$flags+=-march=native" $install_dir/etc/make.conf $0
+    done
+fi
 
 ##########################################################################
 #   Generate sh rc scripts
@@ -492,7 +503,7 @@ $install_dir/sbin/ldconfig -m /lib /usr/lib
 printenv
 cd $ports_dir/ports-mgmt/pkg
 make deinstall || true
-make reinstall
+make -DBATCH reinstall
 
 # Test for sqlite issue with NFS.  If lock file left behind after install,
 # remove it and adjust pkg.conf to use an NFS-safe locking mechanism.
