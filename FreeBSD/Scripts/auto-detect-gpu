@@ -43,6 +43,7 @@ pause
 if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
     printf "Intel GPU detected.\n"
     pciconf -lv | grep -B 2 display
+    pause
     cat << EOM
 
 1.. For recent Intel GPUs, you can try
@@ -75,6 +76,7 @@ fi
 if pciconf -lv | grep -B 2 display | grep vendor | grep -iq amd; then
     printf "AMD GPU detected.\n"
     pciconf -lv | grep -B 2 display
+    pause
     # drm module loaded automatically as a dep
     # auto-append-line "kld_list=\"i915kms $kldlist\"" /etc/rc.conf $0
     # or in rc.conf: kld_list="i915kms"
@@ -127,7 +129,6 @@ fi
 # https://forums.freebsd.org/threads/howto-setup-xorg-with-nvidias-driver.52311/
 
 if pciconf -lv | grep -B 2 display | grep vendor | grep -iq nvidia; then
-    pciconf -lv|grep -B 2 display
     cat << EOM
 
 nVidia GPU detected.
@@ -137,7 +138,9 @@ device shown above.  Then choose a compatible driver version from the
 list of ports below.
 
 EOM
+    pciconf -lv|grep -B 2 display
     ls -d /usr/ports/x11/nvidia-driver*
+    pause
     cat << EOM
 
 Press enter for the current driver or enter just the version number
