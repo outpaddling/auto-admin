@@ -126,7 +126,7 @@ RHEL)
 esac
 
 # Fix primary groups
-for user in $primary_users $secondary_users; do
+for user in $primary_users; do
     if [ 0$silent != 01 ]; then
 	printf "Changing primary group for $user...\n"
     fi
