@@ -1,0 +1,30 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Verify that we're running as root.
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-07-16  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 calling-script-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if [ $(whoami) != root ]; then
+    printf "$1 can only be run as root.\n"
+    exit 1
+fi
