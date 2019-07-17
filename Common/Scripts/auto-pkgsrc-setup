@@ -1184,7 +1184,7 @@ cat << EOM > $install_prefix/sbin/pkg_add
 # Make sure software installed is world-readable on systems with tighter
 # default umask.
 umask 022
-pkg_add.bin \$@
+pkg_add.bin "\$@"
 EOM
 
 chmod 755 $install_prefix/bin/bmake $install_prefix/sbin/pkg_add
