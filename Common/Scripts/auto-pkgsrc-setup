@@ -861,6 +861,7 @@ EOM
     empty(PKGPATH:Mnet/libfetch) && \\
     empty(PKGPATH:Mpkgtools/cwrappers) && \\
     empty(PKGPATH:Mpkgtools/digest) && \\
+    empty(PKGPATH:Mpkgtools/pkg_install) && \\
     empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
     empty(PKGPATH:Mpkgtools/pkgin) && \\
     empty(PKGPATH:Msecurity/mozilla-rootcerts) && \\
@@ -1304,12 +1305,15 @@ fi
 if [ 0$pkg_path != 0 ]; then
     printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
 
+    # Rebuild pkg_install with SSL support
+    cd $frameworks_prefix/pkgtools/pkg_install
+    bmake clean
+    bmake clean-depends
+    bmake replace ALLOW_VULNERABLE_PACKAGES=yes
+    
     # Install numerous deps to save time
-    # SSL is not enabled yet, so override PKG_PATH to be safe
-    PKG_PATH=`echo $pkg_path | sed -e 's|https:|http:|g'`
-    export PKG_PATH
     pkg_add pkgin
-    unset PKG_PATH
+    # unset PKG_PATH
     
     # Reinstall libfetch and pkgin from source to enable SSL.
     # mk.conf should contain "PKG_OPTIONS.libfetch=inet6 openssl" by now
