@@ -1,0 +1,12 @@
+
+Platform-specific directories (FreeBSD, Linux, NetBSD, etc.) should only
+contain scripts that do not make sense to run on any other platform.
+(e.g. auto-ipfw-gateway-setup, as the ipfw firewall is emdemic to FreeBSD)
+All other scripts should be moved to Common as soon as possible.
+
+Scripts that are not tested on *all* supported platforms must contain a
+check to flag unsupported platforms.  Use auto-os-type or auto-os-release
+for this purpose.  For all unsupported platforms, the script should print
+a message such as:
+
+    Unsupported OS: RHEL6

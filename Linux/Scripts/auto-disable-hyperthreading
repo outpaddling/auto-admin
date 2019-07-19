@@ -1,0 +1,73 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-08-11  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 <prefix of this script, e.g. /usr/local>\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $(auto-os-release) in
+RHEL6)
+    ;;
+
+RHEL7)
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-os-release)\n"
+    exit 1
+    ;;
+
+esac
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+prefix="$1"
+
+if ! awk '$1 == "vendor_id" { print $3 }' /proc/cpuinfo \
+    | fgrep -q GenuineIntel; then
+    printf "This machine has no Intel cpus.  Nothing to disable.\n"
+    exit
+fi
+
+# http://www.fidian.com/problems-only-tyler-has/disabling-hyperthreading
+
+# Be careful to not skip the space at the beginning nor the end
+CPUS_TO_SKIP=" $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sed 's/[^0-9].*//' | sort | uniq | tr "\r\n" "  ") "
+echo $CPUS_TO_SKIP
+
+for CPU_PATH in /sys/devices/system/cpu/cpu[0-9]*; do
+    CPU="$(echo $CPU_PATH | tr -cd "0-9")"
+    echo "$CPUS_TO_SKIP" | grep " $CPU " > /dev/null
+    if [ $? -ne 0 ]; then
+	if [ `cat $CPU_PATH/online` != 0 ]; then
+	    echo "Disabling $CPU_PATH"
+	    echo 0 > $CPU_PATH/online
+	else
+	    echo "$CPU_PATH already disabled."
+	fi
+    fi
+done 
+
+auto-append-line "$prefix/sbin/auto-disable-hyperthreading" /etc/rc.d/rc.local $0
+chmod a+x /etc/rc.d/rc.local
+

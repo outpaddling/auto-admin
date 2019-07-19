@@ -1,0 +1,57 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Transfer an encrypted password from another file
+#       Systems must use the same hash method.
+#       Works between FreeBSD and RHEL using sha512 as of this writing
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-12-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 username 'encrypted-password'
+
+Encrypted-password should be the password field the file containing
+encrypted passwords, such as /etc/master.passwd or /etc/shadow.
+
+Single quotes are strongly recommended as encrypted passwords
+may contain $ characters or other symbols that are interpreted by the
+shell.
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+user_name=$1
+pw="$2"
+
+case $(auto-ostype) in
+FreeBSD)
+    chpass -p "$pw" $user_name
+    ;;
+
+RHEL)
+    usermod -p "$pw" $user_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

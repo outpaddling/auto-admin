@@ -1,0 +1,55 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Install a pkgsrc tree from binary bootstrap kit
+#
+#   Arguments:
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-07-05  root        Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 prefix compiler
+
+Examples:
+
+    $0 /usr/pkg gcc-5.0
+    $0 /sharedapps/pkg-2018Q2 cc
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+prefix=$1
+compiler=$2
+
+if [ $compiler = auto ]; then
+    if auto-os-release | fgrep -q RHEL; then
+	compiler=gcc-6.0
+    else
+	compiler=cc
+    fi
+fi
+
+if [ ! -e $prefix ]; then
+    printf "$0: Installing pkgsrc in $prefix...\n"
+    kit=pkgsrc-$(auto-os-release)-$compiler$(echo $prefix | tr / -).tgz
+    curl -O http://mirror1.hpc.uwm.edu/pkgsrc/bootstrap-kits/$kit
+    printf "Unpacking $kit...\n"
+    tar -C / -zxf $kit
+fi

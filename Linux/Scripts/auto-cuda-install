@@ -1,0 +1,80 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Auto-install CUDA on a RHEL/CentOS system
+#
+#   Arguments:
+#       CUDA version, e.g. 10.0.130-1
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-01-02  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 version (e.g. 10.0.130-1)\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $(auto-os-release) in
+RHEL6)
+    major=6
+    ;;
+
+RHEL7)
+    major=7
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-os-release)\n"
+    exit 1
+    ;;
+
+esac
+
+# http://r.search.yahoo.com/_ylt=A0LEVinue69WStIAKfYnnIlQ;_ylu=X3oDMTBydWNmY2MwBGNvbG8DYmYxBHBvcwM0BHZ0aWQDBHNlYwNzcg--/RV=2/RE=1454369903/RO=10/RU=http%3a%2f%2fdeveloper.download.nvidia.com%2fcompute%2fcuda%2f6_0%2frc%2fdocs%2fCUDA_Getting_Started_Linux.pdf/RK=0/RS=9HopwYdfJ7a7Wmz7NZGFZAOPGA8-
+# https://developer.nvidia.com/cuda-downloads
+
+# FIXME: Bail if cuda already installed
+if [ -e /usr/local/cuda ]; then
+    printf "CUDA appears to be installed already.\n"
+    exit 1
+fi
+
+if ! lspci | fgrep -i nvidia; then  
+    printf "No nVidia GPUs found.\n"
+    exit 1
+fi
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+# Enable EPEL repository to supply libvdpau and dkms
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$major.noarch.rpm
+
+# From installation guide for Linux
+yum install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+
+# Enable CUDA repository
+# https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/
+# cuda-repo-rhel7-10.0.130-1.x86_64.rpm 
+# FIXME: Auto-detect/download latest cuda version?
+cuda_ver=$1        
+rpm=cuda-repo-rhel$major-$cuda_ver.x86_64.rpm
+if [ ! -e $rpm ]; then
+    site=http://developer.download.nvidia.com/compute/cuda/repos/rhel$major/x86_64
+    curl -O $site/$rpm
+fi
+rpm -i $rpm || true
+
+# Install CUDA and all dependencies
+yum clean all
+yum install cuda

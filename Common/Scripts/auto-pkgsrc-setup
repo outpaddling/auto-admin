@@ -1,0 +1,1418 @@
+#!/bin/sh -e
+
+pause()
+{
+    local junk
+    
+    printf "Press Enter to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Ask user to select a snapshot
+#
+#   History:
+#   Date        Name        Modification
+#   2016-01-04  Jason Bacon Begin
+##########################################################################
+
+select_snapshot()
+{
+    cat << EOM
+
+You must now choose a pkgsrc snapshot to install.
+
+Quarterly snapshots such as "2016Q2" have gone through additional quality
+control at the end of each quarter and contain fewer bugs.
+
+The "current" snapshot contains the latest commits of each package.
+
+See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
+
+1.. Install a quarterly snapshot
+2.. Install current
+3.. Install from git -current snapshot (git://unixdev.ceas.uwm.edu/pkgsrc)
+4.. Install from a custom source tree
+
+EOM
+    
+    selected=0
+    while [ $selected = 0 ]; do
+	printf "Selection? "
+	read snapshot
+	case $snapshot in
+	1)
+	    printf "Year? "
+	    read year
+	    printf "Quarter? "
+	    read quarter
+	    snapshot=pkgsrc-${year}Q$quarter
+	    selected=1
+	    ;;
+	2)
+	    snapshot=current
+	    selected=1
+	    ;;
+	3)
+	    snapshot=git
+	    selected=1
+	    ;;
+	4)
+	    snapshot=custom
+	    selected=1
+	    ;;
+	*)
+	    printf "Error: Valid selections are 1 or 2.\n" >> /dev/stderr
+	    ;;
+	esac
+    done
+    return 0
+}
+
+
+##########################################################################
+#   Script description:
+#       Automatically install and configure pkgsrc.
+#
+#   History:
+#   Date        Name        Modification
+#   2014-05-19  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--extract-only]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+0)
+    ;;
+1)
+    if [ $1 = --extract-only ]; then
+	EXTRACT_ONLY=yes
+    else
+	usage
+    fi
+    ;;
+*)
+    usage
+    ;;
+esac
+
+# AD servers might add funky stuff to IDs
+if id -gn | fgrep -q ' ' || id -gn | fgrep -q '\'; then
+    cat << EOM
+
+Your primary group ID, "`id -gn`", contains white space or special
+characters.
+
+This will cause the pkgsrc bootstrap to fail.  Please install as
+a different user with no special characters in the user or group names.
+
+EOM
+    exit 1
+fi
+
+start_dir=`pwd`
+
+# RHEL / CentOS base
+if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
+    if [ `whoami` = root ]; then
+	printf "Installing base development tools via yum...\n"
+	yum install -y gcc-gfortran gcc-c++ gcc
+    else
+	printf "You must run 'yum install gcc-gfortran gcc-c++ gcc' first.\n"
+	exit 1
+    fi
+fi
+
+# Debian dash is not compatible
+if [ -e /etc/debian_version ] && [ -e /bin/bash ]; then
+    SH=/bin/bash
+    export SH
+fi
+
+# For OS X, we should install a new base gcc using install-base-gcc
+case `uname` in
+'Darwin')
+    if [ ! -e /usr/bin/gcc ]; then
+	cat << EOM
+
+You must install Xcode command-line tools in order to use pkgsrc.
+
+EOM
+	exit 1
+    fi
+    os_major=`uname -r | cut -d . -f 1`
+    ;;
+
+CYGWIN*)
+    cat << EOM
+
+You MUST have the following Cygwin packages installed:
+
+    devel/gcc4
+    devel/g++4
+    devel/gfortran4
+    devel/make
+    lib/mpfr4 (required by gcc4, but not installed automatically)
+    net/curl or web/wget
+
+Ideally, no other Cygwin packages should be installed.  Libraries and tools
+installed by Cygwin could be found and used by configure scripts in pkgsrc
+packages.  As with all package systems, It is better if all pkgsrc
+dependencies are installed by pkgsrc.  Pkgsrc does its best to ensure that
+this happens, but configure scripts have minds of their own and pkgsrc cannot
+control them completely.
+
+EOM
+    pause
+    ;;
+esac
+
+if [ -e /opt/local/bin/port ]; then
+    cat << EOM
+
+============================================================================
+You appear to be using MacPorts.  MacPorts and pkgsrc can coexist, but you
+must ensure that your environment is configured to avoid mixing them.  Your
+PATH, LD_LIBRARY_PATH, and any other variables that select components of
+MacPorts or pkgsrc must be configured at all times to use one or the other,
+but never both (unless you know what you're doing).
+============================================================================
+EOM
+    pause
+fi
+
+if [ -e /sw/bin ]; then
+    cat << EOM
+
+============================================================================
+You appear to be using Fink.  Fink and pkgsrc can coexist, but you
+must ensure that your environment is configured to avoid mixing them.  Your
+PATH, LD_LIBRARY_PATH, and any other variables that select components of
+MacPorts or pkgsrc must be configured at all times to use one or the other,
+but never both (unless you know what you're doing).
+============================================================================
+EOM
+    pause
+fi
+
+cat << EOM
+
+============================================================================
+Default responses are shown in [].  Simple press Enter to accept defaults.
+
+Type Ctrl+c at any time to stop installation.
+============================================================================
+EOM
+
+if [ `whoami` != 'root' ]; then
+    cat << EOM
+
+============================================================================
+Not running as root.  Installing as user $(whoami).  This is fine, but
+is typically only used to install pkgsrc for your own exclusive use
+on a system for which you don't have administrator rights.  If you want
+to install pkgsrc for multiple users, you may prefer to cancel now and
+re-run this script as root.
+============================================================================
+
+EOM
+    default_prefix="$HOME/Pkgsrc"
+else
+    cat << EOM
+    
+============================================================================
+Running as root.  Installing globally.
+============================================================================
+
+EOM
+    if [ `uname` = Darwin ]; then
+	default_prefix="/opt"
+    else
+	default_prefix="/usr"
+    fi
+fi
+printf "OK to proceed? [y]/n "
+read proceed
+if [ "0$proceed" = "0n" ]; then
+    exit
+fi
+
+cat << EOM
+
+============================================================================
+Binary packages are available for CentOS 6 and 7 if you choose a quarterly
+snapshot and install under /sharedapps, e.g. /sharedapps/pkg-2017Q1.
+
+This will allow packages to be installed using a simple command like
+
+    pkg_add hmmer
+
+instead of building from source with
+
+    cd biology/hmmer
+    bmake install
+
+To use this feature, enter /sharedapps for the prefix below and choose a
+quarterly snapshot of 2017Q1 or later.
+============================================================================
+
+EOM
+
+printf "Installation prefix? [$default_prefix] "
+read prefix
+if [ 0"$prefix" = 0 ]; then
+    prefix=$default_prefix
+fi
+
+select_snapshot
+
+if [ $snapshot = current ]; then
+    dist_suffix="-`date +%Y-%m-%d`"
+else
+    dist_suffix="${snapshot#pkgsrc}"
+fi
+
+cat << EOM
+============================================================================
+Pkgsrc supports multiple installations on the same computer.  Pkgsrc-setup
+handles multiple installations under the same prefix by appending the date
+of a current snapshot or the name of a quarterly snapshot.
+
+It is recommended that you use an install suffix unless you are sure that
+you will not need another pkgsrc tree under 
+
+    $prefix
+    
+It also helps identify the version of each tree.
+============================================================================
+EOM
+
+if [ $snapshot = custom ] || [ $snapshot = git ]; then
+    use_install_suffix=n
+else
+    printf "Add $dist_suffix to installation directories? [y]/n "
+    read use_install_suffix
+fi
+if [ 0$use_install_suffix != 0n ]; then
+    install_suffix="$dist_suffix"
+else
+    install_suffix=''
+fi
+
+install_prefix=$prefix/pkg$install_suffix
+frameworks_prefix=$prefix/pkgsrc$install_suffix
+sys_prefix=$prefix/pkg$install_suffix
+mk_conf=$sys_prefix/etc/mk.conf
+
+cat << EOM
+
+============================================================================
+Packages will be installed under
+
+    $install_prefix
+    
+Frameworks for building and installing will be under
+
+    $frameworks_prefix
+
+System files will be under
+
+    $sys_prefix
+============================================================================
+
+EOM
+
+pause
+
+# Base compiler setup
+cat << EOM
+
+============================================================================
+You will need at least a C compiler and a C++ compiler to build most
+pkgsrc packages.  Many packages also require a Fortran compiler.  On
+many systems, such as NetBSD, pkgsrc can build its own Fortran compilers.
+On RHEL/CentOS, using the gfortran compiler provided via Yum works well.
+
+If pkgsrc is bootstrapped to use the GCC compiler collection,
+it will look for gfortran in the PATH when building certain packages.
+============================================================================
+EOM
+
+# Avoid software from other package managers or cave-man installs
+# This may need alteration on some platforms, but it works on CentOS,
+# FreeBSD, NetBSD, and OS X.
+PATH=/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+
+printf "Compilers in your current PATH include:\n\n"
+if ! which cc; then
+    if ! which gcc; then
+	printf "No C compiler found.  Aborting...\n"
+	exit 1
+    fi
+fi
+if ! which c++; then
+    if ! which g++; then
+	printf "No C++ compiler found.  Aborting...\n"
+	exit 1
+    fi
+fi
+
+if ! which gfortran; then
+    printf "Warning: No gfortran compiler found.\n"
+fi
+
+if [ `uname` != NetBSD ] && [ `uname` != SunOS ] && \
+    [ `uname` != FreeBSD ] && [ `uname` != DragonFly ] && ! which java; then
+    cat << EOM
+
+Warning: No Java installation detected and the openjdk packages only build
+on certain BSD and SunOS systems.  On Linux, Mac OS X, and other platforms,
+you should install a Java JDK before bootstrapping pkgsrc.
+
+EOM
+    printf "Continue without Java? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit
+    fi
+fi
+
+printf "\nThese same compilers must be first in PATH when building packages.\n"
+printf "\nProceed? [y]/n "
+read proceed
+if [ 0$proceed = 0n ]; then
+    exit 0
+fi
+
+if ! which gfortran; then
+    cat << EOM
+
+============================================================================
+No Fortran compiler was found in your PATH.
+
+On RHEL compatible systems, it's best to install gfortran with
+
+    yum install gcc-gfortran
+
+before bootstrapping pkgsrc.
+
+Otherwise, pkgsrc will attempt to install a Fortran compiler when needed,
+using g95 as the default.  For better performance and support of newer Fortran
+code, you may want to use one of the GCC packages instead of g95.
+
+Note that the GCC packages are much larger than g95 and may not build on
+all platforms.
+
+You can change this later by setting
+
+    PKGSRC_FORTRAN=gfortran
+
+or
+
+    PKGSRC_FORTRAN=g95
+
+in $install_prefix/etc/mk.conf.
+============================================================================
+
+EOM
+    printf "Continue without Fortran in the base compiler suite? [y]/n "
+    read resp
+    if [ 0$resp = 0n ]; then
+	exit 1
+    fi
+    
+    printf "Use GCC packages instead of g95? [y]/n "
+    read use_gfortran
+
+fi
+
+cat << EOM
+
+============================================================================
+Compiling with -march=native can result in executables that run up to 30%
+faster in many cases, sometimes even more.  The binary packages created
+will not be portable, however, and will only run on CPUs with all the
+features of this one.
+
+If you are using this system to generate binary packages for use on other
+systems, answer 'n' here.
+
+If you want executables optimized for maximum speed on this system, answer
+'y'.  This will append -march=native to CFLAGS, CXXFLAGS, and FFLAGS in
+
+    $install_prefix/etc/mk.conf
+
+You can add additional compiler flags here as well, all of which will be
+applied to every pkgsrc build.
+
+EOM
+printf "Build all compiled packages with -march=native? y/[n] "
+read march_native
+
+if which curl > /dev/null; then
+    fetch_cmd='curl -O'
+elif which wget > /dev/null; then
+    fetch_cmd=wget
+elif which fetch > /dev/null; then
+    fetch_cmd=fetch
+elif [ -e /usr/pkg/bin/fetch ]; then
+    fetch_cmd=/usr/pkg/bin/fetch
+elif which ftp > /dev/null; then
+    fetch_cmd=ftp
+else
+    printf "No fetch command found.\n"
+    exit 1
+fi
+
+# Download new pkgsrc dist if a new install number was provided
+if [ $snapshot = git ]; then
+    save_cwd=`pwd`
+    mkdir -p $prefix
+    cd $prefix
+    git clone git://unixdev.ceas.uwm.edu/pkgsrc pkgsrc
+    cd $save_cwd
+elif [ $snapshot = custom ]; then
+    download='n'
+    cat << EOM
+
+===========================================================================
+Place your custom source tree in $frameworks_prefix now.
+===========================================================================
+
+EOM
+    pause
+elif [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
+    printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
+    read download
+else
+    download='y'
+fi
+
+if [ 0$download = 0y ]; then
+    printf "Downloading dist...\n\n"
+    # Replace everything after new download
+    rm -rf $frameworks_prefix $install_prefix $sys_prefix
+    mkdir -p $prefix/Dist
+    cd $prefix/Dist
+    rm -f pkgsrc.tar.gz
+
+    fetched=no
+    for dist in \
+	ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz \
+	http://mirror1.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz \
+	http://mirror2.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz; do
+	
+	echo $dist
+	if $fetch_cmd $dist; then
+	    fetched=yes
+	    break
+	fi
+    done
+    if [ $fetched = no ]; then
+	printf "Unable to fetch $snapshot from any mirror.  Giving up...\n"
+	exit 1
+    fi
+    # Make sure dist is in the form pkgsrc-yearQquarter.tar.gz
+    if echo $dist | fgrep ftp.netbsd.org; then
+	mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
+    fi
+fi
+
+if [ $snapshot = custom ] || [ $snapshot = git ]; then
+    unpack='n'
+elif [ -e $frameworks_prefix ]; then
+    printf "$frameworks_prefix already exists.  Replace? y/[n] "
+    read unpack
+else
+    unpack='y'
+fi
+
+# Make sure everything from here on is world-readable
+umask 022
+
+# Create a new package tree for this installation
+if [ 0$unpack = 0y ]; then
+    # Replace everything if unpacking again
+    rm -rf $frameworks_prefix $install_prefix $sys_prefix
+    cd $prefix/Dist
+    printf "Unpacking frameworks...\n"
+    # Use of -o and --no-same-permissions is a security requirement.  It
+    # prevents root from installing a tree owned by an ordinary user.
+    if [ `uname` = NetBSD ]; then
+	tar -zxf pkgsrc$dist_suffix.tar.gz
+    else
+	tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
+    fi
+    rm -rf $frameworks_prefix $sys_prefix $install_prefix
+    mv pkgsrc $frameworks_prefix
+    if [ 0$EXTRACT_ONLY != 0 ]; then
+	exit 0
+    fi
+fi
+
+if [ -e $install_prefix/bin/bmake ]; then
+    printf "$install_prefix already exists.  Rebuild? y/[n] "
+    read bootstrap
+else
+    bootstrap='y'
+fi
+
+# Snow Leopard uname reports i386, even on 64-bit Core 2 Duo machines,
+# so check the hardware and force 64-bit ABI if needed
+# Idea:
+#    gcc -v |& grep Target
+#        i386: --abi 32
+#        x86_64: --abi 64
+
+if [ `uname` = 'Darwin' ] && \
+	sysctl -n machdep.cpu.brand_string | grep 'Core(TM)2' ; then
+    abi_flags='-abi 64'
+else
+    abi_flags=''
+fi
+
+# Bootstrap the installation
+if [ 0$bootstrap = '0y' ]; then
+    # Keep old frameworks, but rebuild installation dir and system files
+    rm -rf $sys_prefix $install_prefix
+    cd $frameworks_prefix/bootstrap
+    
+    # Scrub env to prevent leakage of nonstandard tools into pkgsrc
+    unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    CC=cc
+    CXX=c++
+    # OS X 10.12.6 needs full path for bmake build
+    CPP=`which cpp`
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    # PKGSRC_USE_FORTIFY=no
+    # Leave fortify on and just disable -Werror.  Sufficient for cwrappers.
+    # NOGCCERROR=yes
+    # export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
+    export CC CXX CPP
+
+    if [ `whoami` = root ]; then
+	./bootstrap \
+	    ${abi_flags} \
+	    --prefix ${install_prefix} \
+	    --pkgdbdir ${sys_prefix}/pkgdb \
+	    --sysconfdir ${sys_prefix}/etc \
+	    --varbase ${sys_prefix}/var \
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
+    else
+	./bootstrap \
+	    ${abi_flags} \
+	    --unprivileged \
+	    --prefix ${install_prefix} \
+	    --pkgdbdir ${sys_prefix}/pkgdb \
+	    --sysconfdir ${sys_prefix}/etc \
+	    --varbase ${sys_prefix}/var \
+	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
+    fi
+ 
+    # Separate bootstrap settings
+    printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n\n" >> $mk_conf
+
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # Enable it in the future if/when most of the issues are resolved
+    # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
+    # Leave fortify on and just disable -Werror
+    # gcc49,5,6 fail on CentOS 7 with just this
+    # gcc49,5 on CentOS 6
+    # printf "NOGCCERROR=\t\tyes\n" >> $mk_conf
+
+    # Configure pkgsrc options in mk.conf
+    # Add X11_TYPE=modular tells pkgsrc to use its own X11 packages
+    # PREFER_PKGSRC tells pkgsrc to install depdencies from its own
+    # packages instead of using native tools
+    # RHEL packages tend to be out of date (enterprise Linux values
+    # stability above features)
+    if ! fgrep X11_TYPE $mk_conf; then
+	printf "X11_TYPE=\t\tmodular\n" >> $mk_conf
+	printf "PREFER_NATIVE=\t\tno\n" >> $mk_conf
+	printf "PREFER_PKGSRC=\t\tyes\n" >> $mk_conf
+    fi
+
+    if [ 0$use_gfortran != 0n ]; then
+	printf "PKGSRC_FORTRAN=\t\tgfortran\n" >> $mk_conf
+    fi
+    
+    printf "Will you be using this installation for package development? y/[n] "
+    read developer
+    if [ 0$developer = 0y ]; then
+	if ! fgrep PKG_DEVELOPER $mk_conf; then
+	    printf "PKG_DEVELOPER=\t\tyes\n" >> $mk_conf
+	fi
+    fi
+    
+    # Github and some other sites are inaccessible via ftp on Linux
+    # Try to use a native tool rather than one that pkgsrc has to install
+    # as a dependency
+    case `uname` in
+    FreeBSD)
+	printf "FETCH_USING=\t\tfetch\n" >> $mk_conf
+	;;
+    Linux)
+	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
+	;;
+    NetBSD)
+	printf "FETCH_USING=\t\tftp\n" >> $mk_conf
+	;;
+    *)
+	;;
+    esac
+    
+    cat << EOM
+
+============================================================================
+You can configure pkgsrc to install any package regardless of the license
+type.  Do this only if you are certain that your organization has no
+restrictions on the allowable types of licenses.
+
+EOM
+    printf "Accept all software licenses? [y]/n "
+    read skip_license_check
+    if [ 0$skip_license_check != 0n ]; then
+	printf "SKIP_LICENSE_CHECK=\tyes\n" >> $mk_conf
+    else
+	tmpfile=auto-pkgsrc-setup-license-list
+	awk '{
+	if ( $1 == "DEFAULT_ACCEPTABLE_LICENSES=" )
+	    while ( $NF == "\\" )
+	    {
+		getline;
+		for (c=1; c<NF; ++c) printf("%s ", $c);
+	    }
+	}' $frameworks_prefix/mk/license.mk > $tmpfile
+	licenses=`cat $tmpfile`
+	rm -f $tmpfile
+    
+	for license in $licenses; do
+	    printf "Allow packages with license $license? [y]/n "
+	    read accepted
+	    if [ 0$accepted != '0n' ]; then
+		printf "ACCEPTABLE_LICENSES+=\t$license\n" >> $mk_conf
+	    fi
+	done
+    fi
+    
+    cat << EOM
+Allow installation of packages with known security vulnerabilities?
+
+Not recommended on systems with untrusted users or systems on public
+networks.
+
+If you answer NO here, you can still install individual vulnerable
+packages by running
+
+    env ALLOW_VULNERABLE_PACKAGES=yes bmake install
+
+EOM
+    printf "Allow vulnerable packages? y/[n] "
+    read allow_vulnerable
+    if [ 0$allow_vulnerable = 0y ]; then
+	printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
+    fi
+    printf "PKG_OPTIONS.libfetch=\tinet6 openssl\n" >> $mk_conf
+    
+    if [ 0$march_native = 0y ]; then
+	printf "CFLAGS+=\t\t-march=native\n" >> $mk_conf
+	printf "CXXFLAGS+=\t\t-march=native\n" >> $mk_conf
+	printf "FFLAGS+=\t\t-march=native\n" >> $mk_conf
+    fi
+    
+    case $(uname) in
+    Linux)
+	make_jobs=$(grep '^processor' /proc/cpuinfo|wc -l)
+	;;
+    Darwin|FreeBSD|NetBSD)
+	make_jobs=$(sysctl -n hw.ncpu)
+	;;
+    *)
+	cat << EOM
+
+Not sure how to determine the number of cores under $(uname).
+Set MAKE_JOBS manually in mk.conf if desired and send us a patch if
+you know how to fix this.
+
+EOM
+	make_jobs=1
+	;;
+    esac
+    printf "MAKE_JOBS=\t\t$make_jobs\n" >> $mk_conf
+fi  # bootstrap
+
+# FIXME: Verify that this is the minimal list of $base_gcc deps
+# Pkgsrc 2017Q2 assumes a c++11 compiler.  Force CentOS 6 to build everything
+# using a pkgsrc GCC instead of its native GCC 4.4.7, which has only partial
+# c++11 support and does not support the -std=c++11 flag.
+# Hopefully pkgsrc will handle cases like this automatically in the near
+# future and this hack will no longer be needed.
+#
+# gmake, gsed, and libiconv are for NetBSD
+
+if [ `uname` = Linux ] || [ `uname` = NetBSD ]; then
+
+    cat << EOM
+    
+Select a minimum GCC version.  Many packages will not build with older
+GCC suites such as the GCC 4.4 provided by RHEL/CentOS 6.  When you select
+a newer compiler here, a pkgsrc gcc will be used to build all packages
+except itself.
+
+1.. 4.8
+2.. 4.9
+3.. 5.0
+4.. 6.0
+5.. 7.0
+6.. 8.0
+
+EOM
+    default_minimum=5
+    printf "Selection? [$default_minimum] "
+    read selection
+    if [ 0$selection = 0 ]; then
+	selection=$default_minimum
+    fi
+    case $selection in
+    1)
+	base_gcc=gcc48
+	gcc_version=4.8
+	;;
+    2)
+	base_gcc=gcc49
+	gcc_version=4.9
+	;;
+    3)
+	base_gcc=gcc5
+	gcc_version=5.0
+	;;
+    4)
+	base_gcc=gcc6
+	gcc_version=6.0
+	;;
+    5)
+	base_gcc=gcc7
+	gcc_version=7.0
+	;;
+    6)
+	base_gcc=gcc8
+	gcc_version=8.0
+	;;
+    esac
+
+    # Keep this in sync with pbulk-setup for installations that use both
+    # binary packages and build from source.
+    cat << EOM >> $mk_conf
+
+.if \\
+    empty(PKGPATH:Marchivers/bsdtar) && \\
+    empty(PKGPATH:Marchivers/bzip2) && \\
+    empty(PKGPATH:Marchivers/pax) && \\
+    empty(PKGPATH:Marchivers/xz) && \\
+    empty(PKGPATH:Mconverters/help2man) && \\
+    empty(PKGPATH:Mconverters/libiconv) && \\
+    empty(PKGPATH:Mconverters/p5-Unicode-EastAsianWidth) && \\
+    empty(PKGPATH:Mdatabases/db4) && \\
+    empty(PKGPATH:Mdevel/autoconf) && \\
+    empty(PKGPATH:Mdevel/binutils) && \\
+    empty(PKGPATH:Mdevel/gettext-lib) && \\
+    empty(PKGPATH:Mdevel/gettext-tools) && \\
+    empty(PKGPATH:Mdevel/gmake) && \\
+    empty(PKGPATH:Mdevel/gmp) && \\
+    empty(PKGPATH:Mdevel/gtexinfo) && \\
+    empty(PKGPATH:Mdevel/libffi) && \\
+    empty(PKGPATH:Mdevel/makedepend) && \\
+    empty(PKGPATH:Mdevel/pkgconf) && \\
+    empty(PKGPATH:Mdevel/libtool-base) && \\
+    empty(PKGPATH:Mdevel/m4) && \\
+    empty(PKGPATH:Mdevel/ncurses) && \\
+    empty(PKGPATH:Mdevel/nbpatch) && \\
+    empty(PKGPATH:Mdevel/p5-CPAN-Meta) && \\
+    empty(PKGPATH:Mdevel/p5-Module-Build) && \\
+    empty(PKGPATH:Mdevel/p5-Perl4-CoreLibs) && \\
+    empty(PKGPATH:Mdevel/p5-Scalar-List-Utils) && \\
+    empty(PKGPATH:Mdevel/p5-gettext) && \\
+    empty(PKGPATH:Mdevel/p5-inc-latest) && \\
+    empty(PKGPATH:Mdevel/readline) && \\
+    empty(PKGPATH:Mdevel/zlib) && \\
+    empty(PKGPATH:Mlang/$base_gcc) && \\
+    empty(PKGPATH:Mlang/$base_gcc-libs) && \\
+    empty(PKGPATH:Mlang/perl5) && \\
+    empty(PKGPATH:Mlang/python27) && \\
+    empty(PKGPATH:Mmath/cloog) && \\
+    empty(PKGPATH:Mmath/isl) && \\
+    empty(PKGPATH:Mmath/mpcomplex) && \\
+    empty(PKGPATH:Mmath/mpfr) && \\
+    empty(PKGPATH:Mmisc/p5-Locale-libintl) && \\
+    empty(PKGPATH:Mnet/libfetch) && \\
+    empty(PKGPATH:Mpkgtools/cwrappers) && \\
+    empty(PKGPATH:Mpkgtools/digest) && \\
+    empty(PKGPATH:Mpkgtools/pkg_install) && \\
+    empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
+    empty(PKGPATH:Mpkgtools/pkgin) && \\
+    empty(PKGPATH:Msecurity/mozilla-rootcerts) && \\
+    empty(PKGPATH:Msecurity/openssl) && \\
+    empty(PKGPATH:Msysutils/checkperms) && \\
+    empty(PKGPATH:Mtextproc/gsed) && \\
+    empty(PKGPATH:Mtextproc/p5-Text-Unidecode) && \\
+    empty(PKGPATH:Mx11/xorgproto)
+
+GCC_REQD+=$gcc_version
+
+.endif  # GCC_REQD
+
+# RHEL systems may have an outdated "as" that cannot translate instructions
+# from current GCC code generators, so force pkgsrc binutils.
+.if exists(/etc/redhat-release) && !empty(PKGPATH:Mlang/gcc*)
+CONFIGURE_ARGS+=        --with-gnu-as --with-as=\${PREFIX}/bin/gas
+CONFIGURE_ARGS+=        --with-gnu-ld --with-ld=\${PREFIX}/bin/gld
+BUILDLINK_DEPMETHOD.binutils=   full
+.  include "../../devel/binutils/buildlink3.mk"
+.endif
+
+EOM
+    compiler=gcc-$gcc_version
+else
+    compiler=cc
+fi
+
+printf "\n.endif   # Pkgsrc customizations\n" >> $mk_conf
+
+# Install latest security checks
+${install_prefix}/sbin/pkg_admin \
+    -K ${sys_prefix}/pkgdb fetch-pkg-vulnerabilities
+
+##########################################################################
+#   Some improvements to the base installation
+##########################################################################
+
+# Scrub PATH and LD_LIBRARY_PATH to prevent leakage.
+# If someone wants to shoot themselves in the foot by adding additional
+# non-standard directories, they'll have to load their own bullets and
+# unlatch the safety themselves.
+
+# Generate startup script segments
+
+cat << EOM > ${sys_prefix}/etc/pkgsrc.sh
+# Generated by auto-pkgsrc-setup
+if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
+    PKGSRC=$install_prefix
+    export PKGSRC
+    
+    # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
+    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    PATH=/usr/bin:/usr/sbin:/bin:/sbin
+    unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    
+    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
+    export PATH
+    MANPATH=\$PKGSRC/man:/usr/share/man
+    export MANPATH
+    PKGSRC_INCLUDE=\$PKGSRC/include
+    export PKGSRC_INCLUDE
+    PKGSRC_LIB=\$PKGSRC/lib
+    export PKGSRC_LIB
+fi
+EOM
+
+# Keep this in sync with the script above.  Just remove the scrub lines.
+cat << EOM > ${sys_prefix}/etc/pkgsrc-non-exclusive.sh
+# Generated by auto-pkgsrc-setup
+if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
+    PKGSRC=$install_prefix
+    export PKGSRC
+
+    PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
+    export PATH
+    MANPATH=\$PKGSRC/man:/usr/share/man
+    export MANPATH
+    PKGSRC_INCLUDE=\$PKGSRC/include
+    export PKGSRC_INCLUDE
+    PKGSRC_LIB=\$PKGSRC/lib
+    export PKGSRC_LIB
+fi
+EOM
+
+cat << EOM > ${sys_prefix}/etc/pkgsrc.csh
+# Generated by auto-pkgsrc-setup
+echo \$PATH | fgrep -q "${install_prefix}/bin:"
+if ( \$status != 0 ) then
+    setenv PKGSRC           $install_prefix
+    
+    # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
+    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
+    unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+
+    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
+    setenv MANPATH          \$PKGSRC/man:/usr/share/man
+    setenv PKGSRC_INCLUDE   \$PKGSRC/include
+    setenv PKGSRC_LIB       \$PKGSRC/lib
+endif
+EOM
+
+# Keep this in sync with the script above.  Just remove the scrub lines.
+cat << EOM > ${sys_prefix}/etc/pkgsrc-non-exclusive.csh
+# Generated by auto-pkgsrc-setup
+echo \$PATH | fgrep -q "${install_prefix}/bin:"
+if ( \$status != 0 ) then
+    setenv PKGSRC           $install_prefix
+
+    setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
+    setenv MANPATH          \$PKGSRC/man:/usr/share/man
+    setenv PKGSRC_INCLUDE   \$PKGSRC/include
+    setenv PKGSRC_LIB       \$PKGSRC/lib
+endif
+EOM
+
+if [ -e /etc/profile.d ]; then
+    printf "Add this pkgsrc installation to default path for all users? y/[n] "
+    read add2path
+    if [ 0$add2path = 0y ]; then
+	cp ${sys_prefix}/etc/pkgsrc.*sh /etc/profile.d
+    fi
+fi
+
+# Generate module files
+mkdir -p ${sys_prefix}/etc/modulefiles/pkgsrc
+
+cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
+#%Module1.0#####################################################################
+proc ModulesHelp { } {
+    puts stdout "\n\tAll software installed via the pkgsrc package management"
+    puts stdout "\tsystem. This module prepends the pkgsrc directories to"
+    puts stdout "\tappropriate environment variable(s)."
+}
+
+module-whatis   "All software installed via pkgsrc"
+
+set     version         ${dist_suffix#-}
+set     install_prefix  ${install_prefix}
+
+# Scrub PATH before adding pkgsrc to prevent leakage during builds
+setenv  PATH    /usr/bin:/usr/sbin:/bin:/sbin
+unsetenv        CC
+unsetenv        CFLAGS
+unsetenv        CXX
+unsetenv        CXXFLAGS
+unsetenv        CPP
+unsetenv        CPPFLAGS
+unsetenv        FC
+unsetenv        FFLAGS
+unsetenv        LD
+unsetenv        LDFLAGS
+unsetenv        LD_LIBRARY_PATH
+
+prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
+prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
+
+setenv          PKGSRC          \$install_prefix
+setenv          PKGSRC_INCLUDE  \$install_prefix/include
+setenv          PKGSRC_LIB      \$install_prefix/lib
+EOM
+
+# Keep this in sync with the script.  Just remove the scrub lines.
+cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}-non-exclusive
+#%Module1.0#####################################################################
+proc ModulesHelp { } {
+    puts stdout "\n\tAll software installed via the pkgsrc package management"
+    puts stdout "\tsystem. This module prepends the pkgsrc directories to"
+    puts stdout "\tappropriate environment variable(s)."
+}
+
+module-whatis   "All software installed via pkgsrc"
+
+puts stderr "\n======================================================================"
+puts stderr "WARNING:\n"
+puts stderr "pkgsrc/${dist_suffix#-}-non-exclusive allows programs and libraries"
+puts stderr "that are not part of this pkgsrc tree or the base system to remain in"
+puts stderr "PATH and LD_LIBRARY_PATH.  This may cause some programs to malfunction."
+puts stderr "======================================================================\n"
+
+set     version         ${dist_suffix#-}
+set     install_prefix  ${install_prefix}
+
+prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
+prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
+
+setenv          PKGSRC          \$install_prefix
+setenv          PKGSRC_INCLUDE  \$install_prefix/include
+setenv          PKGSRC_LIB      \$install_prefix/lib
+EOM
+
+# GCC scripts and modules
+for gcc in 48 49 5 6 7 8; do
+    cat << EOM > ${sys_prefix}/etc/gcc$gcc.sh
+# Generated by auto-pkgsrc-setup
+# Assumes pkgsrc already in path
+# Use alone only if you know what you're doing
+if ! echo \$PATH | fgrep -q "${install_prefix}/gcc$gcc/bin:"; then
+    PKGSRC=$install_prefix
+    export PKGSRC
+    
+    PATH=\$PKGSRC/gcc$gcc/bin:\$PATH
+    export PATH
+    # pkgsrc gcc man pages broken
+    # MANPATH=\$PKGSRC/gcc$gcc/man:\$PKGSRC/man:/usr/share/man
+    # export MANPATH
+    PKGSRC_GCC_INCLUDE=\$PKGSRC/gcc$gcc/include
+    export PKGSRC_INCLUDE
+    PKGSRC_GCC_LIB=\$PKGSRC/gcc$gcc/lib
+    export PKGSRC_LIB
+fi
+EOM
+
+    cat << EOM > ${sys_prefix}/etc/gcc$gcc.csh
+# Generated by auto-pkgsrc-setup
+# Assumes pkgsrc already in path
+# Use alone only if you know what you're doing
+echo \$PATH | fgrep -q "${install_prefix}/gcc$gcc/bin:"
+if ( \$status != 0 ) then
+    setenv PKGSRC   $install_prefix
+    
+    setenv PATH                 \$PKGSRC/gcc$gcc/bin:\$PATH
+    # pkgsrc gcc man pages broken
+    # setenv MANPATH            \$PKGSRC/gcc$gcc/man:\$PKGSRC/man:/usr/share/man
+    setenv PKGSRC_GCC_INCLUDE   \$PKGSRC/gcc$gcc/include
+    setenv PKGSRC_GCC_LIB       \$PKGSRC/gcc$gcc/lib
+endif
+EOM
+
+    cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/gcc$gcc
+#%Module1.0#####################################################################
+proc ModulesHelp { } {
+    puts stdout "\n\tpkgsrc gcc$gcc"
+    puts stdout "\tThis module prepends the pkgsrc gcc$gcc directories to"
+    puts stdout "\tappropriate environment variable(s)."
+}
+
+module-whatis   "pkgsrc gcc$gcc"
+
+set     version         ${dist_suffix#-}
+set     install_prefix  ${install_prefix}
+
+prepend-path    PATH    \$install_prefix/gcc$gcc/bin
+# pkgsrc gcc man pages broken
+# prepend-path    MANPATH \$install_prefix/gcc$gcc/man:\$install_prefix/man:/usr/share/man
+
+setenv          PKGSRC_GCC_INCLUDE  \$install_prefix/gcc$gcc/include
+setenv          PKGSRC_GCC_LIB      \$install_prefix/gcc$gcc/lib
+EOM
+
+done    # for gcc in
+if [ ! -z $base_gcc ]; then
+    ln -f ${sys_prefix}/etc/$base_gcc.sh ${sys_prefix}/etc/gcc-base.sh
+    ln -f ${sys_prefix}/etc/$base_gcc.csh ${sys_prefix}/etc/gcc-base.csh
+    ln -f ${sys_prefix}/etc/modulefiles/pkgsrc/$base_gcc \
+	${sys_prefix}/etc/modulefiles/pkgsrc/gcc-base
+fi
+
+##########################################################################
+#   Generate profile.d scripts for updating MODULEPATH
+##########################################################################
+
+profile_dir="$sys_prefix/etc/profile.d"
+mkdir -p $profile_dir
+# Should come alphabetically after modules.sh and modules.csh
+module_path_script=modulez`echo $install_prefix | tr '/' '-'`
+cat << EOM > $profile_dir/$module_path_script.sh
+MODULEPATH=\${MODULEPATH}:$sys_prefix/etc/modulefiles
+export MODULEPATH
+EOM
+cat << EOM > $profile_dir/$module_path_script.csh
+setenv MODULEPATH \${MODULEPATH}:$sys_prefix/etc/modulefiles
+EOM
+chmod 644 $profile_dir/$module_path_script*
+
+# Update PATH for installing packages below
+. ${sys_prefix}/etc/pkgsrc.sh
+
+# Basic instructions on installing a package
+make=bmake
+
+# Wrap bmake and pkg_add commands
+if ! [ -e $install_prefix/bin/bmake.bin ]; then
+    mv $install_prefix/bin/bmake $install_prefix/bin/bmake.bin
+fi
+cat << EOM2 > $install_prefix/bin/bmake
+#!/bin/sh -e
+
+if ! pwd | fgrep -q $frameworks_prefix; then
+    cat << EOM
+    
+			    ===== Error =====
+
+You are running \$(which bmake) from the wrong directory.
+It should only be used from within $frameworks_prefix.
+Load the correct environment module so that you are using the appropriate
+bmake for \$(pwd) or go to $frameworks_prefix.
+
+EOM
+    exit 1
+fi
+
+# Make sure software installed is world-readable on systems with tighter
+# default umask.
+umask 022
+bmake.bin "\$@"
+EOM2
+# Save a copy in case bmake gets clobbered by pkgin upgrade
+# Should move the check into bmake proper so this wrapper is unnecessary
+cp $install_prefix/bin/bmake $install_prefix/bin/bmake-wrapper
+
+if ! [ -e $install_prefix/sbin/pkg_add.bin ]; then
+    mv $install_prefix/sbin/pkg_add $install_prefix/sbin/pkg_add.bin
+fi
+cat << EOM > $install_prefix/sbin/pkg_add
+#!/bin/sh -e
+
+# Make sure software installed is world-readable on systems with tighter
+# default umask.
+umask 022
+pkg_add.bin "\$@"
+EOM
+
+chmod 755 $install_prefix/bin/bmake $install_prefix/sbin/pkg_add
+
+cat << EOM
+
+============================================================================
+The pkgsrc-wip (work in progress) project is a worldwide centralized
+repository of packages currently under development.  You can use the
+packages here to test the latest features of software or get access to
+packages that don't yet exist in the official pkgsrc collection.
+
+You can also contribute your own packages and bug fixes.
+
+EOM
+printf "Install pkgsrc-wip? y/[n] "
+read install_wip
+if [ 0$install_wip = 0y ]; then
+    cd $frameworks_prefix
+    
+    if ! which git; then
+	cat << EOM
+
+No git command found.  Skipping pkgsrc-wip install for now.
+
+See https://pkgsrc.org/wip/ for instructions on installing it later.
+
+EOM
+	pause
+    else
+	# git sometimes returns non-zero status when it succeeded
+	set +e
+	if [ -d wip ]; then
+	    printf "pkgsrc-wip alreading installed.\n"
+	else
+	    cat << EOM
+
+If you have a pkgsrc-wip account, you can use it to check out pkgsrc-wip,
+the work-in-progress category of pkgsrc packages.
+
+If not, you can check it out anonymously.  This is the default if you just
+press Enter.
+
+EOM
+
+	    # NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
+	    # It is here so that this script can work as a standalone.
+	    # Be sure to keep this in sync with the separate script!
+	    printf "pkgsrc-wip username? [none] "
+	    read username
+	    if [ 0$username = 0 ]; then
+		git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
+	    else
+		git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+	    fi
+	fi
+	set -e
+    fi
+fi
+
+# Set up package server if necessary
+if [ -e /etc/redhat-release ]; then
+    release=`cat /etc/redhat-release`
+    release=${release%%.*}
+    release=${release##*release }
+    os=RHEL$release
+elif [ $(uname) = Darwin ]; then
+    os=$(uname)$(uname -r | cut -d '.' -f 1)
+else
+    os=$(uname)-$(uname -r)
+fi
+
+cat << EOM
+
+============================================================================
+
+UWM provides binary packages for quarterly snapshots under /sharedapps,
+e.g. /sharedapps/pkg-2017Q1.
+
+If you know there are binary packages available for
+
+    $install_prefix
+    
+on
+
+    $os
+
+enter the full web server URL(s) here, e.g.:
+
+    https://mirror1.hpc.uwm.edu
+    https://mirror2.hpc.uwm.edu
+
+The default PKG_PATH will be set to
+
+    <URL>/pkgsrc/packages/$install_prefix/$os/All
+
+Edit
+
+    $install_prefix/etc/pkg_install.conf
+
+if this is incorrect.
+
+EOM
+
+cat << EOM
+
+Enter the binary package server name (include http:// or https://), or
+just press enter if you won't be using binary packages.
+
+EOM
+read package_server
+if [ 0$package_server != 0 ]; then
+    pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
+    pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$install_prefix/$os/All\n"
+fi
+
+if [ 0$pkg_path != 0 ]; then
+    printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
+
+    # Rebuild pkg_install with SSL support
+    cd $frameworks_prefix/pkgtools/pkg_install
+    bmake clean
+    bmake clean-depends
+    bmake replace ALLOW_VULNERABLE_PACKAGES=yes
+    
+    # Install numerous deps to save time
+    pkg_add pkgin
+    # unset PKG_PATH
+    
+    # Reinstall libfetch and pkgin from source to enable SSL.
+    # mk.conf should contain "PKG_OPTIONS.libfetch=inet6 openssl" by now
+    pkg_delete -f libfetch pkgin
+    save_cwd=`pwd`
+    cd $frameworks_prefix/pkgtools/pkgin
+    bmake clean
+    bmake clean-depends
+    bmake install
+    if [ $? = 0 ]; then
+	printf "${pkgin_path}" >> $install_prefix/etc/pkgin/repositories.conf
+	pkgin update
+	cat << EOM
+
+Pkgin initialized successfully.  You can use pkgin to install and remove
+binary packages, list available packages, etc.  Run "man pkgin" for details.
+
+EOM
+	if [ ! -z $base_gcc ]; then
+	    pkgin install -y $base_gcc
+	fi
+    else
+	printf "Failed to install pkgin.\nCheck $install_prefix/etc/pkg_install.conf.\n"
+    fi
+    cd $save_cwd
+    pause
+fi
+
+cat << EOM
+============================================================================
+Users running sh-compatible shells can use the following to configure the
+environment for this installation:
+
+    . ${sys_prefix}/etc/pkgsrc.sh
+
+Users running csh-compatible shells can use the following:
+
+    source ${sys_prefix}/etc/pkgsrc.csh
+
+On systems with the "module" command, users can use the following instead
+of one of the commands above:
+
+    module load ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
+============================================================================
+EOM
+pause
+
+cat << EOM
+============================================================================
+To install a package, type:
+
+    cd $frameworks_prefix/<category>/<package>
+    $make install
+
+Ex.
+    cd $frameworks_prefix/math/blas
+    $make install
+============================================================================
+EOM
+pause
+
+cat << EOM
+============================================================================
+After setting the environment using one of the commands above, to compile
+and link programs using libraries installed by pkgsrc, use:
+
+    -I\$PKGSRC_INCLUDE
+    -L\$PKGSRC_LIB
+
+Ex. Assuming your Makefile uses CFLAGS for compiling and LFLAGS for link:
+
+    make CFLAGS="-Wall -g -I\$PKGSRC_INCLUDE" LFLAGS="-L\$PKGSRC_LIB"
+============================================================================
+For more information, go to http://www.netbsd.org/docs/pkgsrc/
+============================================================================
+EOM
+pause
+
+# Install pkgsrc guide onto desktop
+if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
+    mkdir -p $HOME/Desktop/Guides
+    cd $HOME/Desktop/Guides
+    printf "Fetching manual...\n"
+    $fetch_cmd http://www.netbsd.org/docs/pkgsrc/pkgsrc.pdf
+    printf "A copy of the pkgsrc guide has been placed on your desktop.\n"
+fi
+
+touch $prefix/pkg$install_suffix/done
+
+# Generate bootstrap kit
+cd $start_dir
+bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
+printf "Creating bootstrap kit: $bootstrap_archive...\n"
+tar zcf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
+cat << EOM
+
+Bootstrap image saved to $bootstrap_archive.
+
+You can unpack this file to / on other identical `uname` systems in order to
+quickly replicate this installation.
+
+EOM

@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Switch system to use latest packages rather than quarterly
+#
+#   Arguments:
+#       Any arguments to pass to auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-06-16  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [arguments to pass to auto-update-system]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $1 = '--help' ]; then
+    usage
+fi
+
+dir=/usr/local/etc/pkg/repos
+file=$dir/bleeding-edge.conf
+
+mkdir -p $dir
+auto-backup-file $file
+cat << EOM > $file
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
+}
+EOM
+auto-update-system "$@"

@@ -1,0 +1,32 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    printf "Usage: replace_file new old\n"
+    exit 1
+fi
+
+new=$1
+old=$2
+if cmp -s $new $old; then
+    printf "$new already installed.\n"
+else
+    auto-backup-file $old
+    /bin/cp -f $new $old
+fi
+

@@ -1,0 +1,366 @@
+#!/bin/sh
+
+pause()
+{
+    printf "Press return to continue...\n"
+    read junk
+}
+
+
+##########################################################################
+#   Script description:
+#       Interactive interface for adding users
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-06-04  J Bacon     Begin (modified from cluster-adduser)
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [username]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Determine the next available UID
+#
+#   History:
+#   Date        Name        Modification
+#   2012-11-26  Charlie &   Begin
+##########################################################################
+
+next_uid()
+{
+    # Start at 2000 to leave plenty of room
+    uid=2000
+    while uid_taken $uid; do
+	uid=$((uid + 1))
+	if [ $uid -gt 60000 ]; then
+	    printf "Out of user IDs.\n"
+	    exit 1
+	fi
+    done
+    printf "%s\n" $uid
+}
+
+uid_taken()
+{
+    local user_id=$1
+    awk -F ':' ' { print $3 }' /etc/passwd | fgrep -qw $user_id
+    return $?
+}
+
+gid_taken()
+{
+    local group_id=$1
+    awk -F ':' ' { print $3 }' /etc/group | fgrep -qw $group_id
+    return $?
+}
+
+user_exists()
+{
+    local user=$1
+    if [ x$user = x ]; then
+	return 1
+    fi
+    awk -F ':' ' { print $1 }' /etc/passwd | fgrep -qw $user
+    return $?
+}
+
+group_exists()
+{
+    local group=$1
+    if [ x$group = x ]; then
+	return 1
+    fi
+    awk -F ':' ' { print $1 }' /etc/group | fgrep -qw $group
+    return $?
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+set -e
+
+if [ $# -gt 1 ]; then
+    usage
+fi
+
+if [ `whoami` != "root" ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+CONF_DIR=/usr/local/share/auto-admin
+
+os_type=`auto-ostype`
+case $os_type in
+FreeBSD)
+    ldap_conf=/usr/local/etc/ldap.conf
+    ldap_flags=''
+    default_shell="/bin/tcsh"
+    ;;
+RHEL)
+    ldap_conf=/etc/openldap/ldap.conf
+    ldap_flags='-x'
+    default_shell="/bin/bash"
+    ;;
+*)
+    printf "Unsupported os: $os_type\n"
+    exit 1
+esac
+
+cat << EOM
+
+***************************************************************************
+
+Be sure to IMMEDIATELY add this user with the same UID and GID on any other
+systems that might share files with this one.
+
+***************************************************************************
+
+EOM
+pause
+
+case $# in
+0)
+    user_name=''
+    # FIXME: Check for illegal chars
+    while [ x$user_name = x ]; do
+	printf "Username? "
+	read user_name
+	if user_exists $user_name; then
+	    printf "User $user_name already exists.\n"
+	    user_name=''    # re-prime the loop
+	fi
+    done
+    ;;
+1)
+    user_name=$1
+    if user_exists $user_name; then
+	printf "User $user_name already exists.\n"
+	exit 1
+    fi
+    ;;
+*)
+    printf "Usage: $0 [username]\n"
+    exit 1
+    ;;
+esac
+
+
+# Find next available UID
+default_uid=`next_uid`
+
+cat << EOM
+
+If this user has an account on a connected system, use the same UID here to
+avoid ownership issues within tar files, NFS servers, etc.
+
+Otherwise, accept the default UID provided.
+
+EOM
+
+printf "UID? [$default_uid] "
+read uid
+if [ 0$uid = 0 ]; then
+    uid=$default_uid
+fi
+
+# Prevent collisions
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/passwd` = 0$uid ]; then
+    printf "Error: UID $uid is not available.\n"
+    exit 1
+fi
+
+while [ 0$gecos_source != 01 ] && [ 0$gecos_source != 02 ] && [ 0$gecos_source != 03 ]; do
+    cat << EOM
+
+Get user information from:
+
+1.. LDAP
+2.. Active Directory
+3.. Direct input
+
+EOM
+    printf "Selection: "
+    read gecos_source
+done
+
+case $gecos_source in
+1)
+    if [ -e $ldap_conf ]; then
+	# Flag usernames not in LDAP
+	ldap_verified_uid=`ldapsearch $ldap_flags uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+	if [ 0$ldap_verified_uid != 0$user_name ]; then
+	    printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	    read resp
+	    if [ 0$resp != 0'y' ]; then
+		exit 0
+	    fi
+	fi
+	default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    else
+	default_gecos=''
+    fi
+    ;;
+
+2)
+    this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
+    default_server=ad.${this_domain}:3268
+    printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
+    read server
+    if [ 0$server = 0 ]; then
+	server=$default_server
+    fi
+    
+    default_ad_user=$USER
+    printf "YOUR AD Username for user query? [$default_ad_user] "
+    read ad_user_name
+    if [ 0$ad_user_name = 0 ]; then
+	ad_user_name=$default_ad_user
+    fi
+    
+    printf "AD password? "
+    stty -echo
+    read ad_pw
+    stty echo
+
+    ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
+    echo $ldap_verified_uid
+    if [ 0$ldap_verified_uid != 0$user_name ]; then
+	printf "User $user_name is not in the AD directory.  Continue? y/[n] "
+	read resp
+	if [ 0$resp != 0'y' ]; then
+	    exit 0
+	fi
+    fi
+    default_gecos=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name |
+	awk '$1 == "displayName:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    ;;
+
+3)
+    default_gecos="no default"
+    ;;
+
+esac
+
+printf "Full name? [$default_gecos] "
+read gecos
+if [ 0"$gecos" = 0 ]; then
+    gecos="$default_gecos"
+fi
+
+# Convention
+home_dir=/home/$user_name
+
+build_gecos=$CONF_DIR/adduser-build-gecos
+if [ -e $build_gecos ]; then
+    if auto-file-secure $build_gecos; then
+	# Sets gecos_extension
+	. $build_gecos
+    else
+	exit 1
+    fi
+else
+    printf "No $build_gecos found; ignoring.\n"
+fi
+
+gecos="$gecos$gecos_extension"
+printf '%s\n' "$gecos"
+
+printf "Create primary group with same name? y/[n] "
+read create_group
+
+if [ 0$create_group != 0y ]; then
+    # The primary group for assistants should be that of some PI
+    printf "Primary group name for this user? (e.g. group leader's user name) "
+    read primary_group
+    gid=`awk -F : -v username=$primary_group '$1 == username { print $3 }' /etc/group`
+    if [ 0$gid = 0 ]; then
+	printf "Invalid group name: $primary_group\n"
+	exit 1
+    fi
+else
+    primary_group=$user_name
+    
+    printf "GID for $primary_group? [$uid] "
+    read gid
+    if [ 0$gid = 0 ]; then
+	gid=$uid
+    fi
+    if gid_taken $gid; then
+	printf "$gid is in use.\n"
+	exit 1
+    fi
+fi
+
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/group` = 0$uid ]; then
+    printf "Error: GID $gid is not available.\n"
+fi
+
+# Some users may belong to multiple groups.  If so, add them here.
+group='x'
+while [ $group ]; do
+    printf "Add to additional group: [Press return to skip] "
+    read group
+    if [ $group ]; then
+	if [ $additional_groups ]; then
+	    additional_groups=$additional_groups,$group
+	else
+	    additional_groups=$group
+	fi
+    fi
+done
+
+# Select a shell for the new user
+valid=0
+while [ $valid = 0 ]; do
+    printf "\nValid shells:\n"
+    fgrep -v '#' /etc/shells
+    printf "/sbin/nologin\n"
+    printf "\nShell? [$default_shell] "
+    read shell
+    if [ x$shell = x ]; then
+	shell=$default_shell
+	valid=1
+    else
+	if fgrep -q $shell /etc/shells || [ $shell = '/sbin/nologin' ]; then
+	    valid=1
+	else
+	    valid=0
+	    printf "$shell is not a valid shell.\n"
+	fi
+    fi
+done
+
+printf "Username:       $user_name\n"
+printf "UID:            $uid\n"
+printf "GID:            $gid\n"
+printf "Comment:        $gecos\n"
+printf "Primary group:  $primary_group\n"
+printf "Shell:          $shell\n"
+printf "\nCreate account? [y]/n "
+read resp
+if [ 0$resp = 0n ]; then
+    exit
+fi
+
+# Create user account
+if [ "0$additional_groups" != "0" ]; then
+    agroup_flags="-G $additional_groups"
+else
+    agroup_flags=""
+fi
+
+printf "Adding user $user_name...\n"
+
+# useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
+# $agroup_flags -m $user_name
+
+umask 027
+auto-useradd $user_name $uid $primary_group "$gecos" $shell $agroup_flags

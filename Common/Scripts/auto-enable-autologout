@@ -1,0 +1,60 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-06  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 minutes\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+minutes=$1
+
+##########################################################################
+#   Enable for all interactive shells, not just login shells.
+##########################################################################
+
+for script in /etc/csh.cshrc; do
+    if ! fgrep -q autologout $script; then
+	cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+if ( ! \$?autologout ) then
+    set -r autologout=$minutes
+endif
+EOM
+    fi
+done
+
+for script in /etc/bashrc /etc/kshrc /etc/zshrc; do
+    if ! fgrep -q TMOUT $script; then
+	cat << EOM >> $script
+
+# Enable auto-logout after $minutes minutes
+if [ 0\$TMOUT = 0 ]; then
+    TMOUT=$(($minutes * 60))
+    readonly TMOUT
+fi
+EOM
+    fi
+done
+

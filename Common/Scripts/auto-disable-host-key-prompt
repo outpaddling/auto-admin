@@ -1,0 +1,60 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Disable prompt for unknown host key
+#
+#   Arguments:
+#       1.  short hostname
+#       2.  long hostname
+#       3.  IP
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-08-16  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 short-hostname long-hostname IP\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    usage
+fi
+
+short_name=$1
+host_name=$2
+new_ip=$3
+
+if [ `uname` = FreeBSD ]; then
+    if ! which gsed > /dev/null 2>&1; then
+	pkg install -y gsed
+    fi
+    sed=gsed
+elif [ -e /etc/redhat-release ]; then
+    sed=sed
+else
+    printf 'Only FreeBSD and CentOS are supported at this time.\n'
+    exit 1
+fi
+
+if [ ! -e /etc/ssh/ssh_config.orig ]; then
+    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
+fi
+
+if ! fgrep -wq $host_name /etc/ssh/ssh_config; then
+    $sed -i'' "2i\ " /etc/ssh/ssh_config
+    $sed -i'' "3iHost $short_name" /etc/ssh/ssh_config
+    $sed -i'' '4i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+    $sed -i'' "5iHost $host_name" /etc/ssh/ssh_config
+    $sed -i'' '6i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+    $sed -i'' "7iHost $new_ip" /etc/ssh/ssh_config
+    $sed -i'' '8i\\tStrictHostKeyChecking no' /etc/ssh/ssh_config
+fi

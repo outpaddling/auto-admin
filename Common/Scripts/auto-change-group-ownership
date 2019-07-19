@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Search directories for files owned by a particular user and
+#       group and change the group ownership.
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-05-21  Jason Bacon - UITS/CEAS - Systems Manager,EMS 974Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username|uid old-groupname|gid new-groupname|gid directory [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 4 ]; then
+    usage
+fi
+
+user=$1
+old_group=$2
+new_group=$3
+shift
+shift
+shift
+
+dirs="$@"
+
+# BSD and GNU find allow a name or id with -user and -group.
+# GNU find requires a UID with -uid or -gid.  Use -user and -group to
+# be flexible and portable.
+find -L $dirs -user $user -group $old_group -print -exec chgrp $new_group '{}' \;

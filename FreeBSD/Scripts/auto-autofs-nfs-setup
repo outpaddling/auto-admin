@@ -1,0 +1,24 @@
+#!/bin/sh
+
+rc_file='/etc/rc.conf'
+map_file='/etc/amd.map'
+
+auto-enable-service -s statd rpc_statd $0
+auto-enable-service -s lockd rpc_lockd $0
+
+service lockd restart
+service statd restart
+
+# Add amd_enable="YES" to rc.conf
+if ! fgrep -wq 'autofs_enable="YES"' $rc_file; then
+    printf "# Added by $0\n" >> $rc_file
+    printf 'autofs_enable="YES"\n' >> $rc_file
+else
+    printf "autofs already enabled.\n"
+fi
+
+for service in automount automountd autounmountd; do
+    service $service start
+done
+
+# Add automount -u to /etc/rc.suspend

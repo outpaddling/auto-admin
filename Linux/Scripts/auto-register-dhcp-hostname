@@ -1,0 +1,20 @@
+#!/bin/sh
+
+case $(auto-os-release) in
+RHEL6)
+    ;;
+
+RHEL7)
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-os-release)\n"
+    exit 1
+    ;;
+
+esac
+
+# FIXME: Auto-detect primary interface
+file=/etc/sysconfig/network-scripts/ifcfg-eth0
+auto-append-line "DHCP_HOSTNAME=$(hostname)" $file
+

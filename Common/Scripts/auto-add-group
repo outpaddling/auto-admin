@@ -1,0 +1,53 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Create a new group
+#
+#   Arguments:
+#       [-g gid]
+#       groupname
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-09  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-g gid] groupname\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $1 = -g ]; then
+    gid_flags="-g $2"
+    shift
+    shift
+fi
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+group_name=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    pw groupadd $group_name $gid_flags
+    ;;
+
+RHEL)
+    groupadd $group_flags $group_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

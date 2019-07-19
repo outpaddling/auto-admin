@@ -1,0 +1,83 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Manage users
+#
+#   History:
+#   Date        Name        Modification
+#   2019-06-04  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true
+do
+    clear
+    cat << EOM
+
+			    *****************************
+			    *   Auto Admin Main Menu    *
+			    *****************************
+
+1.. Add user
+2.. Add user to another group
+3.. Change user's primary UID
+4.. Change user's primary GID
+Q.. Quit
+
+EOM
+
+    read -p 'Selection? ' resp
+    case $resp in
+    1)
+	auto-adduser
+	;;
+    
+    2)
+	printf "Not yet implemented.\n"
+	;;
+    
+    3)
+	printf "Not yet implemented.\n"
+	;;
+    
+    4)
+	printf "Not yet implemented.\n"
+	;;
+    
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid option: $resp.\n"
+    esac
+    pause
+done

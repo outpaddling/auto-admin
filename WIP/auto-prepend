@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-07-06  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 prefix separator value\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    usage
+fi
+
+prefix="$1"
+separator="$2"
+value="$3"
+
+if ! echo $value | fgrep -q $prefix; then
+    printf "%s%s%s\n" $prefix $separator $value
+fi
+

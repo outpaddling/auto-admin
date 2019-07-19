@@ -1,0 +1,36 @@
+#!/bin/sh -e
+
+if [ $(whoami) != root ]; then
+    printf "Only root can do this.\n"
+    exit 1
+fi
+
+pw=''
+pw2=2
+while [ 0"$pw" != 0"$pw2" ]; do
+    while [ 0"$pw" = 0 ]; do
+	printf "Password? "
+	stty -echo
+	read pw
+	stty echo
+	if [ 0"$pw" = 0 ]; then
+	    printf "\nPassword cannot be blank.\n"
+	fi
+    done
+    printf "\nAgain? "
+    stty -echo
+    read pw2
+    stty echo
+    if [ 0"$pw" != 0"$pw2" ]; then
+	printf "\nPasswords do not match.\n"
+	pw=''
+	pw2=2
+    fi
+done
+
+printf '\n'
+ipmitool user set password 2 "$pw"
+
+# Purge pw from memory
+pw="'ajsdasjfklajsfkl;ajfkajfakfja"
+pw2="'ajsdasjfklajsfkl;ajfkajfakfja"

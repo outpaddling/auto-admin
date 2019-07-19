@@ -8,29 +8,67 @@ auto-admin \- Automated systems management tools
 .PP
 .nf 
 .na 
-auto-amd-local-setup
+
+Common:
+
+auto-append-line
+auto-ask
+auto-denyhosts-remove-ip
+auto-denyhosts-setup
+auto-enable-autologout
+auto-harden
+auto-insert-line
+auto-pkgsrc-setup
+auto-pxe-node-discover
+auto-replace-file
+auto-ssh-authorize
+
+FreeBSD:
+
 auto-amd-nfs-setup
-auto-append-line search-string line file calling-program-name
-auto-ask tag "question" default-answer
 auto-clean-ports
-auto-disable-service rc.conf-name
+auto-config-snd-driver
+auto-db-dir
+auto-disable-service
 auto-enable-compat32
+auto-enable-hal-mount
 auto-enable-passwdqc
 auto-enable-procfs
-auto-enable-service [-s rc.d-name] rc.conf-name calling-program-name
+auto-enable-service
 auto-fastest-mirror
-auto-install-packages category/port [category/port ...]
-auto-ipfw-gateway-setup public-interface local-interface
-auto-kdm3-toggle on|off
-auto-ldap-adduser [username]
-auto-ldap-client-setup uri ou o cacert-file
-auto-package-installed category/port
-auto-replace-file new old
-auto-service-enabled rc.conf-name
-auto-set-suspend-on-lid
-auto-update-port-framework category/port
+auto-install-packages
+auto-ipfw-gateway-setup
+auto-kdm3-toggle
+auto-ldap-adduser
+auto-ldap-client-setup
+auto-package-installed
+auto-print-make-variable
+auto-pxe-installer-setup
+auto-service-enabled
+auto-set-lid-switch-mode
+auto-update-port-framework
 auto-update-xorg.conf
-auto-xdm-toggle on|off
+auto-using-pkgng
+auto-xdm-toggle
+
+NetBSD:
+
+auto-desktop-setup
+auto-install-packages
+auto-install-packages-from-source
+auto-install-pkgsrc-tree
+auto-package-installed
+auto-select-pkgsrc-dist
+install-vuln
+
+RHEL/CentOS:
+
+auto-disable-hyperthreading
+auto-ldap-client-setup
+auto-pxe-installer-setup
+auto-register-dhcp-hostname
+auto-set-memory-limits
+
 .ad
 .fi
 
@@ -63,15 +101,21 @@ directory under which the server should be mounted.
 
 .SH "AUTO-APPEND-LINE"
 
-.B auto-append-line search-string line file calling-program-name
+.B auto-append-line [search-string] line file calling-program-name
 
 Appends 
 .B line
 to a text file if the file does not already contain
-.B search-string.
+.B search-string
+as a whole word.  ( Uses grep -w to prevent false positives such as
+webcamd when searching for amd. )
+If search-string is omitted, line is used as the search string.
+
 A comment beginning with '#' is placed above the line stating that the
 line was added by
-.B calling-program-name.
+.B calling-program-name
+unless calling-program-name is "nocomment".  When calling auto-append-line
+from another script, $0 is usually passed to calling-program-name.
 
 Example:
 
@@ -79,7 +123,7 @@ Enable USB-serial adapters at boot time if they have not
 already been explicitly enabled or disabled.
 
 .na
-auto-append-line uplcom_load 'uplcom_load="YES"' /boot/loader.conf myscript
+auto-append-line uplcom_load 'uplcom_load="YES"' /boot/loader.conf $0
 .ad
 
 .SH AUTO-ASK
@@ -115,6 +159,14 @@ resp=`auto-ask edit-xorg "Edit xorg.conf? (y/n)" n`
 Run "make distclean" in all ports directories containing a work directory.
 This can free a substantial amount of disk space after many ports have
 been installed.
+
+.SH AUTO-CONFIG-SND-DRIVER
+
+.B auto-config-snd-driver
+
+Auto-detect supported sound devices and add a load command to /boot/loader.conf
+for the first device detected.  Does not currently support auto-detecting
+multiple sound devices.
 
 .SH AUTO-DISABLE-SERVICE
 
@@ -264,6 +316,54 @@ is installed.  Exit status is 0 if installed, and non-zero otherwise.
 In addition, a text message stating whether the port is installed is
 printed to the standard output.
 
+.SH AUTO-PXE-INSTALLER-SETUP
+
+.B auto-pxe-installer-setup FreeBSD-installer.iso
+
+Configures the host as a PXE server for net booting other computers on the
+network and automatically installing the FreeBSD system from the FreeBSD ISO
+install image provided.
+
+FreeBSD-installer.iso is any FreeBSD install image using bsdinstall.
+
+Older installers using sysinstall are not supported.
+
+.B auto-pxe-installer-setup
+enables dhcpd, tftpd, and NFS, and automatically configures them
+to allow other computers on the network to PXE boot and run an automated
+installation.
+
+The newly installed systems will accept passwordless root login from the
+PXE server, to facilitate automated post-install configuration.
+
+.B auto-pxe-installer-setup
+is intended primarily for quickly deploying nodes in a cluster or grid
+using the head node as a PXE server.
+
+.SH AUTO-PXE-NODE-DISCOVER
+
+.B auto-pxe-node-discover basename digits domain
+
+Discovers new DHCP clients on the local network, assigns each a host name,
+adds them to /etc/hosts and creates a static DHCP lease.
+
+Host names take the form basename-#.domain, where # is a 0-padded decimal
+value with 'digits' digits.
+
+For example,
+
+auto-pxe-node-discover compute 3 local
+
+will produce host names compute-001.local, compute-002.local, etc.
+
+Meant to be used in conjunction with
+.B auto-pxe-installer-setup.
+
+It is recommended, but not essential, to start
+.B auto-pxe-node-discover
+before imaging any nodes, and to ensure that each node has been assigned
+the desired host name before PXE booting the next node.
+
 .SH AUTO-REPLACE-FILE
 
 .B auto-replace-file new old
@@ -295,9 +395,9 @@ fi
 .ad
 .fi
 
-.SH AUTO-SET-SUSPEND-ON-LID
+.SH AUTO-SET-LID-SWITCH-MODE
 
-.B auto-set-suspend-on-lid S1|S2|S3|S4|S5|NONE
+.B auto-set-lid-switch-mode S1|S2|S3|S4|S5|NONE
 
 Configures laptop lid switch action to the specified ACPI mode.
 

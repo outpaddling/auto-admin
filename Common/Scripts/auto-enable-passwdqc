@@ -1,0 +1,55 @@
+#!/bin/sh -e
+
+os_type=`auto-ostype`
+
+case $os_type in
+RHEL)
+    # pam_pwquality enabled by default on RHEL/CentOS 7
+    if fgrep -q 'release 6' /etc/redhat-release; then
+	# Enable PAM passwdqc
+	# http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-co
+	yum install -y pam_passwdqc
+	sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
+	/etc/pam.d/system-auth
+	
+	# Prevent authconfig from overwriting changes to the line modified above
+	sed -i -E 's|^USECRACKLIB|# USECRACKLIB|g' /etc/sysconfig/authconfig
+    elif fgrep -q 'release 7' /etc/redhat-release && \
+	! fgrep -q auto-enable-passwdqc /etc/security/pwquality.conf; then
+	cat << EOM >> /etc/security/pwquality.conf
+	
+# auto-enable-passwdqc additions
+minlen = 15
+minclass = 3
+maxrepeat = 2
+gecoscheck = 1
+dcredit = 2
+ucredit = 2
+lcredit = 2
+ocredit = 2
+# End auto-enable-passwdqc
+
+EOM
+    fi
+    ;;
+
+FreeBSD)
+    cd /etc/pam.d
+    awk ' { if ($3 == "pam_passwdqc.so")
+	    {
+		printf("password\t%s\t%s\t\t%s\n", $2, $3,
+		    "min=disabled,disabled,16,12,10 retry=3");
+	    }
+	    else
+	    {
+		print $0;
+	    }
+	}' passwd > passwd.tmp
+    mv -f passwd.tmp passwd
+    ;;
+
+*)
+    printf "$0 is not yet implemented for $os_type.\n"
+    exit 1
+    ;;
+esac

@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set default umask
+#
+#   Arguments:
+#       umask in octal
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-09-27  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 octal-umask\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+umask=$1
+case `auto-ostype` in
+FreeBSD)
+    sed -i '' -e "s|umask=022|umask=$umask|g" /etc/login.conf
+    cap_mkdb /etc/login.conf
+    ;;
+RHEL)
+    # FIXME: Find a sure way to set such defaults
+    # sed -i -e "s|umask 002|umask $umask|g" -e "s|umask 022|umask $umask|g" \
+    #    /etc/csh.cshrc /etc/bashrc
+    for shell in sh csh; do
+	printf "umask $umask\n" > /etc/profile.d/auto-umask.$shell
+    done
+    ;;
+esac

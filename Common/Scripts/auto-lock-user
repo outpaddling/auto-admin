@@ -1,0 +1,47 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Lock a user account to prevent future logins
+#
+#   Arguments:
+#       Username
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-06  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+user_name=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    pw lock $user_name
+    ;;
+
+RHEL)
+    # FIXME: Is there a way in Linux to lock an account and restore to
+    # exact config (shell and expiration date) later?
+    chsh -s /sbin/nologin $user_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

@@ -1,0 +1,80 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-03-31  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username new_group|new-gid [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ `whoami` != 'root' ]; then
+    printf "Only root can run $0.\n"
+    exit 1
+fi
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+user_name=$1
+new_group=$2
+shift
+shift
+
+# Verify that all dirs exits before changing anything!
+dirs="$@"
+for dir in $dirs; do
+    if [ ! -e $dir ]; then
+	printf "$0: ${dir}: No such file or directory.\n"
+	exit 1
+    fi
+done
+
+# Verify that user exists
+old_gid=`awk -F : -v user_name=$user_name '$1 == user_name { print $4 }' /etc/passwd`
+if [ 0$old_gid = 0 ]; then
+    printf "$0: $user_name: No such user.\n"
+    exit 1
+fi
+
+# Verify that new gid exists: Let usermod handle this, or we'll have to
+# check for both group name and gid.
+
+# Call me from cluster-change-gid
+ostype=`auto-ostype`
+case $ostype in
+FreeBSD)
+    pw usermod $user_name -g $new_group
+    ;;
+
+RHEL)
+    usermod -g $new_group $user_name
+    ;;
+
+*)
+    printf "Not yet implemented for $ostype.\n"
+    exit 1
+    ;;
+
+esac
+
+# Change group ownership on files under specified directories
+if [ 0"$dirs" != 0 ]; then
+    auto-change-group-ownership $user_name $old_gid $new_group $dirs
+fi

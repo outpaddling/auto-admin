@@ -1,0 +1,86 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Remove a user account
+#
+#   Arguments:
+#       User-name
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-06  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-r] [-y] user-name\n"
+    printf "-r = remove home directory\n"
+    printf "-y = do not prompt before removal\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+while [ $# -gt 1 ]; do
+    case $1 in
+    '-r')
+	remove_home=1
+	shift
+	;;
+    '-y')
+	no_prompt=1
+	shift
+	;;
+    *)
+	usage
+	;;
+    esac
+done
+
+user_name=$1
+home_dir=$(awk -F : -v user_name=$user_name '$1 == user_name { print $6 }' /etc/passwd)
+
+if [ 0$no_prompt != 01 ]; then
+    printf "Are you sure you want to remove $user_name? yes/[no] "
+    read remove
+    if [ 0$remove != 0yes ]; then
+	exit 0
+    fi
+    
+    if [ 0$remove_home != 01 ]; then
+	printf "Remove home directory? yes/[no] "
+	read resp
+	if [ 0$resp = 0yes ]; then
+	    remove_home=1
+	fi
+    fi
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    rmuser -y $user_name
+    ;;
+
+RHEL)
+    userdel $user_name || true
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac
+
+if [ 0$remove_home = 01 ]; then
+    printf "Removing $home_dir...\n"
+    rm -rf $home_dir
+fi

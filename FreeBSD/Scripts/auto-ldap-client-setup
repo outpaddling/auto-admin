@@ -1,0 +1,108 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-09  Jason Bacon Begin
+##########################################################################
+
+pause()
+{
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    printf "Usage: $0 uri ou o cacert-file\n"
+    printf "Example:\n    $0 ldap://ldap.my.domain people my.domain ./cacert.crt\n"
+    exit 1
+fi
+
+uri=$1
+ou=$2
+o=$3
+cacert=$4
+
+if [ -z $EDITOR ]; then
+    export EDITOR=vi
+fi
+
+# Let this install as a dependency pkg_add -r openldap23-client
+auto-install-packages security/pam_ldap net/nss_ldap
+
+# Install cert
+cp $cacert /usr/local/etc/openldap/cacert.crt
+
+# Set up ldap.conf files for openldap and PAM
+for ldap_conf in /usr/local/etc/openldap/ldap.conf /usr/local/etc/ldap.conf; do
+    touch $ldap_conf
+    if ! fgrep -q uwm.edu $ldap_conf; then
+	cat << EOM >> $ldap_conf
+base ou=$ou,o=$o
+uri $uri
+ssl start tls
+tls_cacert /usr/local/etc/openldap/cacert.crt
+tls_reqcert allow
+EOM
+	printf "Updated %s.  Check/correct syntax if necessary.\n" $ldap_conf
+	pause
+	$EDITOR $ldap_conf
+    fi
+done
+
+# Instruct PAM what attribute to look for in the LDAP database
+ldap_conf="/usr/local/etc/ldap.conf"
+if ! fgrep -q login_attribute $ldap_conf; then
+    printf "pam_login_attribute uid\n" >> $ldap_conf
+fi
+
+# Tell PAM to use LDAP for ssh logins
+for service in sshd system xdm; do
+    if ! fgrep -q pam_ldap.so /etc/pam.d/$service; then
+	awk ' { if ( $1 == "auth" && $3 == "pam_unix.so" )
+		{
+		    print "# Attempt and accept LDAP auth before unix auth"
+		    printf("auth\t\tsufficient\t/usr/local/lib/pam_ldap.so\tno_warn\n");
+		    print "# If LDAP auth fails, unix auth must succeed to grant access"
+		    print $0;
+		}
+		else
+		{
+		    print $0;
+		}
+	      }' /etc/pam.d/$service > /etc/pam.d/temp
+	mv /etc/pam.d/$service /etc/pam.d/$service.orig
+	mv /etc/pam.d/temp /etc/pam.d/$service
+	printf "Updated /etc/pam.d/$service.  Check/correct syntax if necessary.\n"
+    fi
+done
+
+# Tell ssh to use PAM
+# Does not appear to be necessary
+# printf "Set UsePAM to yes in sshd_config.\n"
+# pause
+# vi /etc/ssh/sshd_config
+# /etc/rc.d/sshd restart
+
+cat << EOM
+
+==========================================================================
+
+Make sure forward and reverse DNS are functioning for $(hostname).
+
+Some LDAP servers will reject authentication requests if they cannot
+verify the hostname and IP.
+
+==========================================================================
+EOM
+

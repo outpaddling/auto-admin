@@ -1,0 +1,89 @@
+#!/bin/sh
+
+# This script is run by nodes in the kickstart %post section.
+ 
+# !!!! This script must be located in the /var/www/html directory on the head node. !!!!
+
+
+
+# Setting these variables manually.
+NFSSRV=10.1.1.253
+NIC=em1
+
+
+
+# Edit network configuration.
+NODEIP=`ifconfig $NIC | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2`
+NODEIPTAIL=`echo $NODEIP | cut -d "." -f4`
+
+#TWO=2
+#NODEIPTAIL=$(($NODEIPTAIL - $TWO))
+#ONE=1
+#NODEIPTAIL=$(($NODEIPTAIL - $ONE))
+
+if [ $NODEIPTAIL -lt 10 ];then
+        NODEIPTAIL=00$NODEIPTAIL
+else if [ $NODEIPTAIL -lt 100 ];then
+        NODEIPTAIL=0$NODEIPTAIL
+     fi
+fi
+
+COMPUTE=compute-
+COMPUTE=$COMPUTE$NODEIPTAIL
+
+
+# Edit /etc/fstab.
+
+#if [ ! -f /etc/fstab.orig ]; then
+#	cp /etc/fstab /etc/fstab.orig
+#fi
+
+
+#for num in `seq 1 9`
+#do
+#	echo "$NFSSRV:/share$num	/share$num nfs defaults,noatime	0 0" >> /etc/fstab
+#done
+
+#echo "$NFSSRV:/home	/home nfs defaults,noatime	0 0" >> /etc/fstab
+#echo "$NFSSRV:/sharedapps	/sharedapps nfs defaults,noatime	0 0" >> /etc/fstab
+
+
+# Make dirs for mounts.
+#mkdir /share{1,2,3,4,5,6,7,8,9}
+
+
+# Mount from file server.
+#for num in `seq 1 9`
+#do
+#	mount $NFSSRV:/share$num	/share$num
+#done
+
+#mount $NFSSRV:/home /home
+
+sed -i '2iDHCP_HOSTNAME='"\"$COMPUTE\""' ' /etc/sysconfig/network-scripts/ifcfg-$NIC
+#sed -i '/BOOTPROTO="dhcp"/ c\BOOTPROTO="static"' /etc/sysconfig/network-scripts/ifcfg-$NIC
+sed -i '/IPV6INIT="yes"/ c\IPV6INIT="no"' /etc/sysconfig/network-scripts/ifcfg-$NIC
+sed -i '/NM_CONTROLLED="yes"/ c\NM_CONTROLLED="no"' /etc/sysconfig/network-scripts/ifcfg-$NIC
+sed -i '/ONBOOT="no"/ c\ONBOOT="yes"' /etc/sysconfig/network-scripts/ifcfg-$NIC
+sed -i '/UUID/ c\' /etc/sysconfig/network-scripts/ifcfg-$NIC
+
+HOSTIP=`ifconfig $NIC | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2`
+SUBNET=`ifconfig $NIC | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cut -d "." -f 1-3`.0
+NETMASK=`ifconfig $NIC | awk '$1 == "inet" {print $4}' | cut -d ":" -f 2`
+HWADDR=`ifconfig $NIC | awk '$2 == "Link" {print $5}'`
+
+if [ ! `grep $NETMASK /etc/sysconfig/network-scripts/ifcfg-$NIC | awk '{print $1}'` ]; then
+	sed -i '4iNETMASK='"$NETMASK"' ' /etc/sysconfig/network-scripts/ifcfg-$NIC
+fi
+if [ ! `grep $SUBNET /etc/sysconfig/network-scripts/ifcfg-$NIC | awk '{print $1}'` ]; then
+	sed -i '4iNETWORK='"$SUBNET"' ' /etc/sysconfig/network-scripts/ifcfg-$NIC
+fi
+if [ ! `grep $HOSTIP /etc/sysconfig/network-scripts/ifcfg-$NIC | awk '{print $1}'` ]; then
+	sed -i '4iIPADDR='"$HOSTIP"' ' /etc/sysconfig/network-scripts/ifcfg-$NIC
+fi
+if [ ! `grep $HWADDR /etc/sysconfig/network-scripts/ifcfg-$NIC | awk '{print $1}'` ]; then
+	sed -i '4iHWADDR='"$HWADDR"' ' /etc/sysconfig/network-scripts/ifcfg-$NIC
+fi
+
+
+

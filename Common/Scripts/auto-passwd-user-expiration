@@ -1,0 +1,53 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-04-01  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name expire-days [warning-days, default=14]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+2)
+    warning=14
+    ;;
+3)
+    warning=$3
+    ;;
+*)
+    usage
+esac
+user_name=$1
+days=$2
+
+ostype=`auto-ostype`
+case $ostype in
+FreeBSD)
+    # FIXME: Warning days unused.  Can this be controlled?
+    pw usermod $user_name -p +${days}d
+    pw usershow $user_name -P
+    ;;
+RHEL)
+    chage -M $days -W $warning $user_name
+    chage -l $user_name
+    ;;
+*)
+    printf "$0: Not yet implemented for $ostype.\n"
+    exit 1
+esac

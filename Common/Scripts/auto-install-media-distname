@@ -1,0 +1,49 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Fetch install media matching this installation
+#
+#   Arguments:
+#       Install media format (bootonly, disc1, dvd1, memstick, mini-memstick)
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-06-15  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 bootonly|disc1|dvd1|memstick|mini-memstick\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    release=$(uname -r | awk -F - '{ print $1 }')
+    processor=$(uname -p)
+    format=$1
+    if echo $format | fgrep -q memstick; then
+	format=$format.img
+    else
+	format=$format.iso
+    fi
+    image=FreeBSD-${release}-RELEASE-$processor-$format
+    echo $image
+    ;;
+
+*)
+    printf "Sorry, $(auto-ostype) is not yet supported.\n"
+    exit 1
+    ;;
+
+esac

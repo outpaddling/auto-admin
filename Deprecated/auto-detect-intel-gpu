@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       FreeBSD requires a kernel module to support modern Intel
+#       GPUs.  This script automatically detects the presence of an
+#       Intel GPU and performs the necessary system configuration to
+#       enable it in Xorg.
+#
+#   History:
+#   Date        Name        Modification
+#   2017-02-14  Charlie &   Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
+    printf "Intel GPU detected.\n"
+    # drm module loaded automatically as a dep
+    auto-append-line "kld_list=\"i915kms $kldlist\"" /etc/rc.conf $0
+    # or in rc.conf: kld_list="i915kms"
+    # Superseded by modesetting driver
+    # pkg install -y xf86-video-intel
+fi

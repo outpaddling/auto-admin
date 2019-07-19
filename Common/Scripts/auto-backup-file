@@ -1,0 +1,48 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-15  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 filename\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+file=$1
+
+if [ ! -e $file ]; then
+    printf "$file does not exist.  Skipping backup.\n"
+    exit 0
+fi
+
+suffix=1
+while [ -e $file.$suffix ]; do
+    # Avoid creating redundant backups
+    if cmp -s $file $file.$suffix; then
+	printf "This version of $file is already backed up in $file.$suffix.\n"
+	exit 0
+    fi
+    suffix=$(($suffix + 1))
+done
+printf "Backing up to $file.$suffix.\n"
+cp $file $file.$suffix
+

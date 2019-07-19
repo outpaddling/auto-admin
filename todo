@@ -1,4 +1,29 @@
 
+Eliminate all platform-specific directories and add platform checks
+(auto-os-release) to each script that doesn't support all platforms.
+
+Use sysrc to edit rc.conf?
+
+auto-pkgsrc-setup
+    Check for BSD compatibility in echo (fails on Ubuntu)
+	Set sh to /bin/bash
+    Don't ask about adding to path for all users unless running as root
+    Set MAKE_JOBS in mk.conf (detect cores, ask user for limit)
+
+auto-pxe-installer should back up root ssh keys
+
+profile.d scripts should be 644
+
+Set GATEWAY in sysconfig/network for PXE install?
+
+auto-replace-file should take extension as third arg, otherwise use numbers
+
+Clean ports after successful install
+
+Rename auto-package-installed to auto-port-installed
+
+soft quote all strings that might contain spaces
+
 pkg_add should have option to specify version for cases like eigen/eigen2
 
 Add to rc.suspend

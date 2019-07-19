@@ -1,0 +1,366 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Update all components of the system (packages, ports, base...)
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-11  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-11  Charlie &   Begin
+##########################################################################
+
+abuse_warning()
+{
+    cat << EOM
+****************************************************************************
+
+    Running auto-update-system non-interactively can overload the update
+    servers if done in parallel.
+    
+    Run only one instance at a time.
+    
+    DO NOT ABUSE THIS FEATURE!!
+
+****************************************************************************
+EOM
+    return 0
+}
+
+
+##########################################################################
+#   Function description:
+#       Remove unneeded dependencies
+#
+#   2018-01-13  Jason Bacon Begin
+##########################################################################
+
+freebsd_autoremove()
+{
+    if [ 0$autoremove != 0n ]; then
+	printf "\nRemoving unneeded dependencies...\n"
+	case $mode in
+	interactive)
+	    pkg autoremove
+	    ;;
+	*)
+	    pkg autoremove -y
+	    ;;
+	esac
+    fi
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+os_type=`auto-ostype`
+mode=interactive
+if [ $# = 1 ]; then
+    if [ $1 = --binary ]; then
+	mode=binary
+    elif [ $1 = --binary+reboot ]; then
+	mode=binary+reboot
+    elif [ $1 = --defaults+reboot ]; then
+	mode=defaults+reboot
+    elif [ $1 = --defaults ]; then
+	mode=defaults
+    elif [ $1 = --yes ]; then
+	mode=yes
+    else
+	usage
+    fi
+fi
+
+case $os_type in
+FreeBSD)
+    if [ ! -t 0 ]; then
+	# Input redirected.  Being fed y/n responses.
+	portsnap_flags=--interactive
+	freebsd_update_flags=--not-running-from-cron
+	abuse_warning
+    fi
+    
+    # Don't group questions: Need to pause after each step to view output
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot|yes)
+	update_packages=y
+	abuse_warning
+	;;
+    interactive)
+	printf "Update installed packages? [y]/n "
+	read update_packages
+	;;
+    esac
+    
+    if [ 0$update_packages != 0n ]; then
+	case $mode in
+	interactive)
+	    printf "Autoremove unneeded packages? [y]/n "
+	    read autoremove
+	    ;;
+	*)
+	    autoremove=y
+	    ;;
+	esac
+	
+	freebsd_autoremove
+	printf "\nUpdating binary packages...\n"
+	pkg update
+	pkg clean -y
+	pkg upgrade -y
+	freebsd_autoremove
+	pkg clean -y
+    fi
+    
+    case $mode in
+    defaults|defaults+reboot|yes)
+	update_ports=y
+	portsnap_flags=--interactive
+	;;
+    binary|binary+reboot)
+	update_ports=n
+	;;
+    interactive)
+	printf "Update ports tree? [y]/n "
+	read update_ports
+	;;
+    esac
+    
+    if [ 0$update_ports != 0n ]; then
+	if [ -e /usr/ports/CHANGES ]; then
+	    if [ -e /usr/ports/.svn ]; then
+		svn update /usr/ports
+	    else
+		printf "\nFetching latest ports...\n"
+		portsnap fetch
+		printf "Applying updates...\n"
+		portsnap $portsnap_flags update
+	    fi
+	else
+	    auto-ports-checkout
+	fi
+	
+	if which wip-update; then
+	    wip-update
+	fi
+    fi
+    
+    plugin=/usr/local/etc/auto-update-system-post-ports
+    if [ -e $plugin ]; then
+	owner=`stat -L $plugin | awk '{ print $5 }'`
+	group_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 6`
+	world_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 9`
+	if [ $owner != root ]; then
+	    printf "ERROR: $plugin is not owned by root!  You may have been hacked!\n"
+	elif [ $group_write != - ]; then
+	    printf "ERROR: $plugin is group writable!  You may have been hacked!\n"
+	elif [ $world_write != - ]; then
+	    printf "ERROR: $plugin is world writable!  You may have been hacked!\n"
+	else
+	    $plugin
+	fi
+    fi
+    
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot|yes)
+	update_base=y
+	freebsd_update_flags=--not-running-from-cron
+	;;
+    interactive)
+	printf "Update base system? [y]/n "
+	read update_base
+	;;
+    esac
+    if [ 0$update_base != 0n ]; then
+	printf "\nUpdating base system...\n"
+	tmpfile=update-system.tmp
+	freebsd-update $freebsd_update_flags fetch | tee $tmpfile
+	
+	if ! fgrep -q 'No updates' $tmpfile; then
+	    freebsd-update $freebsd_update_flags install
+	    if [ -e /boot/modules/ibcore.ko ]; then
+		cat << EOM
+
+Infiniband kernal modules detected.  Run auto-update-infiniband-modules, after
+rebooting if a reboot is needed.
+
+EOM
+	    fi
+	fi
+	rm $tmpfile
+    fi
+    ;;
+
+RHEL)
+    # Complete interrupted yum updates if the tool is installed and there
+    # are any
+    if ! which yum-complete-transaction; then
+	yum install -y yum-utils
+    fi
+    case $mode in
+    interactive)
+	yum-complete-transaction || true
+	yum update
+	if [ $(auto-os-release) = RHEL7 ]; then
+	    read -p 'Auto-remove unneeded dependencies? [y]/n ' autoremove
+	    if [ 0$autoremove != 0n ]; then
+		yum autoremove -y || true
+	    fi
+	fi
+	;;
+    binary|defaults)
+	yum-complete-transaction || true
+	yum update -y
+	yum autoremove -y
+	;;
+    binary+reboot|defaults+reboot|yes)
+	yes | yum-complete-transaction || true
+	yes | yum update -y
+	yum autoremove -y
+	;;
+    esac
+    
+    if [ `auto-os-release` != RHEL6 ]; then
+	needs-restarting -r || true
+    fi
+    printf "Services that need restarting:\n"
+    needs-restarting
+    ;;
+
+NetBSD)
+    # Don't group questions: Need to pause after each step to view output
+    # FIXME: Support pkg_upgrade?
+    printf "Update installed packages? [y]/n "
+    read update_packages
+    if [ 0$update_packages != 0n ]; then
+	printf "Autoremove unneeded packages? y/[n] "
+	read autoremove
+	if [ 0$autoremove = 0y ]; then
+	    pkgin autoremove
+	fi
+	pkgin update
+	pkgin clean -y
+	pkgin upgrade -y
+	if [ 0$autoremove = 0y ]; then
+	    pkgin autoremove
+	fi
+	pkgin clean -y
+    fi
+    
+    printf "Update pkgsrc tree? [y]/n "
+    read update_pkgsrc
+    if [ 0$update_pkgsrc != 0n ]; then
+	cd /usr/pkgsrc
+	cvs -q up -dP || true
+    fi
+    
+    printf "Update base system? [y]/n "
+    read update_base
+    if [ 0$update_base != 0n ]; then
+	export CVS_RSH=ssh 
+	if [ ! -e /usr/src ]; then
+	    cd /usr
+	    release=netbsd-`uname -r | cut -d . -f 1,2 | tr . - `
+	    printf "Checking out $release src...\n"
+	    pause
+	    cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot co -r $release -P src
+	    cd src
+	else
+	    cd /usr/src
+	    cvs -q up -dP
+	fi
+	mkdir -p /usr/obj /usr/tools
+	
+	# Build tools
+	# Added -U to silence warning
+	./build.sh -O /usr/obj -T /usr/tools -U -u tools
+	
+	# Build kernel
+	arch=$(uname -m)
+	kern=AUTOUPDATE
+	cp sys/arch/$arch/conf/GENERIC sys/arch/$arch/conf/$kern
+	./build.sh -O ../obj -T ../tools -U kernel=$kern
+	
+	# Build userland
+	./build.sh -O ../obj -T ../tools -U distribution
+	
+	# Install everything
+	mv /netbsd /netbsd.old
+	mv /usr/obj/sys/arch/$arch/compile/$kern/netbsd /
+
+	cat << EOM
+
+Rebooting...
+
+After reboot, run the following to install the new userland:
+
+cd /usr/src
+./build.sh -O ../obj -T ../tools -U install=/
+EOM
+	pause
+	shutdown -r now
+    fi
+    ;;
+
+*)
+    printf "Error: $os_type is not yet supported.\n"
+    exit 1
+esac
+
+case $mode in
+binary|defaults)
+    reboot=n
+    ;;
+binary+reboot|defaults+reboot|yes)
+    reboot=y
+    ;;
+interactive)
+    printf "Reboot? y/[n] "
+    read reboot
+    ;;
+esac
+if [ 0$reboot = 0y ]; then
+    printf "Rebooting...\n"
+    sync    # Attempt to prevent Linux kernel update failures
+    shutdown -r now
+else
+    cat << EOM
+
+Be sure to reboot if you've updated the kernel, or restart any services
+affected by package upgrades.
+
+EOM
+fi

@@ -1,0 +1,57 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-05-23  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 filename\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+filename=$1
+
+# FIXME: Check permissions and suid bits
+if [ ! -O $filename ] || [ ! -G $filename ]; then
+    printf "%s is not owned by root:root!\n" $filename
+    ls -l $filename
+    exit 1
+fi
+
+perms=`ls -l $filename`
+
+file_type=`printf '%s' $perms | cut -c 1-1`
+if [ $file_type != '-' ]; then
+    printf "$filename is not a regular file!\n"
+    exit
+fi
+
+group_write=`printf '%s' $perms | cut -c 6-6`
+if [ $group_write != '-' ]; then
+    printf "$filename is group writable!\n"
+    exit
+fi
+
+world_write=`printf '%s' $perms | cut -c 9-9`
+if [ $world_write != '-' ]; then
+    printf "$filename is world writable!\n"
+    exit
+fi

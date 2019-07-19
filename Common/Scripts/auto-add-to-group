@@ -1,0 +1,48 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Add a user to a group
+#
+#   Arguments:
+#       user-name
+#       group-name
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-09  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name group-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+user_name=$1
+group_name=$2
+
+case $(auto-ostype) in
+FreeBSD)
+    pw groupmod $group_name -m $user_name
+    ;;
+
+RHEL)
+    usermod -a -G $group_name $user_name
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

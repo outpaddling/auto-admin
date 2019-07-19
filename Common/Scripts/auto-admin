@@ -1,0 +1,127 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Common admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD|NetBSD)
+    poweroff=-p
+    ;;
+
+*)
+    poweroff=-h
+    ;;
+esac
+
+while true
+do
+    clear
+    cat << EOM
+
+			    *****************************
+			    *   Auto Admin Main Menu    *
+			    *****************************
+
+1.. Shut down system
+2.. Update system
+3.. User management
+Q.. Quit
+
+EOM
+
+    read -p 'Selection? ' resp
+    case 0$resp in
+    01)
+	printf '\n'
+	w
+	printf '\nProceed? y/[n] '
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Minutes to shutdown? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    shutdown $poweroff +$minutes
+	fi
+	;;
+    
+    02)
+	printf '\n'
+	w
+	printf '\nProceed? y/[n] '
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    cat << EOM | wall
+
+This server may need to be rebooted shortly to complete the installation of
+important security updates.  An additional notice will follow if a reboot
+is necessary.
+
+EOM
+	    auto-update-system --defaults
+	    read -p 'Reboot? [y]/n ' reboot
+	    if [ 0$reboot != 0n ]; then
+		read -p "Minutes before reboot? [2] " minutes
+		if [ 0$minutes = 0 ]; then
+		    minutes=2
+		fi
+		cat << EOM | wall
+
+This server will be rebooted shortly to complete the installation of
+important security updates.  It should be available again after about
+$((minutes + 5)) minutes.
+
+EOM
+		shutdown -r +$minutes
+	    fi
+	fi
+	;;
+    
+    03)
+	auto-user-admin
+	;;
+    
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+    pause
+done

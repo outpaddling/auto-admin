@@ -1,0 +1,71 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Update ownership of files following UID/GID change
+#
+#   Arguments:
+#       username
+#       old password file
+#       old group file
+#       directory
+#
+#   History:
+#   Date        Name        Modification
+#   2018-11-22  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username old-passwd-file old-group-file directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    usage
+fi
+
+user_name=$1
+old_password_file=$2
+old_group_file=$3
+dir="$4"
+
+old_user_id=$(awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' $old_password_file)
+old_group_id=$(awk -F : -v user_name=$user_name '$1 == user_name { print $4 }' $old_password_file)
+new_group_id=$(awk -F : -v user_name=$user_name '$1 == user_name { print $4 }' /etc/passwd)
+other_groups=$(awk -F : -v user_name=$user_name '$4 ~ user_name { print $1 }' $old_group_file)
+other_gids=$(awk -F : -v user_name=$user_name '$4 ~ user_name { print $3 }' $old_group_file)
+echo $old_user_id $old_group_id $other_groups $other_gids
+for group in $other_groups; do
+    if [ -z $(awk -F : -v group=$group '$1 == group { print $1 }' /etc/group) ]; then
+	gid=$(awk -F : -v group=$group '$1 == group { print $3 }' $old_group_file)
+	cat << EOM
+
+$user_name is a member of $group, which does not exist.
+
+Files owned by group $gid will not be updated.
+
+EOM
+	read -p 'Continue? y/[n] ' continue
+	if [ 0$continue != 0y ]; then
+	    exit
+	fi
+    fi
+done
+
+printf "Fixing user ownership on $dir...\n"
+find $dir -user $old_user_id -exec chown $user_name '{}' \;
+printf "Fixing primary group ownership on $dir...\n"
+find $dir -group $old_group_id -exec chgrp $new_group_id '{}' \;
+for group in $other_groups; do
+    printf "Fixing group $group ownership on $dir...\n"
+    if [ ! -z $(awk -F : -v group=$group '$1 == group { print $1 }' /etc/group) ]; then
+	old_gid=$(awk -F : -v group=$group '$1 == group { print $3 }' $old_group_file)
+	find $dir -group $old_gid -exec chgrp $group '{}' \;
+    fi
+done

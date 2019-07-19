@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+if [ -e /etc/redhat-release ]; then
+    release=`cat /etc/redhat-release`
+    release=${release%%.*}
+    release=${release##*release }
+    os=RHEL$release
+elif [ `uname` = Darwin ]; then
+    os=$(uname)$(uname -r | cut -d . -f 1)
+else
+    os=$(uname)-$(uname -r)
+fi
+echo $os

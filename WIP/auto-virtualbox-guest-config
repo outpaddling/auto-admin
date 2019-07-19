@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if sysctl dev.acpi.0.%desc | fgrep -q VBOX; then
+    auto-append-line kern.hz 'kern.hz="100"' $LOADER_CONF desktop-installer
+    auto-append-line kern.timecounter.hardware=i8254 \
+	kern.timecounter.hardware=i8254 /boot/loader.conf desktop-installer
+    install_packages emulators/virtualbox-ose-additions
+    auto-enable-service vboxguest desktop-installer
+    auto-enable-service vboxservice desktop-installer
+    # From wiki.freebsd.org/VirtualBox
+    cp $DATADIR/90-vboxguest.fdi $LOCALBASE/etc/hal/fdi/policy/
+
+    # Disable ntpdate and ntpd
+fi

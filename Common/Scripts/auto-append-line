@@ -1,0 +1,52 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Appends a line to a text file if the search key provided
+#       is not already in the file.
+#
+#   Arguments:
+#       $1 = search key [optional]
+#       $2 = line to append if search key not found
+#       $3 = filename
+#       $4 = name of calling program, which is placed in a comment
+#            above the appended line.  Pass 'nocomment' to omit the comment.
+#
+#   Returns:
+#       NA
+#
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ] && [ $# != 4 ]; then
+    printf "Usage: $0 [search-string] line file calling-program-name\n"
+    exit 1
+fi
+
+search_string="$1"
+if [ $# = 4 ]; then
+    shift
+fi
+line="$1"
+file="$2"
+caller="$3"
+
+# Make sure file exists for fgrep
+touch $file
+
+if ! grep -qw "$search_string" "$file"; then
+    if [ 0$caller != 0'nocomment' ]; then
+	printf "# Added by auto-admin from $caller\n" >> "$file"
+    fi
+    printf "$line\n" >> "$file"
+    if [ 0$caller != 0'nocomment' ]; then
+	printf "# End auto-admin addition\n" >> "$file"
+    fi
+fi
+

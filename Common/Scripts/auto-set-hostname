@@ -1,0 +1,48 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Permanently set hostname
+#
+#   Arguments:
+#       New hostname
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-01-03  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 new-hostname\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage new-host-name
+fi
+
+hostname=$1
+case `auto-ostype` in
+RHEL)
+    if which hostnamectl 2>&1 > /dev/null; then
+	hostnamectl set-hostname $hostname
+    else
+	sed -i -e 's|^HOSTNAME=.*|HOSTNAME='$hostname'|' /etc/sysconfig/network
+    fi
+    hostname $hostname
+    ;;
+FreeBSD|NetBSD)
+    sed -i -e 's|^hostname=.*|hostname="'$hostname'"|' /etc/rc.conf
+    hostname $hostname
+    ;;
+*)
+    printf "Unsupported OS: `auto-ostype`\n"
+    exit 1
+    ;;
+esac

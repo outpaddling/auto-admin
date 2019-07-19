@@ -1,0 +1,16 @@
+#!/bin/sh -e
+
+kernel=`uname`
+case $kernel in
+Linux)
+    if [ -e /etc/redhat-release ]; then
+	printf "RHEL\n"
+    else
+	printf "$kernel\n"
+    fi
+    ;;
+*)
+    printf "$kernel\n"
+    ;;
+esac
+

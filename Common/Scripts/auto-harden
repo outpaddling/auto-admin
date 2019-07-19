@@ -1,0 +1,331 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf 'Press return to continue...'
+    read junk
+}
+
+
+##########################################################################
+#   Script description:
+#       Set up some basic security measures.  This is by no means enough
+#       but will block most naive hacking attempts.
+#
+#       http://wiki.centos.org/HowTos/OS_Protection
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-22  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-12-16  root        Begin
+##########################################################################
+
+line()
+{
+    printf '\n===========================================================\n\n'
+    return 0
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-04-21  Jason Bacon Begin
+##########################################################################
+
+unimplemented()
+{
+    if [ $# != 2 ]; then
+	printf "Usage: unimplemented os_type 'feature'\n"
+	exit 1
+    fi
+    local os_type=$1
+    shift
+    printf "INFO: $@ not yet implemented on $os_type.\n"
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+os_type=`auto-ostype`
+export PATH=${PATH}:`dirname $0`
+sysctl_conf=/etc/sysctl.conf
+
+if [ -z $EDITOR ]; then
+    EDITOR=vi
+    export EDITOR
+fi
+
+clear
+printf '\nVerifying openssh checksums...\n\n'
+case $os_type in
+RHEL)
+    # rpm -Vv keyutils-libs-1.2-1.el5
+    rpm -vV openssh-clients || true
+    pause
+    ;;
+*)
+    unimplemented $os_type 'ssh checksum test'
+    ;;
+esac
+
+pause
+clear
+printf '\nInstall updates (may require reboot)? y/[n] '
+read update
+if [ 0$update = 0y ]; then
+    auto-update-system
+fi
+
+pause
+clear
+printf '\nInstalling denyhosts...\n\n'
+auto-denyhosts-setup
+
+pause
+clear
+case $os_type in
+FreeBSD)
+    # Disable all clear-text services
+    cat << EOM
+
+Opening inetd.conf.
+Disable all clear-text services.
+
+EOM
+    pause
+
+    $EDITOR /etc/inetd.conf
+    ;;
+*)
+    unimplemented $os_type 'Clear-text services disable'
+    ;;
+esac    
+
+clear
+printf '\nIn another terminal, disable other unneeded services.\n\n'
+pause
+
+clear
+printf '\nIn another terminal, add a sysadmin account and disable sysadmin rights for other users.\n\n'
+pause
+
+# nosuid, nodev on as many mounts as possible
+# FIXME: Add support for ZFS
+clear
+printf '\nUpdating fstab. Add nosuid on as many partitions as possible.\n\n'
+pause
+$EDITOR /etc/fstab
+
+# Update all mounts after changes to fstab
+case $os_type in
+FreeBSD)
+    mount -au || true
+    ;;
+RHEL)
+    mount -a -o update
+    ;;
+*)
+    unimplemented $os_type 'Remount'
+    ;;
+esac    
+
+# Lock screen on idle consoles
+clear
+cat << EOM
+
+Configure your screensaver to lock the screen after maybe 10 minutes of
+idle time.
+
+EOM
+pause
+
+# Idle time limits
+clear
+default_autologout=15
+printf "\nMinutes to autologout? [$default_autologout] "
+read autologout
+if [ 0$autologout = 0 ]; then
+    autologout=$default_autologout
+fi
+auto-enable-autologout $autologout
+pause
+
+clear
+printf '\nAdding resource limits to prevent fork bombs, etc...\n\n'
+
+# FIXME: Move CentOS cluster-admin limit scripts here
+case $os_type in
+FreeBSD)
+    # Resource limits to contain fork bombs, etc.
+    printf 'Maximum processes per user? [256] '
+    read maxprocs
+    if [ 0$maxprocs = 0 ]; then
+	maxprocs=256
+    fi
+    printf 'Maximum memory per process? (use 'm' or 'g' suffix) [4g] '
+    read maxvmem
+    if [ 0$maxvmem = 0 ]; then
+	maxvmem=4g
+    fi
+    
+    sed -i '' \
+	-e "s|vmemoryuse=unlimited|vmemoryuse=$maxvmem|g" \
+	-e "s|maxproc=unlimited|maxproc=$maxprocs|g" \
+	/etc/login.conf
+    cap_mkdb /etc/login.conf
+    ;;
+*)
+    unimplemented $os_type 'Setting process and memory limits'
+    ;;
+esac
+pause
+
+clear
+printf '\nSetting umask to 027...\n\n'
+# Umask
+case $os_type in
+FreeBSD)
+    sed -i '' \
+	-e 's|umask=022|umask=027|g' \
+	/etc/login.conf
+    cap_mkdb /etc/login.conf
+    sed -i '' -E 's|umask.*22|umask 027|g' /usr/share/skel/dot.*
+    ;;
+RHEL)
+    for file in /etc/bashrc /etc/profile /etc/csh.cshrc; do
+	auto-append-line 'umask 027' $file $0
+    done
+    ;;
+*)
+    unimplemented $os_type 'Setting process and memory limits'
+    ;;
+esac
+pause
+
+clear
+printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
+
+# Disable ICMP redirects from arbitrary sources
+# Flagged by Nexpose
+# Breaks starccm+ license on Avi: net.ipv4.conf.default.forwarding=0
+# One or more of these break iptables gateway functionality
+#        net.ipv4.conf.all.accept_redirects=0 \
+#        net.ipv6.conf.all.accept_redirects=0 \
+#        net.ipv4.conf.default.accept_redirects=0 \
+#        net.ipv4.conf.all.secure_redirects=0 \
+#        net.ipv4.conf.default.secure_redirects=0
+case $os_type in
+RHEL)
+    printf "# Added by $0\n" >> $sysctl_conf
+    for rule in \
+	net.ipv4.tcp_timestamps=0; do
+	
+	sysctl "$rule"
+	auto-append-line "$rule" $sysctl_conf nocomment
+    done
+    printf "# End $0 addition\n" >> $sysctl_conf
+    ;;
+
+FreeBSD)
+    printf "# Added by $0\n" >> $sysctl_conf
+    for rule in \
+	net.inet.icmp.drop_redirect=1 \
+	net.inet.ip.sourceroute=0 \
+	net.inet.ip.accept_sourceroute=0; do
+
+	sysctl "$rule"
+	auto-append-line "$rule" $sysctl_conf nocomment
+    done
+    printf "# End $0 addition\n" >> $sysctl_conf
+    ;;
+
+*)
+    unimplemented $os_type 'Sysctl fixes'
+    ;;
+esac
+# Disable tcp timestamps
+auto-disable-tcp-timestamps
+pause
+
+clear
+printf '\nEnabling password for single-user mode...\n\n'
+case `auto-ostype` in
+RHEL)
+    sed -i -e 's|SINGLE=/sbin/sushell|SINGLE=/sbin/sulogin|' \
+	/etc/sysconfig/init
+    ;;
+FreeBSD)
+    sed -i '.bak' -e '/^console/s|[ \t]secure| insecure|g' /etc/ttys
+    ;;
+*)
+    unimplemented $os_type 'Single-user login protection'
+    ;;
+esac
+
+for file in /usr/local/etc/apache24/httpd.conf /etc/httpd/conf/httpd.conf; do
+    if [ -e $file ]; then
+	auto-append-line 'TraceEnable Off' $file $0
+    fi
+done
+pause
+
+clear
+printf '\nSecuring ntpd...\n\n'
+case $os_type in
+FreeBSD)
+    # NTPD on FreeBSD
+    auto-append-line 'restrict -4 default nomodify nopeer noquery notrap' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict -6 default nomodify nopeer noquery notrap' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict 127.0.0.1' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict -6 ::1' \
+	/etc/ntp.conf nocomment
+    auto-append-line 'restrict 127.127.1.0' \
+	/etc/ntp.conf nocomment
+    ;;
+*)
+    unimplemented $os_type 'NTP security fixes'
+    ;;
+esac
+
+# Strong passwords
+auto-enable-passwdqc
