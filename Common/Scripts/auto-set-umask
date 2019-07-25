@@ -33,12 +33,13 @@ FreeBSD)
     sed -i '' -e "s|umask=022|umask=$umask|g" /etc/login.conf
     cap_mkdb /etc/login.conf
     ;;
+
 RHEL)
-    # FIXME: Find a sure way to set such defaults
-    # sed -i -e "s|umask 002|umask $umask|g" -e "s|umask 022|umask $umask|g" \
-    #    /etc/csh.cshrc /etc/bashrc
+    # FIXME: How to ensure umask is set for all shells? ksh? zsh?
     for shell in sh csh; do
 	printf "umask $umask\n" > /etc/profile.d/auto-umask.$shell
+	chmod 644 /etc/profile.d/auto-umask.$shell
     done
     ;;
+
 esac
