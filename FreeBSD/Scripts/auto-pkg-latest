@@ -37,4 +37,9 @@ FreeBSD: {
   url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
 }
 EOM
-auto-update-system "$@"
+pkg upgrade -y
+printf "Reboot to reload services? (y/n) [y] "
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi

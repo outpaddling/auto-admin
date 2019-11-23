@@ -74,18 +74,18 @@ pkg install -y linux_base-$linux_base
 
 auto-append-line 'linux_enable="YES"' /etc/rc.conf $0
 
-auto-append-line "linprocfs\t/compat/linux/proc\tlinprocfs\trw\t0\t0" /etc/fstab $0
+auto-append-line linprocfs "linprocfs\t/compat/linux/proc\tlinprocfs\trw\t0\t0" /etc/fstab $0
 if ! df | fgrep -q /compat/linux/proc; then
     mount /compat/linux/proc
 fi
 
-auto-append-line "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777    0       0" /etc/fstab $0
+auto-append-line /compat/linux/dev/shm "tmpfs\t\t/compat/linux/dev/shm\ttmpfs\trw,mode=1777\t0\t0" /etc/fstab $0
 if ! df | fgrep /compat/linux/dev/shm; then
     mount /compat/linux/dev/shm
 fi
 
 if [ $linux_base = c7 ]; then
-    auto-append-line "linsysfs    /compat/linux/sys   linsysfs        rw      0       0" /etc/fstab $0
+    auto-append-line linsysfs "linsysfs\t/compat/linux/sys\tlinsysfs\trw\t0\t0" /etc/fstab $0
     if ! df | fgrep -q /compat/linux/sys; then
 	mount /compat/linux/sys
     fi

@@ -75,4 +75,10 @@ FreeBSD)
 
 esac
 
-passwd $user_name
+printf "Set local password? [y]/n "
+read local_pw
+if [ 0$local_pw != 0n ]; then
+    passwd $user_name
+else
+    auto-lock-local-pw $user_name
+fi

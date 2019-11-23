@@ -17,7 +17,7 @@ FreeBSD)
     printf "Initial free space: %d\n" $before
     cd $PORTSDIR
     rm -rf distfiles/* > /dev/null 2>&1
-    for dir in $(ls -d */*/work); do
+    for dir in $(ls -d */*/work*); do
 	# Make sure it still exists - may have been wiped by a recursive clean
 	if [ -e $dir ]; then
 	    echo "Cleaning $dir..."

@@ -25,6 +25,7 @@ pause()
     read junk
 }
 
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -34,7 +35,7 @@ cat << EOM
 Given the wide variety of graphics chipsets available, it is virtually
 impossible to configure the graphics environment automatically.
 
-If X11 fails without preloading a DRM module, you can try one of the following:
+We will now attempt to detect your GPU and provide some guidance...
 
 EOM
 pause
@@ -45,27 +46,58 @@ if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
     pause
     cat << EOM
 
-1.. For recent Intel GPUs, you can try
+1.. For most Intel GPUs, you should use the modesetting driver and latest DRM:
 
-    pkg install drm-kmod
-    Add kld_list="/boot/modules/i915mks.ko" to /etc/rc.conf
+    pkg install -y drm-kmod
+    Add kld_list="/boot/modules/i915kms.ko" to /etc/rc.conf
 
-2.. For older Intel GPUs, you can try
+2.. For some older Intel GPUs, you can try the legacy DRM:
 
     If /boot/kernel/i915kms.ko exists, add kld_list="i915kms" to /etc/rc.conf
     
     Otherwise:
     
-    pkg install drm-legacy-kmod
+    pkg install -y drm-legacy-kmod
     Add "kld_list=/boot/modules/i915kms.ko" to /etc/rc.conf
 
-3.. For very old Intel GPUs, try
+3.. For *really* old Intel GPUs, try the legacy Intel xorg driver:
 
-    pkg install xf86-video-intel
+    pkg install -y xf86-video-intel
 
 EOM
-    pause
-    
+    selection=0
+    while [ $selection -lt 1 ] || [ $selection -gt 3 ]; do
+	read -p "Selection? [1] " selection
+	if [ 0$selection = 0 ]; then
+	    selection=1
+	fi
+	case $selection in
+	1)
+	    pkg remove -y 'drm*kmod' xf86-video-intel || true
+	    pkg install -y drm-kmod
+	    sysrc "kld_list=/boot/modules/i915kms.ko"
+	    ;;
+	2)
+	    pkg remove -y 'drm*kmod' xf86-video-intel || true
+	    if [ -e /boot/kernel/i915kms.ko ]; then
+		sysrc "kld_list=i915kms"
+	    elif pkg install -y drm-legacy-kmod; then
+		sysrc "kld_list=/boot/modules/i915kms.ko"
+	    else
+		printf "Warning: No base of legacy kmod found.\n"
+		printf "Please try another option.\n"
+		selection=0
+	    fi
+	    ;;
+	3)
+	    pkg remove -y 'drm*kmod' || true
+	    pkg install -y xf86-video-intel
+	    ;;
+	*)
+	    printf "Invalid selection: $selection\n"
+	    ;;
+	esac
+    done
 fi
 
 if pciconf -lv | grep -B 2 display | grep vendor | grep -iq amd; then
@@ -76,30 +108,70 @@ if pciconf -lv | grep -B 2 display | grep vendor | grep -iq amd; then
 
 1.. For recent AMD GPUs, you can try
 
-    pkg install drm-kmod xf86-video-amdgpu
-    Add "kld_list=/boot/modules/amdgpu.ko" to /etc/rc.conf
+    pkg install -y drm-kmod xf86-video-amdgpu
+    Add "kld_list=amdgpu" to /etc/rc.conf
 
 2.. For older AMD GPUs, you can try
 
-    pkg install drm-kmod xf86-video-ati
+    pkg install -y drm-kmod xf86-video-ati
     Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
 
-    or
+3.. For even older AMD GPUs, you can try
     
+    pkg install -y xf86-video-ati
     If /boot/kernel/radeonkms.ko exists, add kld_list="radeonkms" to /etc/rc.conf
     
     Otherwise:
     
-    pkg install drm-legacy-kmod
+    pkg install -y drm-legacy-kmod
     Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
 
-3.. For very old AMD GPUs, try
+4.. For incredibly old AMD GPUs (not likely to be in use), try
 
-    pkg install xf86-video-ati-legacy
+    pkg install -y xf86-video-ati-legacy
 
 EOM
-    pause
+    selection=0
+    while [ $selection -lt 1 ] || [ $selection -gt 3 ]; do
+	read -p "Selection? [1] " selection
+	if [ 0$selection = 0 ]; then
+	    selection=1
+	fi
+	case $selection in
+	1)
+	    pkg remove -y 'drm*kmod' 'xf86-video-ati*' || true
+	    pkg install -y drm-kmod xf86-video-amdgpu
+	    sysrc "kld_list=amdgpu"
+	    ;;
+	2)
+	    pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
+	    pkg install -y drm-kmod xf86-video-ati
+	    sysrc "kld_list=/boot/modules/radeonkms.ko"
+	    ;;
+	3)
+	    pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
+	    pkg install -y xf86-video-ati
+	    if [ -e /boot/kernel/radeonkms.ko ]; then
+		sysrc "kld_list=radeonkms"
+	    elif pkg install -y drm-legacy-kmod; then
+		sysrc "kld_list=/boot/moduls/radeonkms.ko"
+	    else
+		printf "Warning: No base or legacy kmod found.\n"
+		printf "Please try another option.\n"
+		selection=0
+	    fi
+	    ;;
+	4)
+	    pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati || true
+	    pkg install -y drm-kmod xf86-video-ati-legacy
+	    ;;
+	*)
+	    printf "Invalid selection: $selection\n"
+	    ;;
+	esac
+    done
 fi
+
 
 ##########################################################################
 #   Script description:
@@ -160,7 +232,7 @@ EOM
 	fi
     fi
     
-    auto-append-line "kld_list=\"$kld \$kld_list\"" /etc/rc.conf $0
+    sysrc "kld_list=$kld"
     kldload $kld || true
     
     dir=/usr/local/etc/X11/xorg.conf.d
