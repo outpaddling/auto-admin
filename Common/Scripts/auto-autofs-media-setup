@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+case $(uname) in
+FreeBSD)
+    pkg install -y fusefs-ntfs fusefs-ext2 \
+	fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs zenity
+    
+    am=/etc/auto_master
+    sed -i '' -e 's|#.*/media|/media|' $am
+    if ! grep -q '^/media.*,sync' $am; then
+	sed -i '' -e '/^\/media/s|$|,sync|' $am
+    fi
+    auto-append-line 'autofs_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'autounmountd_flags="-r 5 -t 5"' /etc/rc.conf $0
+    for service in automount automountd autounmountd devd; do
+	service $service restart
+    done
+    
+    cat << EOM
+
+Autounmountd is set to check every 5 seconds.  Adjust in /etc/rc.conf
+if desired.
+
+EOM
+    ;;
+
+*)
+    printf "$0: Not supported on $(uname).\n"
+    ;;
+
+esac
