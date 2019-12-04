@@ -221,6 +221,10 @@ EOM
 	    fi
 	fi
 	rm $tmpfile
+
+	# mandoc.db is automatically generated
+	# Ensure it's readable on systems with restrictive root umask
+	chmod 644 /usr/share/man/mandoc.db
     fi
     ;;
 
