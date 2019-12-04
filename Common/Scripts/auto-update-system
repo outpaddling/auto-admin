@@ -222,6 +222,7 @@ EOM
 	fi
 	rm $tmpfile
 
+	# FIXME: Temporary hack: Perms should be set by base
 	# mandoc.db is automatically generated
 	# Ensure it's readable on systems with restrictive root umask
 	chmod 644 /usr/share/man/mandoc.db
