@@ -12,6 +12,8 @@ FreeBSD)
 	(cd $PORTSDIR/sysutils/exfat-utils && make install clean)
     fi
     
+    sysrc kld_list+=fuse
+    
     am=/etc/auto_master
     sed -i '' -e 's|#.*/media|/media|' $am
     if ! grep -q '^/media.*,sync' $am; then
