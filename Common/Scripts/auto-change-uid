@@ -33,7 +33,7 @@ for dir in $dirs; do
     fi
 done
 
-ostype=`auto-ostype`
+ostype=$(auto-ostype)
 if [ $ostype = Darwin ]; then
     old_uid=`dscl . -read /Users/$user_name UniqueID | cut -d ' ' -f 2`
 else
@@ -89,7 +89,7 @@ RHEL)
     ;;
 
 *)
-    printf "$0: $(uname) is not currently supported.\n"
+    printf "$0: $(auto-ostype) is not currently supported.\n"
     ;;
 esac
 

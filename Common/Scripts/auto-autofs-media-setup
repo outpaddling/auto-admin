@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-case $(uname) in
+case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     pkg install -y fusefs-ntfs fusefs-ext2 \
@@ -34,7 +34,7 @@ EOM
     ;;
 
 *)
-    printf "$0: Not supported on $(uname).\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     ;;
 
 esac

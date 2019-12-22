@@ -30,7 +30,7 @@ fi
 ip=$1
 
 
-case `uname` in
+case $(auto-ostype) in
 FreeBSD)
     sed="sed -i ''"
     if [ -z $LOCALBASE ]; then
@@ -46,7 +46,7 @@ Linux|NetBSD)
     ;;
 
 *)
-    printf "${0}: Unsuported OS: `uname`\n"
+    printf "${0}: Unsuported OS: $(auto-ostype)\n"
     exit 1
 esac
 

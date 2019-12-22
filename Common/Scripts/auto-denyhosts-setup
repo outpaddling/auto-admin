@@ -25,7 +25,7 @@ line()
 }
 
 # 
-case `uname` in
+case $(auto-ostype) in
 FreeBSD)
     pkg install -y denyhosts
     if [ -z $LOCALBASE ]; then
@@ -57,7 +57,7 @@ EOM
     chkconfig denyhosts on
     ;;
 *)
-    printf "Sorry, $0 is not implemented for `uname` yet.\n"
+    printf "Sorry, $0 is not implemented for $(auto-ostype) yet.\n"
     exit 1
     ;;
 esac
@@ -106,7 +106,7 @@ Uncomment a BLOCK_SERVICE entry and tweak other settings to taste.
 EOM
 pause
 
-case `uname` in
+case $(auto-ostype) in
 FreeBSD)
     sed -i .orig 's|#BLOCK_SERVICE = ALL|BLOCK_SERVICE = ALL|' \
 	$prefix/etc/denyhosts.conf

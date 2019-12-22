@@ -33,7 +33,7 @@ short_name=$1
 host_name=$2
 new_ip=$3
 
-if [ `uname` = FreeBSD ]; then
+if [ $(auto-ostype) = FreeBSD ]; then
     if ! which gsed > /dev/null 2>&1; then
 	pkg install -y gsed
     fi

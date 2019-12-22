@@ -40,13 +40,13 @@ fi
 
 user_name=$1
 pw="$2"
-os_type=`uname`
+os_type=$(auto-ostype)
 
 case $os_type in
 FreeBSD)
     master_pw='/etc/master.passwd'
     ;;
-Linux)
+RHEL)
     master_pw='/etc/shadow'
     ;;
 *)
@@ -83,7 +83,7 @@ else
 	    pwd_mkdb $master_pw.tmp
 	fi
 	;;
-    Linux)
+    RHEL)
 	mv $master_pw.tmp $master_pw
 	restorecon $master_pw
 	;;

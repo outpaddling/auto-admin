@@ -44,8 +44,8 @@ fi
 cd "$pkgsrc"
 
 printf "Cleaning $pkgsrc...\n"
-if [ `uname` = Linux ]; then
-    df_flags=-Pm
+if [ $(uname) = Linux ]; then
+    df_flags=-Pm    # Is this appropriate for all Linux distros?
 else
     df_flags=-m
 fi

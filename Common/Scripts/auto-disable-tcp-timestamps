@@ -1,15 +1,15 @@
 #!/bin/sh
 
 # Prevent discovery of last boot time
-case `uname` in
+case $(auto-ostype) in
 FreeBSD)
     auto-set-sysctl net.inet.tcp.rfc1323 0
     ;;
-Linux)
+RHEL)
     auto-set-sysctl net.ipv4.tcp_timestamps 0
     ;;
 *)
-    printf "Not yet supported for `uname`.\n"
+    printf "Not yet supported for $(auto-ostype).\n"
     exit 1
 esac
 

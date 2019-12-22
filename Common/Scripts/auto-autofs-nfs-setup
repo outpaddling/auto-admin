@@ -1,6 +1,6 @@
 #!/bin/sh
 
-case $(uname) in
+case $(auto-ostype) in
 FreeBSD)
     rc_file='/etc/rc.conf'
     map_file='/etc/amd.map'
@@ -27,7 +27,7 @@ FreeBSD)
     ;;
 
 *)
-    printf "$0: Not supported on $(uname).\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     ;;
 
 esac

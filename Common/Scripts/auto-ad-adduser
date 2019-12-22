@@ -36,15 +36,15 @@ read ad_pw
 printf '\n'
 stty echo
 
-case `uname` in
-    Linux)
+case $(auto-ostype) in
+    RHEL)
 	default_shell="/bin/bash"
 	;;
     FreeBSD)
 	default_shell="/bin/tcsh"
 	;;
     *)
-	printf "`uname` is not supported at this time.\n"
+	printf "$(auto-ostype) is not supported at this time.\n"
 	exit 1
 esac
 
@@ -90,7 +90,7 @@ if [ 0$shell = 0 ]; then
     shell=$default_shell
 fi
 
-case `uname` in
+case $(auto-ostype) in
 FreeBSD)
     groupadd_cmd="pw groupadd $primary_group"
     if [ 0$user_id != 0 ]; then
@@ -109,7 +109,7 @@ FreeBSD)
     useradd_cmd="$useradd_cmd -m -s $shell"
     ;;
 
-Linux)
+RHEL)
     groupadd_cmd="groupadd"
     if [ 0$user_id != 0 ]; then
 	groupadd_cmd="$groupadd_cmd -g $user_id"

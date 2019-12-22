@@ -38,7 +38,7 @@ Darwin)
     ;;
 
 *)
-    echo "OS $(uname) is not supported by $0."
+    echo "OS $(auto-ostype) is not supported by $0."
     exit 1
     ;;
 

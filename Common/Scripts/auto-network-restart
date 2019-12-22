@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    service netif restart && service routing restart
+    ;;
+
+RHEL)
+    # FIXME: Anything else?
+    service network restart
+    ;;
+
+*)
+    printf "`auto-os-type` is not yet supported.\n"
+    exit 1
+    ;;
+
+esac

@@ -145,19 +145,24 @@ if [ 0$serial_number = 0 ]; then
     serial_number=$default_serial_number
 fi
 
-if [ `uname` = FreeBSD ]; then
+case $(auto-ostype) in
+FreeBSD)
     dhcp_service=isc-dhcpd
     if ! which gsed > /dev/null 2>&1; then
 	pkg install -y gsed
     fi
     sed=gsed
-elif [ -e /etc/redhat-release ]; then
+    ;;
+
+RHEL)
     dhcp_service=dhcpd
     sed=sed
-else
+    ;;
+
+*)
     printf 'Only FreeBSD and CentOS are supported at this time.\n'
     exit 1
-fi
+esac
 
 # Restart the service to clean up outdated leases
 service $dhcp_service restart
