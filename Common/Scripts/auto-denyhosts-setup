@@ -35,7 +35,7 @@ FreeBSD)
     fi
     ;;
 
-Linux|NetBSD)
+RHEL|NetBSD)
     cat << EOM
 
 Install denyhosts using your favorite package manager, e.g. pkgsrc.
@@ -116,7 +116,7 @@ FreeBSD)
     /etc/rc.d/syslogd restart
     ;;
 
-Linux)
+RHEL)
     $EDITOR $prefix/share/denyhosts/denyhosts.cfg
     ;;
 

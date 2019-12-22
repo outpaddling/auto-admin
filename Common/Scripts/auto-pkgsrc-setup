@@ -140,6 +140,9 @@ if [ -e /etc/debian_version ] && [ -e /bin/bash ]; then
     export SH
 fi
 
+# Special case: auto-pkgsrc-setup should remain standalone, so use
+# uname instead of auto-ostype.  Don't introduce dependencies on any
+# other auto-admin scripts.
 # For OS X, we should install a new base gcc using install-base-gcc
 case `uname` in
 'Darwin')

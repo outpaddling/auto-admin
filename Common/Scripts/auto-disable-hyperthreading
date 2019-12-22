@@ -7,7 +7,7 @@ FreeBSD)
     printf "Edit /boot/loader.conf to re-enable.\n"
     ;;
 
-Linux)
+RHEL|Linux)
     cat << EOM
 
 Linux does not provide a simple way to disable hyperthreading.  It is best
