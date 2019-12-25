@@ -97,6 +97,7 @@ label localboot
 label install
   menu label Install CentOS
   kernel images/$installer_leaf_dir/images/pxeboot/vmlinuz
+  # FIXME: Can ksdevice be ommitted to support hetergeneous hardware?
   append initrd=images/$installer_leaf_dir/images/pxeboot/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:${local_ip}:/$installer_path/ks.cfg
 
 label reboot
@@ -502,7 +503,12 @@ nfs --server $local_ip --dir $installer_path
 lang en_US.UTF-8
 keyboard us
 
-network --device $iface --onboot yes --bootproto dhcp
+# --device=link should use the first interface found in an "up" state
+# Useful for heterogeneous hardware (i.e. not all servers use em0, etc.)
+# network --device=link --onboot=yes --bootproto=dhcp
+# --device=bootif uses the value from PXELINUX BOOTIF variable
+# network --device=bootif --onboot=yes --bootproto=dhcp
+network --device=$iface --onboot=yes --bootproto=dhcp
 firewall --enabled --service=ssh
 authconfig --enableshadow --passalgo=sha512
 rootpw --iscrypted "$root_pw"
