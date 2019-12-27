@@ -4,7 +4,7 @@ case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     pkg install -y fusefs-ntfs fusefs-ext2 \
-	fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs zenity
+	fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs zenity autoconf automake
     if ! auto-package-installed sysutils/fusefs-exfat; then
 	(cd $PORTSDIR/sysutils/fusefs-exfat && make install clean)
     fi
