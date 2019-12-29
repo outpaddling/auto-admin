@@ -1,0 +1,47 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Enable NFS server
+#
+#   History:
+#   Date        Name        Modification
+#   2019-12-29  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    if ! fgrep -q $(hostname) /etc/hosts; then
+	printf "$0: Warning: $(hostname) is not listed in /etc/hosts.\n"
+	printf "The NFS server may not function until this is corrected.\n"
+	printf "Run auto-nfs-restart after updating /etc/hosts.\n"
+    fi
+    
+    touch /etc/exports
+    auto-enable-service -s nfsd nfs_server $0
+    auto-enable-service -s statd rpc_statd $0
+    auto-enable-service -s lockd rpc_lockd $0
+    ;;
+
+*)
+    printf "$0: $(auto-ostype) is not yet supported.\n"
+    exit 1
+    ;;
+
+esac
+auto-nfs-restart
