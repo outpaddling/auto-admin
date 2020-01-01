@@ -27,7 +27,8 @@ line()
 # 
 case $(auto-ostype) in
 FreeBSD)
-    pkg install -y denyhosts
+    pkg install -gy 'denyhosts-py3*' || true
+    pkg install -gy 'py3*-denyhosts' || true
     if [ -z $LOCALBASE ]; then
 	prefix=/usr/local
     else
@@ -111,6 +112,8 @@ FreeBSD)
     sed -i .orig 's|#BLOCK_SERVICE = ALL|BLOCK_SERVICE = ALL|' \
 	$prefix/etc/denyhosts.conf
     $EDITOR $prefix/etc/denyhosts.conf
+    service denyhosts stop || true
+    rm -f /var/run/denyhosts.pid
     auto-enable-service denyhosts $0
     auto-append-line 'syslogd_flags="-c"' 'syslogd_flags="-c"' /etc/rc.conf $0
     /etc/rc.d/syslogd restart
