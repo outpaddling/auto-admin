@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+: ${PORTSDIR:=/usr/ports}
+pkg install -y pkgconf zenity autoconf automake
+if ! auto-package-installed sysutils/fusefs-exfat; then
+    (cd $PORTSDIR/sysutils/fusefs-exfat && make install clean)
+fi
+if ! auto-package-installed sysutils/exfat-utils; then
+    (cd $PORTSDIR/sysutils/exfat-utils && make install clean)
+fi
+pkg install -y fusefs-ntfs fusefs-ext2 \
+    fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs
+
+kldload fuse || true
+sysrc kld_list+=fuse

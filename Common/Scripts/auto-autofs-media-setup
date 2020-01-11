@@ -2,17 +2,7 @@
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${PORTSDIR:=/usr/ports}
-    pkg install -y fusefs-ntfs fusefs-ext2 pkgconf \
-	fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs zenity autoconf automake
-    if ! auto-package-installed sysutils/fusefs-exfat; then
-	(cd $PORTSDIR/sysutils/fusefs-exfat && make install clean)
-    fi
-    if ! auto-package-installed sysutils/exfat-utils; then
-	(cd $PORTSDIR/sysutils/exfat-utils && make install clean)
-    fi
-    
-    sysrc kld_list+=fuse
+    auto-fusefs-install
     
     am=/etc/auto_master
     sed -i '' -e 's|#.*/media|/media|' $am
