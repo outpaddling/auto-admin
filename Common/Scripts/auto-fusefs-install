@@ -3,7 +3,7 @@
 case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
-    pkg install -y pkgconf zenity autoconf automake
+    pkg install -y pkgconf zenity autoconf automake libublio
     if ! auto-package-installed sysutils/fusefs-exfat; then
 	(cd $PORTSDIR/sysutils/fusefs-exfat && make install clean)
     fi
