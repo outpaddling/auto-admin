@@ -1,0 +1,32 @@
+#!/bin/sh -e
+    
+case $(auto-ostype) in
+FreeBSD)
+    file=/usr/local/etc/PolicyKit/PolicyKit.conf
+    if ! fgrep -q org.freedesktop.hal.storage.mount-removable $file; then
+	cat << EOM
+
+Allow all users to mount removable media?
+
+Note: Consider the security implications of doing this on shared computers.
+
+EOM
+	resp=`auto-ask hal-mount 'Enable auto-mount?' y`
+	if [ 0$resp = 0y ]; then
+	    # Add all users in operator group
+	    sed -i '.bak' -e 's|</config>|\
+    <match action="org.freedesktop.hal.storage.mount-removable">\
+	<return result="yes"/>\
+    </match>\
+</config>|g' $file
+	    /usr/local/etc/rc.d/hald restart
+	fi
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(ostype).\n"
+    exit 1
+    ;;
+
+esac

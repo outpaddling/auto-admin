@@ -28,9 +28,7 @@ case `uname` in
 	exit 1
 esac
 
-
 set -x
 rm -f ${STAGEDIR}${PREFIX}/sbin/auto-*
-cp $os/Scripts/* ${STAGEDIR}${PREFIX}/sbin
-cp Common/Scripts/* ${STAGEDIR}${PREFIX}/sbin
+cp Scripts/* ${STAGEDIR}${PREFIX}/sbin
 chmod 750 ${STAGEDIR}${PREFIX}/sbin/*

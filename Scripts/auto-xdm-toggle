@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Switch XDM on or off
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 on|off\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+new_state=$1
+case $new_state in
+off|on)
+    ;;
+*)
+    usage
+    ;;
+esac
+    
+case $(auto-ostype) in
+FreeBSD)
+    # In case something is left over from a crashed run
+    rm -f /tmp/ttys.auto-xdm-toggle
+    awk -v new_state=$new_state \
+	' { if ( $2 ~ "bin/xdm" ) {
+		tty=$1;
+		sub("#tty","tty",tty);
+		printf("%s\t%s %s\t%s\t%-3s %s\n", \
+		    tty, $2, $3, $4, new_state, $6) }
+	    else {
+		print $0
+	    }
+	  }' /etc/ttys > /tmp/ttys.auto-xdm-toggle
+    mv -f /tmp/ttys.auto-xdm-toggle /etc/ttys
+    
+    kill -HUP 1
+    if [ $new_state = off ]; then
+	killall xdm || true
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(ostype).\n"
+    exit 1
+    ;;
+
+esac

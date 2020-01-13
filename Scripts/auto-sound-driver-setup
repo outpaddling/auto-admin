@@ -1,0 +1,97 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Auto-detect sound devices and add appropriate driver loads
+#       to /boot/loader.conf.
+#
+#   Arguments:
+#       None
+#
+#   Returns:
+#       0 if a supported sound device is found, non-zero otherwise.
+#
+#   History:
+#   Date        Name        Modification
+#   2013-04-14  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+    
+case $(auto-ostype) in
+FreeBSD)
+    devnum=0
+    while dmesg | fgrep -q pcm$devnum; do
+	printf "Found pcm$devnum.\n"
+	devnum=$(($devnum + 1))
+    done
+    
+    if [ $devnum -gt 0 ]; then
+	cat << EOM
+
+=================================== Warning ==================================
+
+One or more sound devices already detected.
+
+$0 works by detecting kernel messages
+for recognized devices after a new driver is loaded.
+
+In order to detect a device for which the driver is already loaded,
+you must remove all sound driver load entries from /boot/loader.conf
+and reboot.
+
+If you believe you have a device for which the driver is not loaded, (if
+you have installed a new sound card since the last scan, for instance),
+then it might make sense to scan now.
+
+EOM
+	printf "Scan for additional sound devices? (y/[n]) "
+	read continue
+	if [ 0$continue != 'y' ]; then
+	    exit 0
+	fi
+    fi
+    
+    for module in /boot/kernel/snd_*.ko; do
+	driver=`basename ${module%%.ko}`
+	case $driver in
+	snd_driver)
+	    break;;
+	*)
+	    printf "Testing $driver...\n"
+	    if kldload ${driver} > /dev/null 2>&1; then
+		if dmesg | fgrep -q pcm$devnum; then
+		    printf "Device found for $driver.  Updating loader.conf...\n"
+		    auto-append-line "${driver}_load" "${driver}_load=\"YES\"" \
+			/boot/loader.conf $0
+		    exit 0
+		else
+		    kldunload $driver
+		fi
+	    fi
+	esac
+    done
+    
+    # No supported sound device found
+    exit 1
+    ;;
+    
+*)
+    printf "$0: Not supported on $(ostype).\n"
+    exit 1
+    ;;
+
+esac

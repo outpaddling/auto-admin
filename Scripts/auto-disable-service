@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 rc.conf-name\n"
+    exit 1
+fi
+    
+case $(auto-ostype) in
+FreeBSD)
+    service=$1
+    if auto-service-enabled $service; then
+	sed -I '.bak' -e "s|${service}_enable=\"YES\"|${service}_enable=\"NO\"|g" \
+	    /etc/rc.conf
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(ostype).\n"
+    exit 1
+    ;;
+
+esac

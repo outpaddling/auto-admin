@@ -1,8 +1,0 @@
-#!/bin/sh -e
-
-if dmidecode | grep -iq macbook; then
-    printf "$0: MacBook detected.\n"
-
-    auto-append-line 'atp_load="YES"' /boot/loader.conf $0
-    auto-append-line 'acpi_video_load="YES"' /boot/loader.conf $0
-fi
