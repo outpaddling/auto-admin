@@ -21,6 +21,27 @@ MNT_GROUP=operator
 MNT_MODE=775
 EOM
     service devd restart
+    cat << EOM
+
+Presently is is necessary to make /sbin/umount SUID root to allow ordinary
+users to unmount.  This, however, allows any user to unmount any filesystem,
+which is a security risk.  This should only be used on personal systems,
+never on a multiuser system.
+
+This approach is also fragile as freebsd-update could revert permissions
+on /sbin/umount.  If this happens, you will need to run
+
+    chmod 4555 /sbin/umount
+
+A more secure and reliable solution is under development and will be
+incorporated into this setup when available.
+
+EOM
+    printf "Allow all users to unmount? y/[n] "
+    read suid
+    if [ 0$suid = 0y ]; then
+	chmod 4555 /sbin/umount
+    fi
     ;;
 
 *)
