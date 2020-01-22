@@ -37,6 +37,20 @@ FreeBSD)
 Given the wide variety of graphics chipsets available, it is virtually
 impossible to configure the graphics environment automatically.
 
+If your screen goes blank during the next boot, you probably have the
+wrong driver or drm module.  In that case, tap the power button and wait
+a minute for a graceful shutdown.  You can also try to ssh in from
+another host.  Hold the power button to force power off only if
+absolutely necessary.
+
+Then boot into single-user mode and do the following:
+
+mount -u -o rw
+vi /etc/rc.conf
+
+Remove the "mks" module from the "kld_list" setting.
+Save and reboot.
+
 We will now attempt to detect your GPU and provide some guidance...
 
 EOM
@@ -81,10 +95,11 @@ EOM
 		;;
 	    2)
 		pkg remove -y 'drm*kmod' xf86-video-intel || true
-		if [ -e /boot/kernel/i915kms.ko ]; then
-		    sysrc "kld_list=i915kms"
-		elif pkg install -y drm-legacy-kmod; then
+		pkg install -y drm-legacy-kmod || true
+		if [ -e /boot/modules/i915kms.ko ]; then
 		    sysrc "kld_list=/boot/modules/i915kms.ko"
+		elif [ -e /boot/kernel/i915kms.ko ]; then
+		    sysrc "kld_list=/boot/kernel/i915kms.ko"
 		else
 		    printf "Warning: No base of legacy kmod found.\n"
 		    printf "Please try another option.\n"
@@ -153,10 +168,11 @@ EOM
 	    3)
 		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
 		pkg install -y xf86-video-ati
-		if [ -e /boot/kernel/radeonkms.ko ]; then
-		    sysrc "kld_list=radeonkms"
-		elif pkg install -y drm-legacy-kmod; then
-		    sysrc "kld_list=/boot/moduls/radeonkms.ko"
+		pkg install -y drm-legacy-kmod || true
+		if [ -e /boot/modules/radeonkms.ko ]; then
+		    sysrc "kld_list=/boot/modules/radeonkms.ko"
+		elif [ -e /boot/kernel/radeonkms.ko ]; then
+		    sysrc "kld_list=/boot/kernel/radeonkms.ko"
 		else
 		    printf "Warning: No base or legacy kmod found.\n"
 		    printf "Please try another option.\n"

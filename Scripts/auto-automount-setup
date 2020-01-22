@@ -4,7 +4,9 @@ case $(auto-ostype) in
 FreeBSD)
     auto-fusefs-install
 
-    for fm in caja; do
+    # Check for native file managers known to have a media eject feature
+    # If none found, use pcmanfm
+    for fm in caja thunar; do
 	if [ -e /usr/local/bin/$fm ]; then
 	    chosen_fm=$fm
 	    break

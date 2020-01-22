@@ -12,7 +12,7 @@ FreeBSD)
 	(cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make install clean)
     fi
     pkg install -y fusefs-ntfs fusefs-ext2 \
-	fusefs-hfsfuse fusefs-lkl fusefs-simple-mtpfs
+	fusefs-hfsfuse fusefs-simple-mtpfs
     
     kldload fuse || true
     sysrc kld_list+=fuse
