@@ -86,6 +86,8 @@ freebsd_autoremove()
 #   Main
 ##########################################################################
 
+: ${PORTSDIR:=/usr/ports}
+
 os_type=`auto-ostype`
 mode=interactive
 if [ $# = 1 ]; then
@@ -160,14 +162,20 @@ FreeBSD)
     esac
     
     if [ 0$update_ports != 0n ]; then
-	if [ -e /usr/ports/CHANGES ]; then
-	    if [ -e /usr/ports/.svn ]; then
-		svn update /usr/ports
+	if [ -e $PORTSDIR/CHANGES ]; then
+	    if [ -e $PORTSDIR/.svn ]; then
+		svn update $PORTSDIR
 	    else
 		printf "\nFetching latest ports...\n"
 		portsnap fetch
 		printf "Applying updates...\n"
-		portsnap $portsnap_flags update
+		if [ -r $PORTSDIR/.portsnap.INDEX ]; then
+		    portsnap $portsnap_flags update
+		else
+		    printf "$0: $PORTSDIR was not created by svn or portsnap.\n"
+		    printf "Please remove $PORTSDIR and try again.\n"
+		    exit
+		fi
 	    fi
 	else
 	    auto-ports-checkout

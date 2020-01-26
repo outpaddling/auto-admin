@@ -56,6 +56,17 @@ We will now attempt to detect your GPU and provide some guidance...
 EOM
     pause
     
+    # Remove old modules
+    sysrc "kld_list-=/boot/kernel/i915kms.ko"
+    sysrc "kld_list-=/boot/kernel/radeonkms.ko"
+    sysrc "kld_list-=/boot/modules/i915kms.ko"
+    sysrc "kld_list-=/boot/modules/radeonkms.ko"
+    sysrc "kld_list-=radeonkms"
+    sysrc "kld_list-=i915kms"
+    sysrc "kld_list-=amdgpu"
+    sysrc "kld_list-=nvidia"
+    sysrc "kld_list-=nvidia-modeset"
+
     if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
 	printf "Intel GPU detected.\n"
 	pciconf -lv | grep -B 2 display
@@ -91,15 +102,15 @@ EOM
 	    1)
 		pkg remove -y 'drm*kmod' xf86-video-intel || true
 		pkg install -y drm-kmod
-		sysrc "kld_list=/boot/modules/i915kms.ko"
+		sysrc "kld_list+=/boot/modules/i915kms.ko"
 		;;
 	    2)
 		pkg remove -y 'drm*kmod' xf86-video-intel || true
 		pkg install -y drm-legacy-kmod || true
 		if [ -e /boot/modules/i915kms.ko ]; then
-		    sysrc "kld_list=/boot/modules/i915kms.ko"
+		    sysrc "kld_list+=/boot/modules/i915kms.ko"
 		elif [ -e /boot/kernel/i915kms.ko ]; then
-		    sysrc "kld_list=/boot/kernel/i915kms.ko"
+		    sysrc "kld_list+=/boot/kernel/i915kms.ko"
 		else
 		    printf "Warning: No base of legacy kmod found.\n"
 		    printf "Please try another option.\n"
@@ -158,21 +169,21 @@ EOM
 	    1)
 		pkg remove -y 'drm*kmod' 'xf86-video-ati*' || true
 		pkg install -y drm-kmod xf86-video-amdgpu
-		sysrc "kld_list=amdgpu"
+		sysrc "kld_list+=amdgpu"
 		;;
 	    2)
 		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
 		pkg install -y drm-kmod xf86-video-ati
-		sysrc "kld_list=/boot/modules/radeonkms.ko"
+		sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		;;
 	    3)
 		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
 		pkg install -y xf86-video-ati
 		pkg install -y drm-legacy-kmod || true
 		if [ -e /boot/modules/radeonkms.ko ]; then
-		    sysrc "kld_list=/boot/modules/radeonkms.ko"
+		    sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		elif [ -e /boot/kernel/radeonkms.ko ]; then
-		    sysrc "kld_list=/boot/kernel/radeonkms.ko"
+		    sysrc "kld_list+=/boot/kernel/radeonkms.ko"
 		else
 		    printf "Warning: No base or legacy kmod found.\n"
 		    printf "Please try another option.\n"
@@ -244,7 +255,7 @@ EOM
 	    fi
 	fi
 	
-	sysrc "kld_list=$kld"
+	sysrc "kld_list+=$kld"
 	kldload $kld || true
 	
 	dir=/usr/local/etc/X11/xorg.conf.d
