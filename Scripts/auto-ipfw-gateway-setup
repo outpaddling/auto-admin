@@ -4,6 +4,7 @@
 #   Script description:
 #       Set up local system as a NAT gateway
 #       FIXME: Generalize name and support multiple firewalls
+#       FIXME: Detect LAN network and mask
 #       
 #   History:
 #   Date        Name        Modification
