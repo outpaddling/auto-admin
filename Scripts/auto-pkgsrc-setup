@@ -784,6 +784,7 @@ GCC suites such as the GCC 4.4 provided by RHEL/CentOS 6.  When you select
 a newer compiler here, a pkgsrc gcc will be used to build all packages
 except itself.
 
+0.. None, use base compiler
 1.. 4.8
 2.. 4.9
 3.. 5.0
@@ -800,6 +801,9 @@ EOM
 	selection=$default_minimum
     fi
     case $selection in
+    0)
+	base_gcc=""
+	;;
     1)
 	base_gcc=gcc48
 	gcc_version=4.8
@@ -828,7 +832,8 @@ EOM
 
     # Keep this in sync with pbulk-setup for installations that use both
     # binary packages and build from source.
-    cat << EOM >> $mk_conf
+    if [ ! -z $base_gcc ]; then
+	cat << EOM >> $mk_conf
 
 .if \\
     empty(PKGPATH:Marchivers/bsdtar) && \\
@@ -884,6 +889,7 @@ EOM
     empty(PKGPATH:Mx11/xorgproto)
 
 GCC_REQD+=$gcc_version
+GFORTRAN_VERSION=$gcc_version
 
 .endif  # GCC_REQD
 
@@ -904,7 +910,10 @@ PKG_DEFAULT_OPTIONS+=   always-libgcc
 .endif
 
 EOM
-    compiler=gcc-$gcc_version
+	compiler=gcc-$gcc_version
+    else    # Use base compiler
+	compiler=cc
+    fi
 else
     compiler=cc
 fi
