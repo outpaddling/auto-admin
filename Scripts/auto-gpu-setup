@@ -87,7 +87,8 @@ EOM
     pkg install -y drm-legacy-kmod
     Add "kld_list=/boot/modules/i915kms.ko" to /etc/rc.conf
 
-3.. For *really* old Intel GPUs, try the legacy Intel xorg driver:
+3.. For *really* old Intel GPUs, or if you encounter other issues with the
+    built-in Intel modesetting driver, try the Intel xorg driver:
 
     pkg install -y xf86-video-intel
 
