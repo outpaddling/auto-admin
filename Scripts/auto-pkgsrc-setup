@@ -304,20 +304,28 @@ EOM
 if [ $snapshot = custom ] || [ $snapshot = git ]; then
     use_install_suffix=n
 elif [ $snapshot = current ]; then
-    printf "Add $dist_suffix to installation directories? y/[n] "
+    printf "Add suffix to installation directories? y/[n] "
     read use_install_suffix
     if [ 0$use_install_suffix = 0y ]; then
-	install_suffix="$dist_suffix"
+	read -p "Suffix? [$dist_suffix] " chosen_suffix
+	if [ 0$chosen_suffix != 0 ]; then
+	    install_suffix="$chosen_suffix"
+	else
+	    install_suffix="$dist_suffix"
+	fi
     else
 	install_suffix=''
     fi
 else
-    printf "Add $dist_suffix to installation directories? [y]/n "
+    printf "Add suffix to installation directories? [y]/n "
     read use_install_suffix
     if [ 0$use_install_suffix != 0n ]; then
-	install_suffix="$dist_suffix"
-    else
-	install_suffix=''
+	read -p "Suffix? [$dist_suffix] " chosen_suffix
+	if [ 0$chosen_suffix != 0 ]; then
+	    install_suffix="$chosen_suffix"
+	else
+	    install_suffix="$dist_suffix"
+	fi
     fi
 fi
 
