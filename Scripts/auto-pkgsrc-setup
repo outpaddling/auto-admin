@@ -641,7 +641,7 @@ if [ 0$bootstrap = '0y' ]; then
 	    --varbase ${sys_prefix}/var \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
- 
+
     # Separate bootstrap settings
     printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n\n" >> $mk_conf
 
@@ -772,6 +772,8 @@ EOM
 	;;
     esac
     printf "MAKE_JOBS=\t\t$make_jobs\n" >> $mk_conf
+    printf "\n.endif   # Pkgsrc boostrap customizations\n" >> $mk_conf
+
 fi  # bootstrap
 
 # FIXME: Verify that this is the minimal list of $base_gcc deps
@@ -848,6 +850,7 @@ EOM
     if [ ! -z $base_gcc ]; then
 	cat << EOM >> $mk_conf
 
+.ifdef BSD_PKG_MK   # pkgsrc
 .if \\
     empty(PKGPATH:Marchivers/bsdtar) && \\
     empty(PKGPATH:Marchivers/bzip2) && \\
@@ -894,7 +897,7 @@ EOM
     empty(PKGPATH:Mpkgtools/pkg_install) && \\
     empty(PKGPATH:Mpkgtools/pkg_install-info) && \\
     empty(PKGPATH:Mpkgtools/pkgin) && \\
-    empty(PKGPATH:Msecurity/mozilla-rootcerts) && \\
+    empty(PKGPATH:Msecurity/mozilla-rootcerts*) && \\
     empty(PKGPATH:Msecurity/openssl) && \\
     empty(PKGPATH:Msysutils/checkperms) && \\
     empty(PKGPATH:Mtextproc/gsed) && \\
@@ -920,8 +923,8 @@ BUILDLINK_DEPMETHOD.binutils=   full
 # avoid problems when mixing compiler versions.  This breaks our use
 # of pkgsrc gcc on EL.
 PKG_DEFAULT_OPTIONS+=   always-libgcc
-.endif
-
+.endif  # RHEL
+.endif  # BSD_PKG_MK
 EOM
 	compiler=gcc-$gcc_version
     else    # Use base compiler
@@ -930,8 +933,6 @@ EOM
 else
     compiler=cc
 fi
-
-printf "\n.endif   # Pkgsrc customizations\n" >> $mk_conf
 
 # Install latest security checks
 ${install_prefix}/sbin/pkg_admin \
@@ -1384,6 +1385,29 @@ EOM
 fi
 
 cat << EOM
+==============================================================================
+Unlike some other package managers, pkgsrc does not install any specific
+certificates automatically.  Instead, it is left to the user to decide which
+certificates should be trusted.
+
+Among the most common lists of trusted certificates are those published by
+Mozilla.  These are available as the following pkgsrc packages:
+
+security/mozilla-rootcerts
+security/mozilla-rootcerts-openssl
+
+Note that these packages include certificates that are required for full
+functionality in curl, git, install.packages() in the R language, and
+possibly other programs you will install via pkgsrc.
+
+EOM
+read -p "Install Mozilla certs? y/[n] " install_certs
+if [ 0$install_certs = 0y ]; then
+    (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
+    (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)
+fi
+
+cat << EOM
 ============================================================================
 Users running sh-compatible shells can use the following to configure the
 environment for this installation:
@@ -1432,6 +1456,30 @@ For more information, go to http://www.netbsd.org/docs/pkgsrc/
 ============================================================================
 EOM
 pause
+
+cat << EOM
+============================================================================
+You can keep your pkgsrc tree up-to-date by periodically running the
+following commands:
+
+    cd $frameworks_prefix
+    cvs -q update -dP
+
+The devel/scmcvs package provides a cvs command in case your system does
+not already have one.
+
+To update your installed packages after a cvs update, there are tools such
+as
+
+    pkgtools/pkg_check
+    pkgtools/pkg_rolling-replace
+
+If there are binary packages for this installation, you may also be able to
+use
+
+    pkgin upgrade
+============================================================================
+EOM
 
 # Install pkgsrc guide onto desktop
 if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
