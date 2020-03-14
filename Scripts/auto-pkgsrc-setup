@@ -162,11 +162,11 @@ CYGWIN*)
 
 You MUST have the following Cygwin packages installed:
 
-    devel/gcc4
-    devel/g++4
-    devel/gfortran4
+    devel/gcc
+    devel/g++
+    devel/gfortran
     devel/make
-    lib/mpfr4 (required by gcc4, but not installed automatically)
+    lib/mpfr (required by gcc, but not installed automatically)
     net/curl or web/wget
 
 Ideally, no other Cygwin packages should be installed.  Libraries and tools
@@ -387,10 +387,6 @@ if ! which c++; then
 	printf "No C++ compiler found.  Aborting...\n"
 	exit 1
     fi
-fi
-
-if ! which gfortran; then
-    printf "Warning: No gfortran compiler found.\n"
 fi
 
 if [ `uname` != NetBSD ] && [ `uname` != SunOS ] && \
