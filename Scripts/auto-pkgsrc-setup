@@ -230,7 +230,7 @@ re-run this script as root.
 ============================================================================
 
 EOM
-    default_prefix="$HOME/Pkgsrc"
+    default_prefix=$(realpath "$HOME/Pkgsrc")
 else
     cat << EOM
     
@@ -622,6 +622,11 @@ if [ 0$bootstrap = '0y' ]; then
     # NOGCCERROR=yes
     # export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
     export CC CXX CPP
+    
+    # Problems with gcc8 generating code with infinite loops on CentOS
+    if [ $(uname) = Linux ]; then
+	export PKGSRC_USE_FORTIFY=no
+    fi
 
     if [ `whoami` = root ]; then
 	./bootstrap \
@@ -663,6 +668,11 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "X11_TYPE=\t\tmodular\n" >> $mk_conf
 	printf "PREFER_NATIVE=\t\tno\n" >> $mk_conf
 	printf "PREFER_PKGSRC=\t\tyes\n" >> $mk_conf
+    fi
+    
+    # Testing: Fortify may be causing problems with gcc8 on CentOS 7
+    if [ $(uname) = Linux ]; then
+	printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     fi
 
     if [ 0$use_gfortran != 0n ]; then
@@ -1195,7 +1205,7 @@ fi
 cat << EOM2 > $install_prefix/bin/bmake
 #!/bin/sh -e
 
-if ! pwd | fgrep -q $frameworks_prefix; then
+if ! pwd -P | fgrep -q $frameworks_prefix; then
     cat << EOM
     
 			    ===== Error =====
@@ -1393,15 +1403,18 @@ certificates should be trusted.
 Among the most common lists of trusted certificates are those published by
 Mozilla.  These are available as the following pkgsrc packages:
 
-security/mozilla-rootcerts
-security/mozilla-rootcerts-openssl
+    security/mozilla-rootcerts
+    security/mozilla-rootcerts-openssl
 
 Note that these packages include certificates that are required for full
 functionality in curl, git, install.packages() in the R language, and
 possibly other programs you will install via pkgsrc.
 
+They can be installed at any time, but doing it now might prevent problems
+for all users of this system.
+
 EOM
-read -p "Install Mozilla certs? y/[n] " install_certs
+read -p "Install Mozilla certs now? y/[n] " install_certs
 if [ 0$install_certs = 0y ]; then
     (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
     (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)
