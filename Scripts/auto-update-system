@@ -11,7 +11,16 @@
 
 usage()
 {
-    printf "Usage: $0 [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]\n"
+    cat << EOM
+
+Usage: $0 [--sync-pkg-cache user@host] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+
+user@host is used to rsync packages from another host that has been updated
+more recently than this one.  This reduces load on the primary package servers
+and may significantly speed up package upgrades.  The other host must have the
+same architecture and OS version as this one.
+
+EOM
     exit 1
 }
 
@@ -89,7 +98,42 @@ freebsd_autoremove()
 : ${PORTSDIR:=/usr/ports}
 
 os_type=`auto-ostype`
-mode=interactive
+
+if [ 0$1 = --help ]; then
+    usage
+fi
+
+if [ 0$1 = 0--sync-pkg-cache ]; then
+    if [ $# -ge 2 ]; then
+	host=$2
+	if echo $host | fgrep -q '@'; then
+	    case $os_type in
+	    FreeBSD)
+		pkg_cache=/var/cache/pkg
+		;;
+	    NetBSD)
+		pkg_cache=/var/db/pkgin/cache
+		;;
+	    RHEL)
+		pkg_cache=/var/cache/yum
+		;;
+	    *)
+		printf "$0: Not supported on $os_type.\n"
+		exit 1
+		;;
+	    esac
+	    rsync -av --delete ${host}:$pkg_cache/ $pkg_cache
+	else
+	    usage
+	fi
+	shift
+	shift
+    else
+	usage
+    fi
+fi
+
+mode=interactive    # Default
 if [ $# = 1 ]; then
     if [ $1 = --binary ]; then
 	mode=binary
