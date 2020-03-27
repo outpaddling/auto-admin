@@ -458,6 +458,7 @@ EOM
 # Use this section only to set up the environment for bsdinstall.
 ##########################################################################
 
+# ada = SATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
 # Add additional potential boot devices here if needed
 for DISK in ada0 da0 mfid0; do
     if [ -e /dev/\$DISK ]; then
@@ -468,7 +469,7 @@ done
 # Note: / must come first in PARTITIONS, or the new system will not boot
 
 # Reasonable default partitions for most users.  Edit to taste.
-PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 16G freebsd-ufs /tmp, 16G freebsd-ufs /var, auto freebsd-ufs /usr }"
+PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 32G freebsd-ufs /tmp, 32G freebsd-ufs /var, auto freebsd-ufs /usr }"
 
 # Alternative: Very basic partition scheme with auto-sized swap and / only.
 # PARTITIONS="\$DISK"
@@ -476,10 +477,12 @@ PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 16G freebsd-ufs /tmp, 16
 # Remove DISTRIBUTIONS you don't need to speed up install.
 # ports can be installed later with svn or portsnap.
 # src is only needed if you plan to rebuild the kernel or userland.
-DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
+# DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
 
 # These should be sufficient for most users.
-# DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
+DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
+
+#!/bin/sh
 
 ##########################################################################
 #   Post-install
@@ -500,27 +503,31 @@ DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
 ##########################################################################
 
 
-# Installing any packages here will require another interaction with the
-# new node after installation.  The first run of 'pkg' requires keyboard
-# input to confirm initialization.  ( yes | pkg will not work )
-#
-# pkg install -y rsync
+# Installing any packages here used to require another interaction with the
+# new node after installation.  The first run of 'pkg' required keyboard
+# input to confirm initialization.  Does not seem to be the case anymore
+# so this should work.
+
+pkg install -y rsync
 
 ##########################################################################
 #   Set a hostname
 ##########################################################################
 
 # Use IP as a unique hostname temporarily
-hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | grep -v 127.0.0 | sed -e 's|\.|-|g'\`'.local'
+# Not sure where the 0.0.0.0 is coming from during PXE install.  It's not
+# in ifconfig output after install.
+hostname=\`ifconfig | awk '\$1 == "inet" { print \$2 }' | fgrep -v 127.0.0 | fgrep -v 0.0.0.0 | sed -e 's|\.|-|g'\`'.local'
 echo "hostname=\$hostname" >> /etc/rc.conf
 
 ##########################################################################
 #   Set time zone
 ##########################################################################
 
+# Change this to your own timezone
 cp /usr/share/zoneinfo/America/Chicago /etc/localtime
 
-# Interactive option
+# Set timezone interactively during PXE install
 # tzsetup
 
 # Set all available interfaces to DHCP for now.
@@ -537,7 +544,7 @@ echo 'ntpdate_enable=YES' >> /etc/rc.conf
 echo 'ntpdate_flags="-u pool.ntp.org"' >> /etc/rc.conf
 echo 'dumpdev=NO' >> /etc/rc.conf
 
-sed -i '' 's|#PermitRootLogin no|PermitRootLogin without-password|g' /etc/ssh/sshd_config
+sed -i '' 's|#PermitRootLogin no|PermitRootLogin prohibit-password|g' /etc/ssh/sshd_config
 mkdir -p /root/.ssh
 echo '$root_key' >> /root/.ssh/authorized_keys
 
