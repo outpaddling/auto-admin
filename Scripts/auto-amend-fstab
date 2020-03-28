@@ -33,6 +33,8 @@ while read mount; do
     dir=`echo $mount | awk '{ print $2 }'`
     if awk '{ print $2 }' /etc/fstab | fgrep -qw $dir; then
 	printf "$dir is already in fstab.\n"
+    elif echo $mount | fgrep -q $(hostname -s); then
+	printf "$mount is on this host, skipping...\n"
     else
 	# FIXME: Make sure mount dir is empty
 	

@@ -33,7 +33,7 @@ FreeBSD)
     fi
     
     touch /etc/exports
-    auto-append-line 'nfsv4_server_setup="YES"' /etc/rc.conf $0
+    auto-append-line 'nfsv4_server_enable="YES"' /etc/rc.conf $0
     auto-enable-service -s nfsd nfs_server $0
     auto-enable-service -s statd rpc_statd $0
     auto-enable-service -s lockd rpc_lockd $0
