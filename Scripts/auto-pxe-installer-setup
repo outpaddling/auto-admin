@@ -458,21 +458,76 @@ EOM
 # Use this section only to set up the environment for bsdinstall.
 ##########################################################################
 
-# ada = SATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
-# Add additional potential boot devices here if needed
-for DISK in ada0 da0 mfid0; do
-    if [ -e /dev/\$DISK ]; then
-	break
-    fi
-done
+# Pick one or the other
+fs=UFS2
+# fs=ZFS
 
-# Note: / must come first in PARTITIONS, or the new system will not boot
+case \$fs in
+UFS2)
+    # ada = SATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
+    # Use the first ATA, SCSI, or RAID disk found
+    # Add additional potential boot devices here if needed
+    for DISK in ada0 da0 mfid0; do
+	if [ -e /dev/\$DISK ]; then
+	    break
+	fi
+    done
 
-# Reasonable default partitions for most users.  Edit to taste.
-PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 32G freebsd-ufs /tmp, 32G freebsd-ufs /var, auto freebsd-ufs /usr }"
+    # Note: / must come first in PARTITIONS, or the new system will not boot
+    # Reasonable default partitions for most users.  Edit to taste.
+    PARTITIONS="\$DISK { 4G freebsd-ufs /, 4G freebsd-swap, 32G freebsd-ufs /tmp, 32G freebsd-ufs /var, auto freebsd-ufs /usr }"
+    
+    # Alternative: Very basic partition scheme with auto-sized swap and / only.
+    # PARTITIONS="\$DISK"
+    ;;
 
-# Alternative: Very basic partition scheme with auto-sized swap and / only.
-# PARTITIONS="\$DISK"
+ZFS)
+    # Build a list of all ATA, SCSI, or RAID disks and create a stripe, mirror
+    # or raidz1, depending on how many disks of the same type are found.
+    # RAID or JBOD volumes must be created before PXE booting, or the devices
+    # will not be in /dev/.
+    # Make sure there are no external disks plugged in unless you want them
+    # as part of the boot volume.
+    
+    export nonInteractive="YES"
+    
+    # Override default 2g swap
+    # export ZFSBOOT_SWAP_SIZE=4g
+    
+    # Not sure is bsdinstall cares about CWD,so playing it safe
+    save_cwd=\$(pwd)
+    cd /dev
+    for driver in ada da mfid; do
+	if [ -e \${driver}0 ]; then
+	    disk=0
+	    while [ -e \$driver\$disk ]; do
+		ZFSBOOT_DISKS="\$ZFSBOOT_DISKS \$driver\$disk"
+		disk=\$((disk + 1))
+	    done
+	    break
+	fi
+    done
+    cd \$save_cwd
+    export ZFSBOOT_DISKS
+    
+    disk_count=\$(echo \$ZFSBOOT_DISKS | wc -w)
+    case \$disk_count in
+    1)
+	export ZFSBOOT_VDEV_TYPE=stripe
+	;;
+    
+    2)
+	export ZFSBOOT_VDEV_TYPE=mirror
+	;;
+    
+    *)
+	export ZFSBOOT_VDEV_TYPE=raidz1
+	;;
+    
+    esac
+    ;;
+
+esac    # UFS2 or ZFS
 
 # Remove DISTRIBUTIONS you don't need to speed up install.
 # ports can be installed later with svn or portsnap.
