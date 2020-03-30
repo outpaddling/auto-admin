@@ -37,6 +37,12 @@ FreeBSD)
     auto-enable-service -s nfsd nfs_server $0
     auto-enable-service -s statd rpc_statd $0
     auto-enable-service -s lockd rpc_lockd $0
+    
+    # FIXME: Present option to run nfsuserd or the sysctls below
+    auto-append-line 'vfs.nfs.enable_uidtostring=1' /etc/sysctl.conf $0
+    auto-append-line 'vfs.nfsd.enable_stringtouid=1' /etc/sysctl.conf $0
+    sysctl vfs.nfs.enable_uidtostring=1
+    sysctl vfs.nfsd.enable_stringtouid=1
     ;;
 
 *)

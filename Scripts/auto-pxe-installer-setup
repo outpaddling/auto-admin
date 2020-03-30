@@ -458,15 +458,25 @@ EOM
 # Use this section only to set up the environment for bsdinstall.
 ##########################################################################
 
+##########################################################################
+# Select boot disk(s).
+#
+# ATA/IDE take priority, followed by SAS/SCSI/external (anything handled
+# by the da driver), followed by RAIDs.  You can change the priority or
+# check additional disk drivers editing the loops below.
+#
+# Make sure there are no external disks plugged in at boot time unless
+# you want them as part of the boot volume.
+
 # Pick one or the other
 fs=UFS2
 # fs=ZFS
 
 case \$fs in
 UFS2)
-    # ada = SATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
-    # Use the first ATA, SCSI, or RAID disk found
-    # Add additional potential boot devices here if needed
+    # ada = ATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
+    # Add other drivers here if your system has them
+    # This will use the first ATA, SCSI, or RAID disk found
     for DISK in ada0 da0 mfid0; do
 	if [ -e /dev/\$DISK ]; then
 	    break
@@ -484,17 +494,16 @@ UFS2)
 ZFS)
     # Build a list of all ATA, SCSI, or RAID disks and create a stripe, mirror
     # or raidz1, depending on how many disks of the same type are found.
-    # RAID or JBOD volumes must be created before PXE booting, or the devices
-    # will not be in /dev/.
-    # Make sure there are no external disks plugged in unless you want them
-    # as part of the boot volume.
+    # Add other drivers here if your system has them
+    # RAID or JBOD volumes must already exist during PXE booting, or the
+    # devices will not be found in /dev.
     
     export nonInteractive="YES"
     
     # Override default 2g swap
     # export ZFSBOOT_SWAP_SIZE=4g
     
-    # Not sure is bsdinstall cares about CWD,so playing it safe
+    # Not sure is bsdinstall cares about CWD, so playing it safe
     save_cwd=\$(pwd)
     cd /dev
     for driver in ada da mfid; do
@@ -531,13 +540,14 @@ esac    # UFS2 or ZFS
 
 # Remove DISTRIBUTIONS you don't need to speed up install.
 # ports can be installed later with svn or portsnap.
-# src is only needed if you plan to rebuild the kernel or userland.
+# src is only needed if you plan to rebuild the kernel or userland, or
+# for building certain drivers from ports, including some WiFi drivers.
+
+# Complete set
 # DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
 
 # These should be sufficient for most users.
 DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
-
-#!/bin/sh
 
 ##########################################################################
 #   Post-install
@@ -546,17 +556,22 @@ DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
 #   installation is complete and before the first reboot.
 #
 #   If you want to unplug the keyboard and display before installation
-#   completes and never come back, do not add interactive commands
-#   below, like pkg install, tzsetup.
+#   completes and never come back, do not enable interactive commands
+#   below, like tzsetup.
 #
 #   With the default non-interactive config below, the new node will
 #   accept passwordless root login from this host via ssh after the first
 #   reboot, so you can immediately run more post-install options over the
-#   network.  If you are running DHCP on this host, the IP address
+#   network.  If you are running DHCP on a server, the IP address
 #   will be in /var/db/dhcpd/dhcpd.leases.  If your network supports it,
 #   the hostname should also self-register in DNS.
+#
+#   auto-pxe-node-discover can be run on the DHCP server during or after
+#   PXE install to add permanent leases to dhcp.conf and hostnames to
+#   /etc/hosts.
 ##########################################################################
 
+#!/bin/sh
 
 # Installing any packages here used to require another interaction with the
 # new node after installation.  The first run of 'pkg' required keyboard
