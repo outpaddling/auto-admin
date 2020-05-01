@@ -85,7 +85,6 @@ fi
 
 os_type=`auto-ostype`
 export PATH=${PATH}:`dirname $0`
-sysctl_conf=/etc/sysctl.conf
 
 if [ -z $EDITOR ]; then
     EDITOR=vi
@@ -253,27 +252,13 @@ printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 #        net.ipv4.conf.default.secure_redirects=0
 case $os_type in
 RHEL)
-    printf "# Added by $0\n" >> $sysctl_conf
-    for rule in \
-	net.ipv4.tcp_timestamps=0; do
-	
-	sysctl "$rule"
-	auto-append-line "$rule" $sysctl_conf nocomment
-    done
-    printf "# End $0 addition\n" >> $sysctl_conf
+    auto-set-sysctl net.ipv4.tcp_timestamps 0 $0
     ;;
 
 FreeBSD)
-    printf "# Added by $0\n" >> $sysctl_conf
-    for rule in \
-	net.inet.icmp.drop_redirect=1 \
-	net.inet.ip.sourceroute=0 \
-	net.inet.ip.accept_sourceroute=0; do
-
-	sysctl "$rule"
-	auto-append-line "$rule" $sysctl_conf nocomment
-    done
-    printf "# End $0 addition\n" >> $sysctl_conf
+    auto-set-sysctl net.inet.icmp.drop_redirect 1 $0
+    auto-set-sysctl net.inet.ip.sourceroute 0 $0
+    auto-set-sysctl net.inet.ip.accept_sourceroute 0 $0
     ;;
 
 *)

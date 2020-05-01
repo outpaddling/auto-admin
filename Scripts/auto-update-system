@@ -96,6 +96,7 @@ freebsd_autoremove()
 ##########################################################################
 
 : ${PORTSDIR:=/usr/ports}
+export PORTSDIR
 
 os_type=`auto-ostype`
 
@@ -206,6 +207,7 @@ FreeBSD)
     esac
     
     if [ 0$update_ports != 0n ]; then
+	auto-check-ports-branch
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
 		svn update $PORTSDIR
@@ -258,6 +260,9 @@ FreeBSD)
     esac
     if [ 0$update_base != 0n ]; then
 	printf "\nUpdating base system...\n"
+	if [ ! -e /boot.save ]; then
+	    cp -Rp /boot /boot.save
+	fi
 	tmpfile=update-system.tmp
 	freebsd-update $freebsd_update_flags fetch | tee $tmpfile
 	

@@ -2,16 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       Set a sysctl variable in /etc/sysctl and update in running kern
+#       Issue IPMI power control over a node
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-03-10  Jason Bacon Begin
+#   2020-02-02  Jason Bacon Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 variable value calling-program\n"
+    printf "Usage: $0 host-bmc-address on|off\n"
     exit 1
 }
 
@@ -20,19 +20,25 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 3 ]; then
+if [ $# != 2 ]; then
     usage
 fi
 
-variable=$1
-value=$2
-caller=$3
+auto-operator-check $0
 
-if grep -q "^$variable=" /etc/sysctl.conf; then
-    sed -i '' -e \
-	"s|^$variable=.*|$variable=$value|" \
-	/etc/sysctl.conf
-else
-    auto-append-line "$variable=$value" /etc/sysctl.conf $caller
+host=$1
+state=$2
+case $state in
+on|off)
+    ;;
+*)
+    usage
+    ;;
+esac
+
+if [ -r /root/.ipmipw ]; then
+    pw_flags="-f /root/.ipmipw"
 fi
-sysctl $variable=$value
+
+# FIXME: Don't hard-code lanplus, maybe just default to it?
+ipmitool -v -I lanplus -H $host -U root $pw_flags chassis power $state

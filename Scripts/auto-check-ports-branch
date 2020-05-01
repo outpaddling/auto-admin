@@ -1,0 +1,67 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Make sure ports branch matches pkg repo
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-04-16  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    export PORTSDIR
+    
+    repo_branch=$(auto-pkg-branch)
+    if [ ! -e $PORTSDIR/Makefile ]; then
+	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
+	auto-ports-checkout
+    else
+	ports_branch=$(auto-ports-branch)
+	if [ $ports_branch != $repo_branch ]; then
+	    cat << EOM
+
+Your binary packages are currently from the $repo_branch branch.
+
+$PORTSDIR is currently using the $ports_branch branch.
+
+Software installed via $PORTSDIR will likely have version mismatches
+with the $repo_branch binary packages.  To avoid this, you should replace
+$PORTSDIR with the $repo_branch ports branch.
+
+EOM
+	    printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
+	    read correct
+	    if [ 0$correct != 0n ]; then
+		# FIXME: Use svn switch where possible: Much faster
+		printf "Saving $PORTSDIR to $PORTSDIR.old.\n"
+		mv $PORTSDIR $PORTSDIR.old
+		auto-ports-checkout
+	    fi
+	fi
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

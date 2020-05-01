@@ -1,0 +1,47 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Determine the branch of the current ports tree
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-04-16  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    export PORTSDIR
+    
+    if head -1 $PORTSDIR/Makefile | fgrep -q head; then
+	printf "latest\n"
+    elif head -1 $PORTSDIR/Makefile | fgrep -q branches; then
+	head -1 $PORTSDIR/Makefile | awk -F / '{ print $2 }'
+    else
+	printf "$0: Cannot determine ports branch from $PORTSDIR/Makefile.\n"
+	exit 1
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

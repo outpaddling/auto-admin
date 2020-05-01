@@ -19,49 +19,66 @@ usage()
 ##########################################################################
 #   Main
 ##########################################################################
-    
+
+: ${PORTSDIR:=/usr/ports}
+export PORTSDIR
+
 case $(auto-ostype) in
 FreeBSD)
-    if [ -e /usr/ports/CHANGES ]; then
-	printf 'Ports tree already installed.\n'
+    if [ -e $PORTSDIR/CHANGES ]; then
+	printf "Ports tree already installed in $PORTSDIR.\n"
 	exit 1
     fi
     
-    case $# in
-    0)
-	selection=''
-	while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
-	    cat << EOM
+    repo_branch=$(auto-pkg-branch)
+    case $repo_branch in
+    latest)
+	case $# in
+	0)
+	    selection=''
+	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
+		cat << EOM
 	
 1.. portsnap
 2.. svn
 
 EOM
-	    printf "Enter your selection: "
-	    read selection
-	done
-	if [ $selection = 1 ]; then
-	    method=portsnap
-	else
-	    method=svn
-	fi
+		printf "Enter your selection: "
+		read selection
+	    done
+	    if [ $selection = 1 ]; then
+		method=portsnap
+	    else
+		method=svn
+		svn_branch=head
+	    fi
+	
 	;;
     
-    1)
-	method=$1
+	1)
+	    method=$1
+	    ;;
+	
+	*)
+	    usage
+	esac
 	;;
-    
     *)
-	usage
+	if [ 0$1 = 0portsnap ]; then
+	    printf "portsnap is unavailable for quarterly branches.  Using svn.\n"
+	fi
+	svn_branch=branches/$repo_branch
+	method=svn
+	;;
     esac
     
     case $method in
     svn)
-	svn checkout https://svn.FreeBSD.org/ports/head /usr/ports
+	svn checkout https://svn.FreeBSD.org/ports/$svn_branch $PORTSDIR
 	;;
     
     portsnap)
-	portsnap fetch extract
+	portsnap -p $PORTSDIR fetch extract
 	;;
     
     *)

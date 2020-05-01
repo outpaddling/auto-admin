@@ -62,14 +62,14 @@ get_new_leases()
     fi
     lease_file=$1
 
-    leases=`awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4 | uniq`
+    leases=$(awk '$1 == "lease" { print $2 }' $lease_file | sort -n -t . -k 4)
     
     # Detect unconfigured servers
     for ip in $leases; do
 	# Already recorded?
 	# Escape periods so 192.168.1.3 doesn't match 192.168.193
 	search_ip=$(echo $ip | sed -e 's|\.|\\\.|g')
-	if ! egrep -q "^#? *$search_ip" /etc/hosts; then
+	if ! egrep -qw "^#? *$search_ip" /etc/hosts; then
 	    printf "\n$ip not found in /etc/hosts.\n"
 	    
 	    # Get lease state from dhcpd.leases

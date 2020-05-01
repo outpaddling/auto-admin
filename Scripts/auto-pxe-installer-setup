@@ -500,10 +500,10 @@ ZFS)
     
     export nonInteractive="YES"
     
-    # Override default 2g swap
+    # Override default swap partition size
     # export ZFSBOOT_SWAP_SIZE=4g
     
-    # Not sure is bsdinstall cares about CWD, so playing it safe
+    # Not sure if bsdinstall cares about CWD, so playing it safe
     save_cwd=\$(pwd)
     cd /dev
     for driver in ada da mfid; do
@@ -513,13 +513,14 @@ ZFS)
 		ZFSBOOT_DISKS="\$ZFSBOOT_DISKS \$driver\$disk"
 		disk=\$((disk + 1))
 	    done
-	    break
+	    break   # Only use first detected disk type for pool
 	fi
     done
     cd \$save_cwd
     export ZFSBOOT_DISKS
     
-    disk_count=\$(echo \$ZFSBOOT_DISKS | wc -w)
+    # awk removes leading space from wc -l output
+    disk_count=$(echo $ZFSBOOT_DISKS | wc -w | awk '{ print $1 }')
     case \$disk_count in
     1)
 	export ZFSBOOT_VDEV_TYPE=stripe

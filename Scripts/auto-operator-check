@@ -2,16 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       Set a sysctl variable in /etc/sysctl and update in running kern
+#       Verify that calling user a member of operator.
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-03-10  Jason Bacon Begin
+#   2019-07-16  Jason Bacon Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 variable value calling-program\n"
+    printf "Usage: $0 calling-script-name\n"
     exit 1
 }
 
@@ -20,19 +20,11 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 3 ]; then
+if [ $# != 1 ]; then
     usage
 fi
 
-variable=$1
-value=$2
-caller=$3
-
-if grep -q "^$variable=" /etc/sysctl.conf; then
-    sed -i '' -e \
-	"s|^$variable=.*|$variable=$value|" \
-	/etc/sysctl.conf
-else
-    auto-append-line "$variable=$value" /etc/sysctl.conf $caller
+if ! groups | fgrep -q operator; then
+    printf "$1 can only be run by members of operator.\n"
+    exit 1
 fi
-sysctl $variable=$value

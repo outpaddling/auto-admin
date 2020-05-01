@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [arguments to pass to auto-update-system]\n"
+    printf "Usage: $0 [--no-reboot] [arguments to pass to auto-update-system]\n"
     exit 1
 }
 
@@ -23,10 +23,15 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $1 = '--help' ]; then
+if [ 0$1 = 0'--help' ]; then
     usage
 fi
-    
+
+if [ 0$1 == 0'--no-reboot' ]; then
+    no_reboot=1
+    shift
+fi
+
 case $(auto-ostype) in
 FreeBSD)
     dir=/usr/local/etc/pkg/repos
@@ -40,10 +45,14 @@ FreeBSD: {
 }
 EOM
     pkg upgrade -y
-    printf "Reboot to reload services? (y/n) [y] "
-    read reboot
-    if [ 0$reboot != 0n ]; then
-	shutdown -r now
+    auto-check-ports-branch
+    
+    if [ 0$no_reboot != 01 ]; then
+	printf "Reboot to reload services? (y/n) [y] "
+	read reboot
+	if [ 0$reboot != 0n ]; then
+	    shutdown -r now
+	fi
     fi
     ;;
     

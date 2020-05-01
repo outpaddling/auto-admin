@@ -230,7 +230,8 @@ re-run this script as root.
 ============================================================================
 
 EOM
-    default_prefix=$(realpath "$HOME/Pkgsrc")
+    # Not all systems have a realpath command
+    default_prefix=`(cd "$HOME/Pkgsrc"; pwd -P)`
 else
     cat << EOM
     
@@ -874,10 +875,10 @@ EOM
     empty(PKGPATH:Mdevel/gmp) && \\
     empty(PKGPATH:Mdevel/gtexinfo) && \\
     empty(PKGPATH:Mdevel/libffi) && \\
+    empty(PKGPATH:Mdevel/libtool-base) && \\
     empty(PKGPATH:Mdevel/libuuid) && \\
     empty(PKGPATH:Mdevel/makedepend) && \\
     empty(PKGPATH:Mdevel/pkgconf) && \\
-    empty(PKGPATH:Mdevel/libtool-base) && \\
     empty(PKGPATH:Mdevel/m4) && \\
     empty(PKGPATH:Mdevel/ncurses) && \\
     empty(PKGPATH:Mdevel/nbpatch) && \\
