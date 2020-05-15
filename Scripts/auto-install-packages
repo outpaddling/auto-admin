@@ -1,0 +1,166 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+    
+##########################################################################
+#   Main
+##########################################################################
+    
+if [ $# -lt 1 ]; then
+    printf "Usage: $0 [-l] [-p PORTSDIR] category/port [category/port ...]\n"
+    exit 1
+fi
+    
+case $(auto-ostype) in
+FreeBSD)
+    install_from_port()
+    {
+	# PKGDIR causes "Missing pkg-descr" errors during install
+	unset PKGDIR
+	
+	# Configure this port, but install dependencies with default options
+	(cd $PORTSDIR/$port && make config && make -DBATCH install && make clean)
+    }
+    
+    # Default.  Override below.
+    PORTSDIR='/usr/ports'
+    latest_package_name=0
+    
+    #set -x
+    while [ 0`echo $1 | cut -c 1,1` = 0'-' ]; do
+	if [ $1 = '-l' ]; then
+	    latest_package_name=1
+	    shift
+	elif [ $1 = '-p' ]; then
+	    PORTSDIR=$2
+	    shift
+	    shift
+	fi
+    done
+    
+    if [ 0$PKGDIR = 0 ]; then
+	export PKGDIR=$PORTSDIR/packages/All
+	mkdir -p $PKGDIR
+    fi
+    
+    # Allow mirrors to be used without having PACKAGEROOT set globally.
+    if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
+	export PACKAGEROOT=$AUTO_PACKAGEROOT
+    else
+	export PACKAGEROOT="ftp://ftp.freebsd.org"
+    fi
+    
+    # Use -stable instead of -release for release candidates
+    if uname -r | fgrep -q RELEASE; then
+	# Keep whole version and remove -RELEASE
+	release=$(uname -r | cut -d '-' -f 1)'-release'
+    else
+	# Keep only major version
+	release=$(uname -r | cut -d '.' -f 1)'-stable'
+    fi
+    
+    if [ 0$latest_package_name = 01 ]; then
+	release=$release/Latest
+    else
+	release=$release/All
+    fi
+    
+    PACKAGEDIR=$(uname -p)'/packages-'$release
+    export PACKAGESITE=$PACKAGEROOT/pub/FreeBSD/ports/$PACKAGEDIR/
+    
+    for port in $*; do
+	# Make sure each is given as category/port
+	if ! printf $port | fgrep -q '/'; then
+	    printf "${0}: $port missing category.\n"
+	    exit 1
+	fi
+	
+	if [ ! -d ${PORTSDIR}/$port ]; then
+	    printf "$port does not exist.\n"
+	    break
+	fi
+	
+	pkg_name=`auto-print-make-variable -p $PORTSDIR $port PKGNAME`
+	if [ $latest_package_name = 1 ]; then
+	    pkg_name=${pkg_name%%-[0-9]*}
+	fi
+	if ! auto-package-installed -p $PORTSDIR $port; then
+	    if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
+		install_from_port
+		status=$?
+	    else
+		# New pkgng system
+		unset PACKAGESITE
+		unset PACKAGEROOT
+		if [ -e $PKGDIR/$pkg_name.tbz ]; then
+		    pkg_path="$PKGDIR/$pkg_name.tbz"
+		    pkg_flags='add'
+		elif [ -e $PKGDIR/$pkg_name.txz ]; then
+		    pkg_path="$PKGDIR/$pkg_name.txz"
+		    pkg_flags='add'
+		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
+		    pkg_path="/dist/packages/All/$pkg_name.tbz"
+		    pkg_flags='add'
+		elif [ -e /dist/packages/All/$pkg_name.txz ]; then
+		    pkg_path="/dist/packages/All/$pkg_name.txz"
+		    pkg_flags='add'
+		else
+		    # Package is in /var/cache/pkg or not yet downloaded
+		    pkg_path=$pkg_name
+		    pkg_flags='install -y'
+		    unset PKGDIR    # Let pkgng find it
+		fi
+		printf "pkg $pkg_flags $pkg_path\n"
+    
+		# Compensate for network hiccups by retrying
+		tries=2
+		# pkg returns 0 when it can't find a package, so grep the
+		# output to detect failures.
+		success=0
+		tmp=auto-install-packages.tmp
+		while [ $success = 0 ] && [ $tries -gt 1 ]; do
+		    pkg $pkg_flags $pkg_path 2>&1 | tee $tmp
+		    if fgrep -q 'No package' $tmp; then
+			tries=$((tries-1))
+			printf "Error installing $port.  $tries more tries.\n"
+			sleep 5
+		    else
+			success=1
+		    fi
+		    rm $tmp
+		done
+		if [ $tries -gt 1 ]; then
+		    status=0
+		else
+		    rm -f $PKGDIR/$pkg_name.tbz $PKGDIR/$pkg_name.txz
+		    if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
+			printf "Giving up on binary package.  Attempting to build from source...\n"
+			install_from_port
+			status=$?
+		    else
+			# Better status value (from pkg_add?)
+			status=1
+		    fi
+		fi
+	    fi
+	fi
+    done
+    exit $status
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

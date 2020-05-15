@@ -1,0 +1,37 @@
+#!/bin/sh -e
+    
+usage()
+{
+    printf "Usage: $0\n"
+    exit 64 # sysexits.h    EX_USAGE
+}
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+# Must be run by root because it builds and installs system binaries
+if [ `whoami` != 'root' ]; then
+    printf "$0 must be run by root.\n"
+    exit 64
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    if [ `uname -m` != 'amd64' ]; then
+	printf "$0 is only for amd64.\n"
+	exit 1
+    fi
+    
+    cd /usr/src
+    make build32
+    make install32
+    /etc/rc.d/ldconfig restart
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

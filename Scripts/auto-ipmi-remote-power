@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Issue IPMI power control over a node
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-02  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 host-bmc-address on|off\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+auto-operator-check $0
+
+host=$1
+state=$2
+case $state in
+on|off)
+    ;;
+*)
+    usage
+    ;;
+esac
+
+if [ -r /root/.ipmipw ]; then
+    pw_flags="-f /root/.ipmipw"
+fi
+
+# FIXME: Don't hard-code lanplus, maybe just default to it?
+ipmitool -v -I lanplus -H $host -U root $pw_flags chassis power $state

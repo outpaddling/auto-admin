@@ -1,0 +1,32 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set a sysctl variable in /etc/sysctl and update in running kern
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-03-10  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 variable value calling-program\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    usage
+fi
+
+variable=$1
+value=$2
+caller=$3
+
+auto-set-conf-var $variable $value /etc/sysctl.conf $caller
+sysctl $variable=$value

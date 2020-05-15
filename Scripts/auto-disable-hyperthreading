@@ -1,0 +1,24 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    auto-append-line machdep.hyperthreading_allowed=0 /boot/loader.conf $0
+    printf "Hyperthreading will be disabled upon the next reboot.\n"
+    printf "Edit /boot/loader.conf to re-enable.\n"
+    ;;
+
+RHEL|Linux)
+    cat << EOM
+
+Linux does not provide a simple way to disable hyperthreading.  It is best
+to disable it in the BIOS if you are running Linux.
+
+EOM
+    exit 1
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    ;;
+
+esac

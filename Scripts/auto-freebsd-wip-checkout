@@ -1,0 +1,62 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check out a new instance of FreeBSD-ports-wip
+#
+#   Arguments:
+#       None
+#
+#   History:
+#   Date        Name        Modification
+#   2019-11-17  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 git|svn\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if [ `whoami` != root ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+if [ $(uname) = FreeBSD ]; then
+    if [ ! -e /usr/ports/CHANGES ]; then
+	auto-ports-checkout
+    fi
+    # Need for github cert
+    pkg install -y ca_root_nss subversion
+    if [ ! -e /usr/ports/wip ]; then
+	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
+	sh ./freebsd-wip-checkout svn
+    fi
+else
+    printf "$0: Not supported on $(uname).\n"
+    exit 1
+fi

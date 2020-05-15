@@ -1,0 +1,35 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check remote server status using IPMI
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-02  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 host-bmc-address\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+auto-operator-check $0
+
+if [ -r /root/.ipmipw ]; then
+    pw_flags="-f /root/.ipmipw"
+fi
+
+# FIXME: Don't hard-code lanplus
+# ipmitool -v -I lanplus -H $1 -U root sel list
+ipmitool -v -I lanplus -H $1 -U root $pw_flags chassis status

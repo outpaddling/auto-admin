@@ -1,0 +1,32 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Convert a networking octet to hexadecimal
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 #.#.#.#\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+octet=$1
+first=$(echo $octet | cut -d . -f 1)
+second=$(echo $octet | cut -d . -f 2)
+third=$(echo $octet | cut -d . -f 3)
+fourth=$(echo $octet | cut -d . -f 4)
+printf "0x%08X\n" $(( ($first << 24) + ($second << 16) + ($third << 8) + $fourth ))

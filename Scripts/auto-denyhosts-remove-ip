@@ -1,0 +1,89 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-07-30  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 ip-address\n"
+    exit 64 # From sysexits.h
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+#
+if [ $# != 1 ]; then
+    usage
+fi
+
+ip=$1
+
+
+case $(auto-ostype) in
+FreeBSD)
+    sed="sed -i ''"
+    if [ -z $LOCALBASE ]; then
+	prefix=/usr/local
+    else
+	prefix=$LOCALBASE
+    fi
+    ;;
+
+Linux|NetBSD)
+    sed="sed -i"
+    prefix=`auto-pkgsrc-prefix`
+    ;;
+
+*)
+    printf "${0}: Unsuported OS: $(auto-ostype)\n"
+    exit 1
+esac
+
+work_dir=$prefix/share/denyhosts/data
+
+# Stop DenyHosts
+service denyhosts stop
+
+# Remove the IP address from /etc/hosts.deny
+$sed "/$ip/d" /etc/hosts.deniedssh
+
+# Remove the IP address from /etc/hosts.deny
+$sed "/$ip/d" $prefix/etc/hosts.deniedssh
+
+# Edit WORK_DIR/hosts and remove the lines containing the IP address. Save the file.
+$sed "/$ip/d" $work_dir/hosts
+
+# Edit WORK_DIR/hosts-restricted and remove the lines containing the IP address. Save the file.
+$sed "/$ip/d" $work_dir/hosts-restricted
+
+# Edit WORK_DIR/hosts-root and remove the lines containing the IP address. Save the file.
+$sed "/$ip/d" $work_dir/hosts-root
+
+# Edit WORK_DIR/hosts-valid and remove the lines containing the IP address. Save the file.
+$sed "/$ip/d" $work_dir/hosts-valid
+
+# Edit WORK_DIR/user-hosts and remove the lines containing the IP address. Save the file.
+$sed "/$ip/d" $work_dir/users-hosts
+
+# (optional) Consider adding the IP address to WORK_DIR/allowed-hosts
+cat << EOM
+You can add $ip to the allowed-hosts file to prevent it from being
+blocked again in the future.
+
+Only do this if you trust ALL potential users of $ip.
+EOM
+
+# Start DenyHosts
+service denyhosts start
+

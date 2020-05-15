@@ -1,0 +1,30 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    auto-fusefs-install
+    
+    am=/etc/auto_master
+    sed -i '' -e 's|#.*/media|/media|' $am
+    if ! grep -q '^/media.*,sync' $am; then
+	sed -i '' -e '/^\/media/s|$|,sync|' $am
+    fi
+    auto-append-line 'autofs_enable="YES"' /etc/rc.conf $0
+    auto-append-line 'autounmountd_flags="-r 5 -t 5"' /etc/rc.conf $0
+    for service in automount automountd autounmountd devd; do
+	service $service restart
+    done
+    
+    cat << EOM
+
+Autounmountd is set to check every 5 seconds.  Adjust in /etc/rc.conf
+if desired.
+
+EOM
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    ;;
+
+esac

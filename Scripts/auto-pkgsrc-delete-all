@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Remove all installed packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-07  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+packages=`pkg_info | awk '{print $1}' | egrep -v 'bmake|pkg_install|bootstrap-mk-files|cwrappers'`
+pkg_delete -f $packages
+pkg_info

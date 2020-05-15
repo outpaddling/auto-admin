@@ -1,0 +1,71 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       auto-build-infiniband-modules
+#       Build, install, and load infiniband kernel modules.
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-04-14  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 datagram|connected\n"
+    printf "* Specify connected if you want to use connected mode ipoib.\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+    
+case $(auto-ostype) in
+FreeBSD)
+    ipoib_mode=$1
+    case $ipoib_mode in
+    datagram)
+	;;
+    
+    connected)
+	export CFLAGS="-DIPOIB_CM"
+	;;
+    
+    *)
+	usage
+	;;
+    
+    esac
+	
+    cd /usr/src
+    make clean  # Rebuild all objs in case src was updated
+    
+    cd sys/modules
+    for module in mlx4 ibcore mlx4ib ipoib; do
+	rm -f /boot/modules/$module.ko
+	cd $module
+	make clean
+	make DEBUG_FLAGS="-DVIMAGE=1"
+	make install
+	# Minimize damage if kldload triggers a panic.  Unlikely, but has happened
+	# with experimental drivers.
+	sync
+	kldload $module || true
+	auto-append-line ${module}'_load="YES"' /boot/loader.conf $0
+	cd ..
+    done
+    kldstat
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

@@ -1,0 +1,30 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Verify that calling user a member of operator.
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-07-16  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 calling-script-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if ! groups | fgrep -q operator; then
+    printf "$1 can only be run by members of operator.\n"
+    exit 1
+fi

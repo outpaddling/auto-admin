@@ -1,0 +1,70 @@
+#!/bin/sh -e
+    
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ] && [ $# != 4 ]; then
+    printf "Usage: $0 [-s rc.d-script-name] rc.conf-name calling-program-name\n"
+    printf "Example: $0 -s kerberos5_server kerberos my-setup-script\n"
+    exit 1
+fi
+
+if [ $# = 4 ]; then
+    script=$2
+    shift
+    shift
+else
+    script=$1
+fi
+service=$1
+caller=$2
+
+case $(auto-ostype) in
+FreeBSD)
+    if [ 0$LOCALBASE = 0 ]; then
+	LOCALBASE="/usr/local"
+    fi
+    
+    if grep -qw "${service}_enable=\"YES\"" /etc/rc.conf; then
+	printf "$service already running.\n"
+	printf "If you need the service restarted, you must do it manually.\n"
+	exit 0
+    fi
+    
+    if grep -qw "${service}_enable=\"NO\"" /etc/rc.conf; then
+	sed -i '' "s|${service}_enable=\"NO\"|${service}_enable=\"YES\"|g" /etc/rc.conf
+    fi
+    
+    if killall $service; then
+	printf "Killed rogue $service.\n"
+    fi
+    rm -f /var/run/$service.pid
+    auto-append-line ${service}_enable ${service}_enable=\"YES\" /etc/rc.conf $caller
+    if [ -e /etc/rc.d/$script ]; then
+	/etc/rc.d/$script start
+    elif [ -e ${LOCALBASE}/etc/rc.d/$script ]; then
+	${LOCALBASE}/etc/rc.d/$script start
+    else
+	printf "Warning: No service startup script found for $service.\n"
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

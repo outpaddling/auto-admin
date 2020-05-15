@@ -1,0 +1,111 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure idrac for standard cluster-admin IP scheme
+#
+#   Arguments:
+#       shared: For idrac with shared interface
+#       dedicated: For idrac with dedicated interface
+#       (Most use a shared interface)
+#
+#   FIXME:
+#       Factor out an auto-idrac-config script to set any network
+#       parameters and call it from here.
+#
+#   History:
+#   Date        Name        Modification
+#   2016-08-24  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 network-interface-of-primary-ethernet shared|dedicated network-prefix-size gateway\n"
+    printf "Example: $0 bce0 shared 24 192.168.0.1\n"
+    printf "Example: $0 em1 dedicated 16 192.168.1.1\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    usage
+fi
+
+auto-root-check $0
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+nic=$1
+nic_mode=$2
+bits=$(( 32 - $3 ))
+gateway=$4
+
+# Sanity check before messing with iDRAC
+case $nic_mode in
+dedicated|shared)
+    ;;
+    
+*)
+    usage
+    ;;
+esac
+
+# Run ipmi-install on all hosts first
+case `auto-ostype` in
+FreeBSD)
+    eth_addr=`ifconfig $nic | awk '$1 == "inet" { print $2 }'`
+    ;;
+
+RHEL)
+    eth_addr=`ip addr show $nic | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
+    ;;
+
+*)
+    printf "Unsupported OS: `auto-ostype`\n"
+    exit 1
+    ;;
+esac
+printf "Ethernet: $eth_addr\n"
+
+# These settings are specific to cluster-admin
+eth_hex=$(auto-octet-to-hex $eth_addr)
+addresses_per_segment=$(( (1 << bits) / 4 ))
+idrac_hex=$(( $eth_hex + $addresses_per_segment ))
+# idrac_addr=`echo $eth_addr | awk -F . '{ printf("%s.%s.%s.%s\n", $1, $2, $3+64, $4) }'`
+idrac_addr=$(auto-hex-to-octet $idrac_hex)
+printf "IDRAC:    $idrac_addr\n"
+
+if ! which ipmitool; then
+    auto-ipmi-install
+fi
+
+ipmitool lan set 1 ipsrc static
+ipmitool lan set 1 ipaddr $idrac_addr
+netmask=$(( (0xffffffff << $bits) & 0xffffffff ))
+# auto-hex-to-octet $netmask
+ipmitool lan set 1 netmask $(auto-hex-to-octet $netmask)
+ipmitool lan set 1 defgw ipaddr $gateway
+
+# Dedicated NIC
+case $nic_mode in
+dedicated)
+    ipmitool raw 0x30 0x24 2
+    ;;
+
+shared)
+    ipmitool raw 0x30 0x24 0
+    ;;
+    
+*)
+    usage
+    ;;
+esac
+
+# Change NIC settings
+ipmitool raw 0x30 0x25

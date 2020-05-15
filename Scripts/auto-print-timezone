@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    # /etc/localtime is a copy of one of the files under /usr/share/zoneinfo
+    local=$(sha256 -q /etc/localtime)
+    find /usr/share/zoneinfo -type f -exec sha256 '{}' \; | \
+	awk -v local=$local '$4 == local { print $2 }' | \
+	cut -d / -f 5,6 | cut -d ')' -f 1
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

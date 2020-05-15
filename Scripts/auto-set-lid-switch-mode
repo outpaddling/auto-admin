@@ -1,0 +1,49 @@
+#!/bin/sh -e
+    
+case $(auto-ostype) in
+FreeBSD)
+    if [ $# != 1 ]; then
+	cat << EOM
+    
+    Usage:
+    
+    $0 suspend|shutdown|none
+    
+    $0 S1|S2|S3|S4|S5|NONE
+    Run "man acpi" for more information.
+    
+EOM
+	exit 1
+    fi
+
+    case $1 in
+    suspend)
+	state=S3
+	;;
+    shutdown)
+	state=S5
+	;;
+    none)
+	state=NONE
+	;;
+    *)
+	state=$1
+    esac
+    
+    # Enable suspend on lid-close
+    # hw.acpi.lid_switch_state exists whether or not computer has a lid
+    if ! sysctl hw.acpi.supported_sleep_state | fgrep -q $state && \
+	[ $state != 'NONE' ]; then
+	printf "$state is not a supported state.\n"
+	exit 1
+    fi
+
+    auto-set-sysctl hw.acpi.lid_switch_state $state $0
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

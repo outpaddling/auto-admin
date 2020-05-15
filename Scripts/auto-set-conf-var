@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Add or update a variable=value pair in a configuration file.
+#       Like sysrc, but allows for sysctl-style variable names
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-05-14  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 variable value file calling-program|'nocomment'\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    usage
+fi
+
+variable="$1"
+value="$2"
+file="$3"
+caller="$4"
+
+if [ ! -e $file ]; then
+    printf "$0: $file does not exist.\n"
+    exit 1
+fi
+
+if grep -q "^$variable=" $file; then
+    sed -i '' -e "s|^$variable=.*|$variable=$value|" $file
+else
+    auto-append-line "$variable=$value" $file $caller
+fi
+

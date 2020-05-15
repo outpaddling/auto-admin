@@ -1,0 +1,17 @@
+#!/bin/sh -e
+    
+case $(auto-ostype) in
+FreeBSD)
+    # Required by bash
+    auto-append-line /dev/fd 'fdesc\t\t/dev/fd\t\t\tfdescfs\trw\t\t0\t0' /etc/fstab $0
+    if ! mount | fgrep -qw fdescfs; then
+	mount fdesc
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

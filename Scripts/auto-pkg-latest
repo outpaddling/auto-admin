@@ -1,0 +1,64 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Switch system to use latest packages rather than quarterly
+#
+#   Arguments:
+#       Any arguments to pass to auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-06-16  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--no-reboot] [arguments to pass to auto-update-system]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ 0$1 = 0'--help' ]; then
+    usage
+fi
+
+if [ 0$1 == 0'--no-reboot' ]; then
+    no_reboot=1
+    shift
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    dir=/usr/local/etc/pkg/repos
+    file=$dir/bleeding-edge.conf
+    
+    mkdir -p $dir
+    auto-backup-file $file
+    cat << EOM > $file
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
+}
+EOM
+    pkg upgrade -y
+    auto-check-ports-branch
+    
+    if [ 0$no_reboot != 01 ]; then
+	printf "Reboot to reload services? (y/n) [y] "
+	read reboot
+	if [ 0$reboot != 0n ]; then
+	    shutdown -r now
+	fi
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

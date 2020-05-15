@@ -1,0 +1,50 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       {En|Dis}able hardware write cache to prevent filesystem corruption
+#       in the event of sudden power loss.
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-05-14  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 on|off calling-program|'nocomment'\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+if [ $1 = on ]; then
+    state=1
+elif [ $1 = off ]; then
+    state=0
+else
+    usage
+fi
+caller="$2"
+
+auto-root-check $0
+
+case $(auto-ostype) in
+FreeBSD)
+    auto-set-conf-var kern.cam.ada.write_cache $state /boot/loader.conf $caller
+    printf "Write cache will be $1 after the next reboot.\n"
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

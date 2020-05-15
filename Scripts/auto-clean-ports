@@ -1,0 +1,46 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Description:
+#       Clean FreeBSD or MacPorts work directories
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+: ${PORTSDIR:=/usr/ports}
+
+case $(auto-ostype) in
+FreeBSD)
+    before=$(df -m $PORTSDIR | awk '$1 != "Filesystem" { print $4 }')
+    printf "Initial free space: %d\n" $before
+    cd $PORTSDIR
+    rm -rf distfiles/* > /dev/null 2>&1
+    for dir in $(ls -d */*/work*); do
+	# Make sure it still exists - may have been wiped by a recursive clean
+	if [ -e $dir ]; then
+	    echo "Cleaning $dir..."
+	    cd $dir/..
+	    make clean
+	    cd $PORTSDIR
+	fi
+    done
+    after=$(df -m $PORTSDIR | awk '$1 != "Filesystem" { print $4 }')
+    printf "Initial free space: %d\n" $before
+    printf "Final free space: %d\n" $after
+    diff=$(($after - $before))
+    printf "%d megabytes freed.\n" $diff
+    ;;
+
+Darwin)
+    port clean --all installed
+    ;;
+
+*)
+    echo "OS $(auto-ostype) is not supported by $0."
+    exit 1
+    ;;
+
+esac
+

@@ -1,0 +1,38 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Disable file transfer commands.
+#       Useful on cluster head nodes.
+#       
+#   History:
+#   Date        Name        Modification
+#   2013?       Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+RHEL)
+    chmod o-rwx /usr/bin/scp /usr/bin/sftp /usr/bin/rsync
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

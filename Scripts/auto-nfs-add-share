@@ -1,0 +1,55 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Add a share to the local NFS setup
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-12-27  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 directory network mask [additional export flags]\n"
+    printf "Example: $0 /usr/home 192.168.0.0 255.255.255.0 -maproot=root\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 3 ]; then
+    usage
+fi
+
+dir="$1"
+network="$2"
+mask="$3"
+shift; shift; shift
+
+if [ ! -d "$dir" ]; then
+    printf "$0: $dir is not a directory.\n"
+    exit 1
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    if mount | awk -v dir="$dir" '$3 == dir { print $4 }' | fgrep -q zfs; then
+	fs=$(mount | awk -v dir="$dir" '$3 == dir { print $1 }')
+	zfs set sharenfs="-network $network -mask $mask $@" "$fs"
+    else
+	auto-append-line "$dir -network $network -mask $mask $@" \
+	    /etc/exports $0
+    fi
+    ;;
+
+*)
+    printf "$0: $(auto-ostype) is not yet supported.\n"
+    exit 1
+    ;;
+
+esac
+auto-nfs-restart

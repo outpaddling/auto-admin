@@ -1,0 +1,81 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Print the value of a port/package make variable.
+#
+#   Arguments:
+#       [-p prefix]   Defaults to prefix of active ports/pkgsrc tree
+#
+#   History:
+#   Date        Name        Modification
+#   2013-01-21  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-p prefix] category/${port_or_package} variable-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if which bmake > /dev/null 2>&1; then
+    make=bmake
+    port_or_package=package
+    base_dir=`auto-pkgsrc-dir`
+else
+    make=make
+    port_or_package=port
+    if [ $(auto-ostype) = FreeBSD ]; then
+	if [ -z $PORTSDIR ]; then
+	    base_dir=/usr/ports
+	else
+	    base_dir=$PORTSDIR
+	fi
+    else
+	base_dir=`auto-pkgsrc-dir`
+    fi
+fi
+
+case $# in
+2)
+    ;;
+4)
+    if [ $1 = '-p' ]; then
+	base_dir=$2
+	shift
+	shift
+    else
+	usage
+    fi
+    ;;
+*)
+    usage
+    ;;
+esac
+
+if [ ! -d $base_dir/$1 ]; then
+    printf "No such ${port_or_package}: $base_dir/$1\n"
+    exit 2
+fi
+
+makefile=/tmp/pkgname.$$
+cat << EOM > $makefile
+
+# Prevent HAVE_GNOME from adding -gnome to PKGNAME
+WITHOUT_GNOME=  yes
+
+print-variable:
+	@echo \${$2}
+
+EOM
+cat "$base_dir/$1/Makefile" >> $makefile
+
+# cat $makefile
+cd $base_dir/$1
+${make} -f $makefile print-variable
+rm -f $makefile

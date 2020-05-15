@@ -1,0 +1,17 @@
+#!/bin/sh -e
+    
+case $(auto-ostype) in
+FreeBSD)
+    # Required by bash
+    auto-append-line /proc 'proc\t\t/proc\t\t\tprocfs\trw\t\t0\t0' /etc/fstab $0
+    if ! mount | fgrep -qw procfs; then
+	mount proc
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

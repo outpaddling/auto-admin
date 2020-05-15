@@ -1,0 +1,58 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Determine the ports branch from which packages are installed
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-04-16  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    if awk '$1 == "url:" { print $2 }' /usr/local/etc/pkg/repos/*.conf \
+	    2> /dev/null | fgrep -q latest; then
+	printf "latest\n"
+    elif awk '$1 == "url:" { print $2 }' /etc/pkg/*.conf | fgrep -q latest; then
+	printf "latest\n"
+    else
+	##########################################################################
+	#   FIXME:
+	#
+	#   Guessing based on today's date will fail from the creation of each
+	#   quarterly branch until the completion of package builds.
+	#   
+	#   https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=245667
+	##########################################################################
+	
+	year=$(date +'%Y')
+	month=$(date +'%m')
+	quarter=$((($month - 1) / 3 + 1))
+	branch=${year}Q$quarter
+    
+	printf "$branch\n"
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

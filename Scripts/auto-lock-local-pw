@@ -1,0 +1,52 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Disable local password for user, so they must use a service
+#       such as LDAP or AD, or are locked out of the system.
+#   
+#   History:
+#   Date        Name        Modification
+#   2019-06-25  Jason Wayne Bacon - UITS/UITS - SysadminBegin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+user_name=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    # pw lock blocks all authentication methods, so just munge the pw manually
+    # with a !! to disable the local password.
+    pw=$(awk -F : -v user_name=$user_name '$1 == user_name { print $2 }' /etc/master.passwd)
+    printf "!!$pw\n" | pw usermod $user_name -H 0
+    # FIXME: Is there a way to disable password expiration, e.g. +0?
+    # Should be, but man page is unclear
+    pw usermod $user_name -p +20y
+    ;;
+
+RHEL)
+    # passwd -l only blocks local password.  LDAP, AD, etc will still work.
+    passwd -l $user_name
+    # Linux still tracks password age even if the password is locked
+    chage -M -1 $user_name
+    ;;
+
+*)
+    printf "$0: Unsupported os: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

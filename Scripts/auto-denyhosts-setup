@@ -1,0 +1,130 @@
+#!/bin/sh -e
+
+pause()
+{
+    local junk
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-09-05  Charlie &   Begin
+##########################################################################
+
+line()
+{
+    printf '==============================================================\n'
+}
+
+# 
+case $(auto-ostype) in
+FreeBSD)
+    pkg install -gy 'denyhosts-py3*' || true
+    pkg install -gy 'py3*-denyhosts' || true
+    if [ -z $LOCALBASE ]; then
+	prefix=/usr/local
+    else
+	prefix=$LOCALBASE
+    fi
+    ;;
+
+RHEL|NetBSD)
+    cat << EOM
+
+Install denyhosts using your favorite package manager, e.g. pkgsrc.
+Pkgsrc can be installed via auto-pkgsrc-setup.
+
+EOM
+    pause
+    default_prefix=`auto-pkgsrc-prefix`
+    
+    printf "Prefix of denyhost installation? [$default_prefix] "
+    read prefix
+    if [ 0$prefix = 0 ]; then
+	prefix=$default_prefix
+    fi
+    
+    ln -sf $prefix/share/denyhosts/daemon-control-dist /etc/init.d/denyhosts
+    
+    # Enable init script
+    chkconfig denyhosts on
+    ;;
+*)
+    printf "Sorry, $0 is not implemented for $(auto-ostype) yet.\n"
+    exit 1
+    ;;
+esac
+
+if [ -z $EDITOR ]; then
+    EDITOR=vi
+    export EDITOR
+fi
+
+# Configure hosts.allow
+if ! fgrep -q 'Your old rules are below' /etc/hosts.allow; then
+    c=1
+    while [ -e /etc/hosts.allow.$c ]; do
+	c=$((c + 1))
+    done
+    cp /etc/hosts.allow /etc/hosts.allow.$c
+    cat << EOM > /etc/hosts.allow
+
+# Uncomment and edit the rules below
+
+all : /etc/hosts.deniedssh : deny
+#ALL : 127.0.0. : allow
+#ALL : PARANOID : RFC931 20 : deny
+#all : all : deny
+
+# Your old rules are below.  BE CAREFUL WHICH OF THEM YOU RESTORE!
+EOM
+    cat /etc/hosts.allow.$c >> /etc/hosts.allow
+fi
+
+cat << EOM
+
+Opening hosts.allow in $EDITOR.  Allow only services you really need!
+
+EOM
+pause
+$EDITOR /etc/hosts.allow
+
+line
+
+cat << EOM
+
+Opening denyhosts.conf in $EDITOR.
+Uncomment a BLOCK_SERVICE entry and tweak other settings to taste.
+
+EOM
+pause
+
+case $(auto-ostype) in
+FreeBSD)
+    sed -i .orig 's|#BLOCK_SERVICE = ALL|BLOCK_SERVICE = ALL|' \
+	$prefix/etc/denyhosts.conf
+    $EDITOR $prefix/etc/denyhosts.conf
+    service denyhosts stop || true
+    rm -f /var/run/denyhosts.pid
+    auto-enable-service denyhosts $0
+    auto-append-line 'syslogd_flags="-c"' 'syslogd_flags="-c"' /etc/rc.conf $0
+    /etc/rc.d/syslogd restart
+    ;;
+
+RHEL)
+    $EDITOR $prefix/share/denyhosts/denyhosts.cfg
+    ;;
+
+esac
+# denyhosts will crash without this
+touch /etc/hosts.deniedssh
+service denyhosts restart
+

@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Enable/disable remote access via ipmitool
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-23  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 on|off\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+auto-root-check $0
+
+state="$1"
+case "$state" in
+on|off)
+    ;;
+*)
+    usage
+    ;;
+esac
+
+# http://lists.us.dell.com/pipermail/linux-poweredge/2007-August/032915.html
+# FIXME: Is -I open a good idea here?  It was in an example.
+ipmitool lan set 1 access $state

@@ -1,0 +1,142 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-18  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 device filesystem label
+
+Do not specify partition for device.  Drive will be automatically reformatted
+with a single partition.  E.g. use "da1", not "da1s1" or "da1p1".
+
+Filesystems are specified with lower case.
+
+Label is a string of your choice to describe the media and is case-insensitive
+on some filesystems (e.g. FAT).
+
+Example:
+
+    $0 da1 fat32 SANDISK64
+
+Filesystems:
+
+    fat16 (Old DOS format for small drives < 2GB)
+    fat32 (Old DOS format for larger drives)
+    exfat (Standard for large FLASH media, recommended for portability)
+    ufs2 (FreeBSD native, not readable on most other operating systems)
+    ntfs (Windows NT and later, proprietary)
+
+    * Warning: A UFS2 filesystem that is removed without being properly unmounted
+    will be marked "dirty" and will not mount again until cleaned with:
+
+    fsck /dev/device
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    usage
+fi
+
+device=$1
+if ! echo $device | fgrep -q /dev/; then
+    device=/dev/$device
+fi
+if [ ! -e $device ]; then
+    printf "$device: No such device.\n"
+    exit 1
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    printf "Current partition table:\n"
+    printf "===========================================================\n"
+    gpart show $device || true  # Should show MBR or GPT
+    printf "===========================================================\n"
+    
+    cat << EOM
+
+This tool is designed to quickly reformat a USB stick or other media using
+a single partition and filesystem.
+
+EOM
+    printf "All data on $device will be lost.  Continue? y/[n] "
+    read continue
+    if [ 0"$continue" != 0y ]; then
+	exit
+    fi
+    
+    fs=$2
+    label="$3"
+    
+    gpart destroy -F $device 2> /dev/null || true
+    
+    case $fs in
+    fat16|fat32)
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s MBR $device
+	sleep 1
+	gpart add -t $fs $device
+	bits=${fs#fat}
+	newfs_msdos -F $bits -L "$label" ${device}s1
+	;;
+    
+    exfat)
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s MBR $device
+	#sleep 1
+	gpart add -t ntfs $device
+	mkfs.exfat -n "$label" ${device}s1
+	;;
+    
+    ufs2)
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s GPT $device
+	gpart add -t freebsd-ufs $device
+	newfs -L "$label" ${device}p1
+	;;
+    
+    ntfs)
+	dd if=/dev/zero of=$device bs=2m count=1
+	sleep 1
+	gpart create -s MBR $device
+	sleep 1
+	gpart add -t ntfs $device
+	sleep 1
+	mkntfs --fast --label "$label" --verbose ${device}s1
+	;;
+    
+    *)
+	printf "Invalid filesystem choice: $fs\n" >> /dev/stderr
+	usage
+	;;
+    esac
+    
+    printf "New partition scheme:\n\n"
+    gpart show $device
+    ;;
+
+*)
+    printf "$0: $(auto-ostype) is not yet supported.\n"
+    exit 1
+    ;;
+
+esac

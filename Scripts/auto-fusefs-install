@@ -1,0 +1,25 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    pkg install -y pkgconf zenity autoconf automake libublio gettext-tools \
+	texinfo fusefs-libs
+    if ! auto-package-installed sysutils/fusefs-exfat; then
+	(cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make install clean)
+    fi
+    if ! auto-package-installed sysutils/exfat-utils; then
+	(cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make install clean)
+    fi
+    pkg install -y fusefs-ntfs fusefs-ext2 \
+	fusefs-hfsfuse fusefs-simple-mtpfs
+    
+    kldload fuse || true
+    sysrc kld_list+=fuse
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    ;;
+
+esac

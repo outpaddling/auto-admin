@@ -1,0 +1,18 @@
+#!/bin/sh -e
+    
+case $(auto-ostype) in
+FreeBSD)
+    if dmidecode | grep -iq macbook; then
+	printf "$0: MacBook detected.\n"
+    
+	auto-append-line 'atp_load="YES"' /boot/loader.conf $0
+	auto-append-line 'acpi_video_load="YES"' /boot/loader.conf $0
+    fi
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
