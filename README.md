@@ -20,4 +20,4 @@ only POSIX tools included with the base system.
 * Speed and Simplicity: Our efforts are focused on basic functionality,
 robustness, fast and easy setup and management.
 
-https://acadix.biz/auto-admin
+https://acadix.biz/auto-admin.php
