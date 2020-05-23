@@ -24,28 +24,37 @@ if [ $# != 1 ]; then
     usage
 fi
 
-case $1 in
-on)
-    state=enable
-    ;;
-off)
-    state=disable
-    ;;
-*)
-    usage
-    ;;
-esac
-
-for fs in $(awk '$3 == "ufs" { print $1 }' /etc/fstab); do
-    mount_opts="$(mount -t ufs | awk -v fs=$fs '$1 == fs { print $0 }')"
-    if [ 0"$mount_opts" != 0 ] && ! echo $mount_opts | fgrep read-only; then
-	cat << EOM
+case $(auto-ostype) in
+FreeBSD)
+    case $1 in
+    on)
+	state=enable
+	;;
+    off)
+	state=disable
+	;;
+    *)
+	usage
+	;;
+    esac
+    
+    for fs in $(awk '$3 == "ufs" { print $1 }' /etc/fstab); do
+	mount_opts="$(mount -t ufs | awk -v fs=$fs '$1 == fs { print $0 }')"
+	if [ 0"$mount_opts" != 0 ] && ! echo $mount_opts | fgrep read-only; then
+	    cat << EOM
 $fs is mounted with write enabled, cannot tune it.
 Reboot to single-user mode and try again.
 
 EOM
-    else
-	printf "Tuning $fs...\n"
-	tunefs -j $state $fs
-    fi
-done
+	else
+	    printf "Tuning $fs...\n"
+	    tunefs -j $state $fs
+	fi
+    done
+    ;;
+
+*)
+    printf "$0: Only applicable on FreeBSD.\n"
+    ;;
+
+esac
