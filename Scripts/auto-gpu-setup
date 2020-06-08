@@ -37,18 +37,19 @@ FreeBSD)
 Given the wide variety of graphics chipsets available, it is virtually
 impossible to configure the graphics environment automatically.
 
-If your screen goes blank during the next boot, you probably have the
-wrong driver or drm module.  In that case, tap the power button and wait
-a minute for a graceful shutdown.  You can also try to ssh in from
-another host.  Hold the power button to force power off only if
-absolutely necessary.
+If your screen goes blank during the next boot, you probably have a chipset
+not supported by the drm module.  In that case, tap the power button and wait
+a minute for a graceful shutdown.  You can also try to ssh in from another
+host.  Hold the power button to force power off only if absolutely necessary
+as this causes file system damage on any system (which is usually repaired
+during the next boot, but not always).
 
 Then boot into single-user mode and do the following:
 
 mount -u -o rw
 vi /etc/rc.conf
 
-Remove the "mks" module from the "kld_list" setting.
+Remove the "kms" module (e.g. i915kms, radeonkms) from the "kld_list" setting.
 Save and reboot.
 
 We will now attempt to detect your GPU and provide some guidance...
@@ -79,19 +80,13 @@ EOM
     pkg install -y drm-kmod
     Add kld_list="/boot/modules/i915kms.ko" to /etc/rc.conf
 
-2.. For some older Intel GPUs, you can try the legacy DRM:
-
-    If /boot/kernel/i915kms.ko exists, add kld_list="i915kms" to /etc/rc.conf
-    
-    Otherwise:
-    
-    pkg install -y drm-legacy-kmod
-    Add "kld_list=/boot/modules/i915kms.ko" to /etc/rc.conf
-
-3.. For even older Intel GPUs, or if you encounter other issues with the
-    built-in Intel modesetting driver, try the Intel xorg driver with no DRM:
+2.. For other Intel GPUs, or if you encounter other issues with the built-in
+    DRM or Intel modesetting driver, try the Intel xorg driver with no DRM:
 
     pkg install -y xf86-video-intel
+
+3.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+    later.
 
 EOM
 	selection=0
@@ -102,26 +97,17 @@ EOM
 	    fi
 	    case $selection in
 	    1)
-		pkg remove -y 'drm*kmod' xf86-video-intel || true
+		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
+		    xf86-video-intel xf86-video-nv || true
 		pkg install -y drm-kmod
 		sysrc "kld_list+=/boot/modules/i915kms.ko"
 		;;
 	    2)
-		pkg remove -y 'drm*kmod' xf86-video-intel || true
-		pkg install -y drm-legacy-kmod || true
-		if [ -e /boot/modules/i915kms.ko ]; then
-		    sysrc "kld_list+=/boot/modules/i915kms.ko"
-		elif [ -e /boot/kernel/i915kms.ko ]; then
-		    sysrc "kld_list+=/boot/kernel/i915kms.ko"
-		else
-		    printf "Warning: No base of legacy kmod found.\n"
-		    printf "Please try another option.\n"
-		    selection=0
-		fi
+		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
+		    xf86-video-nv || true
+		pkg install -y xf86-video-intel
 		;;
 	    3)
-		pkg remove -y 'drm*kmod' || true
-		pkg install -y xf86-video-intel
 		;;
 	    *)
 		printf "Invalid selection: $selection\n"
@@ -146,20 +132,13 @@ EOM
     pkg install -y drm-kmod xf86-video-ati
     Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
 
-3.. For even older AMD GPUs, you can try
-    
-    pkg install -y xf86-video-ati
-    If /boot/kernel/radeonkms.ko exists, add kld_list="radeonkms" to /etc/rc.conf
-    
-    Otherwise:
-    
-    pkg install -y drm-legacy-kmod
-    Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
-
-4.. For even older AMD GPUs or systems lacking DRM support, try the ATI
+3.. For even older AMD GPUs or systems lacking DRM support, try the ATI
     driver with no DRM:
 
     pkg install -y xf86-video-ati
+
+4.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+    later.
 
 EOM
 	selection=0
@@ -170,32 +149,23 @@ EOM
 	    fi
 	    case $selection in
 	    1)
-		pkg remove -y 'drm*kmod' 'xf86-video-ati*' || true
+		pkg remove -y 'drm*kmod' 'xf86-video-ati*' \
+		    xf86-video-nv || true
 		pkg install -y drm-kmod xf86-video-amdgpu
 		sysrc "kld_list+=amdgpu"
 		;;
 	    2)
-		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
+		pkg remove -y 'drm*kmod' xf86-video-amggpu \
+		    xf86-video-ati-legacy xf86-video-nv || true
 		pkg install -y drm-kmod xf86-video-ati
 		sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		;;
 	    3)
-		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
+		pkg remove -y 'drm*kmod' xf86-video-amggpu \
+		    xf86-video-ati-legacy xf86-video-nv || true
 		pkg install -y xf86-video-ati
-		pkg install -y drm-legacy-kmod || true
-		if [ -e /boot/modules/radeonkms.ko ]; then
-		    sysrc "kld_list+=/boot/modules/radeonkms.ko"
-		elif [ -e /boot/kernel/radeonkms.ko ]; then
-		    sysrc "kld_list+=/boot/kernel/radeonkms.ko"
-		else
-		    printf "Warning: No base or legacy kmod found.\n"
-		    printf "Please try another option.\n"
-		    selection=0
-		fi
 		;;
 	    4)
-		pkg remove -y 'drm*kmod' xf86-video-amggpu xf86-video-ati-legacy || true
-		pkg install -y xf86-video-ati
 		;;
 	    *)
 		printf "Invalid selection: $selection\n"
@@ -223,19 +193,37 @@ device shown above.  Then choose a compatible driver version from the
 list of ports below.
 
 EOM
-	pciconf -lv|grep -B 2 display
-	ls -d /usr/ports/x11/nvidia-driver*
-	pause
 	cat << EOM
 
-Press enter for the current driver or enter just the version number
+1.. For recent nVidia GPUs, you can try a closed-source nVidia driver
+
+2.. For very old nvidia GPUs, you can try the open-source nv driver
+
+3.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+    later.
+
+EOM
+	selection=0
+	while [ $selection -lt 1 ] || [ $selection -gt 3 ]; do
+	    read -p "Selection? [1] " selection
+	    if [ 0$selection = 0 ]; then
+		selection=1
+	    fi
+	    case $selection in
+	    1)
+		pciconf -lv | grep -B 2 display
+		ls -d /usr/ports/x11/nvidia-driver*
+		pause
+		cat << EOM
+
+Press enter to use the latest driver or enter just the version number
 (the number after the final '-') from the list above.
 
 EOM
-	printf "Driver version? "
-	read driver
+		printf "Driver version? "
+		read driver
     
-    cat << EOM
+		cat << EOM
 
 The nVidia driver binary packages include Linux support.  We will now
 install the Linux compatibility system of your choice.  Enter '6'
@@ -243,36 +231,49 @@ for CentOS 6 compatibility or '7' for CentOS 7.  Some packages such
 as Linux Flash plugin may require CentOS 6.
 
 EOM
-	printf "6 or 7? "
-	read linux_base
-	auto-install-linux_base $linux_base
-	if [ 0$driver = 0 ]; then
-	    pkg install -y nvidia-driver
-	    kld=nvidia-modeset
-	else
-	    pkg install -y nvidia-driver-$driver
-	    if [ $driver -le 340 ]; then
-		kld=nvidia
-	    else
-		kld=nvidia-modeset
-	    fi
-	fi
-	
-	sysrc "kld_list+=$kld"
-	kldload $kld || true
-	
-	dir=/usr/local/etc/X11/xorg.conf.d
-	fragment=$dir/nvidia.conf
-	if [ ! -e $fragment ]; then
-	    mkdir -p $dir
-	    cat << EOM > $fragment
+		printf "6 or 7? "
+		read linux_base
+		auto-install-linux_base $linux_base
+		if [ 0$driver = 0 ]; then
+		    pkg install -y nvidia-driver
+		    kld=nvidia-modeset
+		else
+		    pkg install -y nvidia-driver-$driver
+		    if [ $driver -le 340 ]; then
+			kld=nvidia
+		    else
+			kld=nvidia-modeset
+		    fi
+		fi
+		
+		sysrc "kld_list+=$kld"
+		kldload $kld || true
+		
+		dir=/usr/local/etc/X11/xorg.conf.d
+		fragment=$dir/nvidia.conf
+		if [ ! -e $fragment ]; then
+		    mkdir -p $dir
+		    cat << EOM > $fragment
 Section "Device"
 Identifier "NVIDIA Card"
 VendorName "NVIDIA Corporation"
 Driver "nvidia"
 EndSection
 EOM
-	fi
+		fi
+		;;
+	    2)
+		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
+		    xf86-video-intel || true
+		pkg install -y xf86-video-nv
+		;;
+	    3)
+		;;
+	    *)
+		printf "Invalid selection: $selection\n"
+		;;
+	    esac
+	done
     fi
     ;;
     
