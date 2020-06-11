@@ -27,6 +27,47 @@ pause()
 
 
 ##########################################################################
+#   Function description:
+#       Remove old DRM modules from config
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-06-11  Jason Bacon Begin
+##########################################################################
+
+scrub_drm()
+{
+    # Remove old modules
+    sysrc -q "kld_list-=/boot/kernel/i915kms.ko" > /dev/null
+    sysrc -q "kld_list-=/boot/kernel/radeonkms.ko" > /dev/null
+    sysrc -q "kld_list-=/boot/modules/i915kms.ko" > /dev/null
+    sysrc -q "kld_list-=/boot/modules/radeonkms.ko" > /dev/null
+    sysrc -q "kld_list-=radeonkms" > /dev/null
+    sysrc -q "kld_list-=i915kms" > /dev/null
+    sysrc -q "kld_list-=amdgpu" > /dev/null
+    sysrc -q "kld_list-=nvidia" > /dev/null
+    sysrc -q "kld_list-=nvidia-modeset" > /dev/null
+}
+
+
+##########################################################################
+#   Function description:
+#       Remove DRM and video driver packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-06-11  Jason Bacon Begin
+##########################################################################
+
+scrub_packages()
+{
+    pkg remove -y 'drm*kmod' \
+	xf86-video-amdgpu 'xf86-video-ati*' \
+	xf86-video-intel \
+	xf86-video-nv 'nvidia-driver*' || true
+}
+
+##########################################################################
 #   Main
 ##########################################################################
     
@@ -57,17 +98,6 @@ We will now attempt to detect your GPU and provide some guidance...
 EOM
     pause
     
-    # Remove old modules
-    sysrc -q "kld_list-=/boot/kernel/i915kms.ko" > /dev/null
-    sysrc -q "kld_list-=/boot/kernel/radeonkms.ko" > /dev/null
-    sysrc -q "kld_list-=/boot/modules/i915kms.ko" > /dev/null
-    sysrc -q "kld_list-=/boot/modules/radeonkms.ko" > /dev/null
-    sysrc -q "kld_list-=radeonkms" > /dev/null
-    sysrc -q "kld_list-=i915kms" > /dev/null
-    sysrc -q "kld_list-=amdgpu" > /dev/null
-    sysrc -q "kld_list-=nvidia" > /dev/null
-    sysrc -q "kld_list-=nvidia-modeset" > /dev/null
-
     if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
 	printf "Intel GPU detected.\n"
 	pciconf -lv | grep -B 2 display
@@ -85,29 +115,35 @@ EOM
 
     pkg install -y xf86-video-intel
 
-3.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+3.. No drivers or DRM, I'll use SCFB or VESA or manually configure a driver
     later.
+
+4.. Leave my current configuration alone.
 
 EOM
 	selection=0
-	while [ $selection -lt 1 ] || [ $selection -gt 3 ]; do
+	while [ $selection -lt 1 ] || [ $selection -gt 4 ]; do
 	    read -p "Selection? [1] " selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
 	    case $selection in
 	    1)
-		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
-		    xf86-video-intel xf86-video-nv || true
+		scrub_packages
+		scrub_drm
 		pkg install -y drm-kmod
 		sysrc "kld_list+=/boot/modules/i915kms.ko"
 		;;
 	    2)
-		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
-		    xf86-video-nv || true
+		scrub_packages
+		scrub_drm
 		pkg install -y xf86-video-intel
 		;;
 	    3)
+		scrub_packages
+		scrub_drm
+		;;
+	    4)
 		;;
 	    *)
 		printf "Invalid selection: $selection\n"
@@ -137,35 +173,41 @@ EOM
 
     pkg install -y xf86-video-ati
 
-4.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+4.. No drivers or DRM, I'll use SCFB or VESA or manually configure a driver
     later.
+
+5.. Leave my current configuration alone.
 
 EOM
 	selection=0
-	while [ $selection -lt 1 ] || [ $selection -gt 4 ]; do
+	while [ $selection -lt 1 ] || [ $selection -gt 5 ]; do
 	    read -p "Selection? [1] " selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
 	    case $selection in
 	    1)
-		pkg remove -y 'drm*kmod' 'xf86-video-ati*' \
-		    xf86-video-nv || true
+		scrub_packages
+		scrub_drm
 		pkg install -y drm-kmod xf86-video-amdgpu
 		sysrc "kld_list+=amdgpu"
 		;;
 	    2)
-		pkg remove -y 'drm*kmod' xf86-video-amggpu \
-		    xf86-video-ati-legacy xf86-video-nv || true
+		scrub_packages
+		scrub_drm
 		pkg install -y drm-kmod xf86-video-ati
 		sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		;;
 	    3)
-		pkg remove -y 'drm*kmod' xf86-video-amggpu \
-		    xf86-video-ati-legacy xf86-video-nv || true
+		scrub_packages
+		scrub_drm
 		pkg install -y xf86-video-ati
 		;;
 	    4)
+		scrub_packages
+		scrub_drm
+		;;
+	    5)
 		;;
 	    *)
 		printf "Invalid selection: $selection\n"
@@ -199,18 +241,23 @@ EOM
 
 2.. For very old nvidia GPUs, you can try the open-source nv driver
 
-3.. Install nothing, I'll use SCFB or VESA or manually configure a driver
+3.. No drivers or DRM, I'll use SCFB or VESA or manually configure a driver
     later.
+
+4.. Leave my current configuration alone.
 
 EOM
 	selection=0
-	while [ $selection -lt 1 ] || [ $selection -gt 3 ]; do
+	while [ $selection -lt 1 ] || [ $selection -gt 4 ]; do
 	    read -p "Selection? [1] " selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
 	    case $selection in
 	    1)
+		scrub_packages
+		scrub_drm
+		
 		pciconf -lv | grep -B 2 display
 		ls -d /usr/ports/x11/nvidia-driver*
 		pause
@@ -263,11 +310,15 @@ EOM
 		fi
 		;;
 	    2)
-		pkg remove -y 'drm*kmod' xf86-video-amdgpu 'xf86-video-ati*' \
-		    xf86-video-intel || true
+		scrub_packages
+		scrub_drm
 		pkg install -y xf86-video-nv
 		;;
 	    3)
+		scrub_packages
+		scrub_drm
+		;;
+	    4)
 		;;
 	    *)
 		printf "Invalid selection: $selection\n"
