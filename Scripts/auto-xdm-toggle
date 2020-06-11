@@ -51,7 +51,7 @@ FreeBSD)
     
     kill -HUP 1
     if [ $new_state = off ]; then
-	killall xdm || true
+	pkill xdm || true
     fi
     ;;
     
