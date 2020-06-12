@@ -231,6 +231,7 @@ re-run this script as root.
 
 EOM
     # Not all systems have a realpath command
+    mkdir $HOME/Pkgsrc
     default_prefix=`(cd "$HOME/Pkgsrc"; pwd -P)`
 else
     cat << EOM
@@ -277,6 +278,8 @@ printf "Installation prefix? [$default_prefix] "
 read prefix
 if [ 0"$prefix" = 0 ]; then
     prefix=$default_prefix
+else
+    rmdir $default_prefix || true
 fi
 
 select_snapshot
