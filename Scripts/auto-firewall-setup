@@ -1,1 +1,105 @@
-/usr/local/sbin/auto-firewall-setup
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure a basic firewall
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-06-30  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    firewall=0
+    while [ $firewall -lt 1 ] || [ $firewall -gt 6 ]; do
+	cat << EOM
+
+Configuring a basic IPFW firewall.  See the FreeBSD Handbook for information
+on customizing IPFW or using PF or IPFILTER instead.
+
+    https://www.freebsd.org/doc/handbook/firewalls.html
+
+The "client" and "simple" rule sets can be customized in /etc/rc.firewall.
+The "workstation" rule set is configured by setting variables such as
+firewall_myservices in /etc/rc.conf.  See /etc/rc.firewall for details.
+
+1.. Open (allow all traffic for now, I'll add my own rules later)
+2.. Client (basic protection for this machine only)
+3.. Simple (protection for entire subnet)
+4.. Closed (block all traffic for now, I'll add my own rules later)
+5.. Workstation (Protect this machine only using stateful rules)
+6.. Custom IPFW rule set
+
+EOM
+	firewall=$(auto-ask firewall-type 'Firewall type?' 2)
+    done
+    sysrc firewall_enable="YES"
+    case $firewall in
+    1)
+	sysrc firewall_type="open"
+	;;
+    
+    2)
+	sysrc firewall_type="client"
+	;;
+    
+    3)
+	sysrc firewall_type="simple"
+	;;
+    
+    4)
+	sysrc firewall_type="closed"
+	;;
+    
+    5)
+	sysrc firewall_type="workstation"
+	;;
+    
+    6)
+	script=$(auto-ask custom-ipfw-script "Path to custom script?" /etc/ipfw.rules)
+	sysrc firewall_type="$script"
+	printf "Install your rule set to $script now.\n"
+	pause
+	;;
+    
+    esac
+    service ipfw restart
+    auto-set-sysctl net.inet.ip.fw.verbose_limit 5 $0
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
