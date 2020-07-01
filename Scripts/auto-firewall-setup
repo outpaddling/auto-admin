@@ -27,7 +27,7 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     firewall=0
-    while [ $firewall -lt 1 ] || [ $firewall -gt 5 ]; do
+    while [ $firewall -lt 1 ] || [ $firewall -gt 6 ]; do
 	cat << EOM
 
 Configuring a basic IPFW firewall using canned rule sets.
