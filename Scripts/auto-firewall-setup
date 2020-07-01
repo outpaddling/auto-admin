@@ -61,15 +61,15 @@ Add similar rules for HTTP (80), HTTPS (443), 631 (IPP printing).  See
 The "workstation" rule set is configured by setting variables such as
 firewall_myservices in /etc/rc.conf.  See /etc/rc.firewall for details.
 
-1.. Open (allow all traffic for now, I'll add my own rules later)
-2.. Client (basic protection for this machine only)
-3.. Simple (protection for entire subnet)
-4.. Closed (block all traffic for now, I'll add my own rules later)
+1.. Open (Allow all traffic for now, I'll add my own rules later)
+2.. Client (Basic protection for this machine only)
+3.. Simple (Protection for entire subnet)
+4.. Closed (Block all traffic for now, I'll add my own rules later)
 5.. Workstation (Protect this machine only using stateful rules)
-6.. Custom IPFW rule set
+6.. Use my custom IPFW rule set
 
 EOM
-	firewall=$(auto-ask firewall-type 'Firewall type?' 2)
+	firewall=$(auto-ask firewall-type 'Firewall type?' 3)
     done
     sysrc firewall_enable="YES"
     case $firewall in
