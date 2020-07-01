@@ -1,0 +1,87 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure a basic firewall
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-06-30  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    firewall=0
+    while [ $firewall -lt 1 ] || [ $firewall -gt 5 ]; do
+	cat << EOM
+
+Configuring a basic IPFW firewall using canned rule sets.
+See the FreeBSD Handbook for more information.
+
+1.. Open (allow all traffic for now, I'll add my own rules later)
+2.. Client (basic protection for this machine only)
+3.. Simple (protection for entire subnet)
+4.. Closed (block all traffic for now, I'll add my own rules later)
+5.. Workstation (Protect this machine only using stateful rules)
+6.. Custom IPFW rule set
+
+EOM
+	firewall=$(auto-ask firewall-type 'Firewall type?' 2)
+    done
+    sysrc firewall_enable="YES"
+    case $firewall in
+    1)
+	sysrc firewall_type="open"
+	;;
+    
+    2)
+	sysrc firewall_type="client"
+	printf "Edit /etc/rc.firewall to customize.\n"
+	;;
+    
+    3)
+	sysrc firewall_type="simple"
+	printf "Edit /etc/rc.firewall to customize.\n"
+	;;
+    
+    4)
+	sysrc firewall_type="closed"
+	;;
+    
+    5)
+	sysrc firewall_type="workstation"
+	printf "Set firewall_myservices and firewall_allowservices in /etc/rc.conf.\n"
+	printf "See /etc/rc.firewall for examples.\n"
+	;;
+    
+    6)
+	script=$(custom-ipfw-script "Path to custom script?" /etc/ipfw.rules)
+	sysrc firewall_type="$script"
+	;;
+    
+    esac
+    service ipfw restart
+    auto-set-sysctl net.inet.ip.fw.verbose_limit 5 $0
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
