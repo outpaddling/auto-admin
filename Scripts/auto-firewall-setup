@@ -70,7 +70,7 @@ EOM
 	;;
     
     6)
-	script=$(custom-ipfw-script "Path to custom script?" /etc/ipfw.rules)
+	script=$(auto-ask custom-ipfw-script "Path to custom script?" /etc/ipfw.rules)
 	sysrc firewall_type="$script"
 	;;
     
