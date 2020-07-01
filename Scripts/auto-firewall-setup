@@ -45,11 +45,19 @@ FreeBSD)
 	cat << EOM
 
 Configuring a basic IPFW firewall.  See the FreeBSD Handbook for information
-on customizing IPFW or using PF or IPFILTER instead.
+on customizing IPFW or using the PF or IPFILTER firewalls instead.
 
     https://www.freebsd.org/doc/handbook/firewalls.html
 
 The "client" and "simple" rule sets can be customized in /etc/rc.firewall.
+For example, to enable incoming SSH (TCP 22) connections, add the following:
+
+    ${fwcmd} add pass tcp from any to me 22 setup
+
+Replace "any" with an IP address specification to limit access.
+Add similar rules for HTTP (80), HTTPS (443), 631 (IPP printing).  See
+/etc/services for a list of common TCP service ports.
+
 The "workstation" rule set is configured by setting variables such as
 firewall_myservices in /etc/rc.conf.  See /etc/rc.firewall for details.
 
