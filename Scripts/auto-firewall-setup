@@ -69,7 +69,7 @@ firewall_myservices in /etc/rc.conf.  See /etc/rc.firewall for details.
 6.. Use my custom IPFW rule set
 
 EOM
-	firewall=$(auto-ask firewall-type 'Firewall type?' 3)
+	firewall=$(auto-ask firewall-type 'Firewall type?' 2)
     done
     sysrc firewall_enable="YES"
     case $firewall in
