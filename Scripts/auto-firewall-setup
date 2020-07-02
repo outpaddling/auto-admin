@@ -38,6 +38,23 @@ if [ $# != 0 ]; then
     usage
 fi
 
+auto-root-check $0
+
+cat << EOM
+
+********************************** WARNING **********************************
+
+Changing your firewall settings is likely to terminate existing network
+connections, such as ssh sessions, unless you really know what you're doing.
+
+*****************************************************************************
+
+EOM
+read -p 'Are you sure you want to proceed? y/[n] ' proceed
+if [ 0$proceed != 0y ]; then
+    exit
+fi
+
 case $(auto-ostype) in
 FreeBSD)
     firewall=0
