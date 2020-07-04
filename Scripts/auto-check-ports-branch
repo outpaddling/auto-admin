@@ -38,7 +38,8 @@ FreeBSD)
 	if [ $ports_branch != $repo_branch ]; then
 	    cat << EOM
 
-Your binary packages are currently from the $repo_branch branch.
+Your binary packages are currently from the $repo_branch branch (or they
+will be shortly when the new bulk builds complete).
 
 $PORTSDIR is currently using the $ports_branch branch.
 
@@ -50,10 +51,19 @@ EOM
 	    printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
 	    read correct
 	    if [ 0$correct != 0n ]; then
-		# FIXME: Use svn switch where possible: Much faster
-		printf "Saving $PORTSDIR to $PORTSDIR.old.\n"
-		mv $PORTSDIR $PORTSDIR.old
-		auto-ports-checkout
+		# FIXME: Add git support when appropriate
+		if [ -e $PORTSDIR/.svn ] && [ $repo_branch != latest ]; then
+		    printf "Switching svn repo to $repo_branch...\n"
+		    cd $PORTSDIR
+		    url=$(svn info | awk '$1 == "URL:" { print $2 }')
+		    new_url=$(echo $url | sed -e "s|ports/.*|ports/branches/$repo_branch|")
+		    svn switch "$new_url"
+		else
+		    printf "Saving $PORTSDIR to $PORTSDIR.old and checkint out $repo_branch...\n"
+		    mv $PORTSDIR $PORTSDIR.old
+		    # FIXME: Specify repo_branch
+		    auto-ports-checkout
+		fi
 	    fi
 	fi
     fi
