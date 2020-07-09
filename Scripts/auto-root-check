@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 calling-script-name\n"
+    printf "Usage: $0 calling-script-name ['reason']\n"
     exit 1
 }
 
@@ -20,11 +20,14 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 1 ] && [ $# != 2 ]; then
     usage
 fi
 
 if [ $(whoami) != root ]; then
     printf "$1 can only be run as root.\n"
+    if [ $# = 2 ]; then
+	printf "$2\n"
+    fi
     exit 1
 fi
