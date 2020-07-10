@@ -42,6 +42,9 @@ FreeBSD)
 	verbose=0
     fi
     
+    # Silence 'Alarm clock' message from shell when ping -t 1 times out
+    trap SIGALRM
+    
     # Start with primary server, then compare all mirrors
     fastest_mirror=''
     fastest_time=`ping -o -n -t 1 ftp.freebsd.org 2> /dev/null \

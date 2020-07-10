@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+# Enable in rc.conf
+sysrc nfs_client_enable="YES"
+
+# Enable NFSv4 without nfsuserd
+# FIXME: Offer option of using nfsuserd
+auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0
