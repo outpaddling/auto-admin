@@ -34,9 +34,19 @@ FreeBSD)
 	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
 	auto-ports-checkout
     else
-	ports_branch=$(auto-ports-branch)
-	if [ $ports_branch != $repo_branch ]; then
+	if ! auto-ports-branch; then
 	    cat << EOM
+
+Your ports tree is neither head nor quarterly and therefore cannot be
+maintained by auto-update-system.  Moving to /usr/old-ports and checking out
+a new ports tree...
+EOM
+	    mv /usr/ports /usr/old-ports
+	    auto-ports-checkout
+	else
+	    ports_branch=$(auto-ports-branch)
+	    if [ $ports_branch != $repo_branch ]; then
+		cat << EOM
 
 Your binary packages are currently from the $repo_branch branch (or they
 will be shortly when the new bulk builds complete).
@@ -48,21 +58,22 @@ with the $repo_branch binary packages.  To avoid this, you should replace
 $PORTSDIR with the $repo_branch ports branch.
 
 EOM
-	    printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
-	    read correct
-	    if [ 0$correct != 0n ]; then
-		# FIXME: Add git support when appropriate
-		if [ -e $PORTSDIR/.svn ] && [ $repo_branch != latest ]; then
-		    printf "Switching svn repo to $repo_branch...\n"
-		    cd $PORTSDIR
-		    url=$(svn info | awk '$1 == "URL:" { print $2 }')
-		    new_url=$(echo $url | sed -e "s|ports/.*|ports/branches/$repo_branch|")
-		    svn switch "$new_url"
-		else
-		    printf "Saving $PORTSDIR to $PORTSDIR.old and checkint out $repo_branch...\n"
-		    mv $PORTSDIR $PORTSDIR.old
-		    # FIXME: Specify repo_branch
-		    auto-ports-checkout
+		printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
+		read correct
+		if [ 0$correct != 0n ]; then
+		    # FIXME: Add git support when appropriate
+		    if [ -e $PORTSDIR/.svn ] && [ $repo_branch != latest ]; then
+			printf "Switching svn repo to $repo_branch...\n"
+			cd $PORTSDIR
+			url=$(svn info | awk '$1 == "URL:" { print $2 }')
+			new_url=$(echo $url | sed -e "s|ports/.*|ports/branches/$repo_branch|")
+			svn switch "$new_url"
+		    else
+			printf "Saving $PORTSDIR to $PORTSDIR.old and checkint out $repo_branch...\n"
+			mv $PORTSDIR $PORTSDIR.old
+			# FIXME: Specify repo_branch
+			auto-ports-checkout
+		    fi
 		fi
 	    fi
 	fi
