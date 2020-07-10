@@ -29,6 +29,12 @@ FreeBSD)
 	printf "Ports tree already installed in $PORTSDIR.\n"
 	exit 1
     fi
+
+    if which svn > /dev/null; then
+	svn=svn
+    else
+	svn=svnlite
+    fi
     
     repo_branch=$(auto-pkg-branch)
     case $repo_branch in
@@ -74,7 +80,7 @@ EOM
     
     case $method in
     svn)
-	svn checkout https://svn.FreeBSD.org/ports/$svn_branch $PORTSDIR
+	$svn checkout https://svn.FreeBSD.org/ports/$svn_branch $PORTSDIR
 	;;
     
     portsnap)

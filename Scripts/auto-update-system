@@ -153,6 +153,11 @@ fi
 
 case $os_type in
 FreeBSD)
+    if which svn > /dev/null; then
+	svn=svn
+    else
+	svn=svnlite
+    fi
     if [ ! -t 0 ]; then
 	# Input redirected.  Being fed y/n responses.
 	portsnap_flags=--interactive
@@ -210,7 +215,7 @@ FreeBSD)
 	auto-check-ports-branch
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
-		svn update $PORTSDIR
+		$svn update $PORTSDIR
 	    else
 		printf "\nFetching latest ports...\n"
 		portsnap fetch

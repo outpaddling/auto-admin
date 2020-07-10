@@ -29,6 +29,11 @@ FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     export PORTSDIR
     
+    if which svn > /dev/null; then
+	svn=svn
+    else
+	svn=svnlite
+    fi
     repo_branch=$(auto-pkg-branch)
     if [ ! -e $PORTSDIR/Makefile ]; then
 	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
@@ -65,9 +70,9 @@ EOM
 		    if [ -e $PORTSDIR/.svn ] && [ $repo_branch != latest ]; then
 			printf "Switching svn repo to $repo_branch...\n"
 			cd $PORTSDIR
-			url=$(svn info | awk '$1 == "URL:" { print $2 }')
+			url=$($svn info | awk '$1 == "URL:" { print $2 }')
 			new_url=$(echo $url | sed -e "s|ports/.*|ports/branches/$repo_branch|")
-			svn switch "$new_url"
+			$svn switch "$new_url"
 		    else
 			printf "Saving $PORTSDIR to $PORTSDIR.old and checkint out $repo_branch...\n"
 			mv $PORTSDIR $PORTSDIR.old
