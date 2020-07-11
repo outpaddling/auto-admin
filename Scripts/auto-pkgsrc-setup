@@ -231,7 +231,7 @@ re-run this script as root.
 
 EOM
     # Not all systems have a realpath command
-    mkdir $HOME/Pkgsrc
+    mkdir -p $HOME/Pkgsrc
     default_prefix=`(cd "$HOME/Pkgsrc"; pwd -P)`
 else
     cat << EOM
