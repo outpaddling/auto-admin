@@ -45,7 +45,7 @@ FreeBSD)
 	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
 		cat << EOM
 	
-1.. portsnap (faster update process, slight delay so for latest updates)
+1.. portsnap (faster update process, very slight delay for latest updates)
 2.. svn (slower update process, but latest commits available immediately)
 
 EOM
