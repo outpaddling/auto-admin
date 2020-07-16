@@ -51,7 +51,7 @@ if [ $(uname) = FreeBSD ]; then
 	auto-ports-checkout
     fi
     # Need for github cert
-    pkg install -y ca_root_nss subversion
+    pkg install -y ca_root_nss
     if [ ! -e /usr/ports/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
 	sh ./freebsd-wip-checkout svn

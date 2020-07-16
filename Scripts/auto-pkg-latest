@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--no-reboot] [arguments to pass to auto-update-system]\n"
+    printf "Usage: $0 [--no-reboot] [--yes] [arguments to pass to auto-update-system]\n"
     exit 1
 }
 
@@ -23,19 +23,50 @@ usage()
 #   Main
 ##########################################################################
 
-if [ 0$1 = 0'--help' ]; then
-    usage
-fi
-
-if [ 0$1 == 0'--no-reboot' ]; then
-    no_reboot=1
-    shift
-fi
-
 case $(auto-ostype) in
 FreeBSD)
+    while [ 0$(echo $1 | cut -c 1,2) = 0'--' ]; do
+	if [ 0$1 = 0'--help' ]; then
+	    usage
+	elif [ 0$1 = 0'--no-reboot' ]; then
+	    no_reboot=1
+	    shift
+	elif [ 0$1 = 0'--yes' ]; then
+	    proceed=1
+	    shift
+	else
+	    usage
+	fi
+    done
+
     dir=/usr/local/etc/pkg/repos
     file=$dir/bleeding-edge.conf
+    if [ -e $file ]; then
+	printf "$0: You are already using latest packages.\n"
+	exit 0
+    fi
+    if [ 0$proceed != 01 ]; then
+	cat << EOM
+
+			       *** WARNING ***
+				 
+Switching from quarterly to latest is not easily reversible.  Once applications
+such as Firefox, Chromium, and Thunderbird are upgraded to the latest release,
+their configuration files may not be readable to older versions present in
+the quarterly branch.
+
+Also be aware that you will likely experience occasional regressions (new bugs)
+when using the latest packages.  You can be of service to the FreeBSD project
+by using the latest packages and reporting regressions you encounter.  If it
+is more important that software on this system be as stable as possible, you
+may want to stay with the quarterly packages instead.
+
+EOM
+	read -p "Are you sure you want to swith to latest? y/n [n] " proceed
+	if [ 0$proceed != 0y ]; then
+	    exit
+	fi
+    fi
     
     mkdir -p $dir
     auto-backup-file $file
