@@ -72,7 +72,7 @@ EOM
     auto-backup-file $file
     cat << EOM > $file
 FreeBSD: {
-  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/latest"
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
 }
 EOM
     pkg upgrade -y
