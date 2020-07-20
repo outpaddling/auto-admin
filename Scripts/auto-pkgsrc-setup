@@ -64,7 +64,7 @@ EOM
 	    selected=1
 	    ;;
 	*)
-	    printf "Error: Valid selections are 1 or 2.\n" >> /dev/stderr
+	    printf "Error: Invalid selection.\n" >> /dev/stderr
 	    ;;
 	esac
     done
