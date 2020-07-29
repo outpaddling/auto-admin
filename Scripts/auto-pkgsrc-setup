@@ -124,13 +124,29 @@ fi
 start_dir=`pwd`
 
 # RHEL / CentOS base
-if [ -e /etc/redhat-release ] && [ ! -e /usr/bin/gcc ]; then
-    if [ `whoami` = root ]; then
-	printf "Installing base development tools via yum...\n"
-	yum install -y gcc-gfortran gcc-c++ gcc
-    else
-	printf "You must run 'yum install gcc-gfortran gcc-c++ gcc' first.\n"
-	exit 1
+if [ -e /etc/redhat-release ]; then
+    if [ -e /usr/include/lzma.h ]; then
+	cat << EOM
+
+			========= Error =========
+
+Bootstrapping pkgsrc with xz-devel installed will cause pkg_install to link
+agains the Yum liblzma.  Due to a bug in pkg_install, installing pkgsrc xz
+will break the pkg_install tools.
+
+Run "yum remove xz-devel" and try again.
+
+EOM
+	exit
+    fi
+    if [ ! -e /usr/bin/gcc ]; then
+	if [ `whoami` = root ]; then
+	    printf "Installing base development tools via yum...\n"
+	    yum install -y gcc-gfortran gcc-c++ gcc
+	else
+	    printf "You must run 'yum install gcc-gfortran gcc-c++ gcc' first.\n"
+	    exit 1
+	fi
     fi
 fi
 
