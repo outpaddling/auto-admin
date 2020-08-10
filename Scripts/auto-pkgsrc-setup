@@ -936,7 +936,7 @@ GFORTRAN_VERSION=$gcc_version
 .endif  # GCC_REQD
 
 # Keep this in sync with pbulk-setup
-.if exists(/etc/redhat-release) && !empty(PKGPATH:Mlang/gcc*)
+.if (exists(/etc/redhat-release) || exists(/etc/amazon)) && !empty(PKGPATH:Mlang/gcc*)
 
 # RHEL systems may have an outdated "as" that cannot translate instructions
 # from current GCC code generators, so force pkgsrc binutils.
