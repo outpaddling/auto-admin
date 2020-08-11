@@ -125,20 +125,6 @@ start_dir=`pwd`
 
 # RHEL / CentOS base
 if [ -e /etc/redhat-release ]; then
-    if [ -e /usr/include/lzma.h ]; then
-	cat << EOM
-
-			========= Error =========
-
-Bootstrapping pkgsrc with xz-devel installed will cause pkg_install to link
-agains the Yum liblzma.  Due to a bug in pkg_install, installing pkgsrc xz
-will break the pkg_install tools.
-
-Run "yum remove xz-devel" and try again.
-
-EOM
-	exit
-    fi
     if [ ! -e /usr/bin/gcc ]; then
 	if [ `whoami` = root ]; then
 	    printf "Installing base development tools via yum...\n"
@@ -415,7 +401,7 @@ if [ `uname` != NetBSD ] && [ `uname` != SunOS ] && \
 
 Warning: No Java installation detected and the openjdk packages only build
 on certain BSD and SunOS systems.  On Linux, Mac OS X, and other platforms,
-you should install a Java JDK before bootstrapping pkgsrc.
+you should install the JDK of your choice before bootstrapping pkgsrc.
 
 EOM
     printf "Continue without Java? y/[n] "
@@ -651,6 +637,8 @@ if [ 0$bootstrap = '0y' ]; then
 	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
+	    --prefer-pkgsrc=yes \
+	    --full \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     else
 	./bootstrap \
@@ -660,6 +648,8 @@ if [ 0$bootstrap = '0y' ]; then
 	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
+	    --prefer-pkgsrc=yes \
+	    --full \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
 
