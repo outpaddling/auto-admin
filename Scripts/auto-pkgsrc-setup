@@ -638,7 +638,6 @@ if [ 0$bootstrap = '0y' ]; then
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
 	    --prefer-pkgsrc=yes \
-	    --full \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     else
 	./bootstrap \
@@ -649,7 +648,6 @@ if [ 0$bootstrap = '0y' ]; then
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
 	    --prefer-pkgsrc=yes \
-	    --full \
 	    --workdir ${sys_prefix}/work 2>&1 | tee bootstrap$dist_suffix.log
     fi
 
