@@ -153,6 +153,7 @@ fi
 
 case $os_type in
 FreeBSD)
+    : ${LOCALBASE:=/usr/local}
     if which svn > /dev/null; then
 	svn=svn
     else
@@ -178,6 +179,18 @@ FreeBSD)
     esac
     
     if [ 0$update_packages != 0n ]; then
+	if [ -e $LOCALBASE/etc/auto-admin/critical-packages ]; then
+	    printf "Verifying availability of critical packages...\n"
+	    for pkg in $(cat $LOCALBASE/etc/auto-admin/critical-packages); do
+		if ! pkg search "^${pkg}-[0-9].*"; then
+		    printf "Critical package $pkg is missing from the repository.\n"
+		    read -p "Upgrade packages anyway? y/[n] " upgrade_anyway
+		    if [ 0$upgrade_anyway != 0y ]; then
+			exit
+		    fi
+		fi
+	    done
+	fi
 	case $mode in
 	interactive)
 	    printf "Autoremove unneeded packages? [y]/n "
@@ -237,7 +250,7 @@ FreeBSD)
 	fi
     fi
     
-    plugin=/usr/local/etc/auto-update-system-post-ports
+    plugin=$LOCALBASE/etc/auto-update-system-post-ports
     if [ -e $plugin ]; then
 	owner=`stat -L $plugin | awk '{ print $5 }'`
 	group_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 6`

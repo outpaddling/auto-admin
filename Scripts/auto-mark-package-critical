@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Mark a package critical for auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-08-13  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 package [package ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    mkdir -p $LOCALBASE/etc/auto-admin
+    for pkg in "$@"; do
+	auto-append-line $pkg $LOCALBASE/etc/auto-admin/critical-packages nocomment
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    ;;
+
+esac
