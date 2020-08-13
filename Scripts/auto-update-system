@@ -181,15 +181,25 @@ FreeBSD)
     if [ 0$update_packages != 0n ]; then
 	if [ -e $LOCALBASE/etc/auto-admin/critical-packages ]; then
 	    printf "Verifying availability of critical packages...\n"
+	    missing_packages=0
 	    for pkg in $(cat $LOCALBASE/etc/auto-admin/critical-packages); do
-		if ! pkg search "^${pkg}-[0-9].*"; then
-		    printf "Critical package $pkg is missing from the repository.\n"
-		    read -p "Upgrade packages anyway? y/[n] " upgrade_anyway
-		    if [ 0$upgrade_anyway != 0y ]; then
-			exit
+		if pkg info -q $pkg; then
+		    if pkg search "^${pkg}-[0-9].*" > /dev/null; then
+			printf "$pkg is available.\n"
+		    else
+			printf "$pkg is installed and marked critical, but missing from the repository.\n"
+			missing_packages=$(($missing_packages + 1))
 		    fi
 		fi
 	    done
+	    if [ $missing_packages -gt 0 ]; then
+		printf "\n                               *** WARNING ***\n\n"
+		printf "Upgrading could render the missing packages above unavailable.\n\n"
+		read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
+		if [ 0$upgrade_anyway != 0y ]; then
+		    exit
+		fi
+	    fi
 	fi
 	case $mode in
 	interactive)
