@@ -195,9 +195,14 @@ FreeBSD)
 	    if [ $missing_packages -gt 0 ]; then
 		printf "\n                               *** WARNING ***\n\n"
 		printf "Upgrading could render the missing packages above unavailable.\n\n"
-		read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
-		if [ 0$upgrade_anyway != 0y ]; then
-		    exit
+		if [ -t 1 ]; then
+		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
+		    if [ 0$upgrade_anyway != 0y ]; then
+			exit
+		    fi
+		else
+		    printf "stdout is not a terminal. Can't ask user what to do, so aborting.\n"
+		    exit 1
 		fi
 	    fi
 	fi
