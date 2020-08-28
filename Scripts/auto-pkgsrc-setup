@@ -1223,15 +1223,15 @@ fi
 cat << EOM2 > $install_prefix/bin/bmake
 #!/bin/sh -e
 
-if ! pwd -P | fgrep -q $frameworks_prefix; then
+if ! pwd -P | fgrep -q $frameworks_prefix/; then
     cat << EOM
     
 			    ===== Error =====
 
 You are running \$(which bmake) from the wrong directory.
-It should only be used from within $frameworks_prefix.
+It should only be used from within $frameworks_prefix/.
 Load the correct environment module so that you are using the appropriate
-bmake for \$(pwd) or go to $frameworks_prefix.
+bmake for \$(pwd) or go to $frameworks_prefix/.
 
 EOM
     exit 1

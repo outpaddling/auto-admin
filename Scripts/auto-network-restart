@@ -1,13 +1,19 @@
 #!/bin/sh -e
 
+# Prompt for root password if needed
+# su won't ask for pw if run as root
+if [ $(whoami) != root ]; then
+    printf "Root "
+fi
+
 case $(auto-ostype) in
 FreeBSD)
-    service netif restart && service routing restart
+    su -m root -c 'service netif restart && service routing restart'
     ;;
 
 RHEL)
     # FIXME: Anything else?
-    service network restart
+    su -m root -c 'service network restart'
     ;;
 
 *)
