@@ -751,9 +751,17 @@ EOM
 	printf "Make sure no other tftp servers are running.\n"
 	pause
     
-	# FIXME: Use systemctl?
-	chkconfig xinetd on
-	service xinetd restart
+	# CentOS 6
+	# chkconfig xinetd on
+	# service xinetd restart
+
+	# CentOS 7
+	# http://www.cyberphoton.com/tftp-server-in-rhel7/
+	# FIXME: Need selinux set to permissive?
+        systemctl enable xinetd
+        systemctl enable tftp
+        systemctl restart xinetd
+        systemctl restart tftp
     }
     
     
@@ -960,7 +968,7 @@ EOM
 		;;
 	    RHEL7)
 		systemctl enable dhcpd
-		systemctl start dhcpd
+		systemctl restart dhcpd
 		;;
 	    esac
 	else
