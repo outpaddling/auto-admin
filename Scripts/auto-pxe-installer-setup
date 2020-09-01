@@ -758,10 +758,10 @@ EOM
 	# CentOS 7
 	# http://www.cyberphoton.com/tftp-server-in-rhel7/
 	# FIXME: Need selinux set to permissive?
-        systemctl enable xinetd
-        systemctl enable tftp
-        systemctl restart xinetd
-        systemctl restart tftp
+	systemctl enable xinetd
+	systemctl enable tftp
+	systemctl restart xinetd
+	systemctl restart tftp
     }
     
     
@@ -1181,25 +1181,25 @@ ignoredisk --only-use=sda
 # reformat and use all available disks.
 
 # part swap --size=4096
-# part / --fstype $boot_fs --size=1024 --grow --onpart=sda
+# part / --fstype $boot_fs --size=1024 --grow --ondisk=sda
 
 ############################################################################
 # Secure server config, allows partitions writable by users
 # (/var, /tmp, /home) to be mounted with nosuid.
 # Use hda instead of sda for IDE drives
 
-part /boot --fstype $boot_fs --size=1024 --onpart=sda
-part swap --size=4096 --onpart=sda
-part / --fstype $boot_fs --size=32768 --onpart=sda
-part /var --fstype $boot_fs --size=32768 --onpart=sda --fsoptions=rw,nosuid
-part /tmp --fstype $boot_fs --size=32768 --onpart=sda --fsoptions=rw,nosuid
+part /boot --fstype $boot_fs --size=1024 --ondisk=sda
+part swap --size=4096 --ondisk=sda
+part / --fstype $boot_fs --size=32768 --ondisk=sda
+part /var --fstype $boot_fs --size=32768 --ondisk=sda --fsoptions=rw,nosuid
+part /tmp --fstype $boot_fs --size=32768 --ondisk=sda --fsoptions=rw,nosuid
 
 # For typical machines and head nodes, use all remaining space for /home
-# part /home --fstype $boot_fs --size=1024 --grow --onpart=sda --fsoptions=rw,nosuid
+# part /home --fstype $boot_fs --size=1024 --grow --ondisk=sda --fsoptions=rw,nosuid
 
 # For nodes with /home NFS-mounted, such as compute nodes, don't allocate
 # local disk space for /home.  Use the space for local scratch.
-part /bigtmp --fstype xfs --size=1024 --grow --onpart=sda --fsoptions=rw,nosuid
+part /bigtmp --fstype xfs --size=1024 --grow --ondisk=sda --fsoptions=rw,nosuid
 
 %post
 
