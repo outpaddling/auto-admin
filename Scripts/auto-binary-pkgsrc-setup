@@ -53,3 +53,6 @@ if [ ! -e $prefix ]; then
     printf "Unpacking $kit...\n"
     tar -C / -zxf $kit
 fi
+sed -i'' '/mirror2/d' /usr/pkg/etc/pkgin/repositories.conf
+echo 'PKG_PATH=https://mirror1.hpc.uwm.edu/pkgsrc/packages/usr/pkg/RHEL7/All;' > \
+    /usr/pkg/etc/pkg_install.conf
