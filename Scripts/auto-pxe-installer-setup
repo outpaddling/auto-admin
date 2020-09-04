@@ -748,6 +748,8 @@ EOM
 	fi
 	sed -i '/disable/ c\\tdisable\t\t\t= no' /etc/xinetd.d/tftp
     
+	chmod -R a+rX /var/lib/tftpboot
+	
 	printf "Make sure no other tftp servers are running.\n"
 	pause
     
@@ -961,7 +963,7 @@ EOM
 	    # Make the DHCP server only serve to private iface's subnet
 	    sed -i '/DHCPDARGS/ c\DHCPDARGS=$iface' /etc/sysconfig/dhcpd
 	    
-	    case $(auto-ostype) in
+	    case $(auto-os-release) in
 	    RHEL6)
 		chkconfig dhcpd on
 		service dhcpd restart
@@ -1067,17 +1069,22 @@ EOM
     #   Copy install media to server
     ##########################################################################
     
-    if ! which rsync; then
-	yum install -y rsync
+    ksconfig=$installer_path/ks.cfg
+    if [ ! -d $installer_path ]; then
+	if ! which rsync; then
+	    yum install -y rsync
+	fi
+	mkdir -p $prefix/mnt
+	if ! mount -t iso9660 -o loop $iso $prefix/mnt; then
+	    printf "CD already mounted.\n"
+	fi
+	mkdir -p $installer_path
+	rsync -av $prefix/mnt/ $installer_path
+	chmod -R a-w,a+rX $installer_path
+	umount $prefix/mnt
+	# We'll generate a new one later
+	mv $ksconfig $ksconfig.orig
     fi
-    mkdir -p $prefix/mnt
-    if ! mount -t iso9660 -o loop $iso $prefix/mnt; then
-	printf "CD already mounted.\n"
-    fi
-    mkdir -p $installer_path
-    rsync -av $prefix/mnt/ $installer_path
-    chmod -R a-w,a+rX $installer_path
-    umount $prefix/mnt
     
     # Set root password in install media?
     # No can do unless it's a live filesystem.
@@ -1105,13 +1112,11 @@ EOM
     root_key="`cat /root/.ssh/id_rsa.pub`"
     restorecon -R -v /root/.ssh     # Set security context for selinux
     
-    
     ##########################################################################
     #   Kickstart
     ##########################################################################
     
     yum install -y pykickstart
-    ksconfig=$installer_path/ks.cfg
     root_pw="`awk -F : '$1 == \"root\" { print $2 }' /etc/shadow`"
     
     printf "Time zone? [America/Chicago] "
@@ -1127,7 +1132,8 @@ EOM
 	boot_fs=xfs
     fi
     
-    cat << EOM > $ksconfig
+    if [ ! -e $ksconfig ]; then
+	cat << EOM > $ksconfig
 # auto-pxe-linux-setup kickstart file
 
 install
@@ -1223,11 +1229,12 @@ yum clean all
 %end
 EOM
     
-    chmod 755 $ksconfig
-    sed -i '/%packages/,$d' $ksconfig
+	chmod 755 $ksconfig
+	sed -i '/%packages/,$d' $ksconfig
+fi
     printf "Editing kickstart config file.\n"
     pause
-    
+
     $EDITOR $ksconfig
     ;;
 
