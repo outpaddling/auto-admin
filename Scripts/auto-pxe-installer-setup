@@ -1083,7 +1083,7 @@ EOM
 	chmod -R a-w,a+rX $installer_path
 	umount $prefix/mnt
 	# We'll generate a new one later
-	mv $ksconfig $ksconfig.orig
+	mv $ksconfig $ksconfig.orig || true
     fi
     
     # Set root password in install media?
