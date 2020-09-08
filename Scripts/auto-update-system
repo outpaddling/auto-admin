@@ -180,9 +180,11 @@ FreeBSD)
     
     if [ 0$update_packages != 0n ]; then
 	if [ -e $LOCALBASE/etc/auto-admin/critical-packages ]; then
+	    critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
 	    printf "Verifying availability of critical packages...\n"
+	    printf "Edit $critical_pkg_file to update list.\n"
 	    missing_packages=0
-	    for pkg in $(cat $LOCALBASE/etc/auto-admin/critical-packages); do
+	    for pkg in $(cat $critical_pkg_file); do
 		if pkg info -q $pkg; then
 		    if pkg search "^${pkg}-[0-9].*" > /dev/null; then
 			printf "$pkg is available.\n"
