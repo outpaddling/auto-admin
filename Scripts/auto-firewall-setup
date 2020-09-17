@@ -58,13 +58,18 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     firewall=0
-    while [ $firewall -lt 1 ] || [ $firewall -gt 6 ]; do
-	cat << EOM
+    cat << EOM
 
 Configuring a basic IPFW firewall.  See the FreeBSD Handbook for information
 on customizing IPFW or using the PF or IPFILTER firewalls instead.
 
     https://www.freebsd.org/doc/handbook/firewalls.html
+
+EOM
+    pause
+
+    while [ $firewall -lt 1 ] || [ $firewall -gt 6 ]; do
+	cat << EOM
 
 The "client" and "simple" rule sets can be customized in /etc/rc.firewall.
 For example, to enable incoming SSH (TCP 22) connections, add the following:
@@ -96,6 +101,10 @@ EOM
     
     2)
 	sysrc firewall_type="client"
+	while [ 0$subnet = 0 ]; do
+	    read -p 'Local subnet? (e.g. 192.168.0.0/16) ' subnet
+	done
+	sysrc firewall_client_net="$subnet"
 	;;
     
     3)
