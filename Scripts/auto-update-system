@@ -261,7 +261,7 @@ FreeBSD)
 	else
 	    auto-ports-checkout
 	fi
-	
+	(cd $PORTSDIR/ports-mgmt/pkg && make clean stage && make deinstall reinstall)
 	if which wip-update; then
 	    wip-update
 	fi
