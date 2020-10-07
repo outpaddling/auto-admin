@@ -261,7 +261,10 @@ FreeBSD)
 	else
 	    auto-ports-checkout
 	fi
-	(cd $PORTSDIR/ports-mgmt/pkg && make clean stage && make deinstall reinstall)
+	# Takes too long and the issue it works around only appeared once
+	# in decades of using FreeBSD (October 2020, ports builds complained
+	# that pkg was outdated)
+	# (cd $PORTSDIR/ports-mgmt/pkg && make clean stage && make deinstall reinstall)
 	if which wip-update; then
 	    wip-update
 	fi
