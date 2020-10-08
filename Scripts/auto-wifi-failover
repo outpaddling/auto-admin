@@ -44,20 +44,25 @@ case $(auto-ostype) in
 FreeBSD)
     case $# in
     0)
-	ifconfig | grep -A 4 flags
+	#ifconfig | grep -A 4 flags
+	printf "Network interfaces via pciconf -lv:\n\n"
+	pciconf -lv | grep -B 3 -A 1 'class.*network'
 	wired=''
 	while [ 0$wired = 0 ]; do
-	    printf "Wired interface? "
+	    printf "\nWired interface? "
 	    read wired
 	done
 	
 	# FIXME: Can we get this from ifconfig instead of rc.conf?
-	wireless_default=$(awk -F '[_=]' '$1 == "wlans" { print $2 }' /etc/rc.conf)
-	printf "Wireless interface (raw, not wlan0)? [$wireless_default] "
+	wireless_default=$(awk -F '[_=]' '$1 == "wlans" { print $2 }' /etc/rc.conf | head -n 1)
+	printf "\nWireless interface (raw, not wlan0)? [$wireless_default] "
 	read wireless
 	if [ 0"$wireless" = 0 ]; then
 	    wireless=$wireless_default
 	fi
+	
+	ifconfig wlan0 destroy
+	ifconfig wlan0 create wlandev $wireless
 	;;
     
     2)
@@ -71,17 +76,20 @@ FreeBSD)
     
     esac
     
-    if grep -q '^wlans_.*wlan0' /etc/rc.conf; then
-	wifi_mac=`ifconfig wlan0 | awk '$1 == "ether" { print $2 }'`
-    else
-	wifi_mac=`ifconfig $wireless | awk '$1 == "ether" { print $2 }'`
-    fi
+    wifi_mac=`ifconfig wlan0 | awk '$1 == "ether" { print $2 }'`
+    printf "Using MAC $wifi_mac...\n"
+    
+    sed -i '' -E "s|^wlans_$wireless.*|# &|" /etc/rc.conf
+    sed -i '' -E "s|^ifconfig_$wired.*|# &|" /etc/rc.conf
+    sed -i '' -E "s|^ifconfig_wlan.*|# &|" /etc/rc.conf
+    sed -i '' -E "s|^ifconfig_lagg.*|# &|" /etc/rc.conf
+    sed -i '' -E "s|^create_args_wlan.*|# &|" /etc/rc.conf
+    sed -i '' -E "s|^cloned_interfaces.*|# &|" /etc/rc.conf
     
     # Note: Not all wireless interfaces allow changing their MAC, so configure
     # the Ethernet MAC instead.
     # e.g. ath0 would not take a new MAC on my Toshiba Satellite
-    if ! fgrep -q 'cloned_interfaces="lagg0"' /etc/rc.conf; then
-	cat << EOM >> /etc/rc.conf
+    cat << EOM >> /etc/rc.conf
 # Added by $0
 ifconfig_$wired="ether $wifi_mac"
 wlans_$wireless="wlan0"
@@ -94,15 +102,11 @@ ifconfig_lagg0="up laggproto failover laggport $wired laggport wlan0 DHCP"
 ifconfig_lagg0_ipv6="inet6 accept_rtadv"
 # End $0 addition
 EOM
-    fi
     
     kldload if_lagg || true
     auto-append-line if_lagg_load="YES" /boot/loader.conf $0
-    
-    # FIXME: Do a better job cleaning up rc.conf
-    printf 'You may want to remove old network configurations from /etc/rc.conf.\n'
-    pause
-    
+
+    printf "Old network configurations have been commented out in rc.conf.\n"
     printf "Reboot to activate the new network configuration.\n"
     pause
     ;;
