@@ -264,7 +264,12 @@ FreeBSD)
 	# Takes too long and the issue it works around only appeared once
 	# in decades of using FreeBSD (October 2020, ports builds complained
 	# that pkg was outdated)
-	# (cd $PORTSDIR/ports-mgmt/pkg && make clean stage && make deinstall reinstall)
+	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
+	    printf "Binary pkg is outdated.  Rebuilding from source...\n"
+	    (cd $PORTSDIR/ports-mgmt/pkg && make clean stage && make deinstall reinstall)
+	else
+	    printf "Binary pkg is up-to-date.\n"
+	fi
 	if which wip-update; then
 	    wip-update
 	fi
