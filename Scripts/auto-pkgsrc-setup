@@ -118,6 +118,30 @@ elif [ 0$1 = 0--help ]; then
     usage
 fi
 
+# Make sure everything from here on is world-readable
+umask=$(umask)
+# Make sure format is consistent across platforms
+umask=$(printf "%04o" $umask)
+if [ $umask != 0022 ]; then
+    cat << EOM
+
+********************************** WARNING **********************************
+
+umask should generally be 0022 for pkgsrc bootstrap and package builds to
+ensure that most files are world-readable and certain private files are
+protected.  Changing permissions on installed pkgsrc files later is tricky
+since you will have to know about special permissions on all files that
+require them.
+
+Your umask is $umask.
+
+EOM
+    read -p "Continue with umask $umask? y/[n] " continue
+    if [ 0$continue != 0y ]; then
+	exit
+    fi
+fi
+
 # AD servers might add funky stuff to IDs
 if id -gn | fgrep -q ' ' || id -gn | fgrep -q '\'; then
     cat << EOM
@@ -549,9 +573,6 @@ elif [ -e $frameworks_prefix ]; then
 else
     unpack='y'
 fi
-
-# Make sure everything from here on is world-readable
-umask 022
 
 # Create a new package tree for this installation
 if [ 0$unpack = 0y ]; then
