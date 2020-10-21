@@ -33,7 +33,7 @@ See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
 
 1.. Install a quarterly snapshot
 2.. Install current
-3.. Install from git -current snapshot (git://unixdev.ceas.uwm.edu/pkgsrc)
+3.. Install from git -current snapshot
 4.. Install from a custom source tree
 
 EOM
@@ -111,10 +111,10 @@ EOM
 #   Main
 ##########################################################################
 
-if [ $1 = --extract-only ]; then
+if [ 0$1 = 0--extract-only ]; then
     EXTRACT_ONLY=yes
     shift
-elif [ $1 = --help ]; then
+elif [ 0$1 = 0--help ]; then
     usage
 fi
 
@@ -265,27 +265,6 @@ read proceed
 if [ "0$proceed" = "0n" ]; then
     exit
 fi
-
-cat << EOM
-
-============================================================================
-Binary packages are available for CentOS 6 and 7 if you choose a quarterly
-snapshot and install under /sharedapps, e.g. /sharedapps/pkg-2017Q1.
-
-This will allow packages to be installed using a simple command like
-
-    pkg_add hmmer
-
-instead of building from source with
-
-    cd biology/hmmer
-    bmake install
-
-To use this feature, enter /sharedapps for the prefix below and choose a
-quarterly snapshot of 2017Q1 or later.
-============================================================================
-
-EOM
 
 printf "Installation prefix? [$default_prefix] "
 read prefix
@@ -456,7 +435,7 @@ or
 
     PKGSRC_FORTRAN=g95
 
-in $install_prefix/etc/mk.conf.
+in $sys_prefix/etc/mk.conf.
 ============================================================================
 
 EOM
@@ -485,7 +464,7 @@ systems, answer 'n' here.
 If you want executables optimized for maximum speed on this system, answer
 'y'.  This will append -march=native to CFLAGS, CXXFLAGS, and FFLAGS in
 
-    $install_prefix/etc/mk.conf
+    $sys_prefix/etc/mk.conf
 
 You can add additional compiler flags here as well, all of which will be
 applied to every pkgsrc build.
@@ -514,7 +493,8 @@ if [ $snapshot = git ]; then
     save_cwd=`pwd`
     mkdir -p $prefix
     cd $prefix
-    git clone git://unixdev.ceas.uwm.edu/pkgsrc pkgsrc
+    read -p "git URL of pkgsrc tree? " git_url
+    git clone $git_url pkgsrc
     cd $save_cwd
 elif [ $snapshot = custom ]; then
     download='n'
@@ -543,9 +523,7 @@ if [ 0$download = 0y ]; then
 
     fetched=no
     for dist in \
-	ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz \
-	http://mirror1.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz \
-	http://mirror2.hpc.uwm.edu/pkgsrc/dist-archive/$snapshot.tar.gz; do
+	ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz; do
 	
 	echo $dist
 	if $fetch_cmd $dist; then
@@ -1089,7 +1067,7 @@ unsetenv        LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
-prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
+prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
 
 setenv          PKGSRC          \$install_prefix
 setenv          PKGSRC_INCLUDE  \$install_prefix/include
@@ -1119,7 +1097,7 @@ set     install_prefix  ${install_prefix}
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
 prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
-prepend-path    MODULEPATH      \$install_prefix/etc/modulefiles
+prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
 
 setenv          PKGSRC          \$install_prefix
 setenv          PKGSRC_INCLUDE  \$install_prefix/include
@@ -1216,11 +1194,7 @@ chmod 644 $profile_dir/$module_path_script*
 # Basic instructions on installing a package
 make=bmake
 
-# Wrap bmake and pkg_add commands
-if ! [ -e $install_prefix/bin/bmake.bin ]; then
-    mv $install_prefix/bin/bmake $install_prefix/bin/bmake.bin
-fi
-cat << EOM2 > $install_prefix/bin/bmake
+cat << EOM2 > $install_prefix/bin/safe-bmake
 #!/bin/sh -e
 
 if ! pwd -P | fgrep -q $frameworks_prefix/; then
@@ -1228,7 +1202,7 @@ if ! pwd -P | fgrep -q $frameworks_prefix/; then
     
 			    ===== Error =====
 
-You are running \$(which bmake) from the wrong directory.
+You are running \$(which safe-bmake) from the wrong directory.
 It should only be used from within $frameworks_prefix/.
 Load the correct environment module so that you are using the appropriate
 bmake for \$(pwd) or go to $frameworks_prefix/.
@@ -1237,28 +1211,11 @@ EOM
     exit 1
 fi
 
-# Make sure software installed is world-readable on systems with tighter
-# default umask.
-umask 022
-bmake.bin "\$@"
+bmake "\$@"
 EOM2
-# Save a copy in case bmake gets clobbered by pkgin upgrade
-# Should move the check into bmake proper so this wrapper is unnecessary
-cp $install_prefix/bin/bmake $install_prefix/bin/bmake-wrapper
 
-if ! [ -e $install_prefix/sbin/pkg_add.bin ]; then
-    mv $install_prefix/sbin/pkg_add $install_prefix/sbin/pkg_add.bin
-fi
-cat << EOM > $install_prefix/sbin/pkg_add
-#!/bin/sh -e
-
-# Make sure software installed is world-readable on systems with tighter
-# default umask.
-umask 022
-pkg_add.bin "\$@"
-EOM
-
-chmod 755 $install_prefix/bin/bmake $install_prefix/sbin/pkg_add
+ln -sf $install_prefix/bin/safe-bmake $install_prefix/bin/sbmake
+chmod 755 $install_prefix/bin/*bmake
 
 cat << EOM
 
@@ -1332,21 +1289,10 @@ cat << EOM
 
 ============================================================================
 
-UWM provides binary packages for quarterly snapshots under /sharedapps,
-e.g. /sharedapps/pkg-2017Q1.
-
-If you know there are binary packages available for
-
-    $install_prefix
-    
-on
-
-    $os
-
-enter the full web server URL(s) here, e.g.:
+If you are using an operating system and PREFIX for which there are
+binary packages, enter the full package server URL(s) here, e.g.:
 
     https://mirror1.hpc.uwm.edu
-    https://mirror2.hpc.uwm.edu
 
 The default PKG_PATH will be set to
 
@@ -1354,7 +1300,7 @@ The default PKG_PATH will be set to
 
 Edit
 
-    $install_prefix/etc/pkg_install.conf
+    $sys_prefix/etc/pkg_install.conf
 
 if this is incorrect.
 
@@ -1362,7 +1308,7 @@ EOM
 
 cat << EOM
 
-Enter the binary package server name (include http:// or https://), or
+Enter a binary package server name (include http:// or https://), or
 just press enter if you won't be using binary packages.
 
 EOM
@@ -1373,7 +1319,7 @@ if [ 0$package_server != 0 ]; then
 fi
 
 if [ 0$pkg_path != 0 ]; then
-    printf "PKG_PATH=$pkg_path\n" >> $install_prefix/etc/pkg_install.conf
+    printf "PKG_PATH=$pkg_path\n" >> $sys_prefix/etc/pkg_install.conf
 
     # Rebuild pkg_install with SSL support
     cd $frameworks_prefix/pkgtools/pkg_install
@@ -1394,7 +1340,7 @@ if [ 0$pkg_path != 0 ]; then
     bmake clean-depends
     bmake install
     if [ $? = 0 ]; then
-	printf "${pkgin_path}" >> $install_prefix/etc/pkgin/repositories.conf
+	printf "${pkgin_path}" >> $sys_prefix/etc/pkgin/repositories.conf
 	pkgin update
 	cat << EOM
 
@@ -1406,7 +1352,7 @@ EOM
 	    pkgin install -y $base_gcc
 	fi
     else
-	printf "Failed to install pkgin.\nCheck $install_prefix/etc/pkg_install.conf.\n"
+	printf "Failed to install pkgin.\nCheck $sys_prefix/etc/pkg_install.conf.\n"
     fi
     cd $save_cwd
     pause
@@ -1439,6 +1385,28 @@ if [ 0$install_certs = 0y ]; then
 fi
 
 cat << EOM
+
+********************************** WARNING **********************************
+
+The bmake binaries installed by pkgsrc are patched to install packages under
+the PREFIX of the tree in which they are built, regardless of the current
+working directory from which you run them.  For example, if you run
+/usr/pkg-2020Q3/bin/bmake from /usr/pkgsrc-2019Q1, it will build packages
+from /usr/pkgsrc-2019Q1 and install them under /usr/pkg-2020Q2.
+
+This will likely cause serious problems, largely due to incompatible versions
+of dependency packages.  It is therefore critical to ensure that your PATH is
+always correct for the tree in which you are building.
+
+It is strongly recommended that you use "safe-bmake" or the abbreviation
+"sbmake" to build and install pkgsrc packages.  This wrapper, automatically
+generated by auto-pkgsrc-setup, performs a simple check to ensure that you
+are using the correct bmake binary for the tree in which you are building.
+
+EOM
+pause
+
+cat << EOM
 ============================================================================
 Users running sh-compatible shells can use the following to configure the
 environment for this installation:
@@ -1462,11 +1430,11 @@ cat << EOM
 To install a package, type:
 
     cd $frameworks_prefix/<category>/<package>
-    $make install
+    safe-bmake install
 
 Ex.
     cd $frameworks_prefix/math/blas
-    $make install
+    safe-bmake install
 ============================================================================
 EOM
 pause

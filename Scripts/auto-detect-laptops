@@ -3,10 +3,13 @@
 case $(auto-ostype) in
 FreeBSD)
     if dmidecode | grep -iq macbook; then
-	printf "$0: MacBook detected.\n"
-    
+	printf "$0: MacBook\n"
 	auto-append-line 'atp_load="YES"' /boot/loader.conf $0
 	auto-append-line 'acpi_video_load="YES"' /boot/loader.conf $0
+    elif dmidecode | grep -iq thinkpad; then
+	printf "$0: IBM/Lenovo ThinkPad\n"
+    elif dmidecode | grep -iq "Product name: Satellite"; then
+	printf "$0: Toshiba Satellite\n"
     fi
     ;;
     
