@@ -799,7 +799,7 @@ EOM
 	;;
     esac
     printf "MAKE_JOBS=\t\t$make_jobs\n" >> $mk_conf
-    printf "\n.endif   # Pkgsrc boostrap customizations\n" >> $mk_conf
+    printf "\n.endif                  # End auto-pkgsrc-setup customizations\n" >> $mk_conf
 
 fi  # bootstrap
 

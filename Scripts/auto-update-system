@@ -221,7 +221,6 @@ FreeBSD)
 	freebsd_autoremove
 	printf "\nUpdating binary packages...\n"
 	pkg update
-	pkg clean -y
 	pkg upgrade -y
 	freebsd_autoremove
 	pkg clean -y
@@ -377,7 +376,6 @@ NetBSD)
 	    pkgin autoremove
 	fi
 	pkgin update
-	pkgin clean -y
 	pkgin upgrade -y
 	if [ 0$autoremove = 0y ]; then
 	    pkgin autoremove
