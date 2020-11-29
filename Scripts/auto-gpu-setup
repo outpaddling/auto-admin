@@ -110,7 +110,7 @@ EOM
     pkg install -y drm-kmod
     Add kld_list="/boot/modules/i915kms.ko" to /etc/rc.conf
 
-2.. For other Intel GPUs, or if you encounter other issues with the built-in
+2.. For older Intel GPUs, or if you encounter other issues with the built-in
     DRM or Intel modesetting driver, try the Intel xorg driver with no DRM:
 
     pkg install -y xf86-video-intel

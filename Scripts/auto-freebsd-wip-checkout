@@ -40,6 +40,7 @@ pause()
 if [ $# != 1 ]; then
     usage
 fi
+vcs=$1
 
 if [ `whoami` != root ]; then
     printf "$0 must be run by root.\n"
@@ -54,7 +55,7 @@ if [ $(uname) = FreeBSD ]; then
     pkg install -y ca_root_nss
     if [ ! -e /usr/ports/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
-	sh ./freebsd-wip-checkout svn
+	sh ./freebsd-wip-checkout $vcs
     fi
 else
     printf "$0: Not supported on $(uname).\n"
