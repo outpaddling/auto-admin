@@ -2,10 +2,8 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Replace old file with a new file, first creating a backup of
+#       old file.
 #       
 #   History:
 #   Date        Name        Modification
@@ -29,4 +27,3 @@ else
     auto-backup-file $old
     /bin/cp -f $new $old
 fi
-

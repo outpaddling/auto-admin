@@ -7,11 +7,18 @@ FreeBSD)
     auto-append-line 'ipmi_load="YES"' /boot/loader.conf $0
     kldload ipmi
     ;;
+
 RHEL)
     yum install -y OpenIPMI ipmitool
     chkconfig ipmi on
     service ipmi start
     chmod 750 /usr/bin/ipmitool
     ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype)\n"
+    exit 1
+    ;;
+
 esac
 

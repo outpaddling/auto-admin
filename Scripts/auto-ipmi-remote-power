@@ -24,7 +24,7 @@ if [ $# != 2 ]; then
     usage
 fi
 
-auto-operator-check $0
+auto-group-check operator $0
 
 host=$1
 state=$2

@@ -1,3 +1,19 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       Install pkgsrc packages necessary for running X11 apps from a
+#       remote display.  xauth is a basic requirement and a reasonable
+#       set of fonts are required for some complex apps such as the
+#       octave GUI.
+#       
+#   History:
+#   Date        Name        Modification
+#   2014?       Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
 pkgin install xauth modular-xorg-fonts

@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 directory\n"
+    printf "Usage: $0 top-level-directory\n"
     exit 1
 }
 

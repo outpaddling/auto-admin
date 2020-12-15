@@ -1,5 +1,18 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       Print the release version of the underlying OS.
+#       
+#   History:
+#   Date        Name        Modification
+#   2016?       Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
 if [ -e /etc/redhat-release ]; then
     release=`cat /etc/redhat-release`
     release=${release%%.*}

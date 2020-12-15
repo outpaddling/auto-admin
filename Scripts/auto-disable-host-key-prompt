@@ -41,7 +41,7 @@ if [ $(auto-ostype) = FreeBSD ]; then
 elif [ -e /etc/redhat-release ]; then
     sed=sed
 else
-    printf 'Only FreeBSD and CentOS are supported at this time.\n'
+    printf 'Only FreeBSD and RHEL/CentOS are supported at this time.\n'
     exit 1
 fi
 

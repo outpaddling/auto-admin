@@ -24,7 +24,11 @@ if [ $# != 1 ]; then
     usage
 fi
 
-auto-operator-check $0
+case $(auto-ostype) in
+FreeBSD)
+    auto-group-check operator $0
+    ;;
+esac
 
 if [ -r /root/.ipmipw ]; then
     pw_flags="-f /root/.ipmipw"

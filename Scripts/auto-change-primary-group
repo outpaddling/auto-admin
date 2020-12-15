@@ -2,10 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Change the primary group for a user
 #       
 #   History:
 #   Date        Name        Modification
@@ -57,8 +54,7 @@ fi
 # check for both group name and gid.
 
 # Call me from cluster-change-gid
-ostype=`auto-ostype`
-case $ostype in
+case $(auto-ostype) in
 FreeBSD)
     pw usermod $user_name -g $new_group
     ;;
@@ -68,7 +64,7 @@ RHEL)
     ;;
 
 *)
-    printf "Not yet implemented for $ostype.\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
 

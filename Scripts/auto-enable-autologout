@@ -2,11 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
+#       Set an auto-logout time limit globally
+#   
+#   FIXME:
+#       Add support for additional shells if present
+#
 #   History:
 #   Date        Name        Modification
 #   2014-05-06  root        Begin
@@ -57,4 +57,3 @@ fi
 EOM
     fi
 done
-

@@ -28,6 +28,7 @@ FreeBSD)
 
 *)
     printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
     ;;
 
 esac

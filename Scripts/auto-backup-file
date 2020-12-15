@@ -2,10 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Create backup copies of a file with ascending integer suffixes
 #       
 #   History:
 #   Date        Name        Modification
@@ -45,4 +42,3 @@ while [ -e $file.$suffix ]; do
 done
 printf "Backing up to $file.$suffix.\n"
 cp $file $file.$suffix
-

@@ -33,8 +33,7 @@ for dir in $dirs; do
     fi
 done
 
-ostype=$(auto-ostype)
-if [ $ostype = Darwin ]; then
+if [ $(auto-ostype) = Darwin ]; then
     old_uid=`dscl . -read /Users/$user_name UniqueID | cut -d ' ' -f 2`
 else
     old_uid=`awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' /etc/passwd`
@@ -75,7 +74,7 @@ EOM
     fi
 fi
 
-case $ostype in
+case $(auto-ostype) in
 Darwin)
     dscl . -change /Users/$user_name UniqueID $old_uid $new_uid
     ;;
@@ -89,7 +88,8 @@ RHEL)
     ;;
 
 *)
-    printf "$0: $(auto-ostype) is not currently supported.\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
     ;;
 esac
 

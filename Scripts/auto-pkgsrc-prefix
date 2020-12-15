@@ -1,7 +1,18 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       Print the PREFIX of the pkgsrc installation currently in path.
+#       
+#   History:
+#   Date        Name        Modification
+#   2018?       Jason Bacon Begin
+##########################################################################
+
 pkg_add=`which pkg_add`
 prefix=${pkg_add%/sbin/pkg_add}
+
+# Compensate for NetBSD where pkg_add is in base
 if [ $prefix = /usr ] && [ -e /usr/pkg/sbin/pkg_add ]; then
     prefix=/usr/pkg
 fi

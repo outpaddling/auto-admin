@@ -1,4 +1,22 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       Print the path of the pkgsrc source tree for the currently active
+#       pkgsrc installation.
+#       
+#   History:
+#   Date        Name        Modification
+#   2018?       Jason Bacon Begin
+##########################################################################
+
+##########################################################################
+#   Main
+##########################################################################
+
+# FIXME: pkgsrc is almost always a sibling of pkg, but not necessarily.
+# The user can choose any directories during bootstrap.  Find a more
+# reliable way.
+
 prefix=`auto-pkgsrc-prefix`
 printf ${prefix} | sed 's|pkg|pkgsrc|'

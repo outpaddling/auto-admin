@@ -40,4 +40,3 @@ if grep -q "^$variable=" $file; then
 else
     auto-append-line "$variable=$value" $file $caller
 fi
-

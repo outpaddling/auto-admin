@@ -1,8 +1,42 @@
 #!/bin/sh -e
 
-# Enable in rc.conf
-sysrc nfs_client_enable="YES"
+##########################################################################
+#   Script description:
+#       Configure a system as an NFS client.
+#       
+#   History:
+#   Date        Name        Modification
+#   2020?       Jason Bacon Begin
+##########################################################################
 
-# Enable NFSv4 without nfsuserd
-# FIXME: Offer option of using nfsuserd
-auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    # Enable in rc.conf
+    sysrc nfs_client_enable="YES"
+    
+    # Enable NFSv4 without nfsuserd
+    # FIXME: Offer option of using nfsuserd
+    auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

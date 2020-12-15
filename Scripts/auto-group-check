@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       Verify that calling user a member of operator.
+#       Verify that calling user is a member of operator.
 #       
 #   History:
 #   Date        Name        Modification
@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 calling-script-name\n"
+    printf "Usage: $0 group calling-script-name\n"
     exit 1
 }
 
@@ -20,11 +20,13 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
     usage
 fi
+group="$1"
+script="$2"
 
-if ! groups | fgrep -q operator; then
-    printf "$1 can only be run by members of operator.\n"
+if ! groups | fgrep -q "$group"; then
+    printf "$script can only be run by members of $group.\n"
     exit 1
 fi

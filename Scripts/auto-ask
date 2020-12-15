@@ -2,10 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Prompt user and take input with a provided default value.
 #       
 #   History:
 #   Date        Name        Modification
