@@ -889,6 +889,8 @@ EOM
     empty(PKGPATH:Mdatabases/db4) && \\
     empty(PKGPATH:Mdevel/autoconf) && \\
     empty(PKGPATH:Mdevel/binutils) && \\
+    empty(PKGPATH:Mdevel/bison) && \\
+    empty(PKGPATH:Mdevel/flex) && \\
     empty(PKGPATH:Mdevel/gettext-lib) && \\
     empty(PKGPATH:Mdevel/gettext-tools) && \\
     empty(PKGPATH:Mdevel/gmake) && \\
