@@ -5,11 +5,15 @@ case $(auto-ostype) in
 FreeBSD)
     auto-set-sysctl net.inet.tcp.rfc1323 0
     ;;
+
 RHEL)
     auto-set-sysctl net.ipv4.tcp_timestamps 0
     ;;
+
 *)
-    printf "Not yet supported for $(auto-ostype).\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 

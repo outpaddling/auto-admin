@@ -57,10 +57,12 @@ EOM
     # Enable init script
     chkconfig denyhosts on
     ;;
+
 *)
-    printf "Sorry, $0 is not implemented for $(auto-ostype) yet.\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
+
 esac
 
 if [ -z $EDITOR ]; then

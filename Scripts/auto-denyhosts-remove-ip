@@ -46,8 +46,10 @@ Linux|NetBSD)
     ;;
 
 *)
-    printf "${0}: Unsuported OS: $(auto-ostype)\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 
 work_dir=$prefix/share/denyhosts/data

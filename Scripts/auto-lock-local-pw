@@ -45,7 +45,7 @@ RHEL)
     ;;
 
 *)
-    printf "$0: Unsupported os: $(auto-ostype)\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
 

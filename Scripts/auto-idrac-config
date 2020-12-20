@@ -67,9 +67,10 @@ RHEL)
     ;;
 
 *)
-    printf "Unsupported OS: `auto-ostype`\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
+
 esac
 printf "Ethernet: $eth_addr\n"
 

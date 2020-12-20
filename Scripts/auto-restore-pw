@@ -46,12 +46,16 @@ case $os_type in
 FreeBSD)
     master_pw='/etc/master.passwd'
     ;;
+
 RHEL)
     master_pw='/etc/shadow'
     ;;
+
 *)
-    printf "Unsupported OS: $os_type\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 
 # sed might trip on special characters in the encrypted password

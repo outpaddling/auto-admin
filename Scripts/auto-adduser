@@ -97,21 +97,24 @@ fi
 
 CONF_DIR=/usr/local/share/auto-admin
 
-os_type=`auto-ostype`
-case $os_type in
+case $(auto-ostype) in
 FreeBSD)
     ldap_conf=/usr/local/etc/ldap.conf
     ldap_flags=''
     default_shell="/bin/tcsh"
     ;;
+
 RHEL)
     ldap_conf=/etc/openldap/ldap.conf
     ldap_flags='-x'
     default_shell="/bin/bash"
     ;;
+
 *)
-    printf "Unsupported os: $os_type\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 
 cat << EOM

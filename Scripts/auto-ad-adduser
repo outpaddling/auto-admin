@@ -4,6 +4,19 @@
 # ou=people,o=uwm
 # Can we override from CLI?
 
+case $(auto-ostype) in
+RHEL)
+    default_shell="/bin/bash"
+    ;;
+FreeBSD)
+    default_shell="/bin/tcsh"
+    ;;
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+esac
+
 if [ $# = 1 ]; then
     user_name=$1
 else
@@ -35,18 +48,6 @@ stty -echo
 read ad_pw
 printf '\n'
 stty echo
-
-case $(auto-ostype) in
-    RHEL)
-	default_shell="/bin/bash"
-	;;
-    FreeBSD)
-	default_shell="/bin/tcsh"
-	;;
-    *)
-	printf "$(auto-ostype) is not supported at this time.\n"
-	exit 1
-esac
 
 # Flag usernames not in LDAP
 #ldapsearch -H ldap://$server -x -W -D "AD\\$ad_user_name" CN=$user_name
@@ -127,9 +128,6 @@ RHEL)
     fi
     useradd_cmd="$useradd_cmd -m -s $shell"
     useradd_cmd="$useradd_cmd $user_name"
-    ;;
-*)
-    exit 1
     ;;
 esac
 

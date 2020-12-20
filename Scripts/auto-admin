@@ -43,9 +43,15 @@ FreeBSD|NetBSD)
     poweroff=-p
     ;;
 
-*)
+RHEL)
     poweroff=-h
     ;;
+
+*)
+    printf "$0: poweroff flag undefined for $(auto-ostype).\n"
+    pause
+    ;;
+
 esac
 
 while true

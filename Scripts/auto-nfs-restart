@@ -18,12 +18,12 @@ RHEL6)
     service nfs restart
     ;;
 
-RHEL7)
+RHEL7|RHEL8)
     systemctl restart nfs
     ;;
 
 *)
-    printf "$(auto-ostype) is not yet supported.\n"
+    printf "$0: Not supported on $(auto-os-release).\n"
     exit 1
     ;;
 

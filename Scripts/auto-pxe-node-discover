@@ -168,8 +168,10 @@ RHEL)
     ;;
 
 *)
-    printf 'Only FreeBSD and CentOS are supported at this time.\n'
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 
 # Restart the service to clean up outdated leases

@@ -12,17 +12,21 @@ while [ 0$user_name = 0 ]; do
 done
 
 case $(auto-ostype) in
-    RHEL)
-	ldap_conf=/etc/openldap/ldap.conf
-	default_shell="/bin/bash"
-	;;
-    FreeBSD)
-	ldap_conf=/usr/local/etc/ldap.conf
-	default_shell="/bin/tcsh"
-	;;
-    *)
-	printf "$(auto-ostype) is not supported at this time.\n"
-	exit 1
+RHEL)
+    ldap_conf=/etc/openldap/ldap.conf
+    default_shell="/bin/bash"
+    ;;
+
+FreeBSD)
+    ldap_conf=/usr/local/etc/ldap.conf
+    default_shell="/bin/tcsh"
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
 esac
 
 if [ -e $ldap_conf ]; then

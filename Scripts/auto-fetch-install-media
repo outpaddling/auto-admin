@@ -38,7 +38,7 @@ FreeBSD)
     ;;
 
 *)
-    printf "Sorry, $(auto-ostype) is not yet supported.\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
 

@@ -37,12 +37,15 @@ RHEL)
     fi
     hostname $hostname
     ;;
+
 FreeBSD|NetBSD)
     sed -i -e 's|^hostname=.*|hostname="'$hostname'"|' /etc/rc.conf
     hostname $hostname
     ;;
+
 *)
-    printf "Unsupported OS: `auto-ostype`\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
+
 esac
