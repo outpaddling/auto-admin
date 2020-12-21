@@ -1372,7 +1372,7 @@ binary packages, list available packages, etc.  Run "man pkgin" for details.
 
 EOM
 	if [ ! -z $base_gcc ]; then
-	    pkgin install -y $base_gcc
+	    pkgin -y install $base_gcc
 	fi
     else
 	printf "Failed to install pkgin.\nCheck $sys_prefix/etc/pkg_install.conf.\n"
