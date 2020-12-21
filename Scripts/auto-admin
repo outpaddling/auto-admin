@@ -57,15 +57,12 @@ esac
 while true
 do
     clear
+    auto-admin-banner
     cat << EOM
 
-			    *****************************
-			    *   Auto Admin Main Menu    *
-			    *****************************
-
-1.. Shut down system
+1.. User management
 2.. Update system
-3.. User management
+3.. Shut down system
 Q.. Quit
 
 EOM
@@ -73,17 +70,7 @@ EOM
     read -p 'Selection? ' resp
     case 0$resp in
     01)
-	printf '\n'
-	w
-	printf '\nProceed? y/[n] '
-	read proceed
-	if [ 0$proceed = 0y ]; then
-	    read -p 'Minutes to shutdown? [2] ' minutes
-	    if [ 0$minutes = 0 ]; then
-		minutes=2
-	    fi
-	    shutdown $poweroff +$minutes
-	fi
+	auto-user-admin
 	;;
     
     02)
@@ -119,7 +106,17 @@ EOM
 	;;
     
     03)
-	auto-user-admin
+	printf '\n'
+	w
+	printf '\nProceed? y/[n] '
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Minutes to shutdown? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    shutdown $poweroff +$minutes
+	fi
 	;;
     
     0Q|0q)
