@@ -39,18 +39,6 @@ pause()
 }
 
 
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2016-03-11  Charlie &   Begin
-##########################################################################
-
 abuse_warning()
 {
     cat << EOM
@@ -113,6 +101,7 @@ if [ 0$1 = 0--sync-pkg-cache ]; then
 		pkg_cache=/var/cache/pkg
 		;;
 	    NetBSD)
+		# FIXME: This depends on the bootstrap options
 		pkg_cache=/var/db/pkgin/cache
 		;;
 	    RHEL)
@@ -179,8 +168,8 @@ FreeBSD)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	if [ -e $LOCALBASE/etc/auto-admin/critical-packages ]; then
-	    critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
+	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
+	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
 	    printf "Edit $critical_pkg_file to update list.\n"
 	    missing_packages=0
