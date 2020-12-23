@@ -1,0 +1,40 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Correct a clock that has strayed too far for NTP to deal with
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-23  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD|NetBSD)
+    # Use absolute pathnames with su to avoid malicious programs
+    printf "Root "
+    su -m root -c '/usr/sbin/service ntpd stop; /usr/sbin/ntpdate -u pool.ntp.org; /usr/sbin/service ntpd start'
+    ;;
+
+*)
+    # To-do: auto-detect chronyd or ntp on RHEL
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
