@@ -1,0 +1,110 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Manage software packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-27  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    while true
+    do
+	clear
+	auto-admin-banner
+	cat << EOM
+
+To see ports by category, run "ls /usr/ports" and e.g. "ls /usr/ports/audio"
+or browse the collection at https://www.freebsd.org/ports/index.html.
+
+1.. List installed packages
+2.. List available packages
+3.. Search available packages
+4.. Install packages
+5.. Remove packages
+Q.. Quit
+
+EOM
+    
+	read -p 'Selection? ' resp
+	case 0$resp in
+	01)
+	    pkg info | more
+	    pause
+	    ;;
+    
+	02)
+	    pkg search '.*' | more
+	    pause
+	    ;;
+    
+	03)
+	    read -p 'Enter any part of the package name: ' pattern
+	    pkg search "$pattern" | more
+	    pause
+	    ;;
+	
+	04)
+	    read -p 'Enter the package name(s): ' names
+	    pkg install "$names"
+	    pause
+	    ;;
+	
+	05)
+	    read -p 'Enter the package name(s): ' names
+	    pkg remove "$names"
+	    read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
+	    if [ 0$deps != 0n ]; then
+		pkg autoremove
+	    fi
+	    pause
+	    ;;
+	
+	0Q|0q)
+	    exit 0
+	    ;;
+    
+	*)
+	    printf "Invalid option: $resp\n"
+	esac
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    pause
+    ;;
+
+esac

@@ -61,8 +61,9 @@ do
     cat << EOM
 
 1.. User management
-2.. Update system
-3.. Shut down system
+2.. Software Manager
+3.. Update system
+4.. Shut down system
 Q.. Quit
 
 EOM
@@ -72,8 +73,12 @@ EOM
     01)
 	auto-user-admin
 	;;
-    
-    02)
+
+    01)
+	auto-software-manager
+	;;
+
+    03)
 	printf '\n'
 	w
 	printf '\nProceed? y/[n] '
@@ -105,7 +110,7 @@ EOM
 	fi
 	;;
     
-    03)
+    04)
 	printf '\n'
 	w
 	printf '\nProceed? y/[n] '
@@ -126,5 +131,4 @@ EOM
     *)
 	printf "Invalid option: $resp\n"
     esac
-    pause
 done
