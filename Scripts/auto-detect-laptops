@@ -1,11 +1,66 @@
 #!/bin/sh -e
+
+pause()
+{
+    local junk
     
+    printf "Press return to continue..."
+    read junk
+}
+
 case $(auto-ostype) in
 FreeBSD)
     if dmidecode | grep -iq macbook; then
 	printf "$0: MacBook\n"
-	auto-append-line 'atp_load="YES"' /boot/loader.conf $0
-	auto-append-line 'acpi_video_load="YES"' /boot/loader.conf $0
+	# https://wiki.freebsd.org/AppleMacbook
+	auto-set-conf-var atp_load '"YES"' /boot/loader.conf $0
+	auto-set-conf-var acpi_video_load '"YES"' /boot/loader.conf $0
+	auto-set-conf-var asmc_load '"YES"' /boot/loader.conf $0
+	
+	# Fix ~ and ` keys in /usr/local/share/X11/xkb/symbols/us-macbook
+	xkb_dir=/usr/local/share/X11/xkb/symbols
+	if [ ! -e $xkb_dir/us-macbook ]; then
+	    cp $xkb_dir/us $xkb_dir/us-macbook
+	fi
+	cat << EOM
+
+If your ` and ~ keys produce < and >, try swapping TLDE and LSGT in
+the "mac" section of $xkb_dir/us-macbook.
+
+EOM
+	pause
+	
+	read -p "Remap right Cmd and Alt keys to Alt and Ctrl? y/[n] " remap
+	if [ 0$remap = 0y ]; then
+	    cat << EOM > /usr/local/etc/xsession.local
+# Run xev to verify Xorg scan codes
+# Turn lower right "enter" key on older macs into a Ctrl key
+xmodmap -e "keycode 108 = Control_R"
+xmodmap -e "add control = Control_R"
+    
+# Turn right Command key into an Alt (Meta) key
+xmodmap -e "keycode 134 = Meta_R Alt_R"
+EOM
+	    cat << EOM
+
+Mods saved to /usr/local/etc/xsession.local.  Source this from all Xsession
+and xinitrc files.
+
+EOM
+	fi
+	# Swap LSGT and TLDE in /usr/local/share/X11/xkb/symbols/us
+	cat << EOM > /etc/X11/xorg.conf.d/macbook-xkb.conf
+Section "InputClass"
+	Identifier "libinput keyboard catchall"
+	MatchIsKeyboard "on"
+	MatchDevicePath "/dev/input/event*"
+	Driver "libinput"
+	Option "XkbRules" "evdev"
+	Option "XkbLayout" "us-macbook"
+	Option "XkbVariant" "mac"
+EndSection
+EOM
+	chmod 644 /etc/X11/xorg.conf.d/macbook-xkb.conf
     elif dmidecode | grep -iq thinkpad; then
 	printf "$0: IBM/Lenovo ThinkPad\n"
     elif dmidecode | grep -iq "Product name: Satellite"; then
