@@ -31,8 +31,9 @@ EOM
 	pause
 	
 	read -p "Remap right Cmd and Alt keys to Alt and Ctrl? y/[n] " remap
+	# FIXME: Prevent redundant xmodmap commands
 	if [ 0$remap = 0y ]; then
-	    cat << EOM > /usr/local/etc/xsession.local
+	    cat << EOM >> /usr/local/etc/xsession.local
 # Run xev to verify Xorg scan codes
 # Turn lower right "enter" key on older macs into a Ctrl key
 xmodmap -e "keycode 108 = Control_R"
