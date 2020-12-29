@@ -5,6 +5,8 @@ FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     pkg install -y pkgconf zenity autoconf automake libublio gettext-tools \
 	texinfo fusefs-libs
+    
+    # exfat tools were marked for no binary package at one point
     if ! auto-package-installed sysutils/fusefs-exfat; then
 	(cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make deinstall clean reinstall)
     fi
