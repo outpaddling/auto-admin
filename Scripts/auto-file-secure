@@ -26,15 +26,18 @@ fi
 
 filename=$1
 
+owner=`ls -l $filename | awk '{ print $3 }'`
+group=`ls -l $filename | awk '{ print $4 }'`
 # FIXME: Check permissions and suid bits
-if [ ! -O $filename ] || [ ! -G $filename ]; then
-    printf "%s is not owned by root:root!\n" $filename
-    ls -l $filename
-    exit 1
+if [ $owner != root ] || [ $group != root ] && [ $group != wheel ]; then
+    if [ ! -O $filename ] || [ ! -G $filename ]; then
+	printf "%s is not owned by root:root or $(id -un):$(id -gn)!\n" $filename
+	ls -l $filename
+	exit 1
+    fi
 fi
 
 perms=`ls -l $filename`
-
 file_type=`printf '%s' $perms | cut -c 1-1`
 if [ $file_type != '-' ]; then
     printf "$filename is not a regular file!\n"
