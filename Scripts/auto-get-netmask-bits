@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Show netmask of first non-loopback interface
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-03  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    hex_netmask=$(ifconfig | awk '$1 == "inet" && $2 !~ "127.0.0" { print $4 }' | head -n 1)
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac
+
+bits=0
+while [ $hex_netmask != 0 ]; do
+    hex_netmask=$(( $hex_netmask << 1 & 0xffffffff ))
+    bits=$(( bits + 1 ))
+done
+echo $bits

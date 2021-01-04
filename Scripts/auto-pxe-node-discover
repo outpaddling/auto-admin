@@ -128,11 +128,11 @@ printf "Using $lease_file and $dhcp_conf...\n"
 if ! fgrep $base_name /etc/hosts | grep $domain; then
     printf "No existing hosts beginning with $base_name.\n"
 fi
-printf "Next serial number? "
-read serial_number
-if [ 0$serial_number = 0 ]; then
-    serial_number=$default_serial_number
-fi
+
+while [ 0$serial_number = 0 ]; do
+    printf "Next serial number? "
+    read serial_number
+done
 
 cat << EOM
 
@@ -148,9 +148,11 @@ Aux         192.168.192.0/18
 then specify 16 here.
 
 EOM
-read -p "Bits in prefix covering all local network segments? [16] " bits
+default_bits=$(auto-get-netmask-bits)
+default_bits=$(( default_bits - 1 ))
+read -p "Bits in prefix covering all local network segments? [$default_bits] " bits
 if [ 0$bits = 0 ]; then
-    bits=16
+    bits=$default_bits
 fi
 
 case $(auto-ostype) in

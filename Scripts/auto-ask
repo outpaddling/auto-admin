@@ -40,7 +40,9 @@ fi
 tag=$1
 question="$2"
 
-response_file=auto-ask-responses.txt
+dot_config=$HOME/.config
+response_file=$dot_config/auto-ask-responses
+mkdir -p $dot_config
 touch $response_file
 
 default_response="`awk -F'|' '$1 == "'$tag'" { print $2 }' $response_file`"

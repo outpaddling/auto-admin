@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+if ! fgrep -q $(hostname) /etc/hosts; then
+    auto-append-line "$(auto-get-ip octet)\t$(hostname)\t$(hostname -s)" /etc/hosts $0
+fi

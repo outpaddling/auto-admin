@@ -55,6 +55,8 @@ if [ 0$proceed != 0y ]; then
     exit
 fi
 
+firewall_script="/etc/ipfw.rules"
+
 case $(auto-ostype) in
 FreeBSD)
     firewall=0
@@ -71,7 +73,7 @@ EOM
     while [ $firewall -lt 1 ] || [ $firewall -gt 6 ]; do
 	cat << EOM
 
-The "client" and "simple" rule sets can be customized in /etc/rc.firewall.
+The "client" and "simple" rule sets can be customized in $firewall_script.
 For example, to enable incoming SSH (TCP 22) connections, add the following:
 
     ${fwcmd} add pass tcp from any to me 22 setup
@@ -81,7 +83,7 @@ Add similar rules for HTTP (80), HTTPS (443), 631 (IPP printing).  See
 /etc/services for a list of common TCP service ports.
 
 The "workstation" rule set is configured by setting variables such as
-firewall_myservices in /etc/rc.conf.  See /etc/rc.firewall for details.
+firewall_myservices in /etc/rc.conf.  See $firewall_script for details.
 
 1.. Open (Allow all traffic for now, I'll add my own rules later)
 2.. Client (Basic protection for this machine only)
@@ -97,36 +99,58 @@ EOM
     case $firewall in
     1)
 	sysrc firewall_type="open"
+	sysrc firewall_script="$firewall_script"
 	;;
     
     2)
 	sysrc firewall_type="client"
-	while [ 0$subnet = 0 ]; do
-	    read -p 'Local subnet? (e.g. 192.168.0.0/16) ' subnet
-	done
+	default_subnet="$(auto-get-network octet)/$(auto-get-netmask-bits)"
+	read -p "Local subnet? [$default_subnet] " subnet
+	if [ 0$subnet = 0 ]; then
+	    subnet=$default_subnet
+	fi
 	sysrc firewall_client_net="$subnet"
+	sysrc firewall_script="$firewall_script"
 	;;
     
     3)
 	sysrc firewall_type="simple"
+	sysrc firewall_script="$firewall_script"
 	;;
     
     4)
 	sysrc firewall_type="closed"
+	sysrc firewall_script="$firewall_script"
 	;;
     
     5)
 	sysrc firewall_type="workstation"
+	sysrc firewall_script="$firewall_script"
 	;;
     
     6)
-	script=$(auto-ask custom-ipfw-script "Path to custom script?" /etc/ipfw.rules)
-	sysrc firewall_type="$script"
+	firewall_type=$(auto-ask custom-ipfw-script "Path to custom script?" $firewall_script)
+	sysrc firewall_type="$firewall_script"
+	firewall_script=$firewall_type
 	printf "Install your rule set to $script now.\n"
 	pause
 	;;
     
     esac
+    if [ ! -e $firewall_script ]; then
+	cp /etc/rc.firewall $firewall_script
+    fi
+    cat << EOM
+
+You MUST add rules to $firewall_script to allow traffic from
+outside the local subnet, or all existing connections will be terminated.
+
+Opening $EDITOR now...
+
+EOM
+    pause
+    : ${EDITOR:=vi}
+    $EDITOR $firewall_script
     service ipfw restart
     auto-set-sysctl net.inet.ip.fw.verbose_limit 5 $0
     ;;
