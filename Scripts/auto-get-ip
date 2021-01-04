@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Show IP address of first non-loopback interface
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-03  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hex|octet\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+format=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    octet_ip=$(ifconfig | awk '$1 == "inet" && $2 !~ "127.0.0" { print $2 }' | head -n 1)
+    hex_netmask=$(ifconfig | awk '$1 == "inet" && $2 !~ "127.0.0" { print $4 }' | head -n 1)
+    hex_ip=$(auto-octet-to-hex $octet_ip)
+    if [ $format = octet ]; then
+	auto-hex-to-octet $hex_ip
+    else
+	echo $hex_ip
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

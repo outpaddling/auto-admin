@@ -36,7 +36,7 @@ case $# in
 esac
 
 
-if which pkgin; then
+if [ -e $(auto-pkgsrc-prefix)/bin/pkgin ]; then
     printf "Cleaning pkg cache...\n"
     pkgin clean
 fi
