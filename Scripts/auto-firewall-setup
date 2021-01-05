@@ -40,6 +40,8 @@ fi
 
 auto-root-check $0
 
+export AUTO_ASK_TAG_PREFIX=auto-firewall-setup
+
 cat << EOM
 
 ********************************** WARNING **********************************

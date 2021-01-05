@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+export AUTO_ASK_TAG_PREFIX=auto-install-linux-flash
+
 case $(auto-ostype) in
 FreeBSD)
     : ${LOCALBASE:=/usr/local}

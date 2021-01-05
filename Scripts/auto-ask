@@ -21,7 +21,8 @@ Usage: $0 tag "question" default-answer
     'tag' is a name used to uniquely identify this question in the
     recorded responses.  It must be a single word without spaces or
     special shell characters, and must be unique across all calls
-    to $0.
+    to $0.  The concatenation of $AUTO_ASK_TAG_PREFIX-$tag is
+    added to ~/.config/auto-ask-responses.
     
     'question' must be enclosed in quotes if it contains spaces or
     special characters.
@@ -29,15 +30,22 @@ Usage: $0 tag "question" default-answer
     'default-answer' must also be encloded in quotes if it contains
     spaces or special characters.
 
+    Environment:
+    
     If AUTO_ASK_USE_DEFAULTS is set (to anything), the user will
     not be prompted, and auto-ask will echo the default response
     from auto-ask-responses if possible, otherwise from argument 3.
+    
+    AUTO_ASK_TAG_PREFIX is prepended to tag.  This should be set to
+    the name of the calling script or something similar to avoid tag
+    name collisions with other scripts in
+    ~/.config/auto-ask-responses.
 
 EOM
     exit 1
 fi
 
-tag=$1
+tag=$AUTO_ASK_TAG_PREFIX-$1
 question="$2"
 
 dot_config=$HOME/.config
