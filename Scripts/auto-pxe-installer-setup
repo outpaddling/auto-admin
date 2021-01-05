@@ -1275,3 +1275,19 @@ fi
     ;;
 
 esac
+
+cat << EOM
+
+Be sure to run auto-pxe-node-discover (from the Node management menu of SPCM)
+BEFORE PXE installing new nodes, and complete the DHCP configuration of each
+new node before it reboots following install (usually by simply accepting the
+defaults offered by auto-pxe-node-discover).  This will permanently reserve
+the first IP address granted to node MAC in dhcp.conf.
+
+Otherwise, the DHCP server may create duplicate leases for the same MAC
+address on subsequent boots.  This will require stopping the DHCP server and
+manually cleaning up the MAC/IP links in dhcp.leases, dhcp.conf, and
+/etc/hosts.
+
+EOM
+pause
