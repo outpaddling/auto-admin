@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 [-64] 6|7\n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -21,16 +21,7 @@ usage()
 ##########################################################################
 
 case $# in
-2)
-    if [ $1 = -64 ]; then
-	linux64=y
-	shift
-    else
-	usage
-    fi
-    ;;
-
-1)
+0)
     ;;
 
 *)
@@ -45,7 +36,7 @@ case $(auto-ostype) in
 FreeBSD)
     # FIXME: Support $PORTSDIR
     MAKE_CONF=/etc/make.conf
-    centos_version=$1
+    centos_version=7
     major=`uname -r | cut -d '.' -f 1`
     # Let flash port install the default linux_base as a depend
     
@@ -54,9 +45,7 @@ FreeBSD)
     major=`uname -r | cut -d . -f 1`
     minor=`uname -r | cut -d . -f 2 | cut -d - -f 1`
     if [ `uname -m` = amd64 ]; then
-	if [ -z $linux64 ]; then
-	    linux64=`auto-ask linux64 'Use 64-bit Linux compatibility? (y/n)' y`
-	fi
+	linux64=y
     else
 	linux64=n
     fi

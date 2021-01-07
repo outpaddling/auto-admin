@@ -278,9 +278,7 @@ for CentOS 6 compatibility or '7' for CentOS 7.  Some packages such
 as Linux Flash plugin may require CentOS 6.
 
 EOM
-		printf "6 or 7? "
-		read linux_base
-		auto-install-linux_base $linux_base
+		auto-install-linux_base
 		if [ 0$driver = 0 ]; then
 		    pkg install -y nvidia-driver
 		    kld=nvidia-modeset

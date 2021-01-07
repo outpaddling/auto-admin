@@ -24,13 +24,9 @@ FreeBSD)
 	# run auto-install-linux_base to update fstab, etc.
 	# Use -f to avoid recursively uninstalling important dependents
 	# like nvidia-driver
-	pkg remove -fy linux_base-c6 linux_base-c7 || true
+	pkg remove -fy linux_base-c7 || true
 	pkg remove -fy linux-flashplayer nspluginwrapper || true
-	if pkg install -y --dry-run $flash | fgrep linux_base-c6; then
-	    auto-install-linux_base 6
-	else
-	    auto-install-linux_base 7
-	fi
+	auto-install-linux_base 7
 	
 	# Must install from source to pull linux-flashplayer dep
 	cd $PORTSDIR/www/$flash
