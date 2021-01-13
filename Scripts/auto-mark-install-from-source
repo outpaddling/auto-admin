@@ -1,0 +1,61 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Mark a package to be rebuilt from source by auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-13  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 category/package reason
+
+Marks a port for reinstalling from source by auto-update-system.  This
+may be desirable to restore port options clobbered by "pkg upgrade",
+upgrade ports that cannot be packaged, or build with optimized CFLAGS set
+in /etc/make.conf.
+
+The "reason" argument must not contain spaces.  It is a brief message that
+will be displayed by auto-upgrade-system when rebuilding a package from
+source.
+
+Examples:
+
+    $0 audio/lame license
+    $0 math/openblas optimization
+    $0 math/R build-options
+    $0 wip/auto-admin work-in-progress
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -ne 2 ]; then
+    usage
+fi
+pkg=$1
+reason=$2
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    mkdir -p $LOCALBASE/etc/auto-admin
+    auto-append-line "$pkg $reason" \
+	$LOCALBASE/etc/auto-admin/install-from-source nocomment
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    ;;
+
+esac

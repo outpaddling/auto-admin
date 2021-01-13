@@ -171,7 +171,7 @@ FreeBSD)
 	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
-	    printf "Edit $critical_pkg_file to update list.\n"
+	    printf "Use auto-mark-package-critical to update the list.\n"
 	    missing_packages=0
 	    for pkg in $(cat $critical_pkg_file); do
 		if pkg info -q $pkg; then
@@ -249,9 +249,6 @@ FreeBSD)
 	else
 	    auto-ports-checkout
 	fi
-	# Takes too long and the issue it works around only appeared once
-	# in decades of using FreeBSD (October 2020, ports builds complained
-	# that pkg was outdated)
 	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
 	    printf "Binary pkg is outdated.  Rebuilding from source...\n"
 	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage && make deinstall reinstall)
@@ -260,6 +257,20 @@ FreeBSD)
 	fi
 	if which wip-update; then
 	    wip-update
+	fi
+	
+	# Process ports marked by auto-mark-install-from-source
+	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
+	printf "Checking for ports to be installed from source...\n"
+	printf "Use auto-mark-install-from-source to update the list.\n"
+	if [ -e $install_from_source ]; then
+	    while read line; do
+		port=$(echo $line | awk '{ print $1 }')
+		reason=$(echo $line | awk '{ print $2 }')
+		printf "Reinstalling $port from source, reason = $reason\n"
+		cd $PORTSDIR/$port
+		make deinstall clean reinstall
+	    done < $install_from_source
 	fi
     fi
     
