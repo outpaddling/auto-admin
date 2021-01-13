@@ -266,10 +266,19 @@ FreeBSD)
 	if [ -e $install_from_source ]; then
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
-		reason=$(echo $line | awk '{ print $2 }')
-		printf "Reinstalling $port from source, reason = $reason\n"
-		cd $PORTSDIR/$port
-		make deinstall clean reinstall
+		pkgbase=$(auto-print-make-variable $port PKGBASE)
+		installed_version=$(pkg query '%v' $pkgbase)
+		ports_version=$(auto-print-make-variable $port PKGVERSION)
+		if [ $ports_version != $installed_version ]; then
+		    reason=$(echo $line | awk '{ print $2 }')
+		    printf "Reinstalling $port from source, reason = $reason\n"
+		    printf "Installed: $installed_version\n"
+		    printf "Ports:     $ports_version\n"
+		    cd $PORTSDIR/$port
+		    make deinstall clean reinstall
+		else
+		    printf "$port is up-to-date.\n"
+		fi
 	    done < $install_from_source
 	fi
     fi
