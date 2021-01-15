@@ -1,14 +1,41 @@
 #!/bin/sh -e
 
-if [ `whoami` != 'root' ]; then
-    printf "Only root can run $0.\n"
-    exit 1
-fi
+##########################################################################
+#   Script description:
+#       Change the UID for a given user
+#       
+#   History:
+#   Date        Name        Modification
+#   2015?       Jason Bacon Begin
+##########################################################################
 
-#
-if [ $# -lt 2 ]; then
-    printf "Usage: $0 username new-uid [directory ...]\n"
+usage()
+{
+    cat << EOM
+
+Usage: $0 username new-uid [directory ...]
+
+[directory ...] is a list of directories where files owned by the old UID
+will be chowned to the new.  It is highly advisable that this be "/" to
+ensure that all files on the system are accessible to the user after the
+UID change.  In some cases, however, this may involved searching many
+directories where the user does not have files.  Use this option to save
+time and resources,  but only if you know what you're doing.  Searching "/"
+is the default.
+
+EOM
     exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+auto-root-check $0
+
+if [ $# -lt 2 ]; then
+    usage
 fi
 
 if [ $1 = --silent ]; then
@@ -24,8 +51,12 @@ new_uid=$2
 shift
 shift
 
+if [ $# = 0 ]; then
+    dirs='/'
+else
+    dirs="$@"
+fi
 # Verify that all dirs exits before changing anything!
-dirs="$@"
 for dir in $dirs; do
     if [ ! -e $dir ]; then
 	printf "$0: ${dir}: No such file or directory.\n"
@@ -53,20 +84,25 @@ if [ 0$old_user_name != 0 ]; then
 fi
 
 if [ 0$silent != 01 ]; then
-    cat << EOM
+    printf "Changing user $user_name from $old_uid to $new_uid.\n"
 
-Changing user $user_name from $old_uid to $new_uid.
+    cat << EOM
 
 Files owned by user $old_uid will be updated to $new_uid under the
 following directories:
 
     $dirs
 
+EOM
+
+    if [ $dirs != / ]; then
+	cat << EOM
 Files in other directories will retain ownership $old_uid and will
 have to be fixed manually.
 
 EOM
-
+    fi
+    printf "Finding and updating all files could take a very long time.\n"
     printf "Are you sure you want to continue? yes/[no] "
     read continue
     if [ 0$continue != 0yes ]; then

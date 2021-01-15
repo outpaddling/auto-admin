@@ -40,6 +40,10 @@ RHEL)
     usermod -a -G $group_name $user_name
     ;;
 
+Darwin)
+    dseditgroup -o edit -a $user_name -t user $group_name
+    ;;
+
 *)
     printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
