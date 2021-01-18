@@ -40,11 +40,26 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    while true
-    do
-	clear
-	auto-admin-banner
-	cat << EOM
+    installed_cmd='pkg info'
+    available_cmd='pkg search ".*"'
+    search_cmd='pkg search'
+    install_cmd='pkg install -y'
+    remove_cmd='pkg remove -y'
+    autoremove_cmd='pkg autoremove -y'
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
+
+while true
+do
+    clear
+    auto-admin-banner
+    cat << EOM
 
 To see ports by category, run "ls /usr/ports" and e.g. "ls /usr/ports/audio"
 or browse the collection at https://www.freebsd.org/ports/index.html.
@@ -57,63 +72,55 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 Q.. Quit
 
 EOM
-    
-	read -p 'Selection? ' resp
-	case 0$resp in
-	01)
-	    pkg info | more
-	    printf "$(pkg info | wc -l) packages installed.\n"
-	    pause
-	    ;;
-    
-	02)
-	    tmpfile=.auto-software-manager-packages.txt
-	    pkg search '.*' > $tmpfile
-	    more $tmpfile
-	    printf "$(cat $tmpfile | wc -l) packages available.\n"
-	    rm -f $tmpfile
-	    pause
-	    ;;
-    
-	03)
-	    read -p 'Enter any part of the package name: ' pattern
-	    pkg search "$pattern" | more
-	    pause
-	    ;;
-	
-	04)
-	    read -p 'Enter the package name(s): ' names
-	    if [ 0"$names" != 0 ]; then
-		pkg install "$names"
-		pause
-	    fi
-	    ;;
-	
-	05)
-	    read -p 'Enter the package name(s): ' names
-	    if [ 0"$names" != 0 ]; then
-		pkg remove "$names"
-		read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
-		if [ 0$deps != 0n ]; then
-		    pkg autoremove
-		fi
-		pause
-	    fi
-	    ;;
-	
-	0Q|0q)
-	    exit 0
-	    ;;
-    
-	*)
-	    printf "Invalid option: $resp\n"
-	esac
-    done
-    ;;
 
-*)
-    printf "$0: Not supported on $(auto-ostype).\n"
-    pause
-    ;;
+    read -p 'Selection? ' resp
+    case 0$resp in
+    01)
+	$installed_cmd | more
+	printf "$(pkg info | wc -l) packages installed.\n"
+	pause
+	;;
 
-esac
+    02)
+	tmpfile=.auto-software-manager-packages.txt
+	eval $available_cmd > $tmpfile
+	more $tmpfile
+	printf "$(cat $tmpfile | wc -l) packages available.\n"
+	rm -f $tmpfile
+	pause
+	;;
+
+    03)
+	read -p 'Enter any part of the package name: ' pattern
+	$search_cmd "$pattern" | more
+	pause
+	;;
+    
+    04)
+	read -p 'Enter the package name(s): ' names
+	if [ 0"$names" != 0 ]; then
+	    $install_cmd $names
+	    pause
+	fi
+	;;
+    
+    05)
+	read -p 'Enter the package name(s): ' names
+	if [ 0"$names" != 0 ]; then
+	    $remove_cmd $names
+	    read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
+	    if [ 0$deps != 0n ]; then
+		$autoremove_cmd
+	    fi
+	    pause
+	fi
+	;;
+    
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+done
