@@ -52,7 +52,7 @@ Darwin|NetBSD|RHEL)
     if ! which pkgin; then
 	cat << EOM
 
-$0 currently depends on pkgsrc binary packages and pkgin
+$0 currently depends on pkgsrc binary packages and no pkgin
 command has been found.
 
 EOM
