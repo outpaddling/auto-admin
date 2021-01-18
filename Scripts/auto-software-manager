@@ -62,11 +62,16 @@ EOM
 	case 0$resp in
 	01)
 	    pkg info | more
+	    printf "$(pkg info | wc -l) packages installed.\n"
 	    pause
 	    ;;
     
 	02)
-	    pkg search '.*' | more
+	    tmpfile=.auto-software-manager-packages.txt
+	    pkg search '.*' > $tmpfile
+	    more $tmpfile
+	    printf "$(cat $tmpfile | wc -l) packages available.\n"
+	    rm -f $tmpfile
 	    pause
 	    ;;
     
@@ -78,18 +83,22 @@ EOM
 	
 	04)
 	    read -p 'Enter the package name(s): ' names
-	    pkg install "$names"
-	    pause
+	    if [ 0"$names" != 0 ]; then
+		pkg install "$names"
+		pause
+	    fi
 	    ;;
 	
 	05)
 	    read -p 'Enter the package name(s): ' names
-	    pkg remove "$names"
-	    read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
-	    if [ 0$deps != 0n ]; then
-		pkg autoremove
+	    if [ 0"$names" != 0 ]; then
+		pkg remove "$names"
+		read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
+		if [ 0$deps != 0n ]; then
+		    pkg autoremove
+		fi
+		pause
 	    fi
-	    pause
 	    ;;
 	
 	0Q|0q)
