@@ -668,6 +668,9 @@ if [ 0$bootstrap = '0y' ]; then
     # Separate bootstrap settings
     printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n\n" >> $mk_conf
 
+    printf "# For pkg_chk, etc.\n" >> $mk_conf
+    printf "PKGSRCDIR=\t\t$frameworks_prefix\n" >> $mk_conf
+    
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
     # Enable it in the future if/when most of the issues are resolved
     # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
