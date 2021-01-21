@@ -251,7 +251,8 @@ FreeBSD)
 	fi
 	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
 	    printf "Binary pkg is outdated.  Rebuilding from source...\n"
-	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage && make deinstall reinstall)
+	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
+		&& make -DBATCH deinstall reinstall)
 	else
 	    printf "Binary pkg is up-to-date.\n"
 	fi
