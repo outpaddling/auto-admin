@@ -44,6 +44,7 @@ FreeBSD)
     available_cmd='pkg search ".*"'
     search_cmd='pkg search'
     install_cmd='pkg install -y'
+    install_from_source_cmd='auto-install-packages -n -s'
     remove_cmd='pkg remove -y'
     autoremove_cmd='pkg autoremove -y'
     ;;
@@ -87,6 +88,7 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 3.. Search available packages
 4.. Install packages
 5.. Remove packages
+6.. Install port/package from source
 Q.. Quit
 
 EOM
@@ -134,6 +136,14 @@ EOM
 	fi
 	;;
     
+    06)
+	read -p 'Enter category/name: ' names
+	if [ 0"$names" != 0 ]; then
+	    $install_from_source_cmd $names
+	    pause
+	fi
+	;;
+
     0Q|0q)
 	exit 0
 	;;
