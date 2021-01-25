@@ -2,56 +2,87 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Install ports/packages either from binary or source
 #       
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
 ##########################################################################
-    
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 [-l] [-n] [-p PORTSDIR] [-s] category/port [category/port ...]
+
+Flags:
+
+-l  Use latest package name
+-n  Skip config menu (previous user settings apply)
+-p  Use provided PORTSDIR
+-s  Build and install from source not binary package
+
+Environment:
+
+AUTO_BUILD_FROM_SOURCE  Build and install from source not binary package
+AUTO_BUILD_NO_CONFIG    Skip config menu (previous user settings apply)
+AUTO_PACKAGEROOT        Mirror for binary packages
+
+EOM
+    exit 11
+}
+
 ##########################################################################
 #   Main
 ##########################################################################
     
 if [ $# -lt 1 ]; then
-    printf "Usage: $0 [-l] [-p PORTSDIR] category/port [category/port ...]\n"
-    exit 1
+    usage
 fi
     
 case $(auto-ostype) in
 FreeBSD)
     install_from_port()
     {
-	# PKGDIR causes "Missing pkg-descr" errors during install
-	unset PKGDIR
-	
+	save_cwd=$(pwd)
+	cd $PORTSDIR/$port
 	# Configure this port, but install dependencies with default options
-	(cd $PORTSDIR/$port && make config && make -DBATCH install && make clean)
+	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
+	    make config
+	fi
+	
+	# Remove other versions that might block install
+	pkg remove -y $(auto-print-make-variable $port PKGBASE) || true
+	
+	make clean
+	make deinstall
+	make -DBATCH reinstall
+	make clean
+	cd $save_cwd
     }
     
     # Default.  Override below.
     PORTSDIR='/usr/ports'
     latest_package_name=0
     
-    #set -x
-    while [ 0`echo $1 | cut -c 1,1` = 0'-' ]; do
-	if [ $1 = '-l' ]; then
+    while [ 0$(printf "%s" $1 | cut -c 1,1) = 0'-' ]; do
+	if [ 0$1 = 0'-l' ]; then
 	    latest_package_name=1
 	    shift
-	elif [ $1 = '-p' ]; then
+	elif [ 0$1 = 0'-p' ]; then
 	    PORTSDIR=$2
 	    shift
 	    shift
+	elif [ 0$1 = 0'-s' ]; then
+	    AUTO_BUILD_FROM_SOURCE=yes
+	    shift
+	elif [ 0$1 = 0'-n' ]; then
+	    AUTO_BUILD_NO_CONFIG=yes
+	    shift
+	else
+	    usage
 	fi
     done
-    
-    if [ 0$PKGDIR = 0 ]; then
-	export PKGDIR=$PORTSDIR/packages/All
-	mkdir -p $PKGDIR
-    fi
     
     # Allow mirrors to be used without having PACKAGEROOT set globally.
     if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
@@ -102,25 +133,8 @@ FreeBSD)
 		# New pkgng system
 		unset PACKAGESITE
 		unset PACKAGEROOT
-		if [ -e $PKGDIR/$pkg_name.tbz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.tbz"
-		    pkg_flags='add'
-		elif [ -e $PKGDIR/$pkg_name.txz ]; then
-		    pkg_path="$PKGDIR/$pkg_name.txz"
-		    pkg_flags='add'
-		elif [ -e /dist/packages/All/$pkg_name.tbz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.tbz"
-		    pkg_flags='add'
-		elif [ -e /dist/packages/All/$pkg_name.txz ]; then
-		    pkg_path="/dist/packages/All/$pkg_name.txz"
-		    pkg_flags='add'
-		else
-		    # Package is in /var/cache/pkg or not yet downloaded
-		    pkg_path=$pkg_name
-		    pkg_flags='install -y'
-		    unset PKGDIR    # Let pkgng find it
-		fi
-		printf "pkg $pkg_flags $pkg_path\n"
+		pkg_flags='install -y'
+		printf "pkg $pkg_flags $pkg_name\n"
     
 		# Compensate for network hiccups by retrying
 		tries=2
@@ -129,7 +143,7 @@ FreeBSD)
 		success=0
 		tmp=auto-install-packages.tmp
 		while [ $success = 0 ] && [ $tries -gt 1 ]; do
-		    pkg $pkg_flags $pkg_path 2>&1 | tee $tmp
+		    pkg $pkg_flags $pkg_name 2>&1 | tee $tmp
 		    if fgrep -q 'No package' $tmp; then
 			tries=$((tries-1))
 			printf "Error installing $port.  $tries more tries.\n"
@@ -142,7 +156,6 @@ FreeBSD)
 		if [ $tries -gt 1 ]; then
 		    status=0
 		else
-		    rm -f $PKGDIR/$pkg_name.tbz $PKGDIR/$pkg_name.txz
 		    if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
 			printf "Giving up on binary package.  Attempting to build from source...\n"
 			install_from_port
