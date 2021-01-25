@@ -35,8 +35,8 @@ case $# in
     ;;
 esac
 
-
-if [ -e $(auto-pkgsrc-prefix)/bin/pkgin ]; then
+# Only if the CURRENTLY ACTIVE tree has pkgin installed
+if which pkgin | fgrep $(auto-pkgsrc-prefix); then
     printf "Cleaning pkg cache...\n"
     pkgin clean
 fi

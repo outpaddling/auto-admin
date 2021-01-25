@@ -2,8 +2,6 @@
 
 pause()
 {
-    local junk
-    
     printf "Press Enter to continue..."
     read junk
 }
@@ -582,10 +580,15 @@ if [ 0$unpack = 0y ]; then
     printf "Unpacking frameworks...\n"
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
-    if [ $(uname) = NetBSD ]; then
-	tar -zxf pkgsrc$dist_suffix.tar.gz
+    if [ $(uname) = SunOS ]; then
+        tar=gtar
     else
-	tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
+        tar=tar
+    fi
+    if [ $(uname) = NetBSD ]; then
+	$tar -zxf pkgsrc$dist_suffix.tar.gz
+    else
+	$tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
     fi
     rm -rf $frameworks_prefix $sys_prefix $install_prefix
     mv pkgsrc $frameworks_prefix

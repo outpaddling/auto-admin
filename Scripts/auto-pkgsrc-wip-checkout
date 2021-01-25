@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+printf "pkgsrc-wip username? [none] "
+read username
+if [ 0$username = 0 ]; then
+    git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
+else
+    git clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
+fi
+cd wip
+git config pull.rebase true
+
+printf "\nEditing .gitconfig.\n\n"
+
+printf "Full name? "
+read name
+
+printf "Email? "
+read email
+
+printf "Editor? [vi] "
+read editor
+if [ 0$editor = 0 ]; then
+    editor=vi
+fi
+git config --global user.name "$name"
+git config --global user.email $email
+git config --global core.editor $editor
+more ~/.gitconfig
