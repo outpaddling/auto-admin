@@ -50,6 +50,20 @@ if [ 0$old_gid = 0 ]; then
     exit 1
 fi
 
+if awk -F : '{ print $1 }' /etc/group | fgrep -q $new_group; then
+    new_gid=`awk -F : -v group_name=$new_group '$1 == group_name { print $3 }' /etc/group`
+elif awk -F : '{ print $3 }' /etc/group | fgrep -q $new_group; then
+    new_gid=$new_group
+else
+    printf "$0: Error: $new_group is not an existing group.\n"
+    exit 1
+fi
+
+if [ $old_gid = $new_gid ]; then
+    printf "$0: $new_group is already the primary group for $user_name.\n"
+    exit
+fi
+
 # Verify that new gid exists: Let usermod handle this, or we'll have to
 # check for both group name and gid.
 

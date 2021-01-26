@@ -31,6 +31,35 @@ pause()
 
 
 ##########################################################################
+#   Function description:
+#       Warn user about UID/GID changes
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-26  J Bacon     Begin
+##########################################################################
+
+uid_warning()
+{
+	cat << EOM
+
+Note: Changing a UID or primary GID requires changing ownership on every
+file owned by the old UID or GID.  This can only be accomplished by
+searching the entire directory tree starting at /, which could take a very
+long time on systems with many files.
+
+The user must not be logged in at any time during this process.
+
+The system must not be shut down or rebooted during this process.
+
+Are you sure you want to proceed with this now?
+
+EOM
+    read -p "Proceed? y/[n] " proceed
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -46,8 +75,9 @@ do
     
 1.. Add user
 2.. Add user to another group
-3.. Change user's primary UID
-4.. Change user's primary GID
+3.. Remove user from group
+4.. Change user's primary UID
+5.. Change user's primary GID
 Q.. Quit
 
 EOM
@@ -59,15 +89,59 @@ EOM
 	;;
     
     2)
-	printf "Not yet implemented.\n"
+	read -p 'Username? ' username
+	if [ ! -z $username ]; then
+	    printf "Current group membership for $username:\n"
+	    if groups $username; then
+		read -p 'Supplementary group to add? ' groupname
+		if [ ! -z $groupname ]; then
+		    if auto-add-to-group $username $groupname; then
+			printf "Changes will take effect in the next login session.\n"
+		    fi
+		fi
+	    fi
+	fi
 	;;
     
     3)
-	printf "Not yet implemented.\n"
+	read -p 'Username? ' username
+	if [ ! -z $username ]; then
+	    printf "Current group membership for $username:\n"
+	    if groups $username; then
+		read -p 'Supplementary group to add? ' groupname
+		if [ ! -z $groupname ]; then
+		    if auto-remove-from-group $username $groupname; then
+			printf "Changes will take effect in the next login session.\n"
+		    fi
+		fi
+	    fi
+	fi
 	;;
     
     4)
-	printf "Not yet implemented.\n"
+	uid_warning
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Username? ' username
+	    if [ ! -z $username ]; then
+		read -p "New UID? " new_uid
+		if [ ! -z $new_uid ]; then
+		    auto-change-uid $username $new_uid / || true
+		fi
+	    fi
+	fi
+	;;
+
+    5)
+	uid_warning
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Username? ' username
+	    if [ ! -z $username ]; then
+		read -p "New GID or group name? " new_gid
+		if [ ! -z $new_gid ]; then
+		    auto-change-primary-group $username $new_gid / || true
+		fi
+	    fi
+	fi
 	;;
     
     Q|q)
