@@ -60,9 +60,9 @@ do
     auto-admin-banner
     cat << EOM
 
-1.. User management
-2.. Software Manager
-3.. Update system
+1.. Update system
+2.. User management
+3.. Software management
 4.. Shut down system
 Q.. Quit
 
@@ -71,17 +71,9 @@ EOM
     read -p 'Selection? ' resp
     case 0$resp in
     01)
-	auto-user-admin
-	;;
-
-    02)
-	auto-software-manager
-	;;
-
-    03)
-	printf '\n'
+	printf '\nThe following users are currently logged in:\n\n'
 	w
-	printf '\nProceed? y/[n] '
+	printf '\nProceed with system updates? y/[n] '
 	read proceed
 	if [ 0$proceed = 0y ]; then
 	    cat << EOM | wall
@@ -110,10 +102,18 @@ EOM
 	fi
 	;;
     
+    02)
+	auto-user-admin
+	;;
+
+    03)
+	auto-software-manager
+	;;
+
     04)
-	printf '\n'
+	printf '\nThe following users are currently logged in:\n\n'
 	w
-	printf '\nProceed? y/[n] '
+	printf '\nProceed with shutdown? y/[n] '
 	read proceed
 	if [ 0$proceed = 0y ]; then
 	    read -p 'Minutes to shutdown? [2] ' minutes
