@@ -137,5 +137,5 @@ done
 
 # Fix file ownership
 if [ 0"$dirs" != 0 ]; then
-    find -L $dirs -group $old_gid $find_print -exec chgrp $group_name '{}' \;
+    find $dirs -group $old_gid $find_print -exec chgrp -h $group_name '{}' \;
 fi

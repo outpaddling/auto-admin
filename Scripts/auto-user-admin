@@ -78,6 +78,7 @@ do
 3.. Remove user from group
 4.. Change user's primary UID
 5.. Change user's primary GID
+6.. Change group's GID
 Q.. Quit
 
 EOM
@@ -139,6 +140,19 @@ EOM
 		read -p "New GID or group name? " new_gid
 		if [ ! -z $new_gid ]; then
 		    auto-change-primary-group $username $new_gid / || true
+		fi
+	    fi
+	fi
+	;;
+    
+    6)
+	uid_warning
+	if [ 0$proceed = 0y ]; then
+	    read -p 'Group name? ' groupname
+	    if [ ! -z $groupname ]; then
+		read -p "New GID? " new_gid
+		if [ ! -z $new_gid ]; then
+		    auto-change-group-gid $groupname $new_gid / || true
 		fi
 	    fi
 	fi

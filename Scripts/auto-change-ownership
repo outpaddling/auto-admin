@@ -35,4 +35,4 @@ dirs="$@"
 # BSD and GNU find allow a name or id with -user and -group.
 # GNU find requires a UID with -uid or -gid.  Use -user and -group to
 # be flexible and portable.
-find -L $dirs -user $old_user -print -exec chown $new_user '{}' \;
+find $dirs -user $old_user -print -exec chown -h $new_user '{}' \;

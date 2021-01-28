@@ -37,4 +37,4 @@ dirs="$@"
 # BSD and GNU find allow a name or id with -user and -group.
 # GNU find requires a UID with -uid or -gid.  Use -user and -group to
 # be flexible and portable.
-find -L $dirs -user $user -group $old_group -print -exec chgrp $new_group '{}' \;
+find $dirs -user $user -group $old_group -print -exec chgrp -h $new_group '{}' \;
