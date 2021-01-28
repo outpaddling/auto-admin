@@ -77,7 +77,7 @@ do
 2.. Add user to another group
 3.. Remove user from group
 4.. Change user's primary UID
-5.. Change user's primary GID
+5.. Change user's primary group
 6.. Change group's GID
 Q.. Quit
 
