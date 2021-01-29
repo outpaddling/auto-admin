@@ -136,7 +136,8 @@ Your umask is $umask.
 EOM
     read -p "Continue with umask $umask? y/[n] " continue
     if [ 0$continue != 0y ]; then
-	exit
+	printf "Using umask 022.\n"
+	umask 022
     fi
 fi
 
@@ -581,9 +582,9 @@ if [ 0$unpack = 0y ]; then
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
     if [ $(uname) = SunOS ]; then
-        tar=gtar
+	tar=gtar
     else
-        tar=tar
+	tar=tar
     fi
     if [ $(uname) = NetBSD ]; then
 	$tar -zxf pkgsrc$dist_suffix.tar.gz
@@ -1223,6 +1224,10 @@ chmod 644 $profile_dir/$module_path_script*
 # Basic instructions on installing a package
 make=bmake
 
+read -p 'umask for pkgsrc builds? [022] ' pkgsrc_umask
+if [ 0$pkgsrc_umask = 0 ]; then
+    pkgsrc_umask=022
+fi
 cat << EOM2 > $install_prefix/bin/safe-bmake
 #!/bin/sh -e
 
@@ -1240,6 +1245,7 @@ EOM
     exit 1
 fi
 
+umask $pkgsrc_umask
 bmake "\$@"
 EOM2
 
