@@ -28,5 +28,6 @@ variable=$1
 value=$2
 caller=$3
 
-auto-set-conf-var $variable $value /etc/sysctl.conf $caller
-sysctl $variable=$value
+if sysctl $variable=$value; then
+    auto-set-conf-var $variable $value /etc/sysctl.conf $caller
+fi

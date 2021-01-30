@@ -33,16 +33,16 @@ if [ `whoami` != 'root' ]; then
     exit 1
 fi
 
-if [ $# -lt 2 ]; then
-    usage
-fi
-
 if [ $1 = --silent ]; then
     silent=1
     shift
-    find_print=""
+    verbose=""
 else
-    find_print=-print
+    verbose=-v
+fi
+
+if [ $# -lt 2 ]; then
+    usage
 fi
 
 group_name=$1
@@ -137,5 +137,7 @@ done
 
 # Fix file ownership
 if [ 0"$dirs" != 0 ]; then
-    find $dirs -group $old_gid $find_print -exec chgrp -h $group_name '{}' \;
+    # Can't use auto-change-group-ownership here because it requires
+    # a username as well as a group name.  Should that be changed?
+    find $dirs -group $old_gid -exec chgrp $verbose -h $group_name '{}' +
 fi

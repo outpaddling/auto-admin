@@ -12,7 +12,7 @@
 
 usage()
 {
-    printf "Usage: $0 username|uid old-groupname|gid new-groupname|gid directory [directory ...]\n"
+    printf "Usage: $0 [--silent] username|uid old-groupname|gid new-groupname|gid directory [directory ...]\n"
     exit 1
 }
 
@@ -20,6 +20,13 @@ usage()
 ##########################################################################
 #   Main
 ##########################################################################
+
+if [ $1 = --silent ]; then
+    shift
+    verbose=""
+else
+    verbose=-v
+fi
 
 if [ $# -lt 4 ]; then
     usage
@@ -37,4 +44,4 @@ dirs="$@"
 # BSD and GNU find allow a name or id with -user and -group.
 # GNU find requires a UID with -uid or -gid.  Use -user and -group to
 # be flexible and portable.
-find $dirs -user $user -group $old_group -print -exec chgrp -h $new_group '{}' \;
+find $dirs -user $user -group $old_group -exec chgrp $verbose -h $new_group '{}' +

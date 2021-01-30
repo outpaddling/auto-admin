@@ -67,10 +67,32 @@ scrub_packages()
 	xf86-video-nv 'nvidia-driver*' || true
 }
 
+
+##########################################################################
+#   Function description:
+#       Mark all DRM kmod packages for building from source in
+#       auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-30  J Bacon     Begin
+##########################################################################
+
+drm_from_source()
+{
+    cd /usr/ports
+    for port in graphics/drm-*; do
+	auto-mark-install-from-source $port KBI
+    done
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
-    
+
+drm_from_source
+
 case $(auto-ostype) in
 FreeBSD)
     cat << EOM
@@ -107,7 +129,7 @@ EOM
 1.. For most modern Intel GPUs, use the modesetting driver which is part of
     the FreeBSD base.
 
-    pkg install -y drm-kmod
+    auto-install-packages -n -s graphics/drm-kmod
     Add kld_list="/boot/modules/i915kms.ko" to /etc/rc.conf
 
 2.. For older Intel GPUs, or if you encounter other issues with the built-in
@@ -131,7 +153,7 @@ EOM
 	    1)
 		scrub_packages
 		scrub_drm
-		pkg install -y drm-kmod
+		auto-install-packages -n -s graphics/drm-kmod
 		sysrc "kld_list+=/boot/modules/i915kms.ko"
 		;;
 	    2)
@@ -160,12 +182,14 @@ EOM
 
 1.. For recent AMD GPUs, you can try
 
-    pkg install -y drm-kmod xf86-video-amdgpu
+    auto-install-packages -n -s graphics/drm-kmod
+    pkg install -y xf86-video-amdgpu
     Add "kld_list=amdgpu" to /etc/rc.conf
 
 2.. For older AMD GPUs, you can try
 
-    pkg install -y drm-kmod xf86-video-ati
+    auto-install-packages -n -s graphics/drm-kmod
+    pkg install -y xf86-video-ati
     Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
 
 3.. For even older AMD GPUs or systems lacking DRM support, try the ATI
@@ -189,13 +213,15 @@ EOM
 	    1)
 		scrub_packages
 		scrub_drm
-		pkg install -y drm-kmod xf86-video-amdgpu
+		auto-install-packages -n -s graphics/drm-kmod
+		pkg install -y xf86-video-amdgpu
 		sysrc "kld_list+=amdgpu"
 		;;
 	    2)
 		scrub_packages
 		scrub_drm
-		pkg install -y drm-kmod xf86-video-ati
+		auto-install-packages -n -s graphics/drm-kmod
+		pkg install -y xf86-video-ati
 		sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		;;
 	    3)
@@ -332,3 +358,14 @@ EOM
     ;;
 
 esac
+
+cat << EOM
+
+If you have changed kld_list in /etc/rc.conf, you should reboot now to test
+the new module.
+
+EOM
+read -p "Reboot now? (y/n) [y] " reboot
+if [ "0$reboot" != 0n ]; then
+    shutdown -r now
+fi
