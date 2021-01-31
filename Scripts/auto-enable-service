@@ -52,6 +52,7 @@ FreeBSD)
 	printf "Killed rogue $service.\n"
     fi
     rm -f /var/run/$service.pid
+    # FIXME: Use sysrc or auto-set-conf-var?
     auto-append-line ${service}_enable ${service}_enable=\"YES\" /etc/rc.conf $caller
     if [ -e /etc/rc.d/$script ]; then
 	/etc/rc.d/$script start

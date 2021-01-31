@@ -104,6 +104,9 @@ FreeBSD)
 	auto-set-sysctl vfs.nfsd.enable_stringtouid 0 $0
 	auto-set-conf-var nfsuserd_flags "'-domain $domain'" /etc/rc.conf $0
 	auto-enable-service nfsuserd $0
+	# auto-enable-service won't restart an existing service and we
+	# may have changed the domain
+	service nfsuserd restart
     fi
     ;;
 
