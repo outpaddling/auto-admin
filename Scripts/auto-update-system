@@ -171,7 +171,8 @@ FreeBSD)
 	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
-	    printf "Use auto-mark-package-critical to update the list.\n"
+	    printf "Use auto-mark-package-critical to update the list\n"
+	    printf "or edit $critical_pkg_file.\n"
 	    missing_packages=0
 	    for pkg in $(cat $critical_pkg_file); do
 		if pkg info -q $pkg; then
@@ -263,25 +264,31 @@ FreeBSD)
 	# Process ports marked by auto-mark-install-from-source
 	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
 	printf "Checking for ports to be installed from source...\n"
-	printf "Use auto-mark-install-from-source to update the list.\n"
+	printf "Use auto-mark-install-from-source to update the list\n"
+	printf "or edit $install_from_source.\n"
+	set +e  # pkg query
 	if [ -e $install_from_source ]; then
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
 		pkgbase=$(auto-print-make-variable $port PKGBASE)
 		installed_version=$(pkg query '%v' $pkgbase)
 		ports_version=$(auto-print-make-variable $port PKGVERSION)
-		if [ $ports_version != $installed_version ]; then
-		    reason=$(echo $line | awk '{ print $2 }')
-		    printf "Reinstalling $port from source, reason = $reason\n"
-		    printf "Installed: $installed_version\n"
-		    printf "Ports:     $ports_version\n"
-		    cd $PORTSDIR/$port
-		    make deinstall clean reinstall
+		if [ ! -z $installed_version ]; then
+		    if [ 0$ports_version != 0$installed_version ]; then
+			reason=$(echo $line | awk '{ print $2 }')
+			printf "Reinstalling $port from source, reason = $reason\n"
+			printf "Installed: $installed_version\n"
+			printf "Ports:     $ports_version\n"
+			auto-install-packages -n -s $port
+		    else
+			printf "$port is up-to-date.\n"
+		    fi
 		else
-		    printf "$port is up-to-date.\n"
+		    printf "$port is not installed.\n"
 		fi
 	    done < $install_from_source
 	fi
+	set -e
     fi
     
     plugin=$LOCALBASE/etc/auto-update-system-post-ports
