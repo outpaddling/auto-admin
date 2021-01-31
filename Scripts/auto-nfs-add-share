@@ -11,8 +11,20 @@
 
 usage()
 {
-    printf "Usage: $0 directory network mask [additional export flags]\n"
-    printf "Example: $0 /usr/home 192.168.0.0 255.255.255.0 -maproot=root\n"
+    cat << EOM
+
+Usage: $0 directory 'allowed-clients' [additional export flags]
+
+The allowed-clients spec is a list of hostnames or a standard network spec.
+If it contains spaces, it must be quoted.
+
+Examples:
+
+    $0 /usr/home -network=192.168.0.0/24 -maproot=root
+    $0 /usr/home '-network=192.168.0.0 255.255.255.0' -maproot=root
+    $0 /share1 
+
+EOM
     exit 1
 }
 
@@ -21,14 +33,14 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# -lt 3 ]; then
+if [ $# -lt 2 ]; then
     usage
 fi
 
 dir="$1"
-network="$2"
-mask="$3"
-shift; shift; shift
+clients="$2"
+shift; shift
+flags="$@"
 
 if [ ! -d "$dir" ]; then
     printf "$0: $dir is not a directory.\n"
@@ -39,10 +51,9 @@ case $(auto-ostype) in
 FreeBSD)
     if mount | awk -v dir="$dir" '$3 == dir { print $4 }' | fgrep -q zfs; then
 	fs=$(mount | awk -v dir="$dir" '$3 == dir { print $1 }')
-	zfs set sharenfs="-network $network -mask $mask $@" "$fs"
+	zfs set sharenfs="$flags $clients" "$fs"
     else
-	auto-append-line "$dir -network $network -mask $mask $@" \
-	    /etc/exports $0
+	auto-append-line "$dir $flags $clients" /etc/exports $0
     fi
     ;;
 
