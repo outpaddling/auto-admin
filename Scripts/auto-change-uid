@@ -131,5 +131,6 @@ esac
 
 # Fix ownership of files in specified directories
 if [ 0"$dirs" != 0 ]; then
-    find $dirs -user $old_uid -exec chown $verbose -h $user_name '{}' +
+    find $dirs -fstype nfs -prune -o \
+	-user $old_uid -exec chown $verbose -h $user_name '{}' +
 fi

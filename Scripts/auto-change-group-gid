@@ -139,5 +139,6 @@ done
 if [ 0"$dirs" != 0 ]; then
     # Can't use auto-change-group-ownership here because it requires
     # a username as well as a group name.  Should that be changed?
-    find $dirs -group $old_gid -exec chgrp $verbose -h $group_name '{}' +
+    find $dirs -fstype nfs -prune -o \
+	-group $old_gid -exec chgrp $verbose -h $group_name '{}' +
 fi
