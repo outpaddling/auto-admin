@@ -11,7 +11,29 @@
 
 usage()
 {
-    printf "Usage: $0\n"
+    cat << EOM
+
+Usage: $0 sysctl|daemon domain
+
+daemon indicates that the nfsuserd/idmap service will be enabled to map
+usernames between server and client on NFSv4 mounts.  This method tolerates
+mismatched UIDs and GIDs (which you may like or not like).
+
+sysctl is FreeBSD-specific and does not require the use of the nfsuserd
+service.  It does require UIDs and GIDs on server and client to agree for
+NFSv4 mounts, as they do for NFSv3 and possibly other services.
+
+domain is required only for daemon setups.  It is an arbitrary string
+(free of whitespace) traditionally set to the domain name of the server and
+clients, but can be overridden in case servers and clients do not all have
+the same domain name.  It must be the same on server and client.
+
+Examples:
+
+    $0 sysctl
+    $0 daemon our.domain
+
+EOM
     exit 1
 }
 
@@ -20,18 +42,50 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 0 ]; then
+case $# in
+1)
+    if [ $1 != sysctl ]; then
+	usage
+    fi
+    if [ $(auto-ostype) != FreeBSD ]; then
+	printf "sysctl is only available on FreeBSD.\n"
+	exit 1
+    fi
+    ;;
+
+2)
+    if [ $1 != daemon ]; then
+	usage
+    fi
+    domain="$2"
+    ;;
+
+*)
     usage
-fi
+    ;;
+
+esac
+mapping="$1"
 
 case $(auto-ostype) in
 FreeBSD)
     # Enable in rc.conf
     sysrc nfs_client_enable="YES"
-    
-    # Enable NFSv4 without nfsuserd
-    # FIXME: Offer option of using nfsuserd
-    auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0
+    auto-enable-service -s statd rpc_statd $0
+    auto-enable-service -s lockd rpc_lockd $0
+
+    if [ $mapping = sysctl ]; then
+	auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0
+	# Not necessary for client, but set anyway
+	auto-set-sysctl vfs.nfsd.enable_stringtouid 1 $0
+	auto-disable-service nfsuserd
+    else
+	auto-set-sysctl vfs.nfs.enable_uidtostring 0 $0
+	# Not necessary for client, but set anyway
+	auto-set-sysctl vfs.nfsd.enable_stringtouid 0 $0
+	auto-set-conf-var nfsuserd_flags "'-domain $domain'" /etc/rc.conf $0
+	auto-enable-service nfsuserd $0
+    fi
     ;;
 
 *)
