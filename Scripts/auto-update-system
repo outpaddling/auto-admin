@@ -279,6 +279,7 @@ FreeBSD)
 			printf "Reinstalling $port from source, reason = $reason\n"
 			printf "Installed: $installed_version\n"
 			printf "Ports:     $ports_version\n"
+			(cd $PORTSDIR/$port && make deinstall)
 			auto-install-packages -n -s $port
 		    else
 			printf "$port is up-to-date.\n"
