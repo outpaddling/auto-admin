@@ -16,7 +16,8 @@ Core design principals:
 * Complete portability: Our aim is to support any POSIX platform for which
 someone is willing to maintain the code.
 * Zero dependencies: All scripts are written in POSIX Bourne shell and use
-only POSIX tools included with the base system.
+only tools included with a minimal install, so auto-admin can be the first
+package installed after the OS.
 * Speed and Simplicity: Our efforts are focused on basic functionality,
 robustness, fast and easy setup and management.
 
