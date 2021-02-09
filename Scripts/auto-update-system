@@ -279,8 +279,15 @@ FreeBSD)
 			printf "Reinstalling $port from source, reason = $reason\n"
 			printf "Installed: $installed_version\n"
 			printf "Ports:     $ports_version\n"
-			(cd $PORTSDIR/$port && make deinstall)
-			auto-install-packages -n -s $port
+			# This code is redundant with auto-install-packages,
+			# but we don't use auto-install-packages here in case
+			# auto-admin itself is marked for install from source
+			# Remove other versions that might block install
+			pkg remove -fy $(auto-print-make-variable $port PKGBASE) || true
+			save_cwd=$(pwd)
+			cd $PORTSDIR/$port
+			make -DBATCH clean reinstall clean
+			cd $save_cwd
 		    else
 			printf "$port is up-to-date.\n"
 		    fi
