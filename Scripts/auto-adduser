@@ -365,5 +365,4 @@ printf "Adding user $user_name...\n"
 # useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
 # $agroup_flags -m $user_name
 
-umask 027
 auto-useradd $user_name $uid $primary_group "$gecos" $shell $agroup_flags
