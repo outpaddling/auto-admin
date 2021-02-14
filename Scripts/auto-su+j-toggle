@@ -46,11 +46,18 @@ $fs is mounted with write enabled, cannot tune it.
 Reboot to single-user mode and try again.
 
 EOM
+	    exit 1
 	else
 	    printf "Tuning $fs...\n"
 	    tunefs -j $state $fs
 	fi
     done
+    printf "Changes will not take effect until the system is rebooted.\n"
+    read -p "Reboot now? [y]/n " reboot
+    if [ 0$reboot != 0n ]; then
+	shutdown -r now
+    fi
+EOM
     ;;
 
 *)
