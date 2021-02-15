@@ -40,7 +40,7 @@ Examples:
 
     $0 -network=192.168.0.0/24 sysctl
     $0 '-network=192.168.0.0 -mask=255.255.255.0' sysctl
-    $0 'bobspc.local julie.laptop.local' nfsuserd our.domain
+    $0 'bobspc.local julie.laptop.local' daemon our.domain
 
 Run "man exports" for a list of options.
 
