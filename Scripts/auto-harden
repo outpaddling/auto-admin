@@ -252,7 +252,6 @@ printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 #        net.ipv4.conf.default.secure_redirects=0
 case $os_type in
 RHEL)
-    auto-set-sysctl net.ipv4.tcp_timestamps 0 $0
     ;;
 
 FreeBSD)
@@ -265,6 +264,7 @@ FreeBSD)
     unimplemented $os_type 'Sysctl fixes'
     ;;
 esac
+
 # Disable tcp timestamps
 auto-disable-tcp-timestamps
 pause
@@ -308,7 +308,7 @@ FreeBSD)
 	/etc/ntp.conf nocomment
     ;;
 *)
-    unimplemented $os_type 'NTP security fixes'
+    unimplemented $os_type 'NTP security enhancements'
     ;;
 esac
 

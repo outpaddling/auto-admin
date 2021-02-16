@@ -3,11 +3,11 @@
 # Prevent discovery of last boot time
 case $(auto-ostype) in
 FreeBSD)
-    auto-set-sysctl net.inet.tcp.rfc1323 0
+    auto-set-sysctl net.inet.tcp.rfc1323 0 $0
     ;;
 
 RHEL)
-    auto-set-sysctl net.ipv4.tcp_timestamps 0
+    auto-set-sysctl net.ipv4.tcp_timestamps 0 $0
     ;;
 
 *)
