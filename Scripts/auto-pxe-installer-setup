@@ -480,7 +480,19 @@ EOM
     
     cat << EOM > $installerconfig
 ##########################################################################
-# PREAMBLE: Executed before install
+# PXE installer script.  All syntax is Bourne shell.
+# "man bsdinstall" for more information.
+#
+# You will generally find this file in
+#
+#   /pxeserver/images/FreeBSD-XX.X-RELEASE-<arch>-disc1/etc/installerconfig
+#
+# in case you want to make changes later, though auto-pxe-installer-setup
+# allows the user to specify other locations.
+##########################################################################
+
+##########################################################################
+# First section: PREAMBLE ( Executed before install )
 # Use this section only to set up the environment for bsdinstall.
 ##########################################################################
 
@@ -494,7 +506,13 @@ EOM
 # Make sure there are no external disks plugged in at boot time unless
 # you want them as part of the boot volume.
 
-# Pick one or the other
+# Pick either UFS2 or ZFS.
+# UFS2 is generally preferable for HPC compute nodes since it uses
+# less RAM, leaving more for computational tasks.
+# ZFS is preferable for NFS servers, so if you configure them using PXE,
+# uncomment ZFS to install the file servers, then switch back to UFS2 for
+# installing the compute nodes.
+
 fs=UFS2
 # fs=ZFS
 
