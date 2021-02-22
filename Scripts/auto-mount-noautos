@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       NFS mounts may be set to noauto since CentOS 7 "bg" option does
+#       not work, or to reduce boot time on FreeBSD, where each bg mount
+#       takes 1.5 minutes to time out by default.  This is especially
+#       helpful on the head node, which is likely to be booted before
+#       other file servers are up.
+#
+#       This script can be run from cron as follows to check once/minute:
+#
+#       * * * * * /usr/local/sbin/auto-mount-noautos \
+#           > /var/log/auto-mount-noautos 2>&1
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-02-22  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+for mount in $(awk '$3 == "nfs" && $4 ~ "noauto" { print $1 }' /etc/fstab); do
+    if [ 0$(mount | awk '{ print $1 }' | fgrep $mount | head -n 1) != 0$mount ]; then
+	printf "Mounting $mount...\n"
+	mount $mount
+    else
+	printf "$mount is already mounted.\n"
+    fi
+done
