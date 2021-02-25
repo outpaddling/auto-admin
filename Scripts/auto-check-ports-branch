@@ -41,7 +41,7 @@ FreeBSD)
     else
 	# Generate name for backup ports dir in case we need it
 	c=0
-	while [ -e $PORTSDIR.$c ]; do
+	while [ -e $PORTSDIR/Backup.$c ]; do
 	    c=$((c + 1))
 	done
 
@@ -49,13 +49,15 @@ FreeBSD)
 	    cat << EOM
 
 Your ports tree is neither head nor quarterly and therefore cannot be
-maintained by auto-update-system.  Moving to $PORTSDIR.$c and checking out
-a new ports tree...
+maintained by auto-update-system.  Moving to $PORTSDIR.Backup.$c and checking
+out a new ports tree...
 EOM
-	    mv $PORTSDIR $PORTSDIR.$c
+	    mkdir $PORTSDIR/Backup.$c
+	    files=$(find $PORTSDIR -depth 1 \! -name 'Backup.*')
+	    mv $files $PORTSDIR/Backup.$c
 	    auto-ports-checkout
-	    if [ -e $PORTSDIR.$c/wip ]; then
-		mv $PORTSDIR.$c/wip $PORTSDIR
+	    if [ -e $PORTSDIR.Backup.$c/wip ]; then
+		mv $PORTSDIR.Backup.$c/wip $PORTSDIR
 	    fi
 	else
 	    ports_branch=$(auto-ports-branch)
@@ -83,13 +85,13 @@ EOM
 			new_url=$(echo $url | sed -e "s|ports/.*|ports/branches/$repo_branch|")
 			$svn switch "$new_url"
 		    else
-			printf "Saving $PORTSDIR to $PORTSDIR.$c and checking out $repo_branch...\n"
-			mv $PORTSDIR $PORTSDIR.$c
+			printf "Saving $PORTSDIR to $PORTSDIR.Backup.$c and checking out $repo_branch...\n"
+			mv $PORTSDIR $PORTSDIR.Backup.$c
 			# FIXME: Specify repo_branch
 			auto-ports-checkout
-	    		if [ -e $PORTSDIR.$c/wip ]; then
-			    mv $PORTSDIR.$c/wip $PORTSDIR
-	    		fi
+			if [ -e $PORTSDIR.Backup.$c/wip ]; then
+			    mv $PORTSDIR.Backup.$c/wip $PORTSDIR
+			fi
 		    fi
 		fi
 	    fi
