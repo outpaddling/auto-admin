@@ -209,6 +209,20 @@ FreeBSD)
 	esac
 	
 	freebsd_autoremove
+
+	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
+	if [ -e $install_from_source ]; then
+	    printf "Cataloging install-from-source versions before upgrade...\n"
+	    installed_versions_db=/root/.config/old_pkg_versions
+	    rm -f $installed_versions_db
+	    while read line; do
+		port=$(echo $line | awk '{ print $1 }')
+		pkgbase=$(auto-print-make-variable $port PKGBASE)
+		installed_version=$(pkg query '%v' $pkgbase) || true
+		printf "$pkgbase $installed_version\n" >> $installed_versions_db
+	    done < $install_from_source
+	fi
+	
 	printf "\nUpdating binary packages...\n"
 	pkg update
 	pkg upgrade -y
@@ -262,7 +276,6 @@ FreeBSD)
 	fi
 	
 	# Process ports marked by auto-mark-install-from-source
-	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
 	printf "Checking for ports to be installed from source...\n"
 	printf "Use auto-mark-install-from-source to update the list\n"
 	printf "or edit $install_from_source.\n"
@@ -271,7 +284,7 @@ FreeBSD)
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
 		pkgbase=$(auto-print-make-variable $port PKGBASE)
-		installed_version=$(pkg query '%v' $pkgbase)
+		installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
 		ports_version=$(auto-print-make-variable $port PKGVERSION)
 		if [ ! -z $installed_version ]; then
 		    if [ 0$ports_version != 0$installed_version ]; then

@@ -307,9 +307,22 @@ if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/group` = 0$uid ]; then
 fi
 
 # Some users may belong to multiple groups.  If so, add them here.
+case $(auto-ostype) in
+FreeBSD)
+    cat << EOM
+
+Users must be in the following groups to perform certain functions:
+
+operator:   Shut down, reboot, etc
+wheel:      "su" to root
+video:      Full access to GPU features
+
+EOM
+	;;
+esac
 group='x'
 while [ $group ]; do
-    printf "Add to additional group: [Press return to skip] "
+    printf "Enter one additional group or just press return to move on] "
     read group
     if [ $group ]; then
 	if [ $additional_groups ]; then
