@@ -48,12 +48,14 @@ if [ `whoami` != root ]; then
 fi
 
 if [ $(uname) = FreeBSD ]; then
+    : ${LOCALBASE:=/usr/local}
+    
     if [ ! -e /usr/ports/CHANGES ]; then
 	auto-ports-checkout
     fi
     # Need for github cert
     pkg install -y ca_root_nss
-    if [ ! -e /usr/ports/wip ]; then
+    if [ ! -e $LOCALBASE/sbin/wip-update ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
 	sh ./freebsd-wip-checkout $vcs
     fi
