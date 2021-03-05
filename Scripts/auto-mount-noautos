@@ -35,8 +35,13 @@ fi
 
 for mount in $(awk '$3 == "nfs" && $4 ~ "noauto" { print $1 }' /etc/fstab); do
     if [ 0$(mount | awk '{ print $1 }' | fgrep $mount | head -n 1) != 0$mount ]; then
-	printf "Mounting $mount...\n"
-	mount $mount
+	node=$(echo $mount | cut -d : -f 1)
+	if ssh -x -o ConnectTimeout=5 $node hostname; then
+	    printf "Mounting $mount...\n"
+	    mount -o retrycnt=1 $mount
+	else
+	    printf "$node is not responding to ssh.\n"
+	fi
     else
 	printf "$mount is already mounted.\n"
     fi
