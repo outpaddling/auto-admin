@@ -91,7 +91,18 @@ drm_from_source()
 #   Main
 ##########################################################################
 
-drm_from_source
+if [ -e /usr/src/Makefile ]; then
+    drm_from_source
+    src_flags="-s"
+else
+    cat << EOM
+
+No /usr/src tree found.  Installing DRM from binary packages.  This could
+result in KBI compatibility issues.  Please consider installing the source
+tree and rerunning $0.
+
+EOM
+fi
 
 case $(auto-ostype) in
 FreeBSD)
@@ -129,7 +140,7 @@ EOM
 1.. For most modern Intel GPUs, use the modesetting driver which is part of
     the FreeBSD base.
 
-    auto-install-packages -n -s graphics/drm-kmod
+    auto-install-packages -n $src_flags graphics/drm-kmod
     Add kld_list="/boot/modules/i915kms.ko" to /etc/rc.conf
 
 2.. For older Intel GPUs, or if you encounter other issues with the built-in
@@ -153,7 +164,7 @@ EOM
 	    1)
 		scrub_packages
 		scrub_drm
-		auto-install-packages -n -s graphics/drm-kmod
+		auto-install-packages -n $src_flags graphics/drm-kmod
 		sysrc "kld_list+=/boot/modules/i915kms.ko"
 		;;
 	    2)
@@ -182,13 +193,13 @@ EOM
 
 1.. For recent AMD GPUs, you can try
 
-    auto-install-packages -n -s graphics/drm-kmod
+    auto-install-packages -n $src_flags graphics/drm-kmod
     pkg install -y xf86-video-amdgpu
     Add "kld_list=amdgpu" to /etc/rc.conf
 
 2.. For older AMD GPUs, you can try
 
-    auto-install-packages -n -s graphics/drm-kmod
+    auto-install-packages -n $src_flags graphics/drm-kmod
     pkg install -y xf86-video-ati
     Add "kld_list=/boot/modules/radeonkms.ko" to /etc/rc.conf
 
@@ -213,14 +224,14 @@ EOM
 	    1)
 		scrub_packages
 		scrub_drm
-		auto-install-packages -n -s graphics/drm-kmod
+		auto-install-packages -n $src_flags graphics/drm-kmod
 		pkg install -y xf86-video-amdgpu
 		sysrc "kld_list+=amdgpu"
 		;;
 	    2)
 		scrub_packages
 		scrub_drm
-		auto-install-packages -n -s graphics/drm-kmod
+		auto-install-packages -n $src_flags graphics/drm-kmod
 		pkg install -y xf86-video-ati
 		sysrc "kld_list+=/boot/modules/radeonkms.ko"
 		;;

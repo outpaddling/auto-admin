@@ -16,8 +16,8 @@ FreeBSD)
     pkg install -y fusefs-ntfs fusefs-ext2 \
 	fusefs-hfsfuse fusefs-simple-mtpfs
     
-    kldload fuse || true
-    sysrc kld_list+=fuse
+    kldload fusefs || true
+    sysrc kld_list+=fusefs
     ;;
 
 *)
