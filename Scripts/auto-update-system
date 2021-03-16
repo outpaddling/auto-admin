@@ -168,6 +168,7 @@ FreeBSD)
     esac
     
     if [ 0$update_packages != 0n ]; then
+	proceed_with_packages=yes
 	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
@@ -191,44 +192,49 @@ FreeBSD)
 		if [ -t 1 ]; then
 		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
 		    if [ 0$upgrade_anyway != 0y ]; then
-			exit
+			proceed_with_packages=no
 		    fi
 		else
 		    printf "stdout is not a terminal. Can't ask user what to do, so aborting.\n"
-		    exit 1
+		    proceed_with_packages=no
 		fi
 	    fi
 	fi
-	case $mode in
-	interactive)
-	    printf "Autoremove unneeded packages? [y]/n "
-	    read autoremove
-	    ;;
-	*)
-	    autoremove=y
-	    ;;
-	esac
 	
-	freebsd_autoremove
-
-	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
-	if [ -e $install_from_source ]; then
-	    printf "Cataloging install-from-source versions before upgrade...\n"
-	    installed_versions_db=/root/.config/old_pkg_versions
-	    rm -f $installed_versions_db
-	    while read line; do
-		port=$(echo $line | awk '{ print $1 }')
-		pkgbase=$(auto-print-make-variable $port PKGBASE)
-		installed_version=$(pkg query '%v' $pkgbase) || true
-		printf "$pkgbase $installed_version\n" >> $installed_versions_db
-	    done < $install_from_source
+	if [ $proceed_with_packages = yes ]; then
+	    case $mode in
+	    interactive)
+		printf "Autoremove unneeded packages? [y]/n "
+		read autoremove
+		;;
+	    *)
+		autoremove=y
+		;;
+	    esac
+	    
+	    freebsd_autoremove
+    
+	    install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
+	    if [ -e $install_from_source ]; then
+		printf "Cataloging install-from-source versions before upgrade...\n"
+		installed_versions_db=/root/.config/old_pkg_versions
+		rm -f $installed_versions_db
+		while read line; do
+		    port=$(echo $line | awk '{ print $1 }')
+		    pkgbase=$(auto-print-make-variable $port PKGBASE)
+		    installed_version=$(pkg query '%v' $pkgbase) || true
+		    printf "$pkgbase $installed_version\n" >> $installed_versions_db
+		done < $install_from_source
+	    fi
+	    
+	    printf "\nUpdating binary packages...\n"
+	    pkg update
+	    pkg upgrade -y
+	    freebsd_autoremove
+	    pkg clean -y
+	else
+	    printf "Skipping ports upgrade since package upgrade was aborted.\n"
 	fi
-	
-	printf "\nUpdating binary packages...\n"
-	pkg update
-	pkg upgrade -y
-	freebsd_autoremove
-	pkg clean -y
     fi
     
     case $mode in
@@ -245,7 +251,9 @@ FreeBSD)
 	;;
     esac
     
-    if [ 0$update_ports != 0n ]; then
+    # If package upgrade was aborted above, cancel ports upgrade as well
+    # to keep things in sync
+    if [ 0$update_ports != 0n ] && [ $proceed_with_packages = yes ]; then
 	auto-check-ports-branch
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
