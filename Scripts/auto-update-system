@@ -100,7 +100,7 @@ if [ 0$1 = 0--sync-pkg-cache ]; then
 	    FreeBSD)
 		pkg_cache=/var/cache/pkg
 		;;
-	    NetBSD)
+	    Darwin|NetBSD)
 		# FIXME: This depends on the bootstrap options
 		pkg_cache=/var/db/pkgin/cache
 		;;
@@ -168,14 +168,12 @@ FreeBSD)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	proceed_with_packages=yes
 	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
 	    printf "Use auto-mark-package-critical to update the list\n"
 	    printf "or edit $critical_pkg_file.\n"
 	    missing_packages=0
-	    pkg update
 	    for pkg in $(cat $critical_pkg_file); do
 		if pkg info -q $pkg; then
 		    if pkg search "^${pkg}-[0-9].*" > /dev/null; then
@@ -192,49 +190,45 @@ FreeBSD)
 		if [ -t 1 ]; then
 		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
 		    if [ 0$upgrade_anyway != 0y ]; then
-			proceed_with_packages=no
+			exit
 		    fi
 		else
 		    printf "stdout is not a terminal. Can't ask user what to do, so aborting.\n"
-		    proceed_with_packages=no
+		    exit 1
 		fi
 	    fi
 	fi
+	case $mode in
+	interactive)
+	    printf "Autoremove unneeded packages? [y]/n "
+	    read autoremove
+	    ;;
+	*)
+	    autoremove=y
+	    ;;
+	esac
 	
-	if [ $proceed_with_packages = yes ]; then
-	    case $mode in
-	    interactive)
-		printf "Autoremove unneeded packages? [y]/n "
-		read autoremove
-		;;
-	    *)
-		autoremove=y
-		;;
-	    esac
-	    
-	    freebsd_autoremove
-    
-	    install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
-	    if [ -e $install_from_source ]; then
-		printf "Cataloging install-from-source versions before upgrade...\n"
-		installed_versions_db=/root/.config/old_pkg_versions
-		rm -f $installed_versions_db
-		while read line; do
-		    port=$(echo $line | awk '{ print $1 }')
-		    pkgbase=$(auto-print-make-variable $port PKGBASE)
-		    installed_version=$(pkg query '%v' $pkgbase) || true
-		    printf "$pkgbase $installed_version\n" >> $installed_versions_db
-		done < $install_from_source
-	    fi
-	    
-	    printf "\nUpdating binary packages...\n"
-	    pkg update
-	    pkg upgrade -y
-	    freebsd_autoremove
-	    pkg clean -y
-	else
-	    printf "Skipping ports upgrade since package upgrade was aborted.\n"
+	freebsd_autoremove
+
+	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
+	if [ -e $install_from_source ]; then
+	    printf "Cataloging install-from-source versions before upgrade...\n"
+	    installed_versions_db=/root/.config/old-pkg-versions
+	    mkdir -p /root/.config
+	    rm -f $installed_versions_db
+	    while read line; do
+		port=$(echo $line | awk '{ print $1 }')
+		pkgbase=$(auto-print-make-variable $port PKGBASE)
+		installed_version=$(pkg query '%v' $pkgbase) || true
+		printf "$pkgbase $installed_version\n" >> $installed_versions_db
+	    done < $install_from_source
 	fi
+	
+	printf "\nUpdating binary packages...\n"
+	pkg update
+	pkg upgrade -y
+	freebsd_autoremove
+	pkg clean -y
     fi
     
     case $mode in
@@ -251,9 +245,7 @@ FreeBSD)
 	;;
     esac
     
-    # If package upgrade was aborted above, cancel ports upgrade as well
-    # to keep things in sync
-    if [ 0$update_ports != 0n ] && [ $proceed_with_packages = yes ]; then
+    if [ 0$update_ports != 0n ]; then
 	auto-check-ports-branch
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
@@ -404,6 +396,16 @@ RHEL)
 	;;
     esac
     
+    # auto-pkgsrc-prefix exits non-zero if no tree found
+    PKGSRC=$(auto-pkgsrc-prefix) || true
+    if [ -z "$PKGSRC" ]; then
+	printf "$0: No active pkgsrc tree found.\n"
+	exit 1
+    fi
+    if [ -e $PKGSRC/bin/pkgin ]; then
+	auto-update-pkgsrc "$@"
+    fi
+    
     if [ `auto-os-release` != RHEL6 ]; then
 	needs-restarting -r || true
     fi
@@ -412,30 +414,7 @@ RHEL)
     ;;
 
 NetBSD)
-    # Don't group questions: Need to pause after each step to view output
-    # FIXME: Support pkg_upgrade?
-    printf "Update installed packages? [y]/n "
-    read update_packages
-    if [ 0$update_packages != 0n ]; then
-	printf "Autoremove unneeded packages? y/[n] "
-	read autoremove
-	if [ 0$autoremove = 0y ]; then
-	    pkgin autoremove
-	fi
-	pkgin update
-	pkgin upgrade -y
-	if [ 0$autoremove = 0y ]; then
-	    pkgin autoremove
-	fi
-	pkgin clean -y
-    fi
-    
-    printf "Update pkgsrc tree? [y]/n "
-    read update_pkgsrc
-    if [ 0$update_pkgsrc != 0n ]; then
-	cd /usr/pkgsrc
-	cvs -q up -dP || true
-    fi
+    auto-update-pkgsrc "$@"
     
     printf "Update base system? [y]/n "
     read update_base
@@ -483,6 +462,20 @@ EOM
 	pause
 	shutdown -r now
     fi
+    ;;
+
+Darwin)
+    # auto-pkgsrc-prefix exits non-zero if no tree found
+    PKGSRC=$(auto-pkgsrc-prefix) || true
+    if [ -z "$PKGSRC" ]; then
+	printf "$0: No active pkgsrc tree found.\n"
+	exit 1
+    fi
+    if [ -e $PKGSRC/bin/pkgin ]; then
+	auto-update-pkgsrc "$@"
+    fi
+    
+    # FIXME: Add softwareupdate logic for base updates
     ;;
 
 *)

@@ -34,7 +34,16 @@ FreeBSD)
     ;;
 
 *)
-    printf "$0: Not supported on $(auto-ostype).\n"
+    # auto-pkgsrc-prefix exits non-zero if no tree found
+    PKGSRC=$(auto-pkgsrc-prefix) || true
+    if [ -z "$PKGSRC" ]; then
+	printf "$0: No active pkgsrc tree found.\n"
+	exit 1
+    fi
+    mkdir -p $PKGSRC/etc/auto-admin
+    for pkg in "$@"; do
+	auto-append-line $pkg $PKGSRC/etc/auto-admin/critical-packages nocomment
+    done
     ;;
 
 esac

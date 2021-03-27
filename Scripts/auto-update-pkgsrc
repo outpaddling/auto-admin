@@ -1,0 +1,260 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Update pkgsrc binary packages and source on any platform
+#
+#   Arguments:
+#       Same as auto-update-system
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-03-27  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 [--sync-pkg-cache user@host] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+
+user@host is used to rsync packages from another host that has been updated
+more recently than this one.  This reduces load on the primary package servers
+and may significantly speed up package upgrades.  The other host must have the
+same architecture and OS version as this one.
+
+EOM
+    exit 1
+}
+
+##########################################################################
+#   Function description:
+#       Remove unneeded dependencies
+#
+#   2021-03-27  Jason Bacon Begin
+##########################################################################
+
+pkgsrc_autoremove()
+{
+    if [ 0$autoremove != 0n ]; then
+	printf "\nRemoving unneeded dependencies...\n"
+	case $mode in
+	interactive)
+	    pkgin autoremove
+	    ;;
+	*)
+	    pkgin -y autoremove
+	    ;;
+	esac
+    fi
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -gt 2 ]; then
+    usage
+fi
+
+mode=interactive    # Default
+if [ $# = 1 ]; then
+    if [ $1 = --binary ]; then
+	mode=binary
+    elif [ $1 = --binary+reboot ]; then
+	mode=binary+reboot
+    elif [ $1 = --defaults+reboot ]; then
+	mode=defaults+reboot
+    elif [ $1 = --defaults ]; then
+	mode=defaults
+    elif [ $1 = --yes ]; then
+	mode=yes
+    else
+	usage
+    fi
+fi
+
+# auto-pkgsrc-prefix exits non-zero if no tree found
+PKGSRC=$(auto-pkgsrc-prefix) || true
+if [ -z "$PKGSRC" ]; then
+    printf "$0: No active pkgsrc tree found.\n"
+    exit 1
+fi
+PKGSRCDIR=$(auto-pkgsrc-dir)
+install_from_source=$PKGSRC/etc/auto-admin/install-from-source
+    
+if [ ! -t 0 ]; then
+    # Input redirected.  Being fed y/n responses.
+    abuse_warning
+fi
+
+if [ ! -e $PKGSRC/bin/pkgin ]; then
+    printf "No $PKGSRC/bin/pkgin: Skipping binary package updates.\n"
+else
+    # Don't group questions: Need to pause after each step to view output
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot|yes)
+	update_packages=y
+	abuse_warning
+	;;
+    interactive)
+	printf "Update installed packages? [y]/n "
+	read update_packages
+	;;
+    esac
+    
+    if [ 0$update_packages != 0n ]; then
+	critical_pkg_file=$PKGSRC/etc/auto-admin/critical-packages
+	if [ -e $critical_pkg_file ]; then
+	    printf "Verifying availability of critical packages...\n"
+	    printf "Use auto-mark-package-critical to update the list\n"
+	    printf "or edit $critical_pkg_file.\n"
+	    missing_packages=0
+	    for pkg in $(cat $critical_pkg_file); do
+		if pkgin list | fgrep -qw $pkg; then
+		    if pkgin search "^${pkg}-[0-9].*" > /dev/null; then
+			printf "$pkg is available.\n"
+		    else
+			printf "$pkg is installed and marked critical, but missing from the repository.\n"
+			missing_packages=$(($missing_packages + 1))
+		    fi
+		fi
+	    done
+	    if [ $missing_packages -gt 0 ]; then
+		printf "\n                               *** WARNING ***\n\n"
+		printf "Upgrading could render the missing packages above unavailable.\n\n"
+		if [ -t 1 ]; then
+		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
+		    if [ 0$upgrade_anyway != 0y ]; then
+			exit
+		    fi
+		else
+		    printf "stdout is not a terminal. Can't ask user what to do, so aborting.\n"
+		    exit 1
+		fi
+	    fi
+	fi
+	case $mode in
+	interactive)
+	    printf "Autoremove unneeded packages? [y]/n "
+	    read autoremove
+	    ;;
+	*)
+	    autoremove=y
+	    ;;
+	esac
+	
+	pkgsrc_autoremove
+    
+	if [ -e $install_from_source ]; then
+	    printf "Cataloging install-from-source versions before upgrade...\n"
+	    installed_versions_db=$HOME/.config/old-pkg-versions
+	    mkdir -p $HOME/.config
+	    rm -f $installed_versions_db
+	    while read line; do
+		pkg=$(echo $line | awk '{ print $1 }')
+		pkgbase=$(auto-print-make-variable $pkg PKGBASE)
+		installed_version=$(pkg query '%v' $pkgbase) || true
+		printf "$pkgbase $installed_version\n" >> $installed_versions_db
+	    done < $install_from_source
+	fi
+	
+	printf "\nUpdating binary packages...\n"
+	pkgin update
+	pkgin -y upgrade
+	pkgsrc_autoremove
+	pkgin -y clean
+    fi
+fi
+
+case $mode in
+defaults|defaults+reboot|yes)
+    update_pkgsrc=y
+    ;;
+binary|binary+reboot)
+    update_pkgsrc=n
+    ;;
+interactive)
+    printf "Update pkgsrc tree? [y]/n "
+    read update_pkgsrc
+    ;;
+esac
+
+if [ 0$update_pkgsrc != 0n ]; then
+    cvs=cvs
+    if [ -e $PKGSRC/bin/sbmake ]; then
+	make=$PKGSRC/bin/sbmake
+    else
+	make=make
+    fi
+    
+    # FIXME: Implement this
+    # auto-check-pkgsrc-branch
+    
+    if [ -e $PKGSRCDIR/Makefile ]; then
+	printf "Updating $PKGSRCDIR...\n"
+	(cd $PKGSRCDIR && $cvs -q update -dP) || true
+    # else
+	# FIXME: Implement this
+	# auto-pkgsrc-checkout
+    fi
+    if [ -e $PKGSRC/sbin/wip-update ]; then
+	wip-update
+    fi
+    
+    # Process packages marked by auto-mark-install-from-source
+    printf "Checking for packages to be installed from source...\n"
+    printf "Use auto-mark-install-from-source to update the list\n"
+    printf "or edit $install_from_source.\n"
+    set +e  # pkg query
+    if [ -e $install_from_source ]; then
+	while read line; do
+	    echo $line
+	    pkg=$(echo $line | awk '{ print $1 }')
+	    pkgbase=$(auto-print-make-variable $pkg PKGBASE)
+	    installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
+	    pkgsrc_version=$(auto-print-make-variable $pkg PKGVERSION)
+	    if [ ! -z $installed_version ]; then
+		if [ 0$pkgsrc_version != 0$installed_version ]; then
+		    reason=$(echo $line | awk '{ print $2 }')
+		    printf "Reinstalling $pkg from source, reason = $reason\n"
+		    printf "Installed: $installed_version\n"
+		    printf "Pkgsrc:     $pkgsrc_version\n"
+		    # This code is redundant with auto-install-packages,
+		    # but we don't use auto-install-packages here in case
+		    # auto-admin itself is marked for install from source
+		    # Remove other versions that might block install
+		    ## pkgsrc cannot remove a package without removing
+		    ## dependents, but it can overinstall
+		    # pkgin remove -fy $(auto-print-make-variable $pkg PKGBASE) || true
+		    save_cwd=$(pwd)
+		    cd $PKGSRCDIR/$pkg
+		    $make -DBATCH clean reinstall clean
+		    cd $save_cwd
+		else
+		    printf "$pkg is up-to-date.\n"
+		fi
+	    else
+		printf "$pkg is not installed.\n"
+	    fi
+	done < $install_from_source
+    fi
+    set -e
+fi
+
+plugin=$PKGSRC/etc/auto-update-pkgsrc-post-src
+if [ -e $plugin ]; then
+    owner=`stat -L $plugin | awk '{ print $5 }'`
+    group_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 6`
+    world_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 9`
+    if [ $owner != root ]; then
+	printf "ERROR: $plugin is not owned by root!  You may have been hacked!\n"
+    elif [ $group_write != - ]; then
+	printf "ERROR: $plugin is group writable!  You may have been hacked!\n"
+    elif [ $world_write != - ]; then
+	printf "ERROR: $plugin is world writable!  You may have been hacked!\n"
+    else
+	$plugin
+    fi
+fi
