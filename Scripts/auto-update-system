@@ -476,6 +476,20 @@ Darwin)
     fi
     
     # FIXME: Add softwareupdate logic for base updates
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot|yes)
+	update_base=y
+	;;
+    interactive)
+	printf "Update base system? [y]/n "
+	read update_base
+	;;
+    esac
+    if [ 0$update_base != 0n ]; then
+	printf "\nUpdating base system...\n"
+	tmpfile=update-system.tmp
+	softwareupdate --install --all
+    fi
     ;;
 
 *)
