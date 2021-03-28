@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Determine the branch of the current ports tree
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-03-28  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+PKGSRC=$(auto-pkgsrc-dir) || true
+if [ -z "$PKGSRC" ]; then
+    printf "$0: No active pkgsrc tree found.\n"
+    exit 1
+fi
+
+branch=$(cd $PKGSRC && \
+    cvs status -v Makefile | awk '$1 == "Sticky" && $2 == "Tag:" { print $3 }')
+if [ "$branch" == "(none)" ]; then
+    printf "current\n"
+else
+    printf "$branch\n" | cut -d - -f 2
+fi
