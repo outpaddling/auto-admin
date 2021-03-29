@@ -89,6 +89,10 @@ if [ ! -t 0 ]; then
     abuse_warning
 fi
 
+##########################################################################
+#   Update binary packages if possible and desired
+##########################################################################
+
 if [ ! -e $PKGSRC/bin/pkgin ]; then
     printf "No $PKGSRC/bin/pkgin: Skipping binary package updates.\n"
 else
@@ -168,6 +172,10 @@ else
     fi
 fi
 
+##########################################################################
+#   Update source tree if desired
+##########################################################################
+
 case $mode in
 defaults|defaults+reboot|yes)
     update_pkgsrc=y
@@ -203,11 +211,13 @@ if [ 0$update_pkgsrc != 0n ]; then
 	wip-update
     fi
     
-    # Process packages marked by auto-mark-install-from-source
+    ##########################################################################
+    #   Process packages marked by auto-mark-install-from-source
+    ##########################################################################
+    
     printf "Checking for packages to be installed from source...\n"
     printf "Use auto-mark-install-from-source to update the list\n"
     printf "or edit $install_from_source.\n"
-    set +e  # pkg query
     if [ -e $install_from_source ]; then
 	while read line; do
 	    echo $line
@@ -240,8 +250,48 @@ if [ 0$update_pkgsrc != 0n ]; then
 	    fi
 	done < $install_from_source
     fi
-    set -e
+    
+    ##########################################################################
+    #   If not using binary packages and one of the pkgsrc upgrade tools is
+    #   installed, run it.
+    ##########################################################################
+    
+    src_update=''
+    if [ ! -e $PKGSRC/bin/pkgin ]; then
+	if [ -e $PKGSRC/sbin/pkg_rolling-replace ]; then
+	    src_update='pkg_rolling-replace -sv'
+	elif [ -e $PKGSRC/sbin/pkg_chk ]; then
+	    src_update='pkg_chk -u'
+	fi
+    fi
+    
+    # Use pkg_rolling-replace if installed, otherwise pkg_chk
+    if which pkg_rolling-replace; then
+	src_update='pkg_rolling-replace -s'
+    elif which pkg_chk; then
+	src_update='pkg_chk -au'
+    fi
+    
+    if [ -n "$src_update" ]; then
+	if [ $mode = interactive ]; then
+	    read -p "Update with \"$src_update\"? [y]/n " update_from_source
+	    if [ 0$update_from_source != 0n ]; then
+		update_from_source=y
+	    fi
+	else
+	    update_from_source=y
+	fi
+	if [ 0$update_from_source = 0y ]; then
+	    cd $PKGSRCDIR
+	    auto-clean-pkgsrc
+	    $src_update
+	fi
+    fi
 fi
+
+##########################################################################
+#   Run post-update plugin scripts if present
+##########################################################################
 
 plugin=$PKGSRC/etc/auto-update-pkgsrc-post-src
 if [ -e $plugin ]; then
