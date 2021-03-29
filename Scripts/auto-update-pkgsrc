@@ -262,6 +262,15 @@ if [ 0$update_pkgsrc != 0n ]; then
 	    src_update='pkg_rolling-replace -sv'
 	elif [ -e $PKGSRC/sbin/pkg_chk ]; then
 	    src_update='pkg_chk -u'
+	else
+	    cat << EOM
+
+No pkgin or upgrade-from-source tools found.  You may want to install
+pkg_rolling-replace or pkg_chk in order to enable upgrading packages from
+source.
+
+EOM
+	    pause
 	fi
     fi
     
@@ -283,7 +292,9 @@ if [ 0$update_pkgsrc != 0n ]; then
 	fi
 	if [ 0$update_from_source = 0y ]; then
 	    cd $PKGSRCDIR
-	    auto-clean-pkgsrc
+	    # FIXME: Remove echo n if/when auto-clean-pkgsrc has a
+	    # non-interactive mode
+	    echo n | auto-clean-pkgsrc
 	    $src_update
 	fi
     fi
