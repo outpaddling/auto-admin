@@ -269,7 +269,7 @@ if [ 0$update_pkgsrc != 0n ]; then
     if which pkg_rolling-replace; then
 	src_update='pkg_rolling-replace -s'
     elif which pkg_chk; then
-	src_update='pkg_chk -au'
+	src_update='pkg_chk -u'
     fi
     
     if [ -n "$src_update" ]; then
