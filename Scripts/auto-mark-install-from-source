@@ -44,6 +44,9 @@ if [ $# -ne 2 ]; then
     usage
 fi
 pkg=$1
+if ! echo $pkg | fgrep -q '/'; then
+    usage
+fi
 reason=$2
 
 case $(auto-ostype) in
