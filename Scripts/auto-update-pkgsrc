@@ -159,9 +159,13 @@ else
 	    while read line; do
 		pkg=$(echo $line | awk '{ print $1 }')
 		pkgbase=$(auto-print-make-variable $pkg PKGBASE)
-		installed_version=$(pkg query '%v' $pkgbase) || true
-		printf "$pkgbase $installed_version\n" >> $installed_versions_db
+		pkgname=$(pkg_info -I $pkgbase | awk '{ print $1 }') || true
+		installed_version=${pkgname#$pkgbase-}
+		if [ -n "$installed_version" ]; then
+		    printf "$pkgbase $installed_version\n" >> $installed_versions_db
+		fi
 	    done < $install_from_source
+	    cat $installed_versions_db
 	fi
 	
 	printf "\nUpdating binary packages...\n"
@@ -239,6 +243,7 @@ if [ 0$update_pkgsrc != 0n ]; then
 		    ## dependents, but it can overinstall
 		    # pkgin remove -fy $(auto-print-make-variable $pkg PKGBASE) || true
 		    save_cwd=$(pwd)
+		    pkg_delete -f $pkgbase  # Avoid already installed error
 		    cd $PKGSRCDIR/$pkg
 		    $make -DBATCH clean reinstall clean
 		    cd $save_cwd
