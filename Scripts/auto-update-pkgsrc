@@ -211,18 +211,20 @@ if [ 0$update_pkgsrc != 0n ]; then
 	# FIXME: Implement this
 	# auto-pkgsrc-checkout
     fi
-    if [ -e $PKGSRC/sbin/wip-update ]; then
-	wip-update
+    if [ -e $PKGSRC/bin/wip-update ]; then
+	$PKGSRC/bin/wip-update
+    elif [ -d $PKGSRCDIR/wip ]; then
+	(cd $PKGSRCDIR/wip && git pull)
     fi
     
     ##########################################################################
     #   Process packages marked by auto-mark-install-from-source
     ##########################################################################
     
-    printf "Checking for packages to be installed from source...\n"
-    printf "Use auto-mark-install-from-source to update the list\n"
-    printf "or edit $install_from_source.\n"
-    if [ -e $install_from_source ]; then
+    if [ -e $install_from_source ] && [ -e $PKGSRC/bin/pkgin ]; then
+	printf "Checking for packages to be installed from source...\n"
+	printf "Use auto-mark-install-from-source to update the list\n"
+	printf "or edit $install_from_source.\n"
 	while read line; do
 	    echo $line
 	    pkg=$(echo $line | awk '{ print $1 }')
