@@ -224,7 +224,7 @@ FreeBSD)
 	    done < $install_from_source
 	fi
 	
-	printf "\nUpdating binary packages...\n"
+	printf "\nUpdating installed packages...\n"
 	pkg update
 	pkg upgrade -y
 	freebsd_autoremove
@@ -250,6 +250,8 @@ FreeBSD)
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
 		$svn update $PORTSDIR
+	    elif [ -e $PORTSDIR/.git ]; then
+		(cd $PORTSDIR && git pull)
 	    else
 		printf "\nFetching latest ports...\n"
 		portsnap fetch

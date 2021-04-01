@@ -90,7 +90,7 @@ if [ ! -t 0 ]; then
 fi
 
 ##########################################################################
-#   Update binary packages if possible and desired
+#   Update installed packages if possible and desired
 ##########################################################################
 
 if [ ! -e $PKGSRC/bin/pkgin ]; then

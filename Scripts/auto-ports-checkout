@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 [portsnap|svn]\n"
+    printf "Usage: $0 [git|portsnap|svn]\n"
     exit 1
 }
 
@@ -30,13 +30,9 @@ FreeBSD)
 	exit 1
     fi
 
-    if which svn > /dev/null; then
-	svn=svn
-    else
-	svn=svnlite
-    fi
-    
     repo_branch=$(auto-pkg-branch)
+    # repo_branch=2021Q1
+    printf "Binary packages are using the $repo_branch branch.\n"
     case $repo_branch in
     latest)
 	case $# in
@@ -44,22 +40,30 @@ FreeBSD)
 	    selection=''
 	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
 		cat << EOM
-	
-1.. portsnap (faster update process, very slight delay for latest updates)
+
+1.. git (slower update process, but latest commits available immediately)
 2.. svn (slower update process, but latest commits available immediately)
+3.. portsnap (faster update process, very slight delay for latest updates)
 
 EOM
 		printf "Enter your selection: "
 		read selection
 	    done
-	    if [ $selection = 1 ]; then
-		method=portsnap
-	    else
+	    case $selection in
+	    1)
+		method=git
+		;;
+	    
+	    2)
 		method=svn
-		svn_branch=head
-	    fi
-	
-	;;
+		;;
+	    
+	    3)
+		method=portsnap
+		;;
+	    
+	    esac
+	    ;;
     
 	1)
 	    method=$1
@@ -67,20 +71,86 @@ EOM
 	
 	*)
 	    usage
+	    ;;
+	
 	esac
+
+	git_branch=''
+	svn_branch=head
 	;;
+
+    # Quarterly
     *)
-	if [ 0$1 = 0portsnap ]; then
-	    printf "portsnap is unavailable for quarterly branches.  Using svn.\n"
+	case $# in
+	0)
+	    selection=''
+	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
+		cat << EOM
+
+1.. git (slower update process, but latest commits available immediately)
+2.. svn (slower update process, but latest commits available immediately)
+
+EOM
+		printf "Enter your selection: "
+		read selection
+	    done
+	    case $selection in
+	    1)
+		method=git
+		;;
+	    
+	    2)
+		method=svn
+		;;
+	    
+	    esac
+	    ;;
+
+	1)
+	    method=$1
+	    ;;
+	
+	*)
+	    usage
+	    ;;
+	
+	esac
+
+	if [ $method = portsnap ]; then
+	    printf "portsnap is unavailable for quarterly branches.\n"
+	    printf "Use git or svn.\n"
+	    exit 1
 	fi
+
+	git_branch="--branch $repo_branch"
 	svn_branch=branches/$repo_branch
-	method=svn
 	;;
+
     esac
     
     case $method in
+    git)
+	if ! git clone --depth 1 \
+		https://git.FreeBSD.org/ports.git $git_branch --single-branch \
+		$PORTSDIR; then
+	    printf "Trying cgit-beta...\n"
+	    set -x
+	    git clone --depth 1 \
+		https://cgit-beta.FreeBSD.org/ports.git \
+		$git_branch --single-branch $PORTSDIR
+	    set +x
+	fi
+	;;
+    
     svn)
+	if which svn > /dev/null; then
+	    svn=svn
+	else
+	    svn=svnlite
+	fi
+	set -x
 	$svn checkout https://svn.FreeBSD.org/ports/$svn_branch $PORTSDIR
+	set +x
 	;;
     
     portsnap)

@@ -28,14 +28,31 @@ case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     export PORTSDIR
-    
-    if head -1 $PORTSDIR/Makefile | fgrep -q head; then
-	printf "latest\n"
-    elif head -1 $PORTSDIR/Makefile | fgrep -q branches; then
-	head -1 $PORTSDIR/Makefile | awk -F / '{ print $2 }'
+
+    cd $PORTSDIR
+    if [ -e .svn ]; then
+	if svn info | grep -q '^URL.*head$'; then
+	    branch=latest
+	else
+	    branch=$(svn info | awk -F / '$1 ~ "^URL" { print $NF }')
+	fi
+	printf "$branch\n"
+    elif [ -e .git ]; then
+	git_branch=$(git branch | awk '{ print $2 }')
+	if [ $git_branch = main ]; then
+	    branch=latest
+	else
+	    branch=$git_branch
+	fi
+	printf "$branch\n"
     else
-	printf "$0: Cannot determine ports branch from $PORTSDIR/Makefile.\n"
-	exit 1
+	# Portsnap trees should have "head" in Makefile
+	if head -1 $PORTSDIR/Makefile | fgrep -q head; then
+	    printf "latest\n"
+	else
+	    printf "$0: Cannot determine ports branch from $PORTSDIR/Makefile.\n"
+	    exit 1
+	fi
     fi
     ;;
 
