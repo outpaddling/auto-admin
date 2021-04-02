@@ -35,9 +35,22 @@ FreeBSD)
 	svn=svnlite
     fi
     repo_branch=$(auto-pkg-branch)
-    if [ ! -e $PORTSDIR/Makefile ]; then
+    if [ ! -e $PORTSDIR ]; then
 	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
 	auto-ports-checkout
+    elif [ ! -e $PORTSDIR/.git ]; then
+	printf "All ports checkout methods other than GIT are deprecated\n"
+	printf "and your ports tree is not a GIT clone.\n"
+	printf "Replacing your old ports tree with a GIT shallow clone.\n"
+	printf "\nOK to remove old $PORTSDIR? y/[n] "
+	read remove_ok
+	if [ 0$remove_ok = 0y ]; then
+	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
+	    auto-ports-checkout
+	else
+	    printf "OK, back up $PORTSDIR and try again.\n"
+	    exit 0
+	fi
     else
 	# Generate name for backup ports dir in case we need it
 	c=0

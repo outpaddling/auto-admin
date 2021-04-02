@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 [git|portsnap|svn]\n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -35,133 +35,25 @@ FreeBSD)
     printf "Binary packages are using the $repo_branch branch.\n"
     case $repo_branch in
     latest)
-	case $# in
-	0)
-	    selection=''
-	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
-		cat << EOM
-
-1.. git (slower update process, but latest commits available immediately)
-2.. svn (slower update process, but latest commits available immediately)
-3.. portsnap (faster update process, very slight delay for latest updates)
-
-EOM
-		printf "Enter your selection: "
-		read selection
-	    done
-	    case $selection in
-	    1)
-		method=git
-		;;
-	    
-	    2)
-		method=svn
-		;;
-	    
-	    3)
-		method=portsnap
-		;;
-	    
-	    esac
-	    ;;
-    
-	1)
-	    method=$1
-	    ;;
-	
-	*)
-	    usage
-	    ;;
-	
-	esac
-
 	git_branch=''
-	svn_branch=head
 	;;
-
-    # Quarterly
+    
     *)
-	case $# in
-	0)
-	    selection=''
-	    while [ 0$selection != 01 ] && [ 0$selection != 02 ]; do
-		cat << EOM
-
-1.. git (slower update process, but latest commits available immediately)
-2.. svn (slower update process, but latest commits available immediately)
-
-EOM
-		printf "Enter your selection: "
-		read selection
-	    done
-	    case $selection in
-	    1)
-		method=git
-		;;
-	    
-	    2)
-		method=svn
-		;;
-	    
-	    esac
-	    ;;
-
-	1)
-	    method=$1
-	    ;;
-	
-	*)
-	    usage
-	    ;;
-	
-	esac
-
-	if [ $method = portsnap ]; then
-	    printf "portsnap is unavailable for quarterly branches.\n"
-	    printf "Use git or svn.\n"
-	    exit 1
-	fi
-
 	git_branch="--branch $repo_branch"
-	svn_branch=branches/$repo_branch
 	;;
 
     esac
     
-    case $method in
-    git)
-	if ! git clone --depth 1 \
-		https://git.FreeBSD.org/ports.git $git_branch --single-branch \
-		$PORTSDIR; then
-	    printf "Trying cgit-beta...\n"
-	    set -x
-	    git clone --depth 1 \
-		https://cgit-beta.FreeBSD.org/ports.git \
-		$git_branch --single-branch $PORTSDIR
-	    set +x
-	fi
-	;;
-    
-    svn)
-	if which svn > /dev/null; then
-	    svn=svn
-	else
-	    svn=svnlite
-	fi
+    if ! git clone --depth 1 \
+	    https://git.FreeBSD.org/ports.git $git_branch --single-branch \
+	    $PORTSDIR; then
+	printf "Trying cgit-beta...\n"
 	set -x
-	$svn checkout https://svn.FreeBSD.org/ports/$svn_branch $PORTSDIR
+	git clone --depth 1 \
+	    https://cgit-beta.FreeBSD.org/ports.git \
+	    $git_branch --single-branch $PORTSDIR
 	set +x
-	;;
-    
-    portsnap)
-	portsnap -p $PORTSDIR fetch extract
-	;;
-    
-    *)
-	usage
-	;;
-    
-    esac
+    fi
     ;;
     
 *)
