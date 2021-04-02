@@ -43,6 +43,7 @@ FreeBSD)
 
 All ports checkout methods other than Git are deprecated and your ports tree
 is not a Git clone.  Replacing your old ports tree with a Git shallow clone.
+
 Before proceeding, make sure you have no uncommitted changes in
 $PORTSDIR or $PORTSDIR/wip.
 
@@ -55,6 +56,24 @@ EOM
 	else
 	    printf "OK, back up $PORTSDIR and try again.\n"
 	    exit 0
+	fi
+    elif (cd $PORTSDIR && git remote -v | fgrep 'fetch' | fgrep 'cgit-beta.FreeBSD.org'); then
+	cat << EOM
+
+Your $PORTSDIR is from the beta Git repository.  Would you like to try to
+replace it with a new tree from the permanent Git repository?
+
+Before proceeding, make sure you have no uncommitted changes in
+$PORTSDIR or $PORTSDIR/wip.
+
+EOM
+	printf "OK to remove old $PORTSDIR? y/[n] "
+	read remove_ok
+	if [ 0$remove_ok = 0y ]; then
+	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
+	    auto-ports-checkout
+	else
+	    printf "OK, keeping $PORTSDIR for now.\n"
 	fi
     else
 	# Generate name for backup ports dir in case we need it
