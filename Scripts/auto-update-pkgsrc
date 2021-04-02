@@ -27,6 +27,25 @@ EOM
     exit 1
 }
 
+
+abuse_warning()
+{
+    cat << EOM
+****************************************************************************
+
+    Running auto-update-pkgsrc non-interactively can overload the update
+    servers if done in parallel.
+    
+    Run only one instance at a time.
+    
+    DO NOT ABUSE THIS FEATURE!!
+
+****************************************************************************
+EOM
+    return 0
+}
+
+
 ##########################################################################
 #   Function description:
 #       Remove unneeded dependencies
@@ -90,7 +109,7 @@ if [ ! -t 0 ]; then
 fi
 
 ##########################################################################
-#   Update installed packages if possible and desired
+#   Update binary packages if possible and desired
 ##########################################################################
 
 if [ ! -e $PKGSRC/bin/pkgin ]; then
