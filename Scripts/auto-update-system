@@ -224,7 +224,7 @@ FreeBSD)
 	    done < $install_from_source
 	fi
 	
-	printf "\nUpdating installed packages...\n"
+	printf "\n**** Updating installed packages...\n"
 	pkg update
 	pkg upgrade -y
 	freebsd_autoremove
@@ -246,6 +246,7 @@ FreeBSD)
     esac
     
     if [ 0$update_ports != 0n ]; then
+	printf "\n**** Updating $PORTSDIR...\n"
 	auto-check-ports-branch
 	if [ -e $PORTSDIR/CHANGES ]; then
 	    if [ -e $PORTSDIR/.svn ]; then
@@ -342,7 +343,7 @@ FreeBSD)
 	;;
     esac
     if [ 0$update_base != 0n ]; then
-	printf "\nUpdating base system...\n"
+	printf "\n**** Updating base system...\n"
 	if [ ! -e /boot.save ]; then
 	    cp -Rp /boot /boot.save
 	fi
@@ -488,7 +489,7 @@ Darwin)
 	;;
     esac
     if [ 0$update_base != 0n ]; then
-	printf "\nUpdating base system...\n"
+	printf "\n**** Updating base system...\n"
 	tmpfile=update-system.tmp
 	softwareupdate --install --all
     fi

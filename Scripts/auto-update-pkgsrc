@@ -187,7 +187,7 @@ else
 	    cat $installed_versions_db
 	fi
 	
-	printf "\nUpdating binary packages...\n"
+	printf "\n**** Updating binary packages...\n"
 	pkgin update
 	pkgin -y upgrade
 	pkgsrc_autoremove
@@ -224,7 +224,7 @@ if [ 0$update_pkgsrc != 0n ]; then
     # auto-check-pkgsrc-branch
     
     if [ -e $PKGSRCDIR/Makefile ]; then
-	printf "Updating $PKGSRCDIR...\n"
+	printf "\n**** Updating $PKGSRCDIR...\n"
 	(cd $PKGSRCDIR && $cvs -q update -dP) || true
     # else
 	# FIXME: Implement this
