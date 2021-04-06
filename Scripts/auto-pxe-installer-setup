@@ -584,7 +584,7 @@ ZFS)
 esac    # UFS2 or ZFS
 
 # Remove DISTRIBUTIONS you don't need to speed up install.
-# ports can be installed later with svn or portsnap.
+# ports can be installed later with git.
 # src is only needed if you plan to rebuild the kernel or userland, or
 # for building certain drivers from ports, including some WiFi drivers.
 

@@ -36,6 +36,8 @@ if [ $# != 0 ]; then
     usage
 fi
     
+export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
+
 case $(auto-ostype) in
 FreeBSD)
     if [ `whoami` = root ]; then
@@ -139,16 +141,13 @@ EOM
     unset CC CFLAGS CPP CPPFLAGS CXX CXXFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
     export PATH
+    git=/usr/local/bin/git
     
     # Download ports snapshot
-    if [ -e /usr/local/bin/svn ]; then
-	svn=/usr/local/bin/svn
-    else
-	svn=$(which svnlite)
-    fi
     if [ ! -e $ports_dir/Makefile ]; then
 	if [ 0$year != 0 ]; then
-	    $svn co https://svn.FreeBSD.org/ports/branches/${year}Q$quarter $ports_dir
+	    $git clone https://git.FreeBSD.org/ports.git \
+		-b ${year}Q$quarter $ports_dir
 	else
 	    checkout=''
 	    while [ 0$checkout != 01 ] && [ 0$checkout != 02 ]; do
@@ -172,7 +171,7 @@ EOM
 		portsnap -f $install_dir/etc/portsnap.conf fetch extract
 		;;
 	    2)
-		$svn co https://svn.FreeBSD.org/ports/head $ports_dir
+		$git clone https://git.FreeBSD.org/ports.git $ports_dir
 		;;
 	    esac
 	fi
