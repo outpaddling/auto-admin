@@ -145,8 +145,14 @@ else
 		fi
 	    done
 	    if [ $missing_packages -gt 0 ]; then
-		printf "\n                               *** WARNING ***\n\n"
-		printf "Upgrading could render the missing packages above unavailable.\n\n"
+		cat << EOM
+
+			       *** WARNING ***
+
+Upgrading may remove the missing critical packages list above. Check the web
+and mailing lists for problems related to the packages, or try again later.
+
+EOM
 		if [ -t 1 ]; then
 		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
 		    if [ 0$upgrade_anyway != 0y ]; then

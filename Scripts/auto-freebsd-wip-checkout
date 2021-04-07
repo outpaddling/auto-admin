@@ -58,6 +58,7 @@ if [ $(uname) = FreeBSD ]; then
     if [ ! -e $LOCALBASE/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
 	sh ./freebsd-wip-checkout $vcs
+	rm -f freebsd-wip-checkout
     fi
 else
     printf "$0: Not supported on $(uname).\n"
