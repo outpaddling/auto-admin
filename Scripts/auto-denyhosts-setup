@@ -28,7 +28,6 @@ line()
 case $(auto-ostype) in
 FreeBSD)
     pkg install -gy 'denyhosts-py3*' || true
-    pkg install -gy 'py3*-denyhosts' || true
     if [ -z $LOCALBASE ]; then
 	prefix=/usr/local
     else
