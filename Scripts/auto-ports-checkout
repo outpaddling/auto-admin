@@ -48,7 +48,6 @@ FreeBSD)
     if ! which git; then
 	pkg install -y git
     fi
-    set -x
     if ! git clone --depth 1 \
 	    https://git.FreeBSD.org/ports.git $git_branch --single-branch \
 	    $PORTSDIR; then
@@ -56,7 +55,6 @@ FreeBSD)
 	    https://cgit-beta.FreeBSD.org/ports.git \
 	    $git_branch --single-branch $PORTSDIR
     fi
-	set +x
     ;;
     
 *)
