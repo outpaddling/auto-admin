@@ -51,22 +51,33 @@ reason=$2
 
 case $(auto-ostype) in
 FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    if [ ! -e "$PORTSDIR/$pkg" ]; then
+	printf "$PORTSDIR/$pkg: No such port.\n"
+	exit 1
+    fi
     : ${LOCALBASE:=/usr/local}
     mkdir -p $LOCALBASE/etc/auto-admin
-    auto-append-line "$pkg $reason" \
+    # Check for port/package name only.  Don't duplicate if reason differs.
+    auto-append-line $pkg "$pkg $reason" \
 	$LOCALBASE/etc/auto-admin/install-from-source nocomment
     ;;
 
 *)
-    # auto-pkgsrc-prefix exits non-zero if no tree found
-    PKGSRC=$(auto-pkgsrc-prefix) || true
-    if [ -z "$PKGSRC" ]; then
+    # auto-pkgsrc-{dir|prefix} exit non-zero if no tree found
+    PKGSRC=$(auto-pkgsrc-dir) || true
+    if [ ! -e "$PKGSRC/$pkg" ]; then
+	printf "$PKGSRC/$pkg: No such package.\n"
+	exit 1
+    fi
+    PREFIX=$(auto-pkgsrc-prefix) || true
+    if [ -z "$PREFIX" ]; then
 	printf "$0: No active pkgsrc tree found.\n"
 	exit 1
     fi
-    mkdir -p $PKGSRC/etc/auto-admin
-    auto-append-line "$pkg $reason" \
-	$PKGSRC/etc/auto-admin/install-from-source nocomment
+    mkdir -p $PREFIX/etc/auto-admin
+    auto-append-line $pkg "$pkg $reason" \
+	$PREFIX/etc/auto-admin/install-from-source nocomment
     ;;
 
 esac
