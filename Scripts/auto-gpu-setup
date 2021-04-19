@@ -91,18 +91,20 @@ drm_from_source()
 #   Main
 ##########################################################################
 
-if [ -e /usr/src/Makefile ]; then
-    drm_from_source
-    src_flags="-s"
-else
-    cat << EOM
-
-No /usr/src tree found.  Installing DRM from binary packages.  This could
-result in KBI compatibility issues.  Please consider installing the source
-tree and rerunning $0.
-
-EOM
-fi
+# This strategy doesn't really help.  Build failures in drm-kmod are about
+# as common as KBI compatibility issues
+# if [ -e /usr/src/Makefile ]; then
+#     drm_from_source
+#     src_flags="-s"
+# else
+#     cat << EOM
+# 
+# No /usr/src tree found.  Installing DRM from binary packages.  This could
+# result in KBI compatibility issues.  Please consider installing the source
+# tree and rerunning $0.
+# 
+# EOM
+# fi
 
 case $(auto-ostype) in
 FreeBSD)
