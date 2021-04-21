@@ -6,13 +6,16 @@ FreeBSD)
     pkg install -y pkgconf zenity autoconf automake libublio gettext-tools \
 	texinfo fusefs-libs
     
+    # There were license restrictions up into 2020
     # exfat tools were marked for no binary package at one point
-    if ! auto-package-installed sysutils/fusefs-exfat; then
-	(cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make deinstall clean reinstall)
-    fi
-    if ! auto-package-installed sysutils/exfat-utils; then
-	(cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make deinstall clean reinstall)
-    fi
+    #if ! auto-package-installed sysutils/fusefs-exfat; then
+    #    (cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make deinstall clean reinstall)
+    #fi
+    #if ! auto-package-installed sysutils/exfat-utils; then
+    #    (cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make deinstall clean reinstall)
+    #fi
+    pkg install -y exfat-utils fusefs-exfat
+    
     pkg install -y fusefs-ntfs fusefs-ext2 \
 	fusefs-hfsfuse fusefs-simple-mtpfs
     
