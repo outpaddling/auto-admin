@@ -231,11 +231,23 @@ EOM
 	    done < $install_from_source
 	fi
 	
+	auto_admin_old_version=$(pkg query '%v' auto-admin)
 	printf "\n**** Updating installed packages...\n"
 	pkg update
 	pkg upgrade -y
 	freebsd_autoremove
 	pkg clean -y
+	auto_admin_new_version=$(pkg query '%v' auto-admin)
+	
+	##########################################################################
+	#   If auto-admin has been upgraded, restart auto-update-system
+	#   to ensure use of the latest fixes
+	##########################################################################
+	
+	if [ $auto_admin_new_version != $auto_admin_old_version ]; then
+	    printf "Restarting with newer version of auto-update-system...\n"
+	    auto_update_system "$@"
+	fi
     fi
     
     case $mode in
