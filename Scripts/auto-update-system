@@ -88,8 +88,13 @@ export PORTSDIR
 
 os_type=`auto-ostype`
 
-if [ 0$1 = --help ]; then
+if [ 0$1 = 0--help ]; then
     usage
+fi
+
+if ! auto-root-check $0; then
+    printf "Root "
+    exec su -m root -c "$0 $@"
 fi
 
 if [ 0$1 = 0--sync-pkg-cache ]; then
