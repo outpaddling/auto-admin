@@ -95,8 +95,11 @@ fi
 if ! auto-root-check $0; then
     # Prevent user from running a Trojan as root in the case their account
     # was compromised
+    absolute="$(which $0)"
+    # Make sure -e is set at this point so the script terminates on failure
+    auto-file-secure "$absolute"
     printf "Root "
-    exec su -m root -c "/usr/local/sbin/auto-update-system $@"
+    exec su -m root -c "$absolute $@"
 fi
 
 if [ 0$1 = 0--sync-pkg-cache ]; then

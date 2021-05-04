@@ -23,18 +23,20 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
-
 filename=$1
+
+if [ ! -e $filename ]; then
+    printf "$0: $filename: No such file or directory.\n"
+    exit 1
+fi
 
 owner=`ls -l $filename | awk '{ print $3 }'`
 group=`ls -l $filename | awk '{ print $4 }'`
 # FIXME: Check permissions and suid bits
 if [ $owner != root ] || [ $group != root ] && [ $group != wheel ]; then
-    if [ ! -O $filename ] || [ ! -G $filename ]; then
-	printf "%s is not owned by root:root or $(id -un):$(id -gn)!\n" $filename
-	ls -l $filename
-	exit 1
-    fi
+    printf "%s is not owned by root:root or root:wheel.\n" $filename
+    ls -l $filename
+    exit 1
 fi
 
 perms=`ls -l $filename`
