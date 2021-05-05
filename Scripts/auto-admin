@@ -38,6 +38,16 @@ if [ $# != 0 ]; then
     usage
 fi
 
+if ! auto-root-check $0; then
+    # Prevent user from running a Trojan as root in the case their account
+    # was compromised
+    absolute="$(which $0)"
+    # Make sure -e is set at this point so the script terminates on failure
+    auto-file-secure "$absolute"
+    printf "Root "
+    exec su -m root -c "$absolute $@"
+fi
+
 case $(auto-ostype) in
 FreeBSD|NetBSD)
     poweroff=-p
