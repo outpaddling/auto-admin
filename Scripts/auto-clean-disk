@@ -32,6 +32,26 @@ FreeBSD)
     done
     ;;
 
+NetBSD)
+    printf "Clean pkgsrc cache and tree? [y]/n "
+    read clean
+    if [ 0$clean != 0n ]; then
+	auto-clean-pkgsrc
+    fi
+    
+    mount_points=`awk '$3 == "ffs" { print $2 }' /etc/fstab`
+    set +e
+    for dir in $mount_points; do
+	printf "Zero free block on $dir? [y]/n "
+	read zero
+	if [ 0$zero != 0n ]; then
+	    cd $dir
+	    dd if=/dev/zero of=zero-temp bs=1m
+	    rm zero-temp
+	fi
+    done
+    ;;
+
 RHEL)
     printf "Clean package cache? [y]/n "
     read clean
