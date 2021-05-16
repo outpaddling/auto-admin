@@ -55,11 +55,16 @@ EOM
 	printf "OK to replace $PORTSDIR? y/[n] "
 	read replace_ok
 	if [ 0$replace_ok = 0y ]; then
+	    # Make sure we don't remove ports while CWD is in it, or
+	    # subsequent processes will fail due to nonexistent '.'
+	    save_cwd=$(pwd)
+	    cd /usr
 	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
 	    auto-ports-checkout
 	    if [ -n "$have_wip" ]; then
 		auto-freebsd-wip-checkout $wip_vcs
 	    fi
+	    cd $save_cwd
 	fi
     elif (cd $PORTSDIR && git remote -v | fgrep 'fetch' | fgrep 'cgit-beta.FreeBSD.org'); then
 	cat << EOM
