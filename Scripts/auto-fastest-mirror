@@ -87,7 +87,7 @@ FreeBSD)
     done
     
     # Print name of fastest mirror
-    printf "ftp://ftp%s.freebsd.org\n" $fastest_mirror
+    printf "http://ftp%s.freebsd.org\n" $fastest_mirror
     ;;
     
 *)
