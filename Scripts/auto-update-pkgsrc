@@ -230,6 +230,11 @@ if [ 0$update_pkgsrc != 0n ]; then
     # auto-check-pkgsrc-branch
     
     if [ -e $PKGSRCDIR/Makefile ]; then
+	printf "\n**** "    # auto-clean-pkgsrc will print the rest
+	# FIXME: Remove echo n if/when auto-clean-pkgsrc has a
+	# non-interactive mode
+	echo n | auto-clean-pkgsrc
+	
 	printf "\n**** Updating $PKGSRCDIR...\n"
 	(cd $PKGSRCDIR && $cvs -q update -dP) || true
     # else
@@ -323,11 +328,13 @@ EOM
 	    update_from_source=y
 	fi
 	if [ 0$update_from_source = 0y ]; then
-	    cd $PKGSRCDIR
-	    # FIXME: Remove echo n if/when auto-clean-pkgsrc has a
-	    # non-interactive mode
-	    echo n | auto-clean-pkgsrc
+	    printf "\n**** Running $src_update...\n"
+	    cd ../..
 	    $src_update
+
+	    printf "\n**** Reinstalling pkg_intall...\n"
+	    cd $PKGSRCDIR/pkgtools/pkg_install
+	    $make replace || true
 	fi
     fi
 fi
@@ -351,3 +358,5 @@ if [ -e $plugin ]; then
 	$plugin
     fi
 fi
+
+printf "Update complete!\n"
