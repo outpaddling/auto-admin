@@ -328,13 +328,13 @@ EOM
 	    update_from_source=y
 	fi
 	if [ 0$update_from_source = 0y ]; then
+	    printf "\n**** Reinstalling pkg_install...\n"
+	    cd $PKGSRCDIR/pkgtools/pkg_install
+	    $make replace
+	    
 	    printf "\n**** Running $src_update...\n"
 	    cd ../..
 	    $src_update
-
-	    printf "\n**** Reinstalling pkg_intall...\n"
-	    cd $PKGSRCDIR/pkgtools/pkg_install
-	    $make replace || true
 	fi
     fi
 fi
