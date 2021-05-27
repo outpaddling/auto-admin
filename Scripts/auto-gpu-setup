@@ -141,7 +141,8 @@ Section "Device"
 	### Force SCFB driver for Parallels 15+
 	Identifier  "Card0"
 	Driver      "scfb"
-	BusID       "PCI:1:0:0"
+	# Default BusID detected by Xorg -configure
+	# BusID       "PCI:1:0:0"
 EndSection
 EOM
 	pause
@@ -156,7 +157,8 @@ Section "Device"
 	### Force SCFB driver for Parallels 15+
 	Identifier  "Card0"
 	Driver      "scfb"
-	BusID       "PCI:0:15:0"
+	# Default BusID detected by Xorg -configure
+	# BusID       "PCI:0:15:0"
 EndSection
 EOM
 	pause
