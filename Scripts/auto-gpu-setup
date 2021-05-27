@@ -133,6 +133,27 @@ We will now attempt to detect your GPU and provide some guidance...
 EOM
     pause
     
+    if sysctl -n kern.vm_guest | fgrep -q parallels; then
+	printf "Parallels VM detected.  Forcing SCBF...\n"
+	mkdir -p /etc/X11/xorg.conf.d
+	cat << EOM > /etc/X11/xorg.conf.d/10-parallels-scfb.conf
+Section "Device"
+	### Force SCFB driver for Parallels 15+
+	Identifier  "Card0"
+	Driver      "scfb"
+	BusID       "PCI:1:0:0"
+EndSection
+EOM
+	pause
+	exit 0
+    fi
+    
+    if sysctl dev.acpi.0.%desc | fgrep -q VBOX; then
+	printf "VirtualBox VM detected.  No driver setup needed.\n"
+	pause
+	exit 0
+    fi
+    
     if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
 	printf "Intel GPU detected.\n"
 	pciconf -lv | grep -B 2 display
