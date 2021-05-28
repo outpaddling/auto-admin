@@ -150,17 +150,9 @@ EOM
     fi
     
     if sysctl -n kern.vm_guest | fgrep -iq vmware; then
-	printf "VMWare VM detected.  Forcing SCBF...\n"
+	printf "VMWare VM detected.  Installing XF86-video-vmware...\n"
 	mkdir -p /etc/X11/xorg.conf.d
-	cat << EOM > /etc/X11/xorg.conf.d/10-vmware-scfb.conf
-Section "Device"
-	### Force SCFB driver for Parallels 15+
-	Identifier  "Card0"
-	Driver      "scfb"
-	# Default BusID detected by Xorg -configure
-	# BusID       "PCI:0:15:0"
-EndSection
-EOM
+	pkg install -y xf86-video-vmware
 	pause
 	exit 0
     fi
