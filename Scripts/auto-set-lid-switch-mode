@@ -16,6 +16,11 @@ EOM
 	exit 1
     fi
 
+    if [ -z "$(sysctl hw.acpi 2> /dev/null || true)" ]; then
+	printf "$0: ACPI not supported on this architecture.\n"
+	exit 1
+    fi
+
     case $1 in
     suspend)
 	state=S3
