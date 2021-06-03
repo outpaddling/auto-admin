@@ -10,7 +10,7 @@ pause()
 
 case $(auto-ostype) in
 FreeBSD)
-    if dmidecode | grep -iq macbook; then
+    if dmidecode 2> /dev/null | grep -iq macbook; then
 	printf "$0: MacBook\n"
 	# https://wiki.freebsd.org/AppleMacbook
 	auto-set-conf-var atp_load '"YES"' /boot/loader.conf $0
@@ -66,9 +66,9 @@ Section "InputClass"
 EndSection
 EOM
 	chmod 644 /etc/X11/xorg.conf.d/macbook-xkb.conf
-    elif dmidecode | grep -iq thinkpad; then
+    elif dmidecode 2> /dev/null | grep -iq thinkpad; then
 	printf "$0: IBM/Lenovo ThinkPad\n"
-    elif dmidecode | grep -iq "Product name: Satellite"; then
+    elif dmidecode 2> /dev/null | grep -iq "Product name: Satellite"; then
 	printf "$0: Toshiba Satellite\n"
     fi
     ;;
