@@ -39,7 +39,7 @@ FreeBSD)
 	have_wip=1
 	wip_vcs=git
     fi
-    if [ ! -e $PORTSDIR ]; then
+    if [ ! -e $PORTSDIR/Makefile ]; then
 	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
 	auto-ports-checkout
     elif [ ! -e $PORTSDIR/.git ]; then
