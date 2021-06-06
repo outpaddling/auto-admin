@@ -24,9 +24,10 @@ Flags:
 
 Environment:
 
-AUTO_BUILD_FROM_SOURCE  Build and install from source not binary package
-AUTO_BUILD_NO_CONFIG    Skip config menu (previous user settings apply)
-AUTO_PACKAGEROOT        Mirror for binary packages
+AUTO_BUILD_FROM_SOURCE=yes  Build and install from source not binary package
+AUTO_BUILD_FROM_SOURCE=fall-back    As above if binary install fails
+AUTO_BUILD_NO_CONFIG=yes    Skip config menu (previous user settings apply)
+AUTO_PACKAGEROOT=URL        Mirror for binary packages
 
 EOM
     exit 11
@@ -49,6 +50,8 @@ FreeBSD)
 	# Configure this port, but install dependencies with default options
 	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
 	    make config
+	else
+	    make_flags="-DBATCH"
 	fi
 	
 	# Remove other versions that might block install
@@ -56,7 +59,7 @@ FreeBSD)
 	
 	make clean
 	make deinstall
-	make -DBATCH reinstall
+	make $make_flags reinstall
 	make clean
 	cd $save_cwd
     }
