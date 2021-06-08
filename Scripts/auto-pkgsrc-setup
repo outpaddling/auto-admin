@@ -996,10 +996,18 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
+    if [ \$(uname) == 'NetBSD' ]; then
+	alias man="man -m \$PKGSRC/man"
+    else
+	which manpath >& /dev/null
+	if [ \$? == 0 ]; then
+	    MANPATH=\$PKGSRC/man:\$(manpath)
+	    export MANPATH
+	fi
+    fi
+    
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
-    MANPATH=\$PKGSRC/man:/usr/share/man
-    export MANPATH
     PKGSRC_INCLUDE=\$PKGSRC/include
     export PKGSRC_INCLUDE
     PKGSRC_LIB=\$PKGSRC/lib
@@ -1014,10 +1022,18 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PKGSRC=$install_prefix
     export PKGSRC
 
+    if [ \$(uname) == 'NetBSD' ]; then
+	alias man="man -m \$PKGSRC/man"
+    else
+	which manpath >& /dev/null
+	if [ \$? == 0 ]; then
+	    MANPATH=\$PKGSRC/man:\$(manpath)
+	    export MANPATH
+	fi
+    fi
+    
     PATH=\$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
     export PATH
-    MANPATH=\$PKGSRC/man:/usr/share/man
-    export MANPATH
     PKGSRC_INCLUDE=\$PKGSRC/include
     export PKGSRC_INCLUDE
     PKGSRC_LIB=\$PKGSRC/lib
@@ -1036,8 +1052,16 @@ if ( \$status != 0 ) then
     setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
     unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
+    if ( \`uname\` == 'NetBSD' ) then
+	alias man "man -m \$PKGSRC/man"
+    else
+	which manpath >& /dev/null
+	if ( \$status == 0 ) then
+	    setenv MANPATH=\$PKGSRC/man:\`manpath\`
+	endif
+    endif
+    
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
-    setenv MANPATH          \$PKGSRC/man:/usr/share/man
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
 endif
@@ -1050,8 +1074,16 @@ echo \$PATH | fgrep -q "${install_prefix}/bin:"
 if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
 
+    if ( \`uname\` == 'NetBSD' ) then
+	alias man "man -m \$PKGSRC/man"
+    else
+	which manpath >& /dev/null
+	if ( \$status == 0 ) then
+	    setenv MANPATH=\$PKGSRC/man:\`manpath\`
+	endif
+    endif
+    
     setenv PATH             \$PKGSRC/bin:\$PKGSRC/sbin:\$PATH
-    setenv MANPATH          \$PKGSRC/man:/usr/share/man
     setenv PKGSRC_INCLUDE   \$PKGSRC/include
     setenv PKGSRC_LIB       \$PKGSRC/lib
 endif
@@ -1096,6 +1128,7 @@ unsetenv        LDFLAGS
 unsetenv        LD_LIBRARY_PATH
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+# FIXME: Prepend pkgsrc to existing man path
 prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
 prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
 
@@ -1126,6 +1159,7 @@ set     version         ${dist_suffix#-}
 set     install_prefix  ${install_prefix}
 
 prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+# FIXME: Prepend pkgsrc to existing man path
 prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
 prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
 
