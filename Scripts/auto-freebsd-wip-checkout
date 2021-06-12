@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 git|svn\n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -37,10 +37,9 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 0 ]; then
     usage
 fi
-vcs=$1
 
 if [ `whoami` != root ]; then
     printf "$0 must be run by root.\n"
@@ -57,7 +56,7 @@ if [ $(uname) = FreeBSD ]; then
     pkg install -y ca_root_nss
     if [ ! -e $LOCALBASE/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
-	sh ./freebsd-wip-checkout $vcs
+	sh ./freebsd-wip-checkout
 	rm -f freebsd-wip-checkout
     fi
 else
