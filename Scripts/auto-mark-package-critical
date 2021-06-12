@@ -48,6 +48,9 @@ FreeBSD)
     for pkg in "$@"; do
 	auto-append-line $pkg $PKGSRC/etc/auto-admin/critical-packages nocomment
     done
+    
+    # FIXME: Exit non-zero if package is not installed
+    # Add support to auto-package installed?
     ;;
 
 esac
