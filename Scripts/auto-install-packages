@@ -13,7 +13,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 [-l] [-n] [-p PORTSDIR] [-s] category/port [category/port ...]
+Usage: $0 [-l] [-n] [-p PORTSDIR] [-s] [pkg-args] category/port [category/port ...]
 
 Flags:
 
@@ -47,6 +47,9 @@ FreeBSD)
     {
 	save_cwd=$(pwd)
 	cd $PORTSDIR/$port
+	printf "Installing dependencies...\n"
+	deps=$(make run-depends-list | cut -d / -f 4-)
+	auto-install-packages -A $deps
 	# Configure this port, but install dependencies with default options
 	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
 	    make config
@@ -83,7 +86,8 @@ FreeBSD)
 	    AUTO_BUILD_NO_CONFIG=yes
 	    shift
 	else
-	    usage
+	    extra_args="$extra_args $1"
+	    shift
 	fi
     done
     
@@ -136,8 +140,8 @@ FreeBSD)
 		# New pkgng system
 		unset PACKAGESITE
 		unset PACKAGEROOT
-		pkg_flags='install -y'
-		printf "pkg $pkg_flags $pkg_name\n"
+		pkg_args='install -y'
+		printf "pkg $pkg_args $extra_args $pkg_name\n"
     
 		# Compensate for network hiccups by retrying
 		tries=2
@@ -146,7 +150,7 @@ FreeBSD)
 		success=0
 		tmp=auto-install-packages.tmp
 		while [ $success = 0 ] && [ $tries -gt 1 ]; do
-		    pkg $pkg_flags $pkg_name 2>&1 | tee $tmp
+		    pkg $pkg_args $extra_args $pkg_name 2>&1 | tee $tmp
 		    if fgrep -q 'No package' $tmp; then
 			tries=$((tries-1))
 			printf "Error installing $port.  $tries more tries.\n"
