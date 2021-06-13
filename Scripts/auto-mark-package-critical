@@ -31,8 +31,7 @@ FreeBSD)
     for pkg in "$@"; do
 	auto-append-line $pkg $LOCALBASE/etc/auto-admin/critical-packages nocomment
     done
-    port=$(pkg origin $pkg)
-    if ! auto-package-installed $port; then
+    if ! pkg info -q $pkg; then
 	exit 1
     fi
     ;;
