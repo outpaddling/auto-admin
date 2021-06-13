@@ -59,6 +59,26 @@ EOM
 
 ##########################################################################
 #   Function description:
+#       Record the last time of a full system update in hours since
+#       the epoch
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-06-13  J Bacon     Begin
+##########################################################################
+
+record_update_time()
+{
+    current_time=$(date '+%s')
+    current_time=$((current_time / 3600))
+    config_dir=/root/.config/auto-admin
+    mkdir -p $config_dir
+    printf "$current_time\n" > $config_dir/last-system-update
+}
+
+
+##########################################################################
+#   Function description:
 #       Remove unneeded dependencies
 #
 #   2018-01-13  Jason Bacon Begin
@@ -371,6 +391,7 @@ EOM
 	read update_base
 	;;
     esac
+    
     if [ 0$update_base != 0n ]; then
 	printf "\n**** Updating base system...\n"
 	if [ ! -e /boot.save ]; then
@@ -396,6 +417,11 @@ EOM
 	# mandoc.db is automatically generated
 	# Ensure it's readable on systems with restrictive root umask
 	chmod 644 /usr/share/man/mandoc.db
+    fi
+    
+    if [ 0$update_packages != 0n ] && [ 0$update_ports != 0n ] && \
+       [ 0$update_base != 0n ]; then
+	record_update_time
     fi
     ;;
 
@@ -436,6 +462,7 @@ RHEL)
     fi
     if [ -e $PKGSRC/bin/pkgin ]; then
 	auto-update-pkgsrc "$@"
+	record_update_time
     fi
     
     if [ `auto-os-release` != RHEL6 ]; then
@@ -447,6 +474,7 @@ RHEL)
 
 NetBSD)
     auto-update-pkgsrc "$@"
+    record_update_time
     
     printf "Update base system? [y]/n "
     read update_base
@@ -521,6 +549,7 @@ Darwin)
 	printf "\n**** Updating base system...\n"
 	tmpfile=update-system.tmp
 	softwareupdate --install --all
+	record_update_time
     fi
     ;;
 
