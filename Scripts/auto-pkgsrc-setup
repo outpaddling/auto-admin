@@ -699,6 +699,11 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     fi
 
+    # GCC packages will fail on Linux with RELRO set
+    if [ $(uname) != Linux ]; then
+	printf "PKGSRC_USE_RELRO=\tyes\n" >> $mk_conf
+    fi
+
     if [ 0$use_gfortran != 0n ]; then
 	printf "PKGSRC_FORTRAN=\t\tgfortran\n" >> $mk_conf
     fi
