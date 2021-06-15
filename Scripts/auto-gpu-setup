@@ -132,6 +132,10 @@ We will now attempt to detect your GPU and provide some guidance...
 
 EOM
     pause
+    if [ -z "$(pciconf -lv)" ]; then
+	printf "No PCI hardware detected.\n"
+	exit 0
+    fi
     
     if sysctl -n kern.vm_guest | fgrep -iq parallels; then
 	printf "Parallels VM detected.  Forcing SCBF...\n"
@@ -157,7 +161,7 @@ EOM
 	exit 0
     fi
     
-    if sysctl dev.acpi.0.%desc | fgrep -iq VBOX; then
+    if sysctl dev.acpi.0.%desc 2> /dev/null | fgrep -iq VBOX; then
 	printf "VirtualBox VM detected.  No driver setup needed.\n"
 	pause
 	exit 0
