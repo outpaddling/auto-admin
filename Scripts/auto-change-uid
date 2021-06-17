@@ -34,16 +34,16 @@ EOM
 
 auto-root-check $0
 
+if [ $# -lt 2 ]; then
+    usage
+fi
+
 if [ $1 = --silent ]; then
     silent=1
     shift
     verbose=""
 else
     verbose=-v
-fi
-
-if [ $# -lt 2 ]; then
-    usage
 fi
 
 user_name=$1

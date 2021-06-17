@@ -33,16 +33,16 @@ if [ `whoami` != 'root' ]; then
     exit 1
 fi
 
+if [ $# -lt 2 ]; then
+    usage
+fi
+
 if [ $1 = --silent ]; then
     silent=1
     shift
     verbose=""
 else
     verbose=-v
-fi
-
-if [ $# -lt 2 ]; then
-    usage
 fi
 
 group_name=$1

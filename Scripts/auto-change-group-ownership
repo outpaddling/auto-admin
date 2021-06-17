@@ -21,15 +21,15 @@ usage()
 #   Main
 ##########################################################################
 
+if [ $# -lt 4 ]; then
+    usage
+fi
+
 if [ $1 = --silent ]; then
     shift
     verbose=""
 else
     verbose=-v
-fi
-
-if [ $# -lt 4 ]; then
-    usage
 fi
 
 user=$1
