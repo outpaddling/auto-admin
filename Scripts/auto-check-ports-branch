@@ -62,7 +62,7 @@ EOM
 	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
 	    auto-ports-checkout
 	    if [ -n "$have_wip" ]; then
-		auto-freebsd-wip-checkout $wip_vcs
+		auto-freebsd-wip-checkout
 	    fi
 	    cd $save_cwd
 	fi
@@ -82,7 +82,7 @@ EOM
 	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
 	    auto-ports-checkout
 	    if [ -n "$have_wip" ]; then
-		auto-freebsd-wip-checkout $wip_vcs
+		auto-freebsd-wip-checkout
 	    fi
 	else
 	    printf "OK, keeping $PORTSDIR for now.\n"
@@ -112,7 +112,7 @@ EOM
 		find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
 		auto-ports-checkout
 		if [ -n "$have_wip" ]; then
-		    auto-freebsd-wip-checkout $wip_vcs
+		    auto-freebsd-wip-checkout
 		fi
 	    fi
 	fi
