@@ -21,6 +21,7 @@ Flags:
 -n  Skip config menu (previous user settings apply)
 -p  Use provided PORTSDIR
 -s  Build and install from source not binary package
+-f  As above if binary package is not found
 
 Environment:
 
@@ -32,6 +33,7 @@ AUTO_PACKAGEROOT=URL        Mirror for binary packages
 EOM
     exit 11
 }
+
 
 ##########################################################################
 #   Main
@@ -47,9 +49,11 @@ FreeBSD)
     {
 	save_cwd=$(pwd)
 	cd $PORTSDIR/$port
-	printf "Installing dependencies...\n"
+	
+	printf "Installing dependencies via pkg if possible...\n"
 	deps=$(make run-depends-list | cut -d / -f 4-)
-	auto-install-packages -A $deps
+	auto-install-packages -f -A $deps
+	
 	# Configure this port, but install dependencies with default options
 	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
 	    make config
@@ -82,6 +86,9 @@ FreeBSD)
 	elif [ 0$1 = 0'-s' ]; then
 	    AUTO_BUILD_FROM_SOURCE=yes
 	    shift
+	elif [ 0$1 = 0'-f' ]; then
+	    AUTO_BUILD_FROM_SOURCE=fall-back
+	    shift
 	elif [ 0$1 = 0'-n' ]; then
 	    AUTO_BUILD_NO_CONFIG=yes
 	    shift
@@ -90,7 +97,8 @@ FreeBSD)
 	    shift
 	fi
     done
-    
+
+    # FIXME: Is this still relevant?
     # Allow mirrors to be used without having PACKAGEROOT set globally.
     if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
 	export PACKAGEROOT=$AUTO_PACKAGEROOT
