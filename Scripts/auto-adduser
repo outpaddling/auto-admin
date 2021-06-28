@@ -80,6 +80,17 @@ group_exists()
     return $?
 }
 
+add_group()
+{
+    local group=$1
+
+    if [ -n "$additional_groups" ]; then
+	additional_groups=$additional_groups,$group
+    else
+	additional_groups=$group
+    fi
+}
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -187,7 +198,7 @@ Get user information from:
 
 1.. LDAP
 2.. Active Directory
-3.. Direct input
+3.. Enter manually
 
 EOM
     printf "Selection: "
@@ -276,10 +287,10 @@ fi
 gecos="$gecos$gecos_extension"
 printf '%s\n' "$gecos"
 
-printf "Create primary group with same name? y/[n] "
+printf "Create primary group with same name? [y]/n "
 read create_group
 
-if [ 0$create_group != 0y ]; then
+if [ 0$create_group = n ]; then
     # The primary group for assistants should be that of some PI
     printf "Primary group name for this user? (e.g. group leader's user name) "
     read primary_group
@@ -309,27 +320,30 @@ fi
 # Some users may belong to multiple groups.  If so, add them here.
 case $(auto-ostype) in
 FreeBSD)
-    cat << EOM
+    printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
+    read add
+    if [ 0$add = 0y ]; then
+	add_group operator
+    fi
 
-Users must be in the following groups to perform certain functions:
-
-operator:   Shut down, reboot, etc
-wheel:      "su" to root
-video:      Full access to GPU features
-
-EOM
-	;;
+    printf "Add $user_name to wheel group to allow su and access to system files? y/[n] "
+    read add
+    if [ 0$add = 0y ]; then
+	add_group wheel
+    fi
+    
+    printf "Add $user_name to video group for optimal graphics performance? [y]/n "
+    read add
+    if [ 0$add != 0n ]; then
+	add_group video
+    fi
 esac
 group='x'
 while [ $group ]; do
-    printf "Enter one additional group or just press return to move on] "
+    printf "Enter another supplementary group or just press return to move on] "
     read group
     if [ $group ]; then
-	if [ $additional_groups ]; then
-	    additional_groups=$additional_groups,$group
-	else
-	    additional_groups=$group
-	fi
+	add_group $group
     fi
 done
 
