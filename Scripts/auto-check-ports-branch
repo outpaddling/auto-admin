@@ -104,6 +104,11 @@ $PORTSDIR with the $repo_branch ports branch.
 Before replacing it, make sure you have no uncommitted changes in
 $PORTSDIR or $PORTSDIR/wip.
 
+Before replacing a quarterly branch with a newer quarterly branch, make sure
+that the package repository has actually been updated to the new quarter.
+This switch could be delayed for non-mainstream platforms such as powerpc*
+and arm*.
+
 EOM
 	    printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
 	    read replace_ok
