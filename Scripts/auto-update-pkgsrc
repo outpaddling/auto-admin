@@ -298,7 +298,7 @@ if [ 0$update_pkgsrc != 0n ]; then
 	if [ -e $PKGSRC/sbin/pkg_rolling-replace ]; then
 	    src_update='pkg_rolling-replace -sv'
 	elif [ -e $PKGSRC/sbin/pkg_chk ]; then
-	    src_update='pkg_chk -u'
+	    src_update='pkg_chk -su'
 	else
 	    cat << EOM
 
@@ -309,13 +309,6 @@ source.
 EOM
 	    pause
 	fi
-    fi
-    
-    # Use pkg_rolling-replace if installed, otherwise pkg_chk
-    if which pkg_rolling-replace; then
-	src_update='pkg_rolling-replace -s'
-    elif which pkg_chk; then
-	src_update='pkg_chk -u'
     fi
     
     if [ -n "$src_update" ]; then
