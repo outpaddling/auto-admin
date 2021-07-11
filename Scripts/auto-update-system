@@ -121,7 +121,10 @@ if ! auto-root-check $0; then
 	exit 1
     fi
     printf "Root "
-    exec su -m root -c "$absolute $@"
+    # exec quotes '$absolute --sync-pkg-cache', causing usage error
+    # Assigning to cmd works around the problem
+    cmd="$absolute $@"
+    exec su -m root -c "$cmd"
 fi
 
 if [ 0$1 = 0--sync-pkg-cache ]; then
@@ -144,7 +147,8 @@ if [ 0$1 = 0--sync-pkg-cache ]; then
 		exit 1
 		;;
 	    esac
-	    rsync -av --delete ${host}:$pkg_cache/ $pkg_cache
+	    printf "$host "
+	    rsync -av ${host}:$pkg_cache/ $pkg_cache
 	else
 	    usage
 	fi
