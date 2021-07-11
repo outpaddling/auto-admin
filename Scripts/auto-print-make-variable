@@ -57,25 +57,15 @@ case $# in
     usage
     ;;
 esac
+port_dir=$1
+variable=$2
 
-if [ ! -d $base_dir/$1 ]; then
-    printf "No such ${port_or_package}: $base_dir/$1\n"
+if [ ! -d $base_dir/$port ]; then
+    printf "No such ${port_or_package}: $base_dir/$port\n"
     exit 2
 fi
 
-makefile=/tmp/pkgname.$$
-cat << EOM > $makefile
-
+cd $base_dir/$port_dir
+# FIXME: Is this still relevant?
 # Prevent HAVE_GNOME from adding -gnome to PKGNAME
-WITHOUT_GNOME=  yes
-
-print-variable:
-	@echo \${$2}
-
-EOM
-cat "$base_dir/$1/Makefile" >> $makefile
-
-# cat $makefile
-cd $base_dir/$1
-${make} -f $makefile print-variable
-rm -f $makefile
+${make} WITHOUT_GNOME=yes -V $variable
