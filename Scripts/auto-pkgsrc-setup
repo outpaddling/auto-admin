@@ -1062,7 +1062,7 @@ if ( \$status != 0 ) then
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
-	    setenv MANPATH=\$PKGSRC/man:\`manpath\`
+	    setenv MANPATH \$PKGSRC/man:\`manpath\`
 	endif
     endif
     
@@ -1084,7 +1084,7 @@ if ( \$status != 0 ) then
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
-	    setenv MANPATH=\$PKGSRC/man:\`manpath\`
+	    setenv MANPATH \$PKGSRC/man:\`manpath\`
 	endif
     endif
     
