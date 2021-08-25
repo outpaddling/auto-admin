@@ -725,6 +725,17 @@ if [ 0$bootstrap = '0y' ]; then
 	;;
     Linux)
 	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
+	if ! which curl; then
+	    cat << EOM
+
+You must install curl via your native Linus package manager, e.g.
+
+	yum install curl
+	apt install curl
+
+EOM
+	    pause
+	fi
 	;;
     NetBSD)
 	printf "FETCH_USING=\t\tftp\n" >> $mk_conf
@@ -1001,11 +1012,11 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
-    if [ \$(uname) == 'NetBSD' ]; then
+    if [ \$(uname) = 'NetBSD' ]; then
 	alias man="man -m \$PKGSRC/man"
     else
-	which manpath >& /dev/null
-	if [ \$? == 0 ]; then
+	which manpath > /dev/null 2>&1
+	if [ \$? = 0 ]; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
 	    export MANPATH
 	fi
@@ -1027,11 +1038,11 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PKGSRC=$install_prefix
     export PKGSRC
 
-    if [ \$(uname) == 'NetBSD' ]; then
+    if [ \$(uname) = 'NetBSD' ]; then
 	alias man="man -m \$PKGSRC/man"
     else
-	which manpath >& /dev/null
-	if [ \$? == 0 ]; then
+	which manpath > /dev/null 2>&1
+	if [ \$? = 0 ]; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
 	    export MANPATH
 	fi
