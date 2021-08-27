@@ -71,7 +71,7 @@ record_update_time()
 {
     current_time=$(date '+%s')
     current_time=$((current_time / 3600))
-    config_dir=/root/.config/auto-admin
+    config_dir=$HOME/.config/auto-admin
     mkdir -p $config_dir
     printf "$current_time\n" > $config_dir/last-system-update
 }
@@ -256,8 +256,8 @@ EOM
 	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
 	if [ -e $install_from_source ]; then
 	    printf "Cataloging install-from-source versions before upgrade...\n"
-	    installed_versions_db=/root/.config/old-pkg-versions
-	    mkdir -p /root/.config
+	    installed_versions_db=$HOME/.config/old-pkg-versions
+	    mkdir -p $HOME/.config
 	    rm -f $installed_versions_db
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
@@ -553,7 +553,6 @@ Darwin)
     esac
     if [ 0$update_base != 0n ]; then
 	printf "\n**** Updating base system...\n"
-	tmpfile=update-system.tmp
 	softwareupdate --install --all
 	record_update_time
     fi
