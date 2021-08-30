@@ -75,7 +75,8 @@ do
 1.. Update system
 2.. User management
 3.. Software management
-4.. Shut down system
+4.. Network management
+5.. Shut down system
 Q.. Quit
 
 EOM
@@ -123,6 +124,10 @@ EOM
 	;;
 
     04)
+	auto-network-manager
+	;;
+	
+    05)
 	printf '\nThe following users are currently logged in:\n\n'
 	w
 	printf '\nProceed with shutdown? y/[n] '
