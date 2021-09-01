@@ -50,22 +50,6 @@ if ! auto-root-check $0; then
     exec su -m root -c "$absolute $@"
 fi
 
-case $(auto-ostype) in
-FreeBSD|NetBSD)
-    poweroff=-p
-    ;;
-
-RHEL)
-    poweroff=-h
-    ;;
-
-*)
-    printf "$0: poweroff flag undefined for $(auto-ostype).\n"
-    pause
-    ;;
-
-esac
-
 while true
 do
     clear
@@ -76,7 +60,7 @@ do
 2.. User management
 3.. Software management
 4.. Network management
-5.. Shut down system
+5.. Power management
 Q.. Quit
 
 EOM
@@ -128,17 +112,7 @@ EOM
 	;;
 	
     05)
-	printf '\nThe following users are currently logged in:\n\n'
-	w
-	printf '\nProceed with shutdown? y/[n] '
-	read proceed
-	if [ 0$proceed = 0y ]; then
-	    read -p 'Minutes to shutdown? [2] ' minutes
-	    if [ 0$minutes = 0 ]; then
-		minutes=2
-	    fi
-	    shutdown $poweroff +$minutes
-	fi
+	auto-power-manager
 	;;
     
     0Q|0q)

@@ -50,33 +50,74 @@ if ! auto-root-check $0; then
     exec su -m root -c "$absolute $@"
 fi
 
+case $(auto-ostype) in
+FreeBSD|NetBSD)
+    poweroff=-p
+    suspend_cmd="acpiconf -s 3"
+    ;;
+
+RHEL)
+    poweroff=-h
+    suspend_cmd="systemctl suspend"
+    ;;
+
+*)
+    printf "$0: poweroff flag undefined for $(auto-ostype).\n"
+    pause
+    ;;
+
+esac
+
 while true
 do
     clear
     auto-admin-banner
     cat << EOM
 
-1.. Restart network
-2.. Configure WiFi failover (to automatically use Ethernet when plugged in)
+1.. Power off
+2.. Restart
+3.. Sleep
 Q.. Quit
 
 EOM
 
     read -p 'Selection? ' resp
-    case 0$resp in
-    01)
-	printf "This will temporarily break all network connections.\n"
-	read -p 'Proceed? y/[n] ' proceed
-	if [ 0"$proceed" = 0y ]; then
-	    auto-network-restart
-	fi
-	;;
-
-    02)
-	auto-wifi-failover
-	;;
-    0q)
+    if [ 0"$resp" = 0q ]; then
 	break
-	;;
-    esac
+    fi
+    printf '\nThe following users are currently logged in:\n\n'
+    w
+    printf '\nAre you sure you want to proceed? y/[n] '
+    read proceed
+    if [ 0$proceed = 0y ]; then
+	case 0$resp in
+	01)
+	    read -p 'Minutes to shutdown? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    shutdown $poweroff +$minutes
+	    ;;
+	
+	02)
+	    read -p 'Minutes to restart? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    shutdown -r +$minutes
+	    ;;
+	
+	03)
+	    read -p 'Minutes before sleep mode? [2] ' minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    c=0;
+	    while [ $c -lt $minutes ]; do
+		sleep 1
+	    done
+	    $suspend_cmd
+	    ;;
+	esac
+    fi
 done
