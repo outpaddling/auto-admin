@@ -58,6 +58,7 @@ do
 
 1.. Restart network
 2.. Configure WiFi failover (to automatically use Ethernet when plugged in)
+3.. Configure a basic firewall
 Q.. Quit
 
 EOM
@@ -75,6 +76,11 @@ EOM
     02)
 	auto-wifi-failover
 	;;
+    
+    03)
+	auto-firewall-setup
+	;;
+    
     0q)
 	break
 	;;
