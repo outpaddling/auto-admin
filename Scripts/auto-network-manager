@@ -70,15 +70,18 @@ EOM
 	read -p 'Proceed? y/[n] ' proceed
 	if [ 0"$proceed" = 0y ]; then
 	    auto-network-restart
+	    pause
 	fi
 	;;
 
     02)
 	auto-wifi-failover
+	pause
 	;;
     
     03)
 	auto-firewall-setup
+	pause
 	;;
     
     0q)
