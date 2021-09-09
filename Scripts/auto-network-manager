@@ -57,8 +57,9 @@ do
     cat << EOM
 
 1.. Restart network
-2.. Configure WiFi failover (to automatically use Ethernet when plugged in)
-3.. Configure a basic firewall
+2.. Configure a simple network interface (not LAGG)
+3.. Configure LAGG WiFi failover (switch to Ethernet when plugged in)
+4.. Configure a basic firewall
 Q.. Quit
 
 EOM
@@ -75,11 +76,15 @@ EOM
 	;;
 
     02)
+	auto-network-config
+	;;
+
+    03)
 	auto-wifi-failover
 	pause
 	;;
     
-    03)
+    04)
 	auto-firewall-setup
 	pause
 	;;

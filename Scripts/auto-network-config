@@ -1,0 +1,123 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-09-09  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    printf "To configure WiFi failover with lagg, run auto-wifi-failover.\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -ne 0 ]; then
+    usage
+fi
+
+while [ 0$medium != 01 ] && [ 0$medium != 02 ]; do
+    cat << EOM
+
+1.. Wired
+2.. Wireless
+
+EOM
+    read -p 'Medium? ' medium
+done
+if [ $medium = 1 ]; then
+    medium=wired
+else
+    medium=wireless
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    RC_CONF=/etc/rc.conf
+    case $# in
+    1)
+	printf "Network interfaces via pciconf -lv:\n\n"
+	pciconf -lv | grep -B 3 -A 1 'class.*network'
+	read -p 'Network interface? ' iface
+	;;
+    
+    2)
+	iface=$2
+	;;
+
+    esac
+    if [ $medium = wireless ]; then
+	auto-set-conf-var wlans_$iface '"wlan0"' $RC_CONF $0
+	iface=wlan0
+	iface_args="WPA "
+    fi
+    
+    read -p 'IP address? [DHCP] ' ip
+    if [ 0$ip = 0 ]; then
+	ip=DHCP
+	auto-set-conf-var ifconfig_$iface "\"${iface_args}DHCP\"" $RC_CONF $0
+	sysrc -x defaultrouter
+	router=$(awk '$1 == "option" && $2 == "routers" { print $3 }' /var/db/dhclient.leases.$iface | tail -1 | tr -d ';~')
+    else
+	while [ 0"$netmask" = 0 ]; do
+	    read -p 'Netmask? (e.g. 255.255.255.0) ' netmask
+	done
+	while [ 0"$router" = 0 ]; do
+	    read -p 'Router IP? ' router
+	done
+	while [ 0"$nameserver1" = 0 ]; do
+	    read -p 'Name server 1 IP? ' nameserver1
+	done
+	read -p 'Name server 2 IP? ' nameserver2
+	read -p 'Search domain? ' search
+
+	# Router
+	sysrc defaultrouter=$router
+
+	# IP and mask
+	auto-set-conf-var ifconfig_$iface \
+	    "\"${iface_args}inet $ip netmask $netmask\"" $RC_CONF $0
+
+	# DNS
+	rm -f /etc/resolv.conf
+	if [ 0"$search" != 0 ]; then
+	    printf "search $search\n" >> /etc/resolv.conf
+	fi
+	printf "nameserver $nameserver1\n" >> /etc/resolv.conf
+	if [ 0"$namserver2" != 0 ]; then
+	    printf "nameserver $nameserver1\n" >> /etc/resolv.conf
+	fi
+    fi
+    route flush
+    auto-network-restart
+    route add default $router
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
