@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -62,15 +62,12 @@ functionality.  To see what else is available via the command-line, choose
 
 Full documentation is in the works and will be included in a future release.
 
-1.. Update system
-2.. User management
-3.. Software management
-4.. Network management
-5.. Power management
-6.. File system actions and settings
-7.. Security settings
-8.. System settings
-9.. List available auto-admin scripts
+1.. Clean disk
+2.. Clean ports/pkgsrc tree
+3.. Format flash media
+4.. Configure autofs to find NFS servers
+5.. Configure this host as an NFS client
+6.. Enable fusefs
 Q.. Quit
 
 EOM
@@ -78,72 +75,47 @@ EOM
     read -p 'Selection? ' resp
     case 0$resp in
     01)
-	printf '\nThe following users are currently logged in:\n\n'
-	w
-	printf '\nProceed with system updates? y/[n] '
-	read proceed
-	if [ 0$proceed = 0y ]; then
-	    cat << EOM | wall
-
-This server may need to be rebooted shortly to complete the installation of
-important security updates.  An additional notice will follow if a reboot
-is necessary.
-
-EOM
-	    auto-update-system --defaults
-	    read -p 'Reboot? [y]/n ' reboot
-	    if [ 0$reboot != 0n ]; then
-		read -p "Minutes before reboot? [2] " minutes
-		if [ 0$minutes = 0 ]; then
-		    minutes=2
-		fi
-		cat << EOM | wall
-
-This server will be rebooted shortly to complete the installation of
-important security updates.  It should be available again after about
-$((minutes + 5)) minutes.
-
-EOM
-		shutdown -r +$minutes
-	    fi
-	fi
+	auto-clean-disk
 	;;
     
     02)
-	auto-user-admin
+	: ${PORTSDIR:=/usr/ports}
+	if [ -e $PORTSDIR ]; then
+	    printf "Cleaning $PORTSDIR...\n"
+	    auto-clean-ports
+	fi
+	if [ 0$(auto-pkgsrc-dir) != 0 ]; then
+	    printf "Cleaning $(auto-pkgsrc-dir)...\n"
+	    auto-clean-pkgsrc
+	fi
 	;;
 
     03)
-	auto-software-manager
+	dmesg | grep '^da'
+	read -p 'Device? (e.g. da1) ' device
+	read -p 'Format? (fat16, fat32, exfat, ntfs, ufs2) ' format
+	read -p 'Disk label? (e.g. SpyPics) ' label
+	auto-media-format $device $format $label
 	;;
 
     04)
-	auto-network-manager
+	auto-autofs-nfs-setup
 	;;
 	
     05)
-	auto-power-manager
+	read -p 'Use user ID mapping? [y]/n ' daemon
+	if [ 0"$daemon" = 0n ]; then
+	    auto-nfs-client-setup sysctl
+	else
+	    read -p 'Domain? (arbitrary but typically host domain) ' domain
+	    auto-nfs-client-setup daemon $domain
+	fi
 	;;
     
     06)
-	auto-filesys-manager
+	auto-fusefs-install
 	;;
     
-    07)
-	auto-security-manager
-	;;
-    
-    08)
-	auto-settings-manager
-	;;
-    
-    09)
-	bin=$(dirname `which auto-admin`)
-	ls $bin/auto-* | more
-	printf "$(ls $bin/auto-* | wc -l) scripts in total.\n"
-	pause
-	;;
-
     0Q|0q)
 	exit 0
 	;;
@@ -151,4 +123,5 @@ EOM
     *)
 	printf "Invalid option: $resp\n"
     esac
+    pause
 done
