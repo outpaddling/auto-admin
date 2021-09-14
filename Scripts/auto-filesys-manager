@@ -56,12 +56,6 @@ do
     auto-admin-banner
     cat << EOM
 
-This menu system encompasses only a small fraction of the total auto-admin
-functionality.  To see what else is available via the command-line, choose
-"List available auto-admin scripts" below.
-
-Full documentation is in the works and will be included in a future release.
-
 1.. Clean disk
 2.. Clean ports/pkgsrc tree
 3.. Format flash media
