@@ -134,7 +134,7 @@ EOM
 	;;
     
     08)
-	auto-settings-manager
+	auto-sys-manager
 	;;
     
     09)
