@@ -56,12 +56,30 @@ do
     auto-admin-banner
     cat << EOM
 
+1.. Enable auto-logout
+2.. Enable password quality checking
+3.. Set password expiration
 Q.. Quit
 
 EOM
 
     read -p 'Selection? ' resp
     case 0$resp in
+    01)
+	read -p 'Maximum idle time in minutes? ' minutes
+	auto-enable-autologout $minutes
+	;;
+    
+    02)
+	auto-enable-passwdqc
+	;;
+    
+    03)
+	read -p 'User name? ' user_name
+	read -p 'Days to expiration? ' days
+	auto-passwd-user-expiration $user_name $days
+	;;
+    
     0Q|0q)
 	exit 0
 	;;

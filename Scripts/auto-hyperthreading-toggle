@@ -1,0 +1,84 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-09-14  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 on|off\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+state=$1
+
+case $(auto-ostype) in
+FreeBSD)
+    if [ $state = on ]; then
+	auto-set-conf-var machdep.hyperthreading_allowed 1 /boot/loader.conf $0
+    elif [ $state = off ]; then
+	auto-set-conf-var machdep.hyperthreading_allowed 0 /boot/loader.conf $0
+    else
+	usage
+    fi
+    printf "Hyperthreading will be $state after the next reboot.\n"
+    printf "Edit /boot/loader.conf to change.\n"
+    ;;
+
+RHEL|Linux)
+    cat << EOM
+
+Linux does not provide a simple way to disable hyperthreading.  It is best
+to disable it in the BIOS if you are running Linux.
+
+EOM
+    pause
+    exit 0
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
