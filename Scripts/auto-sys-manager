@@ -1,0 +1,94 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Common admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+if ! auto-root-check $0; then
+    # Prevent user from running a Trojan as root in the case their account
+    # was compromised
+    absolute="$(which $0)"
+    # Don't count on -e being set at this point
+    if ! auto-file-secure "$absolute"; then
+	exit 1
+    fi
+    printf "Root "
+    exec su -m root -c "$absolute $@"
+fi
+
+while true
+do
+    clear
+    auto-admin-banner
+    cat << EOM
+
+1.. Set host name
+2.. Set memory limits
+3.. Enable hyperthreading
+4.. Disable hyperthreading
+Q.. Quit
+
+EOM
+
+    read -p 'Selection? ' resp
+    case 0$resp in
+    01)
+	read -p 'New hostname? ' hostname
+	auto-set-hostname $hostname
+	;;
+    
+    02)
+	auto-set-memory-limits
+	;;
+    
+    03)
+	auto-hyperthreading-toggle on
+	;;
+    
+    04)
+	auto-hyperthreading-toggle off
+	;;
+    
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+    pause
+done

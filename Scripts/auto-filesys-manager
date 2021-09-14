@@ -1,0 +1,121 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Common admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+if ! auto-root-check $0; then
+    # Prevent user from running a Trojan as root in the case their account
+    # was compromised
+    absolute="$(which $0)"
+    # Don't count on -e being set at this point
+    if ! auto-file-secure "$absolute"; then
+	exit 1
+    fi
+    printf "Root "
+    exec su -m root -c "$absolute $@"
+fi
+
+while true
+do
+    clear
+    auto-admin-banner
+    cat << EOM
+
+1.. Clean disk
+2.. Clean ports/pkgsrc tree
+3.. Format flash media
+4.. Configure autofs to find NFS servers
+5.. Configure this host as an NFS client
+6.. Enable fusefs
+Q.. Quit
+
+EOM
+
+    read -p 'Selection? ' resp
+    case 0$resp in
+    01)
+	auto-clean-disk
+	;;
+    
+    02)
+	: ${PORTSDIR:=/usr/ports}
+	if [ -e $PORTSDIR ]; then
+	    printf "Cleaning $PORTSDIR...\n"
+	    auto-clean-ports
+	fi
+	if [ 0$(auto-pkgsrc-dir) != 0 ]; then
+	    printf "Cleaning $(auto-pkgsrc-dir)...\n"
+	    auto-clean-pkgsrc
+	fi
+	;;
+
+    03)
+	dmesg | grep '^da'
+	read -p 'Device? (e.g. da1) ' device
+	read -p 'Format? (fat16, fat32, exfat, ntfs, ufs2) ' format
+	read -p 'Disk label? (e.g. SpyPics) ' label
+	auto-media-format $device $format $label
+	;;
+
+    04)
+	auto-autofs-nfs-setup
+	;;
+	
+    05)
+	read -p 'Use user ID mapping? [y]/n ' daemon
+	if [ 0"$daemon" = 0n ]; then
+	    auto-nfs-client-setup sysctl
+	else
+	    read -p 'Domain? (arbitrary but typically host domain) ' domain
+	    auto-nfs-client-setup daemon $domain
+	fi
+	;;
+    
+    06)
+	auto-fusefs-install
+	;;
+    
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+    pause
+done

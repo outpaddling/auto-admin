@@ -1,6 +1,19 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
 #   Description:
 #       Set address space limit limits.d
 #
@@ -73,7 +86,20 @@ EOM
     
     chmod 644 /etc/security/limits.d/91-memory.conf /etc/sysconfig/slurm
     ;;
-    
+
+FreeBSD)
+    : ${EDITOR:=vi}
+    cat << EOM
+
+Editing /etc/login.conf.  Change vmemoryuse under the appropriate user class.
+New limits will take effect upon the next login.
+
+EOM
+    pause
+    $EDITOR /etc/login.conf
+    cap_mkdb /etc/login.conf
+    ;;
+
 *)
     printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
