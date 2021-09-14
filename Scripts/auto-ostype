@@ -5,6 +5,8 @@ case $kernel in
 Linux)
     if [ -e /etc/redhat-release ]; then
 	printf "RHEL\n"
+    elif [ -e /etc/debian_version ]; then
+	printf "Debian\n"
     else
 	printf "$kernel\n"
     fi

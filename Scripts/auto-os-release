@@ -18,6 +18,8 @@ if [ -e /etc/redhat-release ]; then
     release=${release%%.*}
     release=${release##*release }
     os=RHEL$release
+elif [ -e /etc/debian_version ]; then
+    os=$(cat /etc/debian_version)
 elif [ `uname` = Darwin ]; then
     os=$(uname)$(uname -r | cut -d . -f 1)
 else
