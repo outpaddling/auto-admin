@@ -22,9 +22,9 @@ FreeBSD)
     mount_points=`awk '$3 == "ufs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free block on $dir? [y]/n "
+	printf "Zero free block on $dir? y/[n] (UFS only) "
 	read zero
-	if [ 0$zero != 0n ]; then
+	if [ 0$zero = 0y ]; then
 	    cd $dir
 	    dd if=/dev/zero of=zero-temp bs=1m
 	    rm zero-temp
@@ -42,9 +42,9 @@ NetBSD)
     mount_points=`awk '$3 == "ffs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free block on $dir? [y]/n "
+	printf "Zero free block on $dir? y/[n] "
 	read zero
-	if [ 0$zero != 0n ]; then
+	if [ 0$zero = 0y ]; then
 	    cd $dir
 	    dd if=/dev/zero of=zero-temp bs=1m
 	    rm zero-temp
@@ -62,9 +62,9 @@ RHEL)
     mount_points=`awk '$3 ~ "ext" || $3 ~ "xfs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free blocks on $dir? [y]/n "
+	printf "Zero free blocks on $dir? y/[n] "
 	read zero
-	if [ 0$zero != 0n ]; then
+	if [ 0$zero = 0y ]; then
 	    cd $dir
 	    dd if=/dev/zero of=zero-temp bs=1M
 	    rm zero-temp
