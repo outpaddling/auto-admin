@@ -89,7 +89,7 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 4.. Install packages
 5.. Remove packages
 6.. Install port/package from source
-7.. Tag a port for installation from source
+7.. Tag a port/package for installation from source
 8.. Tag a binary package as critical
 9.. Switch from quarterly to latest packages
 Q.. Quit
@@ -150,36 +150,41 @@ EOM
     07)
 	cat << EOM
 
-Users may need to install some ports from source even though they use binary
-packages for most installs, because some ports cannot be packaged for
-licensing reasons, to build with non-default options, or to build with
-non-portable optimizations (e.g. -march=native).
+Users may need to install some ports/packages from source even though they use
+binary packages for most installs, because some ports/packages cannot be
+distributed in binary form for licensing reasons, to build with non-default
+options, or to build with non-portable optimizations (e.g. -march=native).
 
-Tagging a port for installation from source here will inform auto-update-system
-that it should be rebuilt from source following "package upgrade" and ports
-tree updates.
+Tagging a port/package for installation from source here will inform
+auto-update-system that it should be rebuilt from source following package
+upgrade and ports/pkgsrc tree updates.
 
-To avoid compatibility issues, you must ensure that your ports tree and
-installed packages are in sync.  This can be ensured by using
-auto-update-system (first option in this menu), which compares ports and
-package branches for you and updates them together.
+To avoid compatibility issues, you must ensure that your ports/pkgsrc tree
+and installed packages are in sync.  This can be generally be ensured by using
+auto-update-system (first option in this menu), which ensures that your
+ports/pkgsrc tree and binary package are on the same branch, and updates
+them together.
 
-Note that using latest packages on tier-2 platforms may make it impossible
-to keep them in sync, because latest packages are not built regularly.  On
-AMD64, latest packages are built continuously and generally lag behind ports
-by no more than a few days.  Hence, mixing on amd64 is very safe as long as
-the ports tree and installed packages are up-to-date.
+Note that using latest binary packages on some platforms may make it
+impossible to keep them in sync, because latest binary packages are not built
+regularly.  Hence, the binary package may be far behind the current source
+tree.  On FreeBSD and NetBSD amd64, latest packages are built continuously
+and generally lag behind ports by no more than a few days.  Hence, mixing on
+amd64 is very safe as long as the ports/pkgsrc tree and installed packages
+are up-to-date.
+
 EOM
     pause
     cat << EOM
 
-Mixing quarterly ports and packages is generally safe since port versions
-never change except in very rare cases to resolve serious issues.  Quarterly
-packages are generally rebuilt quickly to ensure compatibility.
+Mixing quarterly ports/pkgsrc and binary packages is generally safe since
+versions never change except in very rare cases to resolve serious issues.
+Binary packages are generally rebuilt quickly after such updates to ensure
+compatibility.
 
 If building with non-default options, you must ensure that the build is
-compatible with dependent ports.  (This is an issue whether mixing ports and
-packages or building everything from source.)
+compatible with dependent ports/packages.  (This is an issue whether mixing
+source builds and binary packages or building everything from source.)
 
 EOM
 	read -p 'category/port? ' port
@@ -194,16 +199,16 @@ EOM
     08)
 	cat << EOM
 
-Occasionally an important port becomes broken and running "package upgrade"
+Occasionally an important port becomes broken and running package upgrades
 will remove it from your system as a result. This is almost never an issue
-with quarterly packages, but is likely something you will experience
+with quarterly packages, but is something you will likely experience
 eventually if using latest packages.  
 
 Tagging a package as critical informs auto-update-system that you would like
 to be notified that this package is missing from the repository before
 proceeding with ports and package upgrades.  Generally these issues are fixed
-within a few days to a week, so simply holding off on upgrades for a while
-is the easiest solution.
+within quickly, so simply holding off on upgrades for a while is the easiest
+solution.
 
 Desktop-installer automatically tags certain packages, such as the chosedn
 desktop environment or window manager, xorg, etc.
