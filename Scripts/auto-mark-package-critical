@@ -32,6 +32,7 @@ FreeBSD)
 	auto-append-line $pkg $LOCALBASE/etc/auto-admin/critical-packages nocomment
     done
     if ! pkg info -q $pkg; then
+	printf "Warning: $pkg is not currently installed.\n"
 	exit 1
     fi
     ;;
