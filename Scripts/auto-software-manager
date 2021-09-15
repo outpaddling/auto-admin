@@ -183,10 +183,12 @@ packages or building everything from source.)
 
 EOM
 	read -p 'category/port? ' port
-	read -p 'Reason for installing from source? (one word, e.g. license) ' reason
-	auto-mark-install-from-source $port $reason
-	printf "Edit /usr/local/etc/auto-admin/install-from-source to cancel.\n"
-	pause
+	if [ 0"$port" != 0 ]; then
+	    read -p 'Reason for installing from source? (one word, e.g. license) ' reason
+	    auto-mark-install-from-source $port $reason
+	    printf "Edit /usr/local/etc/auto-admin/install-from-source to cancel.\n"
+	    pause
+	fi
 	;;
     
     08)
@@ -208,8 +210,10 @@ desktop environment or window manager, xorg, etc.
 
 EOM
 	read -p 'Package name? ' package
-	auto-mark-package-critical $package || true
-	pause
+	if [ 0"$package" != 0 ]; then
+	    auto-mark-package-critical $package || true
+	    pause
+	fi
 	;;
     
     09)
