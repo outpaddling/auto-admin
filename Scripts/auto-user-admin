@@ -79,6 +79,8 @@ do
 4.. Change user's primary UID
 5.. Change user's primary group
 6.. Change group's GID
+7.. Lock user account
+8.. Unlock user account
 Q.. Quit
 
 EOM
@@ -155,6 +157,24 @@ EOM
 		    auto-change-group-gid $groupname $new_gid / || true
 		fi
 	    fi
+	fi
+	;;
+    
+    7)
+	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
+	printf "Current users:\n\n$users\n\n"
+	read -p 'Username? ' user_name
+	if [ 0"$user_name" != 0 ]; then
+	    auto-lock-user $user_name
+	fi
+	;;
+    
+    8)
+	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
+	printf "Current users:\n\n$users\n\n"
+	read -p 'Username? ' user_name
+	if [ 0"$user_name" != 0 ]; then
+	    auto-unlock-user $user_name
 	fi
 	;;
     
