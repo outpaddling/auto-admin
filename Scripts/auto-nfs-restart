@@ -12,6 +12,9 @@ FreeBSD*)
     # Should suffice on modern FreeBSD
     service nfsd restart
     service mountd onereload
+    if grep -q '^nfsuserd_enable="YES"' /etc/rc.conf; then
+	service nfsuserd restart
+    fi
     ;;
 
 RHEL6)
