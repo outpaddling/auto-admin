@@ -1,0 +1,88 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-09-23  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 dist [dist ...]
+
+FreeBSD dists:  base,base-debug,kernel,kernel-dbg,lib32,lib32-dbg,src,tests
+NetBSD dists:   
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+dists="$@"
+
+auto-root-check $0
+
+case $(auto-ostype) in
+FreeBSD)
+    cd /usr
+    for dist in $dists; do
+	if [ -e $dist ]; then
+	    printf "$dist already installed.\n"
+	else
+	    url=ftp://ftp.freebsd.org/pub/`uname -s`/releases/`uname -m`/`uname -r | cut -d'-' -f1,2`/$dist.txz
+	    printf "Fetching $url...\n"
+	    fetch $url
+	    printf "Extracting $dist...\n"
+	    tar Jxf $dist.txz
+	    rm $dist.txz
+	fi
+    done
+    ;;
+
+NetBSD)
+    cd /
+    sets="$@"
+    for set in $sets; do
+	if [ -e /usr/$set ]; then
+	    printf "$set already installed.\n"
+	else
+	    url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-`uname -r`/`uname -m`/binary/sets/$set.tgz
+	    printf "Fetching $url...\n"
+	    fetch $url
+	    printf "Extracting $set...\n"
+	    tar zxf $set.tgz
+	    rm $set.tgz
+	fi
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    ;;
+
+esac
