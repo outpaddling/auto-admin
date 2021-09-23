@@ -21,4 +21,10 @@ package installed after the OS.
 * Speed and Simplicity: Our efforts are focused on basic functionality,
 robustness, fast and easy setup and management.
 
+Auto-admin includes well over 100 scripts for performing systems management
+tasks as well as a simple menu system for the most common ones, such as
+installing software, adding users, etc.
+
+To get started, simple open a terminal and run auto-admin.
+
 https://acadix.biz/auto-admin.php
