@@ -28,7 +28,7 @@ usage()
 
 Usage: $0 dist [dist ...]
 
-FreeBSD dists:  base,base-debug,kernel,kernel-dbg,lib32,lib32-dbg,src,tests
+FreeBSD dists:  base-dbg,kernel-dbg,lib32,lib32-dbg,src,tests
 NetBSD dists:   
 
 EOM
@@ -49,11 +49,35 @@ auto-root-check $0
 
 case $(auto-ostype) in
 FreeBSD)
-    cd /usr
     for dist in $dists; do
-	if [ -e $dist ]; then
+	case $dist in
+	base-dbg)
+	    target=/usr/lib/debug/bin
+	    ;;
+	src)
+	    target=/usr/src/sys
+	    ;;
+	lib32)
+	    target=/usr/lib32
+	    ;;
+	lib32-dbg)
+	    target=/usr/lib/debug/usr/lib32
+	    ;;
+	kernel-dbg)
+	    target=/usr/lib/debug/boot/kernel
+	    ;;
+	tests)
+	    target=/usr/tests
+	    ;;
+	*)
+	    printf "Unsupported component: $dist\n"
+	    exit 1
+	    ;;
+	esac
+	if [ -e $target ]; then
 	    printf "$dist already installed.\n"
 	else
+	    cd /
 	    url=ftp://ftp.freebsd.org/pub/`uname -s`/releases/`uname -m`/`uname -r | cut -d'-' -f1,2`/$dist.txz
 	    printf "Fetching $url...\n"
 	    fetch $url
@@ -76,7 +100,7 @@ NetBSD)
 	    fetch $url
 	    printf "Extracting $set...\n"
 	    tar zxf $set.tgz
-	    rm $set.tgz
+	    rm -f $set.tgz
 	fi
     done
     ;;
