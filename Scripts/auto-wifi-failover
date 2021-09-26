@@ -103,7 +103,9 @@ ifconfig_lagg0_ipv6="inet6 accept_rtadv"
 # End $0 addition
 EOM
     
-    kldload if_lagg || true
+    # Leave current network config intact until reboot unless there's a
+    # way to successfully activate lagg before then
+    # kldload if_lagg || true
     auto-append-line if_lagg_load="YES" /boot/loader.conf $0
 
     printf "Old network configurations have been commented out in rc.conf.\n"
