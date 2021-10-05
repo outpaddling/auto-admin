@@ -79,7 +79,7 @@ EOM
     case 0$resp in
     01)
 	printf '\nThe following users are currently logged in:\n\n'
-	w
+	finger
 	printf '\nProceed with system updates? y/[n] '
 	read proceed
 	if [ 0$proceed = 0y ]; then
