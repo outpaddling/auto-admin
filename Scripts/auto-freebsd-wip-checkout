@@ -46,7 +46,8 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
-if [ $(uname) = FreeBSD ]; then
+case $(auto-ostype) in
+FreeBSD)
     : ${LOCALBASE:=/usr/local}
     
     if [ ! -e /usr/ports/CHANGES ]; then
@@ -59,7 +60,27 @@ if [ $(uname) = FreeBSD ]; then
 	sh ./freebsd-wip-checkout
 	rm -f freebsd-wip-checkout
     fi
-else
-    printf "$0: Not supported on $(uname).\n"
+    ;;
+
+DragonFly)
+    : ${LOCALBASE:=/usr/local}
+    export PORTSDIR=/usr/dports
+    
+    if [ ! -e /usr/dports/Makefile ]; then
+	auto-ports-checkout
+    fi
+    # Need for github cert
+    pkg install -y ca_root_nss
+    if [ ! -e $LOCALBASE/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
+	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
+	sh ./freebsd-wip-checkout
+	rm -f freebsd-wip-checkout
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
-fi
+    ;;
+
+esac
