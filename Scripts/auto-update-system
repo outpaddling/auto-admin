@@ -103,7 +103,16 @@ freebsd_autoremove()
 #   Main
 ##########################################################################
 
-: ${PORTSDIR:=/usr/ports}
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    ;;
+
+DragonFly)
+    : ${PORTSDIR:=/usr/dports}
+    ;;
+
+esac
 export PORTSDIR
 
 os_type=`auto-ostype`
@@ -133,7 +142,7 @@ if [ 0"$1" = 0--sync-pkg-cache ]; then
 	host=$2
 	if echo $host | fgrep -q '@'; then
 	    case $os_type in
-	    FreeBSD)
+	    FreeBSD|DragonFly)
 		pkg_cache=/var/cache/pkg
 		;;
 	    Darwin|NetBSD)
@@ -178,13 +187,8 @@ if [ $# = 1 ]; then
 fi
 
 case $os_type in
-FreeBSD)
+FreeBSD|DragonFly)
     : ${LOCALBASE:=/usr/local}
-    if which svn > /dev/null; then
-	svn=svn
-    else
-	svn=svnlite
-    fi
     if [ ! -t 0 ]; then
 	# Input redirected.  Being fed y/n responses.
 	portsnap_flags=--interactive
@@ -303,23 +307,15 @@ EOM
     
     if [ 0$update_ports != 0n ]; then
 	printf "\n**** Updating $PORTSDIR...\n"
-	auto-check-ports-branch
-	if [ -e $PORTSDIR/CHANGES ]; then
-	    if [ -e $PORTSDIR/.svn ]; then
-		$svn update $PORTSDIR
-	    elif [ -e $PORTSDIR/.git ]; then
+	auto-check-ports-branch || true
+	# Was CHANGES for FreeBSD.  Is Makefile just as good?
+	if [ -e $PORTSDIR/Makefile ]; then
+	    if [ -e $PORTSDIR/.git ]; then
 		(cd $PORTSDIR && git pull)
 	    else
-		printf "\nFetching latest ports...\n"
-		portsnap fetch
-		printf "Applying updates...\n"
-		if [ -r $PORTSDIR/.portsnap.INDEX ]; then
-		    portsnap $portsnap_flags update
-		else
-		    printf "$0: $PORTSDIR was not created by svn or portsnap.\n"
-		    printf "Please remove $PORTSDIR and try again.\n"
-		    exit
-		fi
+		printf "Ports tree is not a git clone.\n"
+		printf "auto-check-ports-branch appears to have failed.\n"
+		exit 1
 	    fi
 	else
 	    auto-ports-checkout
@@ -417,30 +413,34 @@ EOM
     esac
     
     if [ 0$update_base != 0n ]; then
-	printf "\n**** Updating base system...\n"
-	if [ ! -e /boot.save ]; then
-	    cp -Rp /boot /boot.save
-	fi
-	tmpfile=update-system.tmp
-	freebsd-update $freebsd_update_flags fetch | tee $tmpfile
-	
-	if ! fgrep -q 'No updates' $tmpfile; then
-	    freebsd-update $freebsd_update_flags install
-	    if [ -e /boot/modules/ibcore.ko ]; then
-		cat << EOM
+	if [ $(auto-ostype) = FreeBSD ]; then
+	    printf "\n**** Updating base system...\n"
+	    if [ ! -e /boot.save ]; then
+		cp -Rp /boot /boot.save
+	    fi
+	    tmpfile=update-system.tmp
+	    freebsd-update $freebsd_update_flags fetch | tee $tmpfile
+	    
+	    if ! fgrep -q 'No updates' $tmpfile; then
+		freebsd-update $freebsd_update_flags install
+		if [ -e /boot/modules/ibcore.ko ]; then
+		    cat << EOM
 
 Infiniband kernal modules detected.  Run auto-update-infiniband-modules, after
 rebooting if a reboot is needed.
 
 EOM
+		fi
 	    fi
+	    rm $tmpfile
+    
+	    # FIXME: Temporary hack: Perms should be set by base
+	    # mandoc.db is automatically generated
+	    # Ensure it's readable on systems with restrictive root umask
+	    chmod 644 /usr/share/man/mandoc.db
+	else
+	    printf "Base system update not yet implemented for $(auto-ostype).\n"
 	fi
-	rm $tmpfile
-
-	# FIXME: Temporary hack: Perms should be set by base
-	# mandoc.db is automatically generated
-	# Ensure it's readable on systems with restrictive root umask
-	chmod 644 /usr/share/man/mandoc.db
     fi
     
     if [ 0$update_packages != 0n ] && [ 0$update_ports != 0n ] && \
