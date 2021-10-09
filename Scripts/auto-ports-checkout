@@ -56,7 +56,12 @@ FreeBSD)
 	    $git_branch --single-branch $PORTSDIR
     fi
     ;;
-    
+
+DragonFly)
+    cd /usr
+    make dports-create-shallow
+    ;;
+
 *)
     printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
