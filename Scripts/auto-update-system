@@ -313,8 +313,14 @@ EOM
 	    if [ -e $PORTSDIR/.git ]; then
 		(cd $PORTSDIR && git pull)
 	    else
-		printf "Ports tree is not a git clone.\n"
-		printf "auto-check-ports-branch appears to have failed.\n"
+		cat << EOM
+
+$PORTSDIR is not a git clone. auto-check-ports-branch appears to have
+failed or was not allowed to replace an outdated ports tree.
+Your ports tree must be a git clone in order to receive updates.
+Aborting...
+
+EOM
 		exit 1
 	    fi
 	else
