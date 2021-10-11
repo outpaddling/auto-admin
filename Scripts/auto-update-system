@@ -266,7 +266,7 @@ EOM
 	    rm -f $installed_versions_db
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
-		pkgbase=$(auto-print-make-variable $port PKGBASE)
+		pkgbase=$(auto-print-make-variable $port PKGBASE) || true
 		installed_version=$(pkg query '%v' $pkgbase) || true
 		printf "$pkgbase $installed_version\n" >> $installed_versions_db
 	    done < $install_from_source
