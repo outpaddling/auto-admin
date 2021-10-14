@@ -94,8 +94,7 @@ EOM
 	if [ 0"$new_branch_hash" != 0'' ] && [ $ports_branch != $repo_branch ]; then
 	    cat << EOM
 
-Your binary packages are currently from the $repo_branch branch (or they
-will be shortly when the new bulk builds complete).
+Binary packages are currently from the $repo_branch branch.
 
 $PORTSDIR is currently using the $ports_branch branch.
 
