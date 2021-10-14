@@ -32,22 +32,24 @@ FreeBSD)
     elif awk '$1 == "url:" { print $2 }' /etc/pkg/*.conf | fgrep -q latest; then
 	printf "latest\n"
     else
-	##########################################################################
-	#   FIXME:
-	#
-	#   Guessing based on today's date will fail from the creation of each
-	#   quarterly branch until the completion of package builds.
-	#   
-	#   https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=245667
-	##########################################################################
+	# meta.txz should be time stamped with the latest update
+	# to the package repo
+	major=$(uname -r | cut -d . -f 1)
+	arch=$(uname -p)
+	tmpfile=auto-pkg-branch-meta.txz
+	rm -f $tmpfile
+	fetch -o $tmpfile \
+	    http://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/meta.txz
 	
-	year=$(date +'%Y')
+	mod_time=$(ls -l -D '%Y-%m' $tmpfile | awk '{ print $6 }')
+	rm -f $tmpfile
+	year=$(echo $mod_time | cut -d - -f 1)
 	# leading 0 means octal, invalid for 8 and 9
-	padded_month=$(date +'%m')
+	padded_month=$(echo $mod_time | cut -d - -f 2)
 	month=${padded_month#0}
 	quarter=$((($month - 1) / 3 + 1))
 	branch=${year}Q$quarter
-    
+	
 	printf "$branch\n"
     fi
     ;;
