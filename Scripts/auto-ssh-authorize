@@ -41,8 +41,12 @@ eval remotehost="\${$#}"
 
 echo "Authorizing ${user}@$host on $remotehost."
 
+cd
 if [ ! -f .ssh/id_rsa.pub ] ; then
-   ssh-keygen -P "" -f "./.ssh/id_rsa"
+    if [ ! -e .ssh ]; then
+	mkdir .ssh
+    fi
+    ssh-keygen -P "" -f "./.ssh/id_rsa"
 fi
 
 key=`cat .ssh/id_rsa.pub`

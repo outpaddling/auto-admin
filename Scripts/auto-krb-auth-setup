@@ -44,7 +44,14 @@ RHEL)
     ;;
     
 FreeBSD)
-    pkg install -y openldap-client
+    : ${PORTSDIR:=/usr/ports}
+    # Ports require a specific version
+    # Include not-yet-existent versions to kick the breakage can down the road
+    ver=$(awk '$1 ~ "^DEFAULT_OPENLDAP_VER" { print $2 }' /usr/ports/Mk/bsd.ldap.mk)
+    if [ -e $PORTSDIR/net/openldap$ver-client ]; then
+	pkg install -y openldap24-client
+	break
+    fi
 
     # FIXME: Verify that this is valid and works correctly
     cp /etc/pam.d/xdm /etc/pam.d/xscreensaver
