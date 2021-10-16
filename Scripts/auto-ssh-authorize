@@ -51,5 +51,5 @@ fi
 
 key=`cat .ssh/id_rsa.pub`
 # Don't use sed to remove keys since -i syntax is not standardized
-ssh $@ "umask 077; mkdir -p .ssh; touch .ssh/known_hosts .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; fgrep -v ${user}@$host .ssh/authorized_keys > .ssh/temp_authorized_keys && mv -f .ssh/temp_authorized_keys .ssh/authorized_keys && echo $key >> .ssh/authorized_keys"
+ssh $@ "umask 077; mkdir -p .ssh; touch .ssh/known_hosts .ssh/authorized_keys; chmod 600 .ssh/authorized_keys; fgrep -v ${user}@$host .ssh/authorized_keys > .ssh/temp_authorized_keys; mv -f .ssh/temp_authorized_keys .ssh/authorized_keys && echo $key >> .ssh/authorized_keys"
 exit $?
