@@ -38,16 +38,17 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
-unsupported_prog=$1
+unsupported_prog=`basename $1`
 
 cat << EOM
 
 ${unsupported_prog}: Not currently supported on $(auto-ostype)
 
 Adding support for $unsupported_prog on $(auto-ostype) may be a simple matter
-of adding a case to $unsupported_prog or even just adding "|$(auto-ostype)" to
-an existing case if the code is that same as that on a currently supported
-OS.  Please consider helping the open source community by adding and fully
-testing support for $(auto-ostype) and submitting a patch (e.g. on Github.)
+of adding a case to $unsupported_prog or even just adding "|$(auto-ostype)"
+to an existing case if the code is the same as on a currently supported OS.
+
+Please consider helping the open source community by adding and fully testing
+support for $(auto-ostype) and submitting a patch (e.g. on Github.)
 
 EOM
