@@ -153,7 +153,7 @@ if [ 0"$1" = 0--sync-pkg-cache ]; then
 		pkg_cache=/var/cache/yum
 		;;
 	    *)
-		printf "$0: Not supported on $os_type.\n"
+		auto-unsupported-os $0
 		exit 1
 		;;
 	    esac
@@ -583,7 +583,7 @@ Darwin)
     ;;
 
 *)
-    printf "$0: Not supported on $(auto-ostype).\n"
+    auto-unsupported-os $0
     exit 1
     ;;
 

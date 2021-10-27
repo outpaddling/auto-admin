@@ -1,0 +1,54 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#
+#   Description:
+#       Notify user of an unsupported OS for the tool named by $1.
+#
+#   Arguments:
+#       $1  Calling program name, i.e. program not supported on this OS
+#
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-10-26  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 unsupported-program-name\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+unsupported_prog=`basename $1`
+
+cat << EOM
+
+${unsupported_prog}: Not currently supported on $(auto-os-release)
+
+Adding support for $unsupported_prog on $(auto-os-release) may be a simple matter
+of adding a case to $unsupported_prog or even just adding "|$(auto-os-release)"
+to an existing case if the code is the same as on a currently supported OS.
+
+Please consider helping the open source community by adding and fully testing
+support for $(auto-os-release) and submitting a patch (e.g. on Github.)
+
+EOM

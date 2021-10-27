@@ -1051,7 +1051,7 @@ EOM
 	;;
     
     *)
-	printf "$0: Not supported on $(auto-os-release).\n"
+	auto-unsupported-release $0
 	exit 1
 	;;
     
@@ -1290,7 +1290,7 @@ fi
     ;;
 
 *)
-    printf "$0: Not supported on $(auto-ostype).\n"
+    auto-unsupported-os $0
     exit 1
     ;;
 

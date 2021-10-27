@@ -35,7 +35,7 @@ RHEL)
 	;;
     
     *)
-	printf "$0: Not supported on $(auto-os-release).\n"
+	auto-unsupported-os $0
 	exit 1
 	;;
     

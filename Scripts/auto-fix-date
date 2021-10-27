@@ -33,7 +33,7 @@ FreeBSD|NetBSD)
 
 *)
     # To-do: auto-detect chronyd or ntp on RHEL
-    printf "$0: Not supported on $(auto-ostype).\n"
+    auto-unsupported-os $0
     exit 1
     ;;
 

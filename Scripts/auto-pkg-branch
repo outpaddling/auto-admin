@@ -55,7 +55,7 @@ FreeBSD)
     ;;
 
 *)
-    printf "$0: Not supported on $(auto-ostype).\n"
+    auto-unsupported-os $0
     exit 1
     ;;
 

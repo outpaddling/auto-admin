@@ -60,7 +60,7 @@ EOM
     ;;
 
 *)
-    printf "$0: Not supported on $(auto-ostype).\n"
+    auto-unsupported-os $0
     printf "$0: Only applicable on FreeBSD.\n"
     exit 1
     ;;
