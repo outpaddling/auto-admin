@@ -35,6 +35,21 @@ on|off)
     ;;
 esac
 
+cat << EOM
+
+Note: For security reasons, you may need to enable IPMI over LAN via the
+console.
+
+For example, on Dell PowerEdge systems, enter the iDrac settings when
+prompted during bootup (Ctrl+E) and make sure IPMI over LAN is enabled in
+the menu.
+
+You must also configure network settings using a tool such as
+auto-idrac-config and an IPMI password using a tool such as
+auto-idrac-password.
+
+EOM
+
 # http://lists.us.dell.com/pipermail/linux-poweredge/2007-August/032915.html
 # FIXME: Is -I open a good idea here?  It was in an example.
 ipmitool lan set 1 access $state
