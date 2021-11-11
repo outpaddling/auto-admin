@@ -29,7 +29,7 @@ if [ $# != 3 ] && [ $# != 4 ]; then
     exit 1
 fi
 
-search_string="$1"
+search_string=$(printf "$1")    # Avert trailing \ warning in grep
 if [ $# = 4 ]; then
     shift
 fi
@@ -37,7 +37,7 @@ line="$1"
 file="$2"
 caller="$3"
 
-# Make sure file exists for fgrep
+# Make sure file exists for grep
 touch $file
 
 if ! grep -qw "$search_string" "$file"; then
