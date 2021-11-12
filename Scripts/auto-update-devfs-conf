@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       Add entries to devfs.conf
+#       A reboot is required to fully test the changes
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-11-11  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 device [device ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${DEVFS_CONF:=/etc/devfs.conf}
+    
+    for dev in $*; do
+	if ! grep -q "^perm[ $(printf '\t')]*${dev}" $DEVFS_CONF; then
+	    printf "Adding $dev to defvs.conf.\n"
+	    printf "\n# Added by desktop-installer:\n" >> $DEVFS_CONF
+	    printf "perm\t${dev}\t0660\n" >> $DEVFS_CONF
+	    printf "own\t${dev}\troot:operator\n" >> $DEVFS_CONF
+	else
+	    printf "Entry already exists in devfs.conf for $dev.\n"
+	fi
+    done
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

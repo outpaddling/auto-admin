@@ -1,0 +1,72 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       Add entries to devfs.rules and restart devfs to test.
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-11-11  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 group device [device ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${DEVFS_RULES:=/etc/devfs.rules}
+    : ${RC_CONF:=/etc/rc.conf}
+    
+    if [ ! -e $DEVFS_RULES ]; then
+	printf "[system=10]\n" > $DEVFS_RULES
+    fi
+    
+    auto-enable-service devd desktop-installer
+    auto-set-conf-var devfs_system_ruleset '"system"' $RC_CONF desktop-installer
+    
+    group=$1
+    shift
+    for dev in $*; do
+	if ! fgrep -qw "'${dev}*'" $DEVFS_RULES; then
+	    printf "Adding $dev to defvs.rules.\n"
+	    printf "# Added by desktop-installer.\n" >> $DEVFS_RULES
+	    printf "add path '${dev}*' mode 0660 group $group\n" >> $DEVFS_RULES
+	else
+	    printf "Entry already exists in devfs.rules for $dev.\n"
+	fi
+    done
+    service devfs restart
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

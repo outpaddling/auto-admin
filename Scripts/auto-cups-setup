@@ -1,0 +1,90 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-11-11  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    
+    printf "Configuring cups...\n"
+    auto-install-packages \
+	print/cups \
+	print/hplip \
+	print/foomatic-db-engine \
+	print/gutenprint
+    auto-mark-package-critical cups hplip foomatic-db-engine gutenprint
+    
+    # FIXME
+    # foomatic-db-hpijs and hpijs appear to be redundant.
+    # 2014-11-16: The hpijs package is broken, as does the foomatic-db-hpijs
+    # *port*, so as much as I hate to work around bugs in other software,
+    # we'll install hpijs from source for now.  This print driver is just
+    # too important to leave out.
+    #cd $PORTSDIR/print/hpijs
+    #make deinstall reinstall
+    
+    auto-update-devfs-rules cups unlpt ulpt lpt
+    
+    # FIXME: Is this still necessary?
+    # Older ports have lpt-cupsd.conf, newer ulpt-cupsd.conf
+    if [ -f ${LOCALBASE}/share/examples/cups/ulpt-cupsd.conf ]; then
+	if [ ! -f ${LOCALBASE}/etc/devd/ulpt-cupsd.conf ]; then
+	    mkdir -p ${LOCALBASE}/etc/devd
+	    cp ${LOCALBASE}/share/examples/cups/ulpt-cupsd.conf ${LOCALBASE}/etc/devd/
+	fi
+    
+	# Fix missing semicolons in cups 1.4.6 $LOCALBASE/etc/devd/ulpt-cupsd.conf
+	if [ -e $LOCALBASE/etc/devd/ulpt-cupsd.conf ]; then
+	    sed -i '' -e 's|}$|};|g' $LOCALBASE/etc/devd/ulpt-cupsd.conf
+	fi
+    elif [ -f ${LOCALBASE}/share/examples/cups/lpt-cupsd.conf ]; then
+	if [ ! -f ${LOCALBASE}/etc/devd/lpt-cupsd.conf ]; then
+	    mkdir -p ${LOCALBASE}/etc/devd
+	    cp ${LOCALBASE}/share/examples/cups/lpt-cupsd.conf ${LOCALBASE}/etc/devd/
+	fi
+    fi
+    
+    auto-enable-service cupsd desktop-installer
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
