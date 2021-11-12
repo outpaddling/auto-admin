@@ -8,6 +8,7 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     service=$1
+    service $service stop || true
     if auto-service-enabled $service; then
 	sed -I '.bak' -e "s|${service}_enable=\"YES\"|${service}_enable=\"NO\"|g" \
 	    /etc/rc.conf

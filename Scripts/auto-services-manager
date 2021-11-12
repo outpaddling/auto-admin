@@ -1,0 +1,107 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Common admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-01-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+# Prevent user from running a Trojan as root in the case their account
+# was compromised
+absolute="$(which $0)"
+# Don't count on -e being set at this point
+if ! auto-file-secure "$absolute"; then
+    exit 1
+fi
+
+if ! auto-root-check $0; then
+    printf "Root "
+    # exec quotes '$absolute --flag', causing usage error
+    # Assigning to cmd works around the problem
+    cmd="$absolute $@"
+    exec su -m root -c "$cmd"
+fi
+
+while true
+do
+    clear
+    auto-admin-banner
+    cat << EOM
+
+1.. sshd
+2.. cupsd
+Q.. Quit
+
+EOM
+
+    read -p 'Service? ' service
+    if [ 0$service = 0q ]; then
+	exit 0
+    fi
+
+    cat << EOM
+
+1.. Enable
+2.. Disable
+Q.. Quit
+
+EOM
+    read -p 'Selection? ' resp
+    if [ 0$resp = 0q ]; then
+	exit 0
+    fi
+
+    case 0$service in
+    01)
+	if [ 0"$resp" = 01 ]; then
+	    auto-enable-service sshd $0
+	elif [ 0"$resp" = 02 ]; then
+	    auto-disable-service sshd
+	fi
+	;;
+    
+    02)
+	if [ 0"$resp" = 01 ]; then
+	    auto-cups-setup
+	elif [ 0"$resp" = 02 ]; then
+	    auto-disable-service cupsd
+	fi
+	;;
+    
+    *)
+	printf "Invalid option: $service\n"
+    esac
+    pause
+done

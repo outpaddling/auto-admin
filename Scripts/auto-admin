@@ -74,7 +74,8 @@ Full documentation is in the works and will be included in a future release.
 6.. File system actions and settings
 7.. Security settings
 8.. System settings
-9.. List available auto-admin scripts
+9.. Services manager
+10.. List available auto-admin scripts
 Q.. Quit
 
 EOM
@@ -142,6 +143,10 @@ EOM
 	;;
     
     09)
+	auto-services-manager
+	;;
+    
+    010)
 	bin=$(dirname `which auto-admin`)
 	ls $bin/auto-* | more
 	printf "$(ls $bin/auto-* | wc -l) scripts in total.\n"
