@@ -1,0 +1,124 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set up a basic apache server with mod_php
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-01-21  J Bacon     Begin
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+usage()
+{
+    printf "Usage: $0 webserver [--server-version sv] [--php-version pv]\n"
+    printf "Example: $0 apache --server-version 24 --php-version 74\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if ! fgrep -qw $(hostname) /etc/hosts; then
+    printf "$0: $(hostname) must be listed in /etc/hosts.\n"
+    exit 1
+fi
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+server=$1
+shift
+case $server in
+apache)
+    ;;
+
+*)
+    printf "$0: Unsupported web server: $server\n"
+    exit 1
+    ;;
+
+esac
+
+while [ $# -gt 0 ]; do
+    if [ $1 = '--server-version' ]; then
+	server_version=$2
+	shift
+	shift
+    elif [ $1 = '--php-version' ]; then
+	php_version=$2
+	shift
+	shift
+    else
+	usage
+    fi
+done
+
+: ${EDITOR:=vi}
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    if [ -z "$server_version" ]; then
+	server_version=$(awk '$1 ~ "^APACHE_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
+    fi
+    if [ -z "$php_version" ]; then
+	php_version=$(awk '$1 ~ "^PHP_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
+    fi
+    pkg install -y $server$server_version
+    pkg install -y auto-admin rsync subversion
+    pkg install -y mod_php$php_version
+    
+    case $server in
+    apache)
+	apache_conf=$LOCALBASE/etc/apache24/httpd.conf
+	auto-append-line 'Include etc/apache24/extra/httpd-default.conf' $apache_conf $0
+	
+	cat << EOM
+
+Adding handlers to extra/httpd-php.conf.  No need to edit httpd.conf.
+
+EOM
+	pause
+	cat << EOM > $LOCALBASE/etc/apache24/extra/httpd-php.conf 
+<FilesMatch "\.php\$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+<FilesMatch "\.phps\$">
+    SetHandler application/x-httpd-php-source
+</FilesMatch>
+EOM
+
+	    printf "Uncomment #Include etc/apache24/extra/httpd-userdir.conf if desired.\n"
+	pause
+	$EDITOR $apache_conf
+	$EDITOR $LOCALBASE/etc/apache24/extra/httpd-userdir.conf
+
+	cp $LOCALBASE/www/apache24/data/index.html $LOCALBASE/www/apache24/data/index.php
+	# FIXME: Auto-detect apache version
+	if auto-service-enabled apache24; then
+	    service apache24 restart
+	else
+	    auto-enable-service apache24 $0
+	fi
+	;;
+
+    esac
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

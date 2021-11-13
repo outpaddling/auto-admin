@@ -1,0 +1,110 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Generate and activate https with apache
+#
+#   Arguments:
+#       Apache version (e.g. 24)
+#
+#   History:
+#   Date        Name        Modification
+#   2018-01-07  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 web-server [--server-version sv]\n"
+    printf "Example: $0 apache --server-version 24\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+server=$1
+shift
+case $server in
+apache)
+    ;;
+
+*)
+    printf "$0: Unsupported web server: $server\n"
+    exit 1
+    ;;
+
+esac
+
+while [ $# -gt 0 ]; do
+    if [ $1 = '--server-version' ]; then
+	server_version=$2
+	shift
+	shift
+    else
+	usage
+    fi
+done
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${LOCALBASE:=/usr/local}
+    case $server in
+    apache)
+	if [ -z "$server_version" ]; then
+	    server_version=$(awk '$1 ~ "^APACHE_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
+	fi
+	apache_dir=$LOCALBASE/etc/apache$server_version
+	key_file=`hostname -s`.key
+	cert_file=`hostname -s`.crt
+	
+	# http://www.rhyous.com/2009/11/06/installing-an-apache-ssl-on-freebsd-using-the-ports-tree/
+	#if [ ! -e $apache_dir/$key_file ]; then
+	#    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+	#        -keyout $apache_dir/$key_file -out $apache_dir/$cert_file
+	#fi
+	# https://www.freebsd.org/doc/handbook/openssl.html
+	openssl req -x509 -new -nodes -sha256 -days 730 -newkey rsa:2048 \
+	    -out $apache_dir/$cert_file -keyout $apache_dir/$key_file
+	
+	sed -i '' \
+	    -e "s|server.key|$key_file|g" \
+	    -e "s|server.crt|$cert_file|g" \
+	    $apache_dir/extra/httpd-ssl.conf
+	
+	# Make sure these names aren't part of a longer name
+	sed -i .bak \
+	    -e 's|#LoadModule socache_shmcb_module|LoadModule socache_shmcb_module|' \
+	    -e 's|#LoadModule ssl_module|LoadModule ssl_module|' \
+	    -e 's|#Include etc/apache24/extra/httpd-ssl.conf|Include etc/apache24/extra/httpd-ssl.conf|' \
+	    $apache_dir/httpd.conf
+	service apache$server_version restart
+	;;
+
+    esac
+    ;;
+	
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

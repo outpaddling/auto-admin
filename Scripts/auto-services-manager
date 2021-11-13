@@ -60,8 +60,9 @@ do
     auto-admin-banner
     cat << EOM
 
-1.. sshd
-2.. cupsd
+1.. SSH remote login
+2.. CUPS printing service
+3.. Web server
 Q.. Quit
 
 EOM
@@ -97,6 +98,39 @@ EOM
 	    auto-cups-setup
 	elif [ 0"$resp" = 02 ]; then
 	    auto-disable-service cupsd
+	fi
+	;;
+    
+    03)
+	if [ 0"$resp" = 01 ]; then
+	    auto-web-setup apache
+	    cat << EOM
+
+1.. No https
+2.. Self-signed cert
+3.. Lets Encrypt and py-certbot
+
+EOM
+	    read -p "Selection? " https
+	    case 0"$https" in
+	    01)
+		;;
+	    
+	    02)
+		auto-web-self-sign apache
+		;;
+	    
+	    03)
+		# Install python for cron
+		pkg install -y python py38-certbot-apache
+		printf "See See https://certbot.eff.org/lets-encrypt/freebsd-apache.html\n"
+		pause
+		;;
+	    
+	    esac
+	elif [ 0"$resp" = 02 ]; then
+	    apache=$(grep ^apache /etc/rc.conf | cut -d _ -f 1)
+	    auto-disable-service $apache
 	fi
 	;;
     
