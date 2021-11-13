@@ -123,7 +123,14 @@ EOM
 	    03)
 		# Install python for cron
 		pkg install -y python py38-certbot-apache
-		printf "See See https://certbot.eff.org/lets-encrypt/freebsd-apache.html\n"
+		cat << EOM
+
+The certbot command has been installed on your system.
+
+For instructions on generating the certificate and activating a cron job
+to automatically renew it, see https://certbot.eff.org/lets-encrypt.
+
+EOM
 		pause
 		;;
 	    
