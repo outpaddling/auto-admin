@@ -23,7 +23,7 @@ usage()
 #   Main
 ##########################################################################
 
-if which bmake > /dev/null 2>&1; then
+if auto-using-pkgsrc; then
     make=bmake
     port_or_package=package
     base_dir=`auto-pkgsrc-dir`
@@ -31,7 +31,7 @@ else
     make=make
     port_or_package=port
     if [ $(auto-ostype) = FreeBSD ]; then
-	if [ -z $PORTSDIR ]; then
+	if [ -z "$PORTSDIR" ]; then
 	    base_dir=/usr/ports
 	else
 	    base_dir=$PORTSDIR
