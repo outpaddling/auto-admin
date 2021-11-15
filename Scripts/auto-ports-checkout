@@ -48,12 +48,14 @@ FreeBSD)
     if ! which git; then
 	pkg install -y git
     fi
-    if ! git clone --depth 1 \
-	    https://git.FreeBSD.org/ports.git $git_branch --single-branch \
-	    $PORTSDIR; then
+    if [ -e /etc/rc.conf.ghostbsd ]; then
+	printf "Cloning GhostBSD ports...\n"
 	git clone --depth 1 \
-	    https://cgit-beta.FreeBSD.org/ports.git \
-	    $git_branch --single-branch $PORTSDIR
+	    https://github.com/ghostbsd/ghostbsd-ports $PORTSDIR
+    else
+	git clone --depth 1 \
+	    https://git.FreeBSD.org/ports.git $git_branch --single-branch \
+	    $PORTSDIR
     fi
     ;;
 
