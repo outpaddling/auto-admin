@@ -48,6 +48,8 @@ FreeBSD)
     if ! which git; then
 	pkg install -y git
     fi
+
+    # FIXME: Factor out to something like $(auto-os-variant)
     if [ -e /etc/rc.conf.ghostbsd ]; then
 	printf "Cloning GhostBSD ports...\n"
 	git clone --depth 1 \

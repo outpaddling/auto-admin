@@ -407,16 +407,21 @@ EOM
 	fi
     fi
     
-    case $mode in
-    binary|binary+reboot|defaults|defaults+reboot|yes)
-	update_base=y
-	freebsd_update_flags=--not-running-from-cron
-	;;
-    interactive)
-	printf "Update base system? [y]/n "
-	read update_base
-	;;
-    esac
+    # FIXME: Factor out to something like $(auto-os-variant)
+    if [ -e /etc/rc.conf.ghostbsd ]; then
+	update_base=n
+    else
+	case $mode in
+	binary|binary+reboot|defaults|defaults+reboot|yes)
+	    update_base=y
+	    freebsd_update_flags=--not-running-from-cron
+	    ;;
+	interactive)
+	    printf "Update base system? [y]/n "
+	    read update_base
+	    ;;
+	esac
+    fi
     
     if [ 0$update_base != 0n ]; then
 	if [ $(auto-ostype) = FreeBSD ]; then
