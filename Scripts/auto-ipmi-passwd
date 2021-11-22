@@ -2,45 +2,60 @@
 
 auto-root-check $0
 
-case $# in
-0)
-    userid=2
-    ;;
+userid=2
+while [ $# -gt 0 ]; do
+    case $1 in
+    --user)
+	userid=$2
+	shift
+	shift
+	;;
+    
+    ##########################################################################
+    #   Setting a password via a command-line argument is not very secure
+    #   since it will show up briefly in "ps".  However, ipmitool requires
+    #   it as an argument anyway, so doing the same here doesn't change much.
+    ##########################################################################
+    
+    --passwd)
+	pw=$2
+	shift
+	shift
+	;;
+    
+    *)
+	printf "Usage: $0 [--user ipmi-user-id] [--passwd ipmi-password]\n"
+	printf "Default user id = 2\n"
+	exit 1
+	;;
+    
+    esac
+done
 
-1)
-    userid=$1
-    ;;
-
-*)
-    printf "Usage: $0 [ipmi user id]\n"
-    printf "Default user id = 2\n"
-    exit 1
-    ;;
-
-esac
-
-pw=''
-pw2=2
-while [ 0"$pw" != 0"$pw2" ]; do
-    while [ 0"$pw" = 0 ]; do
-	printf "Password? "
+if [ -z "$pw" ]; then
+    pw=''
+    pw2=2
+    while [ 0"$pw" != 0"$pw2" ]; do
+	while [ 0"$pw" = 0 ]; do
+	    printf "Password? "
+	    stty -echo
+	    read pw
+	    stty echo
+	    if [ 0"$pw" = 0 ]; then
+		printf "\nPassword cannot be blank.\n"
+	    fi
+	done
+	printf "\nAgain? "
 	stty -echo
-	read pw
+	read pw2
 	stty echo
-	if [ 0"$pw" = 0 ]; then
-	    printf "\nPassword cannot be blank.\n"
+	if [ 0"$pw" != 0"$pw2" ]; then
+	    printf "\nPasswords do not match.\n"
+	    pw=''
+	    pw2=2
 	fi
     done
-    printf "\nAgain? "
-    stty -echo
-    read pw2
-    stty echo
-    if [ 0"$pw" != 0"$pw2" ]; then
-	printf "\nPasswords do not match.\n"
-	pw=''
-	pw2=2
-    fi
-done
+fi
 
 printf '\n'
 ipmitool user set password $userid "$pw"
