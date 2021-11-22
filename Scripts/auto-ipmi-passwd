@@ -1,9 +1,23 @@
 #!/bin/sh -e
 
-if [ $(whoami) != root ]; then
-    printf "Only root can do this.\n"
+auto-root-check $0
+
+case $# in
+0)
+    userid=2
+    ;;
+
+1)
+    userid=$1
+    ;;
+
+*)
+    printf "Usage: $0 [ipmi user id]\n"
+    printf "Default user id = 2\n"
     exit 1
-fi
+    ;;
+
+esac
 
 pw=''
 pw2=2
@@ -29,7 +43,7 @@ while [ 0"$pw" != 0"$pw2" ]; do
 done
 
 printf '\n'
-ipmitool user set password 2 "$pw"
+ipmitool user set password $userid "$pw"
 
 # Purge pw from memory
 pw="'ajsdasjfklajsfkl;ajfkajfakfja"

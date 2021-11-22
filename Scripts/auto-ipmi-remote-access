@@ -46,7 +46,7 @@ the menu.
 
 You must also configure network settings using a tool such as
 auto-idrac-config and an IPMI password using a tool such as
-auto-idrac-password.
+auto-ipmi-password.
 
 EOM
 
