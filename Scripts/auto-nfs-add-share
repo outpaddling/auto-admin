@@ -22,7 +22,7 @@ Examples:
 
     $0 /usr/home -network=192.168.0.0/24 -maproot=root
     $0 /usr/home '-network=192.168.0.0 255.255.255.0' -maproot=root
-    $0 /share1 
+    $0 /share1 'bobspc.local julie.laptop.local'
 
 EOM
     exit 1
