@@ -34,10 +34,6 @@ caller=$2
 
 case $(auto-ostype) in
 FreeBSD)
-    if [ 0$LOCALBASE = 0 ]; then
-	LOCALBASE="/usr/local"
-    fi
-    
     if grep -q "^${service}_enable=\"YES\"" /etc/rc.conf; then
 	printf "$service already running.\n"
 	printf "If you need the service restarted, you must do it manually.\n"
@@ -56,8 +52,8 @@ FreeBSD)
     auto-append-line ${service}_enable ${service}_enable=\"YES\" /etc/rc.conf $caller
     if [ -e /etc/rc.d/$script ]; then
 	/etc/rc.d/$script start
-    elif [ -e ${LOCALBASE}/etc/rc.d/$script ]; then
-	${LOCALBASE}/etc/rc.d/$script start
+    elif [ -e $(auto-localbase)/etc/rc.d/$script ]; then
+	$(auto-localbase)/etc/rc.d/$script start
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi

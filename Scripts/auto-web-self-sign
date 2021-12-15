@@ -66,13 +66,12 @@ done
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${LOCALBASE:=/usr/local}
     case $server in
     apache)
 	if [ -z "$server_version" ]; then
 	    server_version=$(awk '$1 ~ "^APACHE_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
 	fi
-	apache_dir=$LOCALBASE/etc/apache$server_version
+	apache_dir=$(auto-localbase)/etc/apache$server_version
 	key_file=`hostname -s`.key
 	cert_file=`hostname -s`.crt
 	

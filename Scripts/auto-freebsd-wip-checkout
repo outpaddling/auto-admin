@@ -48,14 +48,12 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${LOCALBASE:=/usr/local}
-    
     if [ ! -e /usr/ports/CHANGES ]; then
 	auto-ports-checkout
     fi
     # Need for github cert
     pkg install -y ca_root_nss
-    if [ ! -e $LOCALBASE/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
+    if [ ! -e $(auto-localbase)/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
 	sh ./freebsd-wip-checkout
 	rm -f freebsd-wip-checkout
@@ -63,7 +61,6 @@ FreeBSD)
     ;;
 
 DragonFly)
-    : ${LOCALBASE:=/usr/local}
     export PORTSDIR=/usr/dports
     
     if [ ! -e /usr/dports/Makefile ]; then
@@ -71,7 +68,7 @@ DragonFly)
     fi
     # Need for github cert
     pkg install -y ca_root_nss
-    if [ ! -e $LOCALBASE/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
+    if [ ! -e $(auto-localbase)/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
 	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
 	sh ./freebsd-wip-checkout
 	rm -f freebsd-wip-checkout

@@ -33,11 +33,7 @@ ip=$1
 case $(auto-ostype) in
 FreeBSD)
     sed="sed -i ''"
-    if [ -z $LOCALBASE ]; then
-	prefix=/usr/local
-    else
-	prefix=$LOCALBASE
-    fi
+    prefix=$(auto-localbase)
     ;;
 
 Linux|NetBSD)

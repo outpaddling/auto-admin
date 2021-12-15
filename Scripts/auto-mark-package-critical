@@ -26,10 +26,9 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${LOCALBASE:=/usr/local}
-    mkdir -p $LOCALBASE/etc/auto-admin
+    mkdir -p $(auto-localbase)/etc/auto-admin
     for pkg in "$@"; do
-	auto-append-line $pkg $LOCALBASE/etc/auto-admin/critical-packages nocomment
+	auto-append-line $pkg $(auto-localbase)/etc/auto-admin/critical-packages nocomment
     done
     if ! pkg info -q $pkg; then
 	printf "Warning: $pkg is not currently installed.\n"
@@ -38,6 +37,7 @@ FreeBSD)
     ;;
 
 *)
+    # FIXME: Can this be merged with the FreeBSD case?
     # auto-pkgsrc-prefix exits non-zero if no tree found
     PKGSRC=$(auto-pkgsrc-prefix) || true
     if [ -z "$PKGSRC" ]; then

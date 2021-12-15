@@ -68,7 +68,6 @@ done
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${LOCALBASE:=/usr/local}
     if [ -z "$server_version" ]; then
 	server_version=$(awk '$1 ~ "^APACHE_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
     fi
@@ -81,7 +80,7 @@ FreeBSD)
     
     case $server in
     apache)
-	apache_conf=$LOCALBASE/etc/apache24/httpd.conf
+	apache_conf=$(auto-localbase)/etc/apache24/httpd.conf
 	auto-append-line 'Include etc/apache24/extra/httpd-default.conf' $apache_conf $0
 	
 	cat << EOM
@@ -90,7 +89,7 @@ Adding handlers to extra/httpd-php.conf.  No need to edit httpd.conf.
 
 EOM
 	pause
-	cat << EOM > $LOCALBASE/etc/apache24/extra/httpd-php.conf 
+	cat << EOM > $(auto-localbase)/etc/apache24/extra/httpd-php.conf 
 <FilesMatch "\.php\$">
     SetHandler application/x-httpd-php
 </FilesMatch>
@@ -102,9 +101,9 @@ EOM
 	    printf "Uncomment #Include etc/apache24/extra/httpd-userdir.conf if desired.\n"
 	pause
 	$EDITOR $apache_conf
-	$EDITOR $LOCALBASE/etc/apache24/extra/httpd-userdir.conf
+	$EDITOR $(auto-localbase)/etc/apache24/extra/httpd-userdir.conf
 
-	cp $LOCALBASE/www/apache24/data/index.html $LOCALBASE/www/apache24/data/index.php
+	cp $(auto-localbase)/www/apache24/data/index.html $(auto-localbase)/www/apache24/data/index.php
 	# FIXME: Auto-detect apache version
 	if auto-service-enabled apache24; then
 	    service apache24 restart

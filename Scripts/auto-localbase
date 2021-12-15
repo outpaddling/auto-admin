@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-localbase
+#
+#   Description:
+#       Print the default LOCALBASE (prefix for add-on software) to the
+#       standard output.
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-12-15  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+if [ -n "$(auto-pkgsrc-prefix)" ]; then
+    printf "$(auto-pkgsrc-prefix)\n"
+else
+    case $(uname) in
+    Darwin)
+	printf "/opt\n"
+	;;
+    
+    *)
+	printf "/usr/local\n"
+	;;
+    
+    esac
+fi

@@ -39,8 +39,6 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${LOCALBASE:=/usr/local}
-    
     printf "Configuring cups...\n"
     auto-install-packages \
 	print/cups \
@@ -62,20 +60,20 @@ FreeBSD)
     
     # FIXME: Is this still necessary?
     # Older ports have lpt-cupsd.conf, newer ulpt-cupsd.conf
-    if [ -f ${LOCALBASE}/share/examples/cups/ulpt-cupsd.conf ]; then
-	if [ ! -f ${LOCALBASE}/etc/devd/ulpt-cupsd.conf ]; then
-	    mkdir -p ${LOCALBASE}/etc/devd
-	    cp ${LOCALBASE}/share/examples/cups/ulpt-cupsd.conf ${LOCALBASE}/etc/devd/
+    if [ -f $(auto-localbase)/share/examples/cups/ulpt-cupsd.conf ]; then
+	if [ ! -f $(auto-localbase)/etc/devd/ulpt-cupsd.conf ]; then
+	    mkdir -p $(auto-localbase)/etc/devd
+	    cp $(auto-localbase)/share/examples/cups/ulpt-cupsd.conf $(auto-localbase)/etc/devd/
 	fi
     
-	# Fix missing semicolons in cups 1.4.6 $LOCALBASE/etc/devd/ulpt-cupsd.conf
-	if [ -e $LOCALBASE/etc/devd/ulpt-cupsd.conf ]; then
-	    sed -i '' -e 's|}$|};|g' $LOCALBASE/etc/devd/ulpt-cupsd.conf
+	# Fix missing semicolons in cups 1.4.6 $(auto-localbase)/etc/devd/ulpt-cupsd.conf
+	if [ -e $(auto-localbase)/etc/devd/ulpt-cupsd.conf ]; then
+	    sed -i '' -e 's|}$|};|g' $(auto-localbase)/etc/devd/ulpt-cupsd.conf
 	fi
-    elif [ -f ${LOCALBASE}/share/examples/cups/lpt-cupsd.conf ]; then
-	if [ ! -f ${LOCALBASE}/etc/devd/lpt-cupsd.conf ]; then
-	    mkdir -p ${LOCALBASE}/etc/devd
-	    cp ${LOCALBASE}/share/examples/cups/lpt-cupsd.conf ${LOCALBASE}/etc/devd/
+    elif [ -f $(auto-localbase)/share/examples/cups/lpt-cupsd.conf ]; then
+	if [ ! -f $(auto-localbase)/etc/devd/lpt-cupsd.conf ]; then
+	    mkdir -p $(auto-localbase)/etc/devd
+	    cp $(auto-localbase)/share/examples/cups/lpt-cupsd.conf $(auto-localbase)/etc/devd/
 	fi
     fi
     

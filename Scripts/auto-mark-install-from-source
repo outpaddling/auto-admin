@@ -56,14 +56,14 @@ FreeBSD)
 	printf "$PORTSDIR/$pkg: No such port.\n"
 	exit 1
     fi
-    : ${LOCALBASE:=/usr/local}
-    mkdir -p $LOCALBASE/etc/auto-admin
+    mkdir -p $(auto-localbase)/etc/auto-admin
     # Check for port/package name only.  Don't duplicate if reason differs.
     auto-append-line $pkg "$pkg $reason" \
-	$LOCALBASE/etc/auto-admin/install-from-source nocomment
+	$(auto-localbase)/etc/auto-admin/install-from-source nocomment
     ;;
 
 *)
+    # FIXME: Can this be merged with the FreeBSD case?
     # auto-pkgsrc-{dir|prefix} exit non-zero if no tree found
     PKGSRC=$(auto-pkgsrc-dir) || true
     if [ ! -e "$PKGSRC/$pkg" ]; then

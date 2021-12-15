@@ -19,8 +19,7 @@ user@host is used to rsync packages from another host that has been updated
 more recently than this one.  This reduces load on the primary package servers
 and may significantly speed up package upgrades.  The other host must have the
 same architecture and OS version as this one.  user@host can also be
-permanently stored in $LOCALBASE/etc/auto-admin/pkg-cache-host.  LOCALBASE
-is /opt on Darwin and /usr/local on other platforms.
+permanently stored in $(auto-localbase)/etc/auto-admin/pkg-cache-host.
 
 EOM
     exit 1
@@ -73,7 +72,7 @@ record_update_time()
 {
     current_time=$(date '+%s')
     current_time=$((current_time / 3600))
-    config_dir=$LOCALBASE/etc/auto-admin
+    config_dir=$(auto-localbase)/etc/auto-admin
     mkdir -p $config_dir
     printf "$current_time\n" > $config_dir/last-system-update
 }
@@ -139,21 +138,10 @@ if ! auto-root-check $0; then
     exec su -m root -c "$cmd"
 fi
 
-case $(uname) in
-Darwin)
-    : ${LOCALBASE:=/opt}
-    ;;
-
-*)
-    : ${LOCALBASE:=/usr/local}
-    ;;
-
-esac
-
-if [ -e $LOCALBASE/etc/auto-admin/pkg-cache-host ]; then
+if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
     printf "Using pkg-cache-host...\n"
     sync_pkg_cache=1
-    pkg_cache_host=$(cat $LOCALBASE/etc/auto-admin/pkg-cache-host)
+    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
 elif [ 0"$1" = 0--sync-pkg-cache ]; then
     if [ $# -ge 2 ] && echo $pkg_cache_host | fgrep -q '@'; then
 	sync_pkg_cache=1
@@ -224,7 +212,7 @@ FreeBSD|DragonFly)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	critical_pkg_file=$LOCALBASE/etc/auto-admin/critical-packages
+	critical_pkg_file=$(auto-localbase)/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
 	    printf "Use auto-mark-package-critical to update the list\n"
@@ -273,7 +261,7 @@ EOM
 	
 	freebsd_autoremove
 
-	install_from_source=$LOCALBASE/etc/auto-admin/install-from-source
+	install_from_source=$(auto-localbase)/etc/auto-admin/install-from-source
 	if [ -e $install_from_source ]; then
 	    printf "Cataloging install-from-source versions before upgrade...\n"
 	    installed_versions_db=$HOME/.config/old-pkg-versions
@@ -389,23 +377,23 @@ EOM
 	set -e
     fi
 
-    if [ -e $LOCALBASE/etc/auto-update-system-post-ports ]; then
-	plugin=$LOCALBASE/etc/auto-update-system-post-ports
+    if [ -e $(auto-localbase)/etc/auto-update-system-post-ports ]; then
+	plugin=$(auto-localbase)/etc/auto-update-system-post-ports
 	cat << EOM
 
 Warning: Use of
 
-$LOCALBASE/etc/auto-update-system-post-ports
+$(auto-localbase)/etc/auto-update-system-post-ports
 
 is deprecated. Please move the plugin to
 
-$LOCALBASE/etc/auto-admin/auto-update-system-post-ports
+$(auto-localbase)/etc/auto-admin/auto-update-system-post-ports
 
 as soon as possible.
 
 EOM
     else
-	plugin=$LOCALBASE/etc/auto-admin/auto-update-system-post-ports
+	plugin=$(auto-localbase)/etc/auto-admin/auto-update-system-post-ports
     fi
     if [ -e $plugin ]; then
 	owner=`stat -L $plugin | awk '{ print $5 }'`

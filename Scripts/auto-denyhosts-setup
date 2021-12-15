@@ -9,6 +9,8 @@ pause()
 
 ##########################################################################
 #   Function description:
+#       Denyhosts is deprecated since TCP wrappers are obsolete
+#       This script will be removed
 #       
 #   Arguments:
 #       
@@ -28,11 +30,7 @@ line()
 case $(auto-ostype) in
 FreeBSD)
     pkg install -gy 'denyhosts-py3*' || true
-    if [ -z $LOCALBASE ]; then
-	prefix=/usr/local
-    else
-	prefix=$LOCALBASE
-    fi
+    prefix=$(auto-localbase)
     ;;
 
 RHEL|NetBSD)
