@@ -264,8 +264,8 @@ EOM
 	install_from_source=$(auto-localbase)/etc/auto-admin/install-from-source
 	if [ -e $install_from_source ]; then
 	    printf "Cataloging install-from-source versions before upgrade...\n"
-	    installed_versions_db=$HOME/.config/old-pkg-versions
-	    mkdir -p $HOME/.config
+	    installed_versions_db=$(auto-localbase)/etc/auto-admin/old-pkg-versions
+	    mkdir -p $(auto-localbase)/etc/auto-admin/
 	    rm -f $installed_versions_db
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
