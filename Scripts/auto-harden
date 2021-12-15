@@ -217,28 +217,6 @@ esac
 pause
 
 clear
-printf '\nSetting umask to 027...\n\n'
-# Umask
-case $os_type in
-FreeBSD)
-    sed -i '' \
-	-e 's|umask=022|umask=027|g' \
-	/etc/login.conf
-    cap_mkdb /etc/login.conf
-    sed -i '' -E 's|umask.*22|umask 027|g' /usr/share/skel/dot.*
-    ;;
-RHEL)
-    for file in /etc/bashrc /etc/profile /etc/csh.cshrc; do
-	auto-append-line 'umask 027' $file $0
-    done
-    ;;
-*)
-    unimplemented $os_type 'Setting process and memory limits'
-    ;;
-esac
-pause
-
-clear
 printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 
 # Disable ICMP redirects from arbitrary sources
