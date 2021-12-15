@@ -18,7 +18,9 @@ Usage: $0 [--sync-pkg-cache user@host] [--binary | --binary+reboot | --defaults 
 user@host is used to rsync packages from another host that has been updated
 more recently than this one.  This reduces load on the primary package servers
 and may significantly speed up package upgrades.  The other host must have the
-same architecture and OS version as this one.
+same architecture and OS version as this one.  user@host can also be
+permanently stored in $LOCALBASE/etc/auto-admin/pkg-cache-host.  LOCALBASE
+is /opt on Darwin and /usr/local on other platforms.
 
 EOM
     exit 1
@@ -71,7 +73,7 @@ record_update_time()
 {
     current_time=$(date '+%s')
     current_time=$((current_time / 3600))
-    config_dir=$HOME/.config/auto-admin
+    config_dir=$LOCALBASE/etc/auto-admin
     mkdir -p $config_dir
     printf "$current_time\n" > $config_dir/last-system-update
 }
@@ -137,36 +139,50 @@ if ! auto-root-check $0; then
     exec su -m root -c "$cmd"
 fi
 
-if [ 0"$1" = 0--sync-pkg-cache ]; then
-    if [ $# -ge 2 ]; then
-	host=$2
-	if echo $host | fgrep -q '@'; then
-	    case $os_type in
-	    FreeBSD|DragonFly)
-		pkg_cache=/var/cache/pkg
-		;;
-	    Darwin|NetBSD)
-		# FIXME: This depends on the bootstrap options
-		pkg_cache=/var/db/pkgin/cache
-		;;
-	    RHEL)
-		pkg_cache=/var/cache/yum
-		;;
-	    *)
-		auto-unsupported-os $0
-		exit 1
-		;;
-	    esac
-	    printf "$host "
-	    rsync -av ${host}:$pkg_cache/ $pkg_cache
-	else
-	    usage
-	fi
+case $(uname) in
+Darwin)
+    : ${LOCALBASE:=/opt}
+    ;;
+
+*)
+    : ${LOCALBASE:=/usr/local}
+    ;;
+
+esac
+
+if [ -e $LOCALBASE/etc/auto-admin/pkg-cache-host ]; then
+    printf "Using pkg-cache-host...\n"
+    sync_pkg_cache=1
+    pkg_cache_host=$(cat $LOCALBASE/etc/auto-admin/pkg-cache-host)
+elif [ 0"$1" = 0--sync-pkg-cache ]; then
+    if [ $# -ge 2 ] && echo $pkg_cache_host | fgrep -q '@'; then
+	sync_pkg_cache=1
+	pkg_cache_host=$2
 	shift
 	shift
     else
 	usage
     fi
+fi
+if [ -n "$pkg_cache_host" ]; then
+    case $os_type in
+    FreeBSD|DragonFly)
+	pkg_cache=/var/cache/pkg
+	;;
+    Darwin|NetBSD)
+	# FIXME: This depends on the bootstrap options
+	pkg_cache=/var/db/pkgin/cache
+	;;
+    RHEL)
+	pkg_cache=/var/cache/yum
+	;;
+    *)
+	auto-unsupported-os $0
+	exit 1
+	;;
+    esac
+    printf "Syncing from $pkg_cache_host...\n"
+    rsync -av ${pkg_cache_host}:$pkg_cache/ $pkg_cache
 fi
 
 mode=interactive    # Default
@@ -188,7 +204,6 @@ fi
 
 case $os_type in
 FreeBSD|DragonFly)
-    : ${LOCALBASE:=/usr/local}
     if [ ! -t 0 ]; then
 	# Input redirected.  Being fed y/n responses.
 	portsnap_flags=--interactive
@@ -593,6 +608,14 @@ Darwin)
     ;;
 
 esac
+
+# FIXME: Find a secure way to give back to the central cache host
+# Requires root access
+# Push newly downloaded packages back to central host
+#if [ -n "$pkg_cache_host" ]; then
+#    printf "Syncing to $pkg_cache_host...\n"
+#    rsync -av $pkg_cache/ ${pkg_cache_host}:$pkg_cache
+#fi
 
 case $mode in
 binary|defaults)
