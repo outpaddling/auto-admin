@@ -111,21 +111,15 @@ read update
 if [ 0$update = 0y ]; then
     auto-update-system
 fi
-
 pause
-clear
-printf '\nInstalling denyhosts...\n\n'
-auto-denyhosts-setup
 
-pause
 clear
 case $os_type in
 FreeBSD)
     # Disable all clear-text services
     cat << EOM
 
-Opening inetd.conf.
-Disable all clear-text services.
+Editing inetd.conf.  Disable all clear-text services.
 
 EOM
     pause
@@ -148,7 +142,7 @@ pause
 # nosuid, nodev on as many mounts as possible
 # FIXME: Add support for ZFS
 clear
-printf '\nUpdating fstab. Add nosuid on as many partitions as possible.\n\n'
+printf '\nEditing fstab. Add nosuid on as many partitions as possible.\n\n'
 pause
 $EDITOR /etc/fstab
 
@@ -169,7 +163,7 @@ esac
 clear
 cat << EOM
 
-Configure your screensaver to lock the screen after maybe 10 minutes of
+Configure your screensaver to lock the screen after about 10 minutes of
 idle time.
 
 EOM
@@ -229,9 +223,6 @@ printf '\nDisabling ICMP redirects and other network vulnerabilities...\n\n'
 #        net.ipv4.conf.all.secure_redirects=0 \
 #        net.ipv4.conf.default.secure_redirects=0
 case $os_type in
-RHEL)
-    ;;
-
 FreeBSD)
     auto-set-sysctl net.inet.icmp.drop_redirect 1 $0
     auto-set-sysctl net.inet.ip.sourceroute 0 $0
@@ -262,7 +253,7 @@ FreeBSD)
     ;;
 esac
 
-for file in /usr/local/etc/apache24/httpd.conf /etc/httpd/conf/httpd.conf; do
+for file in /usr/local/etc/apache*/httpd.conf /etc/httpd/conf/httpd.conf; do
     if [ -e $file ]; then
 	auto-append-line 'TraceEnable Off' $file $0
     fi
