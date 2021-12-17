@@ -29,7 +29,8 @@ usage()
 Usage: $0 dist [dist ...]
 
 FreeBSD dists:  base-dbg,kernel-dbg,lib32,lib32-dbg,src,tests
-NetBSD dists:   
+NetBSD dists:   base,comp,debug,etc,games,man,misc,modules,rescue,
+		tests,text,xbase,xcomp,xdebug,xetc,xfont,xserver
 
 EOM
     exit 1
@@ -99,12 +100,15 @@ NetBSD)
 	if [ -e /usr/$set ]; then
 	    printf "$set already installed.\n"
 	else
-	    url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-`uname -r`/`uname -m`/binary/sets/$set.tgz
-	    printf "Fetching $url...\n"
-	    fetch $url
+	    tarball=$set.tar.xz
+	    url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-`uname -r`/`uname -m`/binary/sets/$tarball
+	    if [ ! -e $tarball ]; then
+		printf "Fetching $url...\n"
+		fetch $url
+	    fi
 	    printf "Extracting $set...\n"
-	    tar zxf $set.tgz
-	    rm -f $set.tgz
+	    tar Jxf $tarball
+	    rm -f $tarball
 	fi
     done
     ;;
