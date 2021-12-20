@@ -87,7 +87,8 @@ all:
 # Install all target files (binaries, libraries, docs, etc.)
 
 install:
-	${MKDIR} -p ${DESTDIR}${PREFIX}/sbin ${DESTDIR}${MANDIR}/man1
+	${MKDIR} -p ${DESTDIR}${PREFIX}/sbin ${DESTDIR}${MANDIR}/man1 \
+	    ${DESTDIR}${DATADIR}
 	${INSTALL} -m 0755 Scripts/* ${DESTDIR}${PREFIX}/sbin
 	${INSTALL} -m 0644 Man/* ${DESTDIR}${MANDIR}/man1
 	${CP} -R Data/ ${DESTDIR}${DATADIR}
