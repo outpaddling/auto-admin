@@ -1,0 +1,72 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-add-swap path-to-swapfile size (mibibytes)
+#
+#   Description:
+#       The auto-add-swap script creates a swap file, activates it, and
+#       configures the system to automatically activate it at boot time.
+#       The new swap file serves as additional swap space if a swap
+#       partition is already present.
+#       
+#   Arguments:
+#       path-to-swapfile    Full pathname of the new swap file
+#       size                Size of swap file in mibibytes
+#       
+#   Examples:
+#       auto-add-swap /swapfile 4096
+#
+#   Returns:
+#       0 on success, non-zero on failure
+#
+#   Files:
+#       /etc/rc.conf (FreeBSD)
+#
+#   See also:
+#       swapon(1), mdconfig(1) (FreeBSD)
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-12-20  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 swap-file-path megabytes\n"
+    printf "Example: $0 /swapfile 4096\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+swapfile=$1
+mbytes=$2
+
+case $(auto-ostype) in
+FreeBSD)
+    if fgrep -q $swapfile /etc/rc.conf; then
+	printf "$swapfile is already configured in rc.conf.\n"
+	exit 1
+    else
+	# FIXME: Probably won't work with ZFS
+	dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
+	chmod 600 $swapfile
+	printf "swapfile=\"$swapfile\"" >> /etc/rc.conf
+	mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md0
+    fi
+    ;;
+
+*)
+    auto-unsupported-os $0
+    ;;
+
+esac
+swapinfo
