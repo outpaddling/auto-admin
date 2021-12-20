@@ -56,6 +56,7 @@ PREFIX      ?= ${LOCALBASE}
 # Allow caller to override either MANPREFIX or MANDIR
 MANPREFIX   ?= ${PREFIX}
 MANDIR      ?= ${MANPREFIX}/man
+DATADIR     ?= ${PREFIX}/share/auto-admin
 
 ############################################################################
 # Assume first command in PATH.  Override with full pathnames if necessary.
@@ -89,6 +90,7 @@ install:
 	${MKDIR} -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${MANDIR}/man1
 	${INSTALL} -m 0755 Scripts/* ${DESTDIR}${PREFIX}/bin
 	${INSTALL} -m 0644 Man/* ${DESTDIR}${MANDIR}/man1
+	${CP} -R Data/ ${DESTDIR}${DATADIR}
 
 help:
 	@printf "Usage: make [VARIABLE=value ...] all\n\n"
