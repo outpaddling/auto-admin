@@ -1,19 +1,37 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Synopsis:
+#       auto-admin
+#       
+#   Description:
+#       Main menu for common auto-admin tasks.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 upon successful exit, non-zero if certain commands failed
+#
+#   See also:
+#       auto-update-system(1), auto-user-admin(1),
+#       auto-software-manager(1), auto-network-manager(1),
+#       auto-power-manager(1), auto-filesys-manager(1),
+#       auto-security-manager(1), auto-sys-manager(1),
+#       auto-services-manager(1)
 #       
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
 ##########################################################################
 
-usage()
-{
-    printf "Usage: $0\n"
-    exit 1
-}
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
 
 
 ##########################################################################
