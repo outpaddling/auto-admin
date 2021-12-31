@@ -18,7 +18,7 @@ printf "\nCPUs:\n"
 dmidecode -t processor | egrep 'Socket|Version|Speed|Core|Thread'
 
 printf "\nMemory:\n"
-dmidecode -t memory | egrep 'Capacity|Size|Locator|Type'
+dmidecode -t memory | egrep 'Capacity|Size|Locator|Type|Speed.*MT'
 
 cat << EOM
 
