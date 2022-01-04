@@ -1,4 +1,9 @@
 #!/bin/sh -e
+
+if [ -z "$(sysctl hw.acpi 2> /dev/null || true)" ]; then
+    printf "$0: ACPI not supported on this architecture.\n"
+    exit 1
+fi
     
 case $(auto-ostype) in
 FreeBSD)
