@@ -12,6 +12,12 @@
 #       platform (on CentOS, there is no base system separate from Yum
 #       packages).
 #
+#       CAUTION: auto-update-system should not be run in parallel on
+#       many systems, as this will swamp the network and package servers
+#       with redundand downloads.  Either run updates serially, using
+#       --sync-pkg-cache for all but the first system, or configure a
+#       package mirror or proxy server.
+#
 #       On BSD systems, auto-pkgsrc-setup ensures that the binary package
 #       repository and ports/pkgsrc tree are on the same branch.  If they
 #       are not, auto-update-system offers to update the ports/pkgsrc
@@ -36,12 +42,6 @@
 #       If the user@host spec is stored in
 #       $PREFIX/etc/auto-admin/pkg-cache-host, it will be automatically
 #       used for all future updates.
-#
-#       CAUTION: auto-update-system should not be run in parallel on
-#       many systems, as this will swamp the network and package servers
-#       with redundand downloads.  Either run updates serially, using
-#       --sync-pkg-cache for all but the first system, or configure a
-#       package mirror or proxy server.
 #
 #       Following a successful update, the current time is stored in
 #       $PREFIX/etc/auto-admin/last-system-update.  The auto-last-update
