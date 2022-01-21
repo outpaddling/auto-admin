@@ -134,7 +134,7 @@ require them.
 Your umask is $umask.
 
 EOM
-    read -p "Continue with umask $umask? y/[n] " continue
+    read -p "Use umask $umask? y/[n] " continue
     if [ 0$continue != 0y ]; then
 	printf "Using umask 022.\n"
 	umask 022
@@ -159,12 +159,12 @@ start_dir=`pwd`
 
 # RHEL / CentOS base
 if [ -e /etc/redhat-release ]; then
-    if [ ! -e /usr/bin/gcc ]; then
-	if [ `whoami` = root ]; then
-	    printf "Installing base development tools via yum...\n"
-	    yum install -y gcc-gfortran gcc-c++ gcc
-	else
-	    printf "You must run 'yum install gcc-gfortran gcc-c++ gcc' first.\n"
+    if [ `whoami` = root ]; then
+	printf "Installing base development tools via yum...\n"
+	yum install -y gcc-gfortran gcc-c++ gcc tar git
+    else
+	if [ ! -e /usr/bin/gcc ] || [ ! -e /usr/bin/tar ] || [ ! -e /usr/bin/git ]; then
+	    printf "You must run 'yum install gcc-gfortran gcc-c++ gcc tar git' first.\n"
 	    exit 1
 	fi
     fi
@@ -854,7 +854,7 @@ except itself.
 
 EOM
     # Keep this in sync with pbulk-setup
-    default_minimum=6
+    default_minimum=3
     printf "Selection? [$default_minimum] "
     read selection
     if [ 0$selection = 0 ]; then
