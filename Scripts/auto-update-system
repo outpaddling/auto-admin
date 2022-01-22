@@ -257,20 +257,24 @@ if ! auto-root-check $0; then
     exec su -m root -c "$cmd"
 fi
 
-if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
-    printf "Using pkg-cache-host...\n"
-    sync_pkg_cache=1
-    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
-elif [ 0"$1" = 0--sync-pkg-cache ]; then
-    if [ $# -ge 2 ] && echo $pkg_cache_host | fgrep -q '@'; then
+if [ 0"$1" = 0--sync-pkg-cache ]; then
+    if [ $# -ge 2 ]; then
 	sync_pkg_cache=1
 	pkg_cache_host=$2
-	shift
-	shift
+	if echo $pkg_cache_host | fgrep -q '@'; then
+	    shift
+	    shift
+	else
+	    usage
+	fi
     else
 	usage
     fi
+elif [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
+    sync_pkg_cache=1
+    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
 fi
+
 if [ -n "$pkg_cache_host" ]; then
     case $os_type in
     FreeBSD|DragonFly)
