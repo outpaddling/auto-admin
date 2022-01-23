@@ -23,7 +23,7 @@ usage()
 #   Main
 ##########################################################################
 
-if auto-using-pkgsrc; then
+if auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
     make=bmake
     port_or_package=package
     base_dir=`auto-pkgsrc-dir`
