@@ -452,6 +452,10 @@ EOM
 	else
 	    auto-ports-checkout
 	fi
+	# In rare circumstances, the binary pkg package can be incompatible
+	# with the latest ports tree.  The pkg port should probably get
+	# special attention and trigger a new package build immediately
+	# following commits, but until then...
 	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
 	    printf "pkg version does not match ports.  Rebuilding from source...\n"
 	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
