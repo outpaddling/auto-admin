@@ -12,6 +12,19 @@
 #   2012-01-08  Jason Bacon Begin
 ##########################################################################
 
+stop_service()
+{
+    if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
+	service $script stop
+    fi
+    if pkill $service; then
+	printf "Killed rogue $service.\n"
+    fi
+    rm -f /var/run/$service.pid
+    return 0
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -35,7 +48,7 @@ caller=$2
 case $(auto-ostype) in
 FreeBSD)
     if grep -q "^${service}_enable=\"YES\"" /etc/rc.conf; then
-	printf "$service already running.\n"
+	printf "$service already enabled.\n"
 	printf "If you need the service restarted, you must do it manually.\n"
 	exit 0
     fi
@@ -43,17 +56,34 @@ FreeBSD)
     if grep -q "^${service}_enable=\"NO\"" /etc/rc.conf; then
 	sed -i '' "s|${service}_enable=\"NO\"|${service}_enable=\"YES\"|g" /etc/rc.conf
     fi
-    
-    if killall $service; then
-	printf "Killed rogue $service.\n"
+
+    auto-set-conf-var ${service}_enable '"YES"' /etc/rc.conf $caller
+    stop_service
+    if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
+	service $script start
+    else
+	printf "Warning: No service startup script found for $service.\n"
     fi
-    rm -f /var/run/$service.pid
-    # FIXME: Use sysrc or auto-set-conf-var?
-    auto-append-line ${service}_enable ${service}_enable=\"YES\" /etc/rc.conf $caller
+    ;;
+    
+NetBSD)
+    if grep -q "^${service}=YES" /etc/rc.conf; then
+	printf "$service already enabled.\n"
+	printf "If you need the service restarted, you must do it manually.\n"
+	exit 0
+    fi
+    
+    if grep -q "^${service}=NO" /etc/rc.conf; then
+	sed -i '' "s|${service}=NO|${service}=YES|g" /etc/rc.conf
+    fi
+
+    auto-set-conf-var $service YES /etc/rc.conf $caller
+    stop_service
     if [ -e /etc/rc.d/$script ]; then
-	/etc/rc.d/$script start
-    elif [ -e $(auto-localbase)/etc/rc.d/$script ]; then
-	$(auto-localbase)/etc/rc.d/$script start
+	service $script start
+    elif [ -e $(auto-localbase)/share/examples/rc.d/$script ]; then
+	cp $(auto-localbase)/share/examples/rc.d/$script /etc/rc.d
+	service $script start
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi

@@ -22,12 +22,21 @@ FreeBSD)
     mount_points=`awk '$3 == "ufs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free block on $dir? y/[n] (UFS only) "
+	printf "Zero free block on $dir? y/[n] "
 	read zero
 	if [ 0$zero = 0y ]; then
-	    cd $dir
-	    dd if=/dev/zero of=zero-temp bs=1m
-	    rm zero-temp
+	    fs=$(df -T $dir | fgrep -v Filesystem | awk '{ print $2 }')
+	    echo $fs
+	    if [ $fs = zfs ]; then
+		printf "Temporarily disabling dedup on $dir...\n"
+		dedup=$(zfs get -H -o value dedup $dir)
+		zfs set dedup=off $dir
+	    fi
+	    dd if=/dev/zero of=$dir/zero-temp bs=1m
+	    rm -f $dir/zero-temp
+	    if [ $fs = zfs ]; then
+		zfs set dedup=$dedup $dir
+	    fi
 	fi
     done
     ;;

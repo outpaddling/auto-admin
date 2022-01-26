@@ -91,7 +91,7 @@ install:
 	    ${DESTDIR}${DATADIR}
 	${INSTALL} -m 0755 Scripts/* ${DESTDIR}${PREFIX}/sbin
 	${INSTALL} -m 0644 Man/* ${DESTDIR}${MANDIR}/man1
-	${CP} -R Data/ ${DESTDIR}${DATADIR}
+	${CP} -R Data/* ${DESTDIR}${DATADIR}
 
 help:
 	@printf "Usage: make [VARIABLE=value ...] all\n\n"

@@ -240,8 +240,7 @@ if [ 0$update_pkgsrc != 0n ]; then
 	make=make
     fi
     
-    # FIXME: Implement this
-    # auto-check-pkgsrc-branch
+    # FIXME: Implement auto-check-pkgsrc-branch
     
     if [ -e $PKGSRCDIR/Makefile ]; then
 	printf "\n**** "    # auto-clean-pkgsrc will print the rest
@@ -249,11 +248,11 @@ if [ 0$update_pkgsrc != 0n ]; then
 	# non-interactive mode
 	echo n | auto-clean-pkgsrc
 	
+	if ! which cvs; then
+	    (cd $PKGSRCDIR/devel/scmcvs && $make install)
+	fi
 	printf "\n**** Updating $PKGSRCDIR...\n"
 	(cd $PKGSRCDIR && $cvs -q update -dP) || true
-    # else
-	# FIXME: Implement this
-	# auto-pkgsrc-checkout
     fi
     if [ -e $PKGSRC/bin/wip-update ]; then
 	$PKGSRC/bin/wip-update
@@ -314,14 +313,7 @@ if [ 0$update_pkgsrc != 0n ]; then
 	elif [ -e $PKGSRC/sbin/pkg_chk ]; then
 	    src_update='pkg_chk -su'
 	else
-	    cat << EOM
-
-No pkgin or upgrade-from-source tools found.  You may want to install
-pkg_rolling-replace or pkg_chk in order to enable upgrading packages from
-source.
-
-EOM
-	    pause
+	    (cd $PKGSRCDIR/pkgtools/pkg_chk && $make install)
 	fi
     fi
     

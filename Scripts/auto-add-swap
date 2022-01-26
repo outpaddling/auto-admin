@@ -52,20 +52,36 @@ mbytes=$2
 
 case $(auto-ostype) in
 FreeBSD)
-    if fgrep -q $swapfile /etc/rc.conf; then
-	printf "$swapfile is already configured in rc.conf.\n"
+    dir=$(dirname $swapfile)
+    fs_type=$(df -T $dir | fgrep -v Filesystem | awk '{ print $2 }')
+    if [ $fs_type = zfsx ]; then
+	printf "Swap file on ZFS is currently not supported.\n"
+	printf "Please choose another location.\n"
 	exit 1
+	# Not certain if ZFS swap is stable yet
+	#pool=$(df -T $dir | fgrep -v Filesystem | awk '{ split($1, a, "/"); print a[1]; }')
+	#sbase=$(basename $swapfile)
+	#zfs create -V ${mbytes}M -o org.freebsd:swap=on -o checksum=off \
+	#    -o compression=off -o dedup=off -o sync=disabled \
+	#    -o primarycache=none $pool/$sbase
+	#service zvol restart
     else
-	# FIXME: Probably won't work with ZFS
-	dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
-	chmod 600 $swapfile
-	printf "swapfile=\"$swapfile\"" >> /etc/rc.conf
-	mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md0
+	if grep -q '^swapfile=' /etc/rc.conf; then
+	    printf "Error: swapfile is already configured in rc.conf.\n"
+	    exit 1
+	else
+	    # FIXME: Probably won't work with ZFS
+	    dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
+	    chmod 600 $swapfile
+	    printf "swapfile=\"$swapfile\"" >> /etc/rc.conf
+	    mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md0
+	fi
     fi
     ;;
 
 *)
     auto-unsupported-os $0
+    exit
     ;;
 
 esac
