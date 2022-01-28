@@ -50,8 +50,8 @@ FreeBSD)
 	save_cwd=$(pwd)
 	cd $PORTSDIR/$port
 	
-	printf "Installing dependencies via pkg if possible...\n"
-	deps=$(make run-depends-list | cut -d / -f 4-)
+	printf "Installing non-wip dependencies via pkg if possible...\n"
+	deps=$(make run-depends-list | cut -d / -f 4- | grep -v '^wip/')
 	auto-install-packages -f -A $deps
 	
 	# Configure this port, but install dependencies with default options
