@@ -51,8 +51,10 @@ FreeBSD)
 	cd $PORTSDIR/$port
 	
 	printf "Installing non-wip dependencies via pkg if possible...\n"
-	deps=$(make run-depends-list | cut -d / -f 4- | grep -v '^wip/')
-	auto-install-packages -f -A $deps
+	deps=$(make run-depends-list | cut -d / -f 4- | grep -v '^wip/' || true)
+	if [ -n "$deps" ]; then
+	    auto-install-packages -f -A $deps
+	fi
 	
 	# Configure this port, but install dependencies with default options
 	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
