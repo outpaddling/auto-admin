@@ -78,7 +78,7 @@ FreeBSD)
 	    printf "$dist already installed.\n"
 	else
 	    cd /
-	    if `uname -r` | fgrep -q RELEASE; then
+	    if uname -r | fgrep -q RELEASE; then
 		url=ftp://ftp.freebsd.org/pub/`uname -s`/releases/`uname -m`/`uname -r | cut -d'-' -f1,2`/$dist.txz
 	    else
 		url=ftp://ftp.freebsd.org/pub/`uname -s`/snapshots/`uname -m`/`uname -r | cut -d'-' -f1,2`/$dist.txz
