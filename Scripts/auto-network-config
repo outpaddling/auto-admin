@@ -2,12 +2,17 @@
 
 ##########################################################################
 #   Synopsis:
-#       
+#       auto-network-config [interface-name]
+#
 #   Description:
+#       .B auto-network-config
+#       is a UI (user interface) for configuring a network interface.
 #       
 #   Arguments:
+#       interface   Optional name of the interface, e.g. re0, bce0, em0
 #       
 #   Returns:
+#       0 on success, non-zero on failure
 #
 #   Examples:
 #
@@ -57,14 +62,14 @@ case $(auto-ostype) in
 FreeBSD)
     RC_CONF=/etc/rc.conf
     case $# in
-    1)
+    0)
 	printf "Network interfaces via pciconf -lv:\n\n"
 	pciconf -lv | grep -B 3 -A 1 'class.*network'
 	read -p 'Network interface? ' iface
 	;;
     
-    2)
-	iface=$2
+    1)
+	iface=$1
 	;;
 
     esac

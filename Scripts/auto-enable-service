@@ -15,7 +15,7 @@
 stop_service()
 {
     if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
-	service $script stop
+	service $script stop || true
     fi
     if pkill $service; then
 	printf "Killed rogue $service.\n"
