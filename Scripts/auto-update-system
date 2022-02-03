@@ -457,8 +457,8 @@ EOM
 	# special attention and trigger a new package build immediately
 	# following commits, but until then...
 	# PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
-	# by pkg -v, so use PORTVERSION for comparison.
-	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PORTVERSION) ]; then
+	# by pkg -v, so use pkg query '%v' for comparison.
+	if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
 	    printf "pkg version does not match ports.  Rebuilding from source...\n"
 	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
 		&& make -DBATCH deinstall reinstall)
