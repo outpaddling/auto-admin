@@ -456,7 +456,9 @@ EOM
 	# with the latest ports tree.  The pkg port should probably get
 	# special attention and trigger a new package build immediately
 	# following commits, but until then...
-	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
+	# PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
+	# by pkg -v, so use PORTVERSION for comparison.
+	if [ $(pkg -v) != $(auto-print-make-variable ports-mgmt/pkg PORTVERSION) ]; then
 	    printf "pkg version does not match ports.  Rebuilding from source...\n"
 	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
 		&& make -DBATCH deinstall reinstall)
