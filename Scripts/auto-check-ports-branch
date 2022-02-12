@@ -91,7 +91,8 @@ EOM
 	ports_branch=$(auto-ports-branch)
 	# Make sure new branch is available in ports repo
 	new_branch_hash="$(git ls-remote --heads https://git.FreeBSD.org/ports.git $repo_branch)"
-	if [ 0"$new_branch_hash" != 0'' ] && [ $ports_branch != $repo_branch ]; then
+	if [ $repo_branch == latest -o 0"$new_branch_hash" != 0'' ] \
+	    && [ $ports_branch != $repo_branch ]; then
 	    cat << EOM
 
 Binary packages are currently from the $repo_branch branch.
