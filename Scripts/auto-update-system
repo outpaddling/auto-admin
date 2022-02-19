@@ -293,7 +293,7 @@ if [ -n "$pkg_cache_host" ]; then
 	;;
     esac
     printf "Syncing from $pkg_cache_host...\n"
-    rsync -av ${pkg_cache_host}:$pkg_cache/ $pkg_cache
+    rsync -av --timeout=5 ${pkg_cache_host}:$pkg_cache/ $pkg_cache || true
 fi
 
 mode=interactive    # Default
