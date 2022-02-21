@@ -627,7 +627,7 @@ RHEL)
 	printf "$0: No active pkgsrc tree found.\n"
 	exit 1
     fi
-    if [ -e $PKGSRC/bin/pkgin ]; then
+    if auto-using-pkgsrc; then
 	auto-update-pkgsrc "$@"
 	record_update_time
     fi
@@ -698,7 +698,7 @@ Darwin)
 	printf "$0: No active pkgsrc tree found.\n"
 	exit 1
     fi
-    if [ -e $PKGSRC/bin/pkgin ]; then
+    if auto-using-pkgsrc; then
 	auto-update-pkgsrc "$@"
     fi
     
