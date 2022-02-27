@@ -84,6 +84,38 @@ pause()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   History:
+#   Date        Name        Modification
+#   2022-02-27  ,,,         Begin
+##########################################################################
+
+installed_up_to_date()
+{
+    if [ $# != 1 ] || ! echo "$1" | fgrep -q '/'; then
+	printf "Usage: installed_up_to_date category/package\n"
+	exit 1
+    fi
+    
+    pkg=$1
+    pkgbase=$(auto-print-make-variable $pkg PKGBASE)
+    pkgname=$(pkg_info -I $pkgbase | awk '{ print $1 }') || true
+    installed_version=${pkgname#$pkgbase-}
+    pkgsrc_version=$(auto-print-make-variable $pkg PKGVERSION)
+    printf "pkg_install: Installed = $installed_version pkgsrc = $pkgsrc_version\n"
+    if [ 0$installed_version = 0$pkgsrc_version ]; then
+	return 1
+    else
+	return 0
+    fi
+}
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -232,13 +264,14 @@ interactive)
     ;;
 esac
 
+if [ -e $PKGSRC/bin/sbmake ]; then
+    make=$PKGSRC/bin/sbmake
+else
+    make=make
+fi
+
 if [ 0$update_pkgsrc != 0n ]; then
     cvs=cvs
-    if [ -e $PKGSRC/bin/sbmake ]; then
-	make=$PKGSRC/bin/sbmake
-    else
-	make=make
-    fi
     
     # FIXME: Implement auto-check-pkgsrc-branch
     
@@ -259,82 +292,85 @@ if [ 0$update_pkgsrc != 0n ]; then
     elif [ -d $PKGSRCDIR/wip ]; then
 	(cd $PKGSRCDIR/wip && git pull)
     fi
-    
-    ##########################################################################
-    #   Process packages marked by auto-mark-install-from-source
-    ##########################################################################
-    
-    if [ -e $install_from_source ] && [ -e $PKGSRC/bin/pkgin ]; then
-	printf "Checking for packages to be installed from source...\n"
-	printf "Use auto-mark-install-from-source to update the list\n"
-	printf "or edit $install_from_source.\n"
-	while read line; do
-	    echo $line
-	    pkg=$(echo $line | awk '{ print $1 }')
-	    pkgbase=$(auto-print-make-variable $pkg PKGBASE)
-	    installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
-	    pkgsrc_version=$(auto-print-make-variable $pkg PKGVERSION)
-	    if [ ! -z $installed_version ]; then
-		if [ 0$pkgsrc_version != 0$installed_version ]; then
-		    reason=$(echo $line | awk '{ print $2 }')
-		    printf "Reinstalling $pkg from source, reason = $reason\n"
-		    printf "Installed: $installed_version\n"
-		    printf "Pkgsrc:     $pkgsrc_version\n"
-		    # This code is redundant with auto-install-packages,
-		    # but we don't use auto-install-packages here in case
-		    # auto-admin itself is marked for install from source
-		    # Remove other versions that might block install
-		    ## pkgsrc cannot remove a package without removing
-		    ## dependents, but it can overinstall
-		    # pkgin remove -fy $(auto-print-make-variable $pkg PKGBASE) || true
-		    save_cwd=$(pwd)
-		    pkg_delete -f $pkgbase  # Avoid already installed error
-		    cd $PKGSRCDIR/$pkg
-		    $make -DBATCH clean reinstall clean
-		    cd $save_cwd
-		else
-		    printf "$pkg is up-to-date.\n"
-		fi
+fi
+
+##########################################################################
+#   Process packages marked by auto-mark-install-from-source
+##########################################################################
+
+if [ -e $install_from_source ] && [ -e $PKGSRC/bin/pkgin ]; then
+    printf "Checking for packages to be installed from source...\n"
+    printf "Use auto-mark-install-from-source to update the list\n"
+    printf "or edit $install_from_source.\n"
+    while read line; do
+	echo $line
+	pkg=$(echo $line | awk '{ print $1 }')
+	pkgbase=$(auto-print-make-variable $pkg PKGBASE)
+	installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
+	pkgsrc_version=$(auto-print-make-variable $pkg PKGVERSION)
+	if [ ! -z $installed_version ]; then
+	    if [ 0$pkgsrc_version != 0$installed_version ]; then
+		reason=$(echo $line | awk '{ print $2 }')
+		printf "Reinstalling $pkg from source, reason = $reason\n"
+		printf "Installed: $installed_version\n"
+		printf "Pkgsrc:     $pkgsrc_version\n"
+		# This code is redundant with auto-install-packages,
+		# but we don't use auto-install-packages here in case
+		# auto-admin itself is marked for install from source
+		# Remove other versions that might block install
+		## pkgsrc cannot remove a package without removing
+		## dependents, but it can overinstall
+		# pkgin remove -fy $(auto-print-make-variable $pkg PKGBASE) || true
+		save_cwd=$(pwd)
+		pkg_delete -f $pkgbase  # Avoid already installed error
+		cd $PKGSRCDIR/$pkg
+		$make -DBATCH clean reinstall clean
+		cd $save_cwd
 	    else
-		printf "$pkg is not installed.\n"
+		printf "$pkg is up-to-date.\n"
 	    fi
-	done < $install_from_source
-    fi
-    
-    ##########################################################################
-    #   If not using binary packages and one of the pkgsrc upgrade tools is
-    #   installed, run it.
-    ##########################################################################
-    
-    src_update=''
-    if [ ! -e $PKGSRC/bin/pkgin ]; then
-	if [ -e $PKGSRC/sbin/pkg_rolling-replace ]; then
-	    src_update='pkg_rolling-replace -sv'
-	elif [ -e $PKGSRC/sbin/pkg_chk ]; then
-	    src_update='pkg_chk -su'
 	else
-	    (cd $PKGSRCDIR/pkgtools/pkg_chk && $make install)
+	    printf "$pkg is not installed.\n"
 	fi
+    done < $install_from_source
+fi
+
+##########################################################################
+#   If not using binary packages and one of the pkgsrc upgrade tools is
+#   installed, run it.
+##########################################################################
+
+src_update=''
+if [ ! -e $PKGSRC/bin/pkgin ]; then
+    if [ -e $PKGSRC/sbin/pkg_rolling-replace ]; then
+	src_update='pkg_rolling-replace -sv'
+    elif [ -e $PKGSRC/sbin/pkg_chk ]; then
+	src_update='pkg_chk -su'
+    else
+	(cd $PKGSRCDIR/pkgtools/pkg_chk && $make install)
     fi
-    
-    if [ -n "$src_update" ]; then
-	if [ $mode = interactive ]; then
-	    read -p "Update with \"$src_update\"? [y]/n " update_from_source
-	    if [ 0$update_from_source != 0n ]; then
-		update_from_source=y
-	    fi
-	else
+fi
+
+if [ -n "$src_update" ]; then
+    if [ $mode = interactive ]; then
+	read -p "Update with \"$src_update\"? [y]/n " update_from_source
+	if [ 0$update_from_source != 0n ]; then
 	    update_from_source=y
 	fi
-	if [ 0$update_from_source = 0y ]; then
+    else
+	update_from_source=y
+    fi
+    if [ 0$update_from_source = 0y ]; then
+	if installed_up_to_date pkgtools/pkg_install; then
 	    printf "\n**** Reinstalling pkg_install...\n"
 	    cd $PKGSRCDIR/pkgtools/pkg_install
 	    $make replace
-	    
-	    printf "\n**** Running $src_update...\n"
-	    cd ../..
-	    $src_update
+	else
+	    printf "$pkg is up-to-date.\n"
 	fi
+	printf "\n**** Running $src_update...\n"
+	cd ../..
+	$src_update
     fi
 fi
 
