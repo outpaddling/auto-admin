@@ -452,23 +452,32 @@ EOM
 	else
 	    auto-ports-checkout
 	fi
-	# In rare circumstances, the binary pkg package can be incompatible
-	# with the latest ports tree.  The pkg port should probably get
-	# special attention and trigger a new package build immediately
-	# following commits, but until then...
-	# PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
-	# by pkg -v, so use pkg query '%v' for comparison.
-	if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
-	    printf "pkg version does not match ports.  Rebuilding from source...\n"
-	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
-		&& make -DBATCH deinstall reinstall)
-	else
-	    printf "Binary pkg is up-to-date.\n"
-	fi
+
 	if which wip-update; then
 	    wip-update
 	fi
-	
+    fi
+
+    # In rare circumstances, the binary pkg package can be incompatible
+    # with the latest ports tree.  The pkg port should probably get
+    # special attention and trigger a new package build immediately
+    # following commits, but until then...
+    # PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
+    # by pkg -v, so use pkg query '%v' for comparison.
+    if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
+	printf "pkg version does not match ports.  Rebuilding from source...\n"
+	(cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
+	    && make -DBATCH deinstall reinstall)
+    else
+	printf "Binary pkg is up-to-date.\n"
+    fi
+    
+    # If binary packages were updated, also update ports listed in
+    # install-from-source.  Do this whether or not ports tree was updated
+    # here since it may have been updated by other means.  E.g. SPCM
+    # updates binary packages and rsyncs ports tree from the head node
+    # to other nodes.
+    if [ 0$update_packages != 0n ]; then
 	# Process ports marked by auto-mark-install-from-source
 	printf "Checking for ports to be installed from source...\n"
 	printf "Use auto-mark-install-from-source to update the list\n"
@@ -505,7 +514,7 @@ EOM
 	fi
 	set -e
     fi
-
+    
     if [ -e $(auto-localbase)/etc/auto-update-system-post-ports ]; then
 	plugin=$(auto-localbase)/etc/auto-update-system-post-ports
 	cat << EOM
