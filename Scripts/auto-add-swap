@@ -21,7 +21,7 @@
 #       0 on success, non-zero on failure
 #
 #   Files:
-#       /etc/rc.conf (FreeBSD)
+#       /etc/fstab (FreeBSD)
 #
 #   See also:
 #       swapon(1), mdconfig(1) (FreeBSD)
@@ -66,15 +66,23 @@ FreeBSD)
 	#    -o primarycache=none $pool/$sbase
 	#service zvol restart
     else
-	if grep -q '^swapfile=' /etc/rc.conf; then
-	    printf "Error: swapfile is already configured in rc.conf.\n"
+	if grep -q "$swapfile" /etc/fstab; then
+	    printf "Error: swapfile is already configured in fstab.\n"
 	    exit 1
 	else
 	    # FIXME: Probably won't work with ZFS
-	    dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
+	    if [ ! -e $swapfile ]; then
+		printf "Creating $swapfile...\n"
+		dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
+	    else
+		printf "Using existing $swapfile...\n"
+	    fi
 	    chmod 600 $swapfile
-	    printf "swapfile=\"$swapfile\"" >> /etc/rc.conf
-	    mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md0
+	    # https://www.cyberciti.biz/faq/create-a-freebsd-swap-file/
+	    printf "md42\tnone\tswap\tsw,file=$swapfile\t0\t0\n" >> /etc/fstab
+	    swapon -a
+	    # Old method
+	    # mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md42
 	fi
     fi
     ;;

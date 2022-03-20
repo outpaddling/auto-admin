@@ -29,7 +29,7 @@ cross-platform package manager with an extensive package collection that
 works on virtually any POSIX platform.  Packages may exist in other package
 managers as well, but we maintain a FreeBSD port and a pkgsrc package and
 update them regularly with new releases.  New pkgsrc users may want to
-try out [auto-pkgsrc-setup](https://netbsd.org/~bacon/), a simple script
+try out [auto-pkgsrc-setup](https://github.com/outpaddling/auto-admin/blob/master/Scripts/auto-pkgsrc-setup), a simple script
 to guide you through a pkgsrc installation.  Auto-pkgsrc-setup is actually
 part of auto-admin, but designed to run independently to solve the chicken-egg
 problem of getting pkgsrc running before auto-admin is installed.
