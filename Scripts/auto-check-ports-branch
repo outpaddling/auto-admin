@@ -17,6 +17,36 @@ usage()
 
 
 ##########################################################################
+#   Function description:
+#       Replace the ports tree and wip if present
+#       
+#   History:
+#   Date        Name        Modification
+#   2022-03-20  Charlie &   Begin
+##########################################################################
+
+replace_ports()
+{
+    # In case CWD is in $PORTSDIR
+    local save_cwd=$(pwd)
+    if [ -e $PORTSDIR/wip/.svn ]; then
+	local have_wip=1
+	local wip_vcs=svn
+    elif [ -e $PORTSDIR/wip/.git ]; then
+	local have_wip=1
+	local wip_vcs=git
+    fi
+    cd `dirname $PORTSDIR`  # Parent of PORTSDIR
+    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
+    auto-ports-checkout
+    if [ -n "$have_wip" ]; then
+	auto-freebsd-wip-checkout
+    fi
+    cd $save_cwd
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -32,13 +62,6 @@ FreeBSD)
     repo_branch=$(auto-pkg-branch)
     # Debug: 
     # repo_branch=2021Q1
-    if [ -e $PORTSDIR/wip/.svn ]; then
-	have_wip=1
-	wip_vcs=svn
-    elif [ -e $PORTSDIR/wip/.git ]; then
-	have_wip=1
-	wip_vcs=git
-    fi
     if [ ! -e $PORTSDIR/Makefile ]; then
 	printf "No ports tree at $PORTSDIR.  Checking one out now...\n"
 	auto-ports-checkout
@@ -57,14 +80,7 @@ EOM
 	if [ 0$replace_ok = 0y ]; then
 	    # Make sure we don't remove ports while CWD is in it, or
 	    # subsequent processes will fail due to nonexistent '.'
-	    save_cwd=$(pwd)
-	    cd /usr
-	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
-	    auto-ports-checkout
-	    if [ -n "$have_wip" ]; then
-		auto-freebsd-wip-checkout
-	    fi
-	    cd $save_cwd
+	    replace_ports
 	fi
     elif (cd $PORTSDIR && git remote -v | fgrep 'fetch' | fgrep 'cgit-beta.FreeBSD.org'); then
 	cat << EOM
@@ -79,11 +95,7 @@ EOM
 	printf "OK to replace $PORTSDIR? y/[n] "
 	read replace_ok
 	if [ 0$replace_ok = 0y ]; then
-	    find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
-	    auto-ports-checkout
-	    if [ -n "$have_wip" ]; then
-		auto-freebsd-wip-checkout
-	    fi
+	    replace_ports
 	else
 	    printf "OK, keeping $PORTSDIR for now.\n"
 	fi
@@ -115,12 +127,7 @@ EOM
 	    printf "Replace $PORTSDIR with $repo_branch? (y/n) [y] "
 	    read replace_ok
 	    if [ 0$replace_ok != 0n ]; then
-		# FIXME: Look into changing branches with git
-		find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
-		auto-ports-checkout
-		if [ -n "$have_wip" ]; then
-		    auto-freebsd-wip-checkout
-		fi
+		replace_ports
 	    fi
 	fi
     fi
