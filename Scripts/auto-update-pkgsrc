@@ -361,15 +361,18 @@ if [ -n "$src_update" ]; then
 	update_from_source=y
     fi
     if [ 0$update_from_source = 0y ]; then
-	if installed_up_to_date pkgtools/pkg_install; then
-	    printf "\n**** Reinstalling pkg_install...\n"
-	    cd $PKGSRCDIR/pkgtools/pkg_install
-	    $make replace
-	else
-	    printf "$pkg is up-to-date.\n"
-	fi
+	# FIXME: Do this for all packages marked not for deletion
+	for pkg in security/openssl pkgtools/pkg_install; do
+	    if installed_up_to_date $pkg; then
+		printf "\n**** Reinstalling pkg_install...\n"
+		cd $PKGSRCDIR/$pkg
+		$make replace
+	    else
+		printf "$pkg is up-to-date.\n"
+	    fi
+	    cd ../..
+	done
 	printf "\n**** Running $src_update...\n"
-	cd ../..
 	$src_update
     fi
 fi

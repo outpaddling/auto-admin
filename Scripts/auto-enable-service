@@ -60,7 +60,9 @@ FreeBSD)
     auto-set-conf-var ${service}_enable '"YES"' /etc/rc.conf $caller
     stop_service
     if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
-	service $script start
+	# Use restart instead of start to prevent desktop-installer
+	# from exiting after killing rogue devd?
+	service $script restart || true
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi
