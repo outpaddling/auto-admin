@@ -73,16 +73,18 @@ FreeBSD)
 	    # FIXME: Probably won't work with ZFS
 	    if [ ! -e $swapfile ]; then
 		printf "Creating $swapfile...\n"
-		dd if=/dev/zero of=$swapfile bs=1024k count=$mbytes
+		dd if=/dev/zero of=$swapfile bs=1m count=$mbytes
 	    else
 		printf "Using existing $swapfile...\n"
 	    fi
 	    chmod 600 $swapfile
 	    # https://www.cyberciti.biz/faq/create-a-freebsd-swap-file/
-	    printf "md42\tnone\tswap\tsw,file=$swapfile\t0\t0\n" >> /etc/fstab
-	    swapon -a
-	    # Old method
-	    # mdconfig -a -t vnode -f $swapfile -u 0 && swapon /dev/md42
+	    # https://www.freebsdnews.com/2015/07/03/add-swap-file-freebsd-10-1/
+	    # FIXME: "late" is a workaround for this bug:
+	    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=195326
+	    auto-append-line "md\tnone\tswap\tsw,file=$swapfile,late\t0\t0" \
+		/etc/fstab $0
+	    swapon -aL
 	fi
     fi
     ;;
