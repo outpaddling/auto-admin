@@ -293,6 +293,11 @@ if [ -n "$pkg_cache_host" ]; then
 	;;
     esac
     printf "Syncing from $pkg_cache_host...\n"
+    while ! ssh -o ConnectTimeOut=2 $pkg_cache_host ls > /dev/null; do
+	printf "pkgcache host ($pkg_cache_host) is not responding.\n"
+	printf "Will retry in 10 seconds.\n"
+	sleep 10
+    done
     rsync -av --timeout=5 ${pkg_cache_host}:$pkg_cache/ $pkg_cache || true
 fi
 
