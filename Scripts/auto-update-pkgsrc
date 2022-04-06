@@ -362,9 +362,11 @@ if [ -n "$src_update" ]; then
     fi
     if [ 0$update_from_source = 0y ]; then
 	# FIXME: Do this for all packages marked not for deletion
-	for pkg in security/openssl pkgtools/pkg_install; do
+	# and their dependencies.  Dependencies first.
+	# cwrappers, openssl deps for pkg_install
+	for pkg in pkgtools/cwrappers security/openssl pkgtools/pkg_install; do
 	    if installed_up_to_date $pkg; then
-		printf "\n**** Reinstalling pkg_install...\n"
+		printf "\n**** Running make replace for $pkg...\n"
 		cd $PKGSRCDIR/$pkg
 		$make replace
 	    else

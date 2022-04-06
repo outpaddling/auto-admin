@@ -64,7 +64,9 @@ FreeBSD)
     
     for mirror in 1 2 3 4 6 7 8 9 10 11 12; do
 	url=ftp$mirror.freebsd.org
+	# ping sometimes outputs "Alarm clock"
 	time=`ping -o -n -t 1 ftp$mirror.freebsd.org 2> /dev/null \
+	    | fgrep -v Alarm \
 	    | awk '$2 == "bytes" { print $7 }' | awk -F '=' ' { print $2 }' \
 	    | awk -F '.' ' { print $1 }'`
 	if [ $? != 0 ] || [ 0$time = 0 ]; then
