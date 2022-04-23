@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 [-p ports-dir] category/port\n"
+    printf "Usage: $0 [-p base-dir] category/port\n"
     exit 1
 }
 
@@ -50,7 +50,7 @@ FreeBSD)
     major_name=${name%-*}
     if pkg info ${name} > /dev/null 2>&1; then
 	printf "$name is installed.\n"
-	return 0;
+	exit 0;
     elif pkg info $major_name > /dev/null 2>&1; then
 	version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
 	installed="$major_name-$version"
@@ -59,13 +59,40 @@ FreeBSD)
 	fi
     else
 	printf "$major_name is not installed.\n"
-	return 1;
+	exit 1;
     fi
     ;;
-    
+
 *)
-    auto-unsupported-os $0
-    exit 1
+    if auto-using-pkgsrc; then
+	if [ `echo $port | awk -F / ' { print NF }'` != 2 ]; then
+	    usage
+	fi
+	
+	name=`auto-print-make-variable $* PKGNAME`
+	if [ $? != 0 ]; then
+	    printf "$name"
+	    exit 2
+	fi
+	
+	major_name=${name%-*}
+	if pkg_info ${name} > /dev/null 2>&1; then
+	    printf "$name is installed.\n"
+	    exit 0;
+	elif pkg_info $major_name > /dev/null 2>&1; then
+	    version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
+	    installed="$major_name-$version"
+	    if [ $installed != $name ]; then
+		printf "$installed is installed (your ports tree contains $name).\n"
+	    fi
+	else
+	    printf "$major_name is not installed.\n"
+	    exit 1;
+	fi
+    else
+	printf "No FreeBSD ports or pkgsrc found.\n"
+	exit 1
+    fi
     ;;
 
 esac
