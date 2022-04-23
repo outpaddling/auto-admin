@@ -157,16 +157,44 @@ fi
 
 start_dir=`pwd`
 
-# RHEL / CentOS base
-if [ -e /etc/redhat-release ]; then
-    if [ `whoami` = root ]; then
+if [ `whoami` = root ]; then
+    # RHEL / CentOS base
+    if [ -e /etc/redhat-release ]; then
 	printf "Installing base development tools via yum...\n"
-	yum install -y gcc-gfortran gcc-c++ gcc tar git
-    else
-	if [ ! -e /usr/bin/gcc ] || [ ! -e /usr/bin/tar ] || [ ! -e /usr/bin/git ]; then
-	    printf "You must run 'yum install gcc-gfortran gcc-c++ gcc tar git' first.\n"
-	    exit 1
+	yum install -y gcc-gfortran gcc-c++ gcc java-11-openjdk-devel tar git
+    elif [ -e /etc/debian_version ]; then
+	printf "Installing base development tools via apt...\n"
+	apt install -y gcc g++ gfortran openjdk-11-headless tar curl git
+    fi
+fi
+
+if [ $(uname) != NetBSD ]; then
+    printf "Checking for required tools...\n"
+    for tool in cc c++ javac tar curl git; do
+	if ! which $tool; then
+	    missing="$missing $tool"
 	fi
+    done
+    if [ -n "$missing" ]; then
+	cat << EOM
+
+Missing required tools:$missing
+
+Please install these tools via your operating system's native package manager
+and run $0 again.
+
+On Linux systems you should also install gfortran along with gcc and g++.
+
+On Debian-based systems:
+
+    apt install -y gcc g++ gfortran openjdk-11-headless tar curl git
+
+On Fedora/RHEL-based systems:
+
+    yum install -y gcc gcc-g++ gcc-gfortran java-11-openjdk-devel tar curl git
+
+EOM
+    exit 1
     fi
 fi
 
@@ -854,7 +882,7 @@ except itself.
 
 EOM
     # Keep this in sync with pbulk-setup
-    default_minimum=3
+    default_minimum=0
     printf "Selection? [$default_minimum] "
     read selection
     if [ 0$selection = 0 ]; then
