@@ -21,7 +21,7 @@ Usage: $0 tag "question" default-answer
     'tag' is a name used to uniquely identify this question in the
     recorded responses.  It must be a single word without spaces or
     special shell characters, and must be unique across all calls
-    to $0.  The concatenation of $AUTO_ASK_TAG_PREFIX$tag is
+    to $0.  The concatenation of \$AUTO_ASK_TAG_PREFIX and tag is
     added to ~/.config/auto-ask-responses.  Suffix AUTO_ASK_TAG_PREFIX
     with a - if you would like a separator, e.g.
     
