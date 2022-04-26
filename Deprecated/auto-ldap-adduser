@@ -11,9 +11,27 @@ while [ 0$user_name = 0 ]; do
     read user_name
 done
 
-if [ -e /usr/local/etc/ldap.conf ]; then
+case $(auto-ostype) in
+RHEL)
+    ldap_conf=/etc/openldap/ldap.conf
+    default_shell="/bin/bash"
+    ;;
+
+FreeBSD)
+    ldap_conf=/usr/local/etc/ldap.conf
+    default_shell="/bin/tcsh"
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
+
+if [ -e $ldap_conf ]; then
     # Flag usernames not in LDAP
-    ldap_verified_uid=`ldapsearch uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+    ldap_verified_uid=`ldapsearch -x uid=$user_name | awk '$1 == "uid:" { print $2 }'`
     if [ 0$ldap_verified_uid != 0$user_name ]; then
 	printf "User $user_name is not in the LDAP directory.  Continue? (y/n) "
 	read resp
@@ -32,7 +50,7 @@ fi
 printf "Other groups (separated by commas)? "
 read othergroups
 
-default_comment=`ldapsearch uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+default_comment=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
 comment=''
 while [ 0"$comment" = 0 ]; do
     printf "Comment? [default = '$default_comment'] "
@@ -45,7 +63,6 @@ done
 printf "User ID? [Press return for default] "
 read user_id
 
-default_shell="/bin/tcsh"
 cat /etc/shells
 printf "\nShell? [$default_shell] "
 read shell
@@ -53,29 +70,59 @@ if [ 0$shell = 0 ]; then
     shell=$default_shell
 fi
 
-groupadd_cmd="pw groupadd $primary_group"
-if [ 0$user_id != 0 ]; then
-    groupadd_cmd="$groupadd_cmd -g $user_id"
-fi
+case $(auto-ostype) in
+FreeBSD)
+    groupadd_cmd="pw groupadd $primary_group"
+    if [ 0$user_id != 0 ]; then
+	groupadd_cmd="$groupadd_cmd -g $user_id"
+    fi
+    
+    # Order of pw flags matters!
+    useradd_cmd="pw useradd $user_name"
+    if [ 0$user_id != 0 ]; then
+	useradd_cmd="$useradd_cmd -u $user_id"
+    fi
+    useradd_cmd="$useradd_cmd -c \"$comment\" -g $primary_group"
+    if [ 0$othergroups != 0 ]; then
+	useradd_cmd="$useradd_cmd -G \"$othergroups\""
+    fi
+    useradd_cmd="$useradd_cmd -m -s $shell"
+    ;;
 
-# Order of pw flags matters!
-useradd_cmd="pw useradd $user_name -w random"
-if [ 0$user_id != 0 ]; then
-    useradd_cmd="$useradd_cmd -u $user_id"
-fi
-useradd_cmd="$useradd_cmd -c \"$comment\" -g $primary_group"
-if [ 0$othergroups != 0 ]; then
-    useradd_cmd="$useradd_cmd -G \"$othergroups\""
-fi
-useradd_cmd="$useradd_cmd -m -s $shell"
+RHEL)
+    groupadd_cmd="groupadd"
+    if [ 0$user_id != 0 ]; then
+	groupadd_cmd="$groupadd_cmd -g $user_id"
+    fi
+    groupadd_cmd="$groupadd_cmd $primary_group"
+    
+    # Order of pw flags matters!
+    useradd_cmd="useradd"
+    if [ 0$user_id != 0 ]; then
+	useradd_cmd="$useradd_cmd -u $user_id"
+    fi
+    useradd_cmd="$useradd_cmd -c \"$comment\" -g $primary_group"
+    if [ 0$othergroups != 0 ]; then
+	useradd_cmd="$useradd_cmd -G \"$othergroups\""
+    fi
+    useradd_cmd="$useradd_cmd -m -s $shell"
+    useradd_cmd="$useradd_cmd $user_name"
+    ;;
+*)
+    exit 1
+    ;;
+esac
 
 # Eval here to expand before running
 printf "$groupadd_cmd\n"
 eval $groupadd_cmd
 printf "$useradd_cmd\n"
 eval $useradd_cmd
+
+passwd $user_name
+
 if [ 0$user_name = 0$ldap_verified_uid ]; then
-cat << EOM
+    cat << EOM
 
 This user can authenticate using either LDAP or the temporary password
 shown above.  It is therefore optional to provide this temporary password
@@ -83,9 +130,9 @@ to the user.
 
 EOM
 else
-cat << EOM
+    cat << EOM
 
-Record the temporary password shown above.  This is the only means by which
+Record the temporary password.  This is the only means by which
 this user can authenticate.
 
 EOM
