@@ -9,7 +9,7 @@
 #
 #   History:
 #   Date        Name        Modification
-#   2017-02-14  Charlie &   Begin
+#   2017-02-14  J Bacon     Begin
 ##########################################################################
 
 ##########################################################################
@@ -108,7 +108,7 @@ drm_from_source()
 
 case $(auto-ostype) in
 FreeBSD)
-    cat << EOM
+    more << EOM
 
 Given the wide variety of graphics chipsets available, it is virtually
 impossible to configure the graphics environment automatically.
@@ -128,7 +128,12 @@ vi /etc/rc.conf
 Remove the "kms" module (e.g. i915kms, radeonkms) from the "kld_list" setting.
 Save and reboot.
 
-We will now attempt to detect your GPU and provide some guidance...
+We will now attempt to detect your GPU and provide some guidance.  This
+will automatically install a stable version of the drm-kmod (Direct
+Rendering Kernel Module).  Note that there may also be newer, experimental
+drm-kmod ports such as /usr/ports/graphics/drm-510-kmod that better support
+bleeding-edge hardware.  You can install one of these manually if you want
+to try them.
 
 EOM
     pause
