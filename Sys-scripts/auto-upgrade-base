@@ -20,6 +20,8 @@ usage()
 #   Main
 ##########################################################################
 
+auto-root-check $0
+
 case $(auto-ostype) in
 FreeBSD)
     case $# in

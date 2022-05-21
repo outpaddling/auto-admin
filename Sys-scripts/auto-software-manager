@@ -98,14 +98,14 @@ Q.. Quit
 EOM
 
     read -p 'Selection? ' resp
-    case 0$resp in
-    01)
+    case $resp in
+    1)
 	$installed_cmd | more
 	printf "$($installed_cmd | wc -l) packages installed.\n"
 	pause
 	;;
 
-    02)
+    2)
 	tmpfile=.auto-software-manager-packages.txt
 	eval $available_cmd > $tmpfile
 	more $tmpfile
@@ -114,13 +114,13 @@ EOM
 	pause
 	;;
 
-    03)
+    3)
 	read -p 'Enter any part of the package name: ' pattern
 	$search_cmd "$pattern" | more
 	pause
 	;;
     
-    04)
+    4)
 	read -p 'Enter the package name(s): ' names
 	if [ 0"$names" != 0 ]; then
 	    $install_cmd $names
@@ -128,7 +128,7 @@ EOM
 	fi
 	;;
     
-    05)
+    5)
 	read -p 'Enter the package name(s): ' names
 	if [ 0"$names" != 0 ]; then
 	    $remove_cmd $names
@@ -140,7 +140,7 @@ EOM
 	fi
 	;;
     
-    06)
+    6)
 	read -p 'Enter category/name: ' names
 	if [ 0"$names" != 0 ]; then
 	    $install_from_source_cmd $names
@@ -148,7 +148,7 @@ EOM
 	fi
 	;;
 
-    07)
+    7)
 	cat << EOM
 
 Users may need to install some ports/packages from source even though they use
@@ -197,7 +197,7 @@ EOM
 	fi
 	;;
     
-    08)
+    8)
 	cat << EOM
 
 Occasionally an important port becomes broken and running package upgrades
@@ -222,7 +222,7 @@ EOM
 	fi
 	;;
     
-    09)
+    9)
 	auto-pkg-latest
 	pause
 	;;
@@ -232,7 +232,7 @@ EOM
 	pause
 	;;
     
-    0Q|0q)
+    Q|q)
 	exit 0
 	;;
 
