@@ -43,11 +43,14 @@ FreeBSD)
     fi
     
     # Silence 'Alarm clock' message from shell when ping -t 1 times out
-    trap SIGALRM
+    # Doesn't work
+    # trap SIGALRM
     
     # Start with primary server, then compare all mirrors
     fastest_mirror=''
+    # ping sometimes outputs "Alarm clock"
     fastest_time=`ping -o -n -t 1 ftp.freebsd.org 2> /dev/null \
+	    | fgrep -vi alarm \
 	    | awk '$2 == "bytes" { print $7 }' | awk -F '=' ' { print $2 }' \
 	    | awk -F '.' ' { print $1 }'`
     
@@ -66,7 +69,7 @@ FreeBSD)
 	url=ftp$mirror.freebsd.org
 	# ping sometimes outputs "Alarm clock"
 	time=`ping -o -n -t 1 ftp$mirror.freebsd.org 2> /dev/null \
-	    | fgrep -v Alarm \
+	    | fgrep -vi alarm \
 	    | awk '$2 == "bytes" { print $7 }' | awk -F '=' ' { print $2 }' \
 	    | awk -F '.' ' { print $1 }'`
 	if [ $? != 0 ] || [ 0$time = 0 ]; then
