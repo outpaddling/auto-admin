@@ -92,6 +92,7 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 7.. Tag a port/package for installation from source
 8.. Tag a binary package as critical
 9.. Switch from quarterly to latest packages
+10. Upgrade the base system
 Q.. Quit
 
 EOM
@@ -223,6 +224,11 @@ EOM
     
     09)
 	auto-pkg-latest
+	pause
+	;;
+    
+    10)
+	auto-upgrade-base
 	pause
 	;;
     

@@ -1,0 +1,108 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Switch XDM on or off
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-01-08  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [release]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $(auto-ostype) in
+FreeBSD)
+    case $# in
+    0)
+	printf "New release? (e.g. 13.1-RELEASE, 13.2-BETA1) "
+	read release
+	;;
+    1)
+	release=$1
+	;;
+    esac
+    
+    more << EOM
+
+			    ======== Warning ========
+
+Using the upgrade process to switch to a new release of the OS is not the
+cleanest way to upgrade.  Any corruption in the filesystem or configuration
+files caused by power outages or human error will likely remain after the
+upgrade, as will "bit rot", the degradation of data on storage media due
+to physical flaws or other causes.
+
+Many IT experts argue that a filesystem should be wiped away and recreated
+once every year or two in order to avoid accumulating hidden problems.
+
+You may want to consider instead backing up your important files (e.g.
+documents, source code, configuration files under /etc and /usr/local/etc)
+and doing a fresh install to ensure that you end up with a pristine system.
+This process also helps eliminate junk files and free up disk space.
+
+Minor upgrades (e.g. from 13.0 to 13.1) are generally safer than major
+upgrades (12.3 to 13.1), but a fresh install always results in the cleanest
+system.  Doing fresh installs frequently is also good practice to prepare
+you for times when you have no choice (new systems, disk failures).
+
+Note also that you may need to manually edit some configuration files
+before proceeding with the upgrade.
+
+EOM
+    while [ 0"$resp" != 0"yes" ] && [ 0"$resp" != 0"no" ]; do
+	printf "Proceed? yes/no "
+	read resp
+    done
+    if [ $resp = yes ]; then
+	freebsd-update upgrade -r $release
+	resp=""
+	while [ 0"$resp" != 0"yes" ] && [ 0"$resp" != 0"no" ]; do
+	    printf "Install updates? yes/no "
+	    read resp
+	done
+	if [ $resp = yes ]; then
+	    freebsd-update install
+
+	    cat << EOM
+
+After rebooting, it is best to complete the process from a text console
+(virtual terminal) rather than a GUI session.
+
+If a graphical login screen appears after rebooting, type Ctrl+Alt+F1 to
+go to virtual terminal 0, then log in as root and run
+
+    freebsd-update install
+    auto-update-system --defaults
+
+Another reboot is then a good idea to reload kernel modules and services
+upgraded by auto-update-system.
+
+EOM
+	    resp=""
+	    while [ 0"$resp" != 0"yes" ] && [ 0"$resp" != 0"no" ]; do
+		printf "Reboot now? yes/no "
+		read resp
+	    done
+	    if [ $resp = yes ]; then
+		shutdown -r now
+	    fi
+	fi
+    fi
+    ;;
+    
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
