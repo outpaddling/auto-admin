@@ -30,7 +30,7 @@ Usage: $0 tag "question" default-answer
     'question' must be enclosed in quotes if it contains spaces or
     special characters.
     
-    'default-answer' must also be encloded in quotes if it contains
+    'default-answer' must also be enclosed in quotes if it contains
     spaces or special characters.
 
     Environment:
