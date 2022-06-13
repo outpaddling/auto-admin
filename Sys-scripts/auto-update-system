@@ -401,6 +401,7 @@ EOM
 		    flavor="$(echo $line | awk '{ print $3 }')"
 		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE) || true
 		else
+		    unset flavor
 		    pkgbase=$(auto-print-make-variable $port PKGBASE) || true
 		fi
 		installed_version=$(pkg query '%v' $pkgbase) || true
@@ -500,6 +501,7 @@ EOM
 		    flavor="$(echo $line | awk '{ print $3 }')"
 		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE)
 		else
+		    unset flavor
 		    pkgbase=$(auto-print-make-variable $port PKGBASE)
 		fi
 		installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
