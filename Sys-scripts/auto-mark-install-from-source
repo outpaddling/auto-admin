@@ -13,12 +13,15 @@ usage()
 {
     cat << EOM
 
-Usage: $0 category/package reason
+Usage: $0 category/package[@flavor] reason
 
 Marks a port for reinstalling from source by auto-update-system.  This
 may be desirable to restore port options clobbered by "pkg upgrade",
 upgrade ports that cannot be packaged, or build with optimized CFLAGS set
 in /etc/make.conf.
+
+FreeBSD ports: If the port/package supports flavors and no flavor is
+specified, the default flavor is assumed.
 
 The "reason" argument must not contain spaces.  It is a brief message that
 will be displayed by auto-upgrade-system when rebuilding a package from
