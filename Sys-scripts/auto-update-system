@@ -397,7 +397,12 @@ EOM
 	    rm -f $installed_versions_db
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
-		pkgbase=$(auto-print-make-variable $port PKGBASE) || true
+		if [ $(echo $line | wc -w) = 3 ]; then
+		    flavor="$(echo $line | awk '{ print $3 }')"
+		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE) || true
+		else
+		    pkgbase=$(auto-print-make-variable $port PKGBASE) || true
+		fi
 		installed_version=$(pkg query '%v' $pkgbase) || true
 		printf "$pkgbase $installed_version\n" >> $installed_versions_db
 	    done < $install_from_source
@@ -491,7 +496,12 @@ EOM
 	if [ -e "$install_from_source" ]; then
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
-		pkgbase=$(auto-print-make-variable $port PKGBASE)
+		if [ $(echo $line | wc -w) = 3 ]; then
+		    flavor="$(echo $line | awk '{ print $3 }')"
+		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE)
+		else
+		    pkgbase=$(auto-print-make-variable $port PKGBASE)
+		fi
 		installed_version=$(awk -v pkgbase=$pkgbase '$1 == pkgbase { print $2 }' $installed_versions_db)
 		ports_version=$(auto-print-make-variable $port PKGVERSION)
 		if [ ! -z "$installed_version" ]; then
@@ -504,16 +514,20 @@ EOM
 			# but we don't use auto-install-packages here in case
 			# auto-admin itself is marked for install from source
 			# Remove other versions that might block install
-			pkg remove -fy $(auto-print-make-variable $port PKGBASE) || true
+			pkg remove -fy $pkgbase || true
 			save_cwd=$(pwd)
 			cd $PORTSDIR/$port
-			make clean reinstall clean
+			if [ -n "$flavor" ]; then
+			    make clean reinstall clean FLAVOR=$flavor
+			else
+			    make clean reinstall clean
+			fi
 			cd $save_cwd
 		    else
-			printf "$port is up-to-date.\n"
+			printf "$pkgbase is up-to-date.\n"
 		    fi
 		else
-		    printf "$port is not installed.\n"
+		    printf "$pkgbase is not installed.\n"
 		fi
 	    done < $install_from_source
 	fi

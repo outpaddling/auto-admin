@@ -47,6 +47,10 @@ pkg=$1
 if ! echo $pkg | fgrep -q '/'; then
     usage
 fi
+if echo $pkg | fgrep -q '@'; then
+    flavor=$(echo $pkg | cut -d @ -f 2)
+    pkg=$(echo $pkg | cut -d @ -f 1)
+fi
 reason=$2
 
 case $(auto-ostype) in
@@ -58,7 +62,7 @@ FreeBSD)
     fi
     mkdir -p $(auto-localbase)/etc/auto-admin
     # Check for port/package name only.  Don't duplicate if reason differs.
-    auto-append-line $pkg "$pkg $reason" \
+    auto-append-line $pkg "$pkg $reason $flavor" \
 	$(auto-localbase)/etc/auto-admin/install-from-source nocomment
     ;;
 

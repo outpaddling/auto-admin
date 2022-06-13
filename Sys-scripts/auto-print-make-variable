@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [-p prefix] category/${port_or_package} variable-name\n"
+    printf "Usage: $0 [--base-dir dir] [--flavor flavor] category/${port_or_package} variable-name\n"
     exit 1
 }
 
@@ -41,17 +41,22 @@ else
     fi
 fi
 
-case $# in
-2)
-    ;;
-4)
-    if [ $1 = '-p' ]; then
+while [ $(echo $1 | cut -c 1) = '-' ]; do
+    if [ $1 = '--base-dir' ]; then
 	base_dir=$2
+	shift
+	shift
+    elif [ $1 = '--flavor' ]; then
+	flavor="FLAVOR=$2"
 	shift
 	shift
     else
 	usage
     fi
+done
+
+case $# in
+2)
     ;;
 *)
     usage
@@ -68,4 +73,4 @@ fi
 cd $base_dir/$port_dir
 # FIXME: Is this still relevant?
 # Prevent HAVE_GNOME from adding -gnome to PKGNAME
-${make} WITHOUT_GNOME=yes -v $variable
+${make} $flavor WITHOUT_GNOME=yes -v $variable
