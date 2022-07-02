@@ -138,7 +138,8 @@ FreeBSD)
 	    break
 	fi
 	
-	pkg_name=`auto-print-make-variable -p $PORTSDIR $port PKGNAME`
+	# FIXME: Is --base-dir really needed?
+	pkg_name=`auto-print-make-variable --base-dir $PORTSDIR $port PKGNAME`
 	if [ $latest_package_name = 1 ]; then
 	    pkg_name=${pkg_name%%-[0-9]*}
 	fi
