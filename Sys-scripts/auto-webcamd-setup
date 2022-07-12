@@ -2,29 +2,27 @@
 
 ##########################################################################
 #   Synopsis:
-#       
+#       auto-webcamd-setup
+#
 #   Description:
-#       
+#       Install and configure software needed for webcams.  Also
+#       prompts to enable individual users.
+#
 #   Arguments:
-#       
+#       None.
+#
 #   Returns:
-#
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
 #
 #   See also:
 #       
 #   History:
 #   Date        Name        Modification
-#   2022-07-12  Charlie &   Begin
+#   2022-07-12  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -46,8 +44,11 @@ FreeBSD)
     kldload cuse || true
     auto-set-conf-var cuse_load '"YES"' $LOADER_CONF $0
     auto-enable-service webcamd $0
-    dmesg | tail
-    read -p "ugen device? (e.g. 1.5) " ugen
+    dmesg | grep ^ugen | tail
+    while [ -z "$ugen" ]; do
+	printf "Enter the ugen number shown above for your camera.\n"
+	read -p "ugen device? (e.g. 1.5) " ugen
+    done
     sysrc webcamd_0_flags="-d ugen$ugen"
     service devd restart
     service webcamd restart
