@@ -1,0 +1,72 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-webcamd-setup
+#
+#   Description:
+#       Install and configure software needed for webcams.  Also
+#       prompts to enable individual users.
+#
+#   Arguments:
+#       None.
+#
+#   Returns:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2022-07-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+	
+case $(auto-ostype) in
+FreeBSD)
+    # https://www.davidschlachter.com/misc/freebsd-webcam-browser
+    LOADER_CONF=/boot/loader.conf
+    RC_CONF=/etc/rc.conf
+    pkg install -y webcamd pwcview v4l-utils v4l_compat
+    kldload cuse || true
+    auto-set-conf-var cuse_load '"YES"' $LOADER_CONF $0
+    auto-enable-service webcamd $0
+    sleep 2
+    dmesg | grep ^ugen | fgrep -i camera | uniq
+    while [ -z "$ugen" ]; do
+	read -p "ugen device? (e.g. 1.5) " ugen
+    done
+    auto-append-line webcamd_0_flags "webcamd_0_flags=\"-d ugen$ugen\"" \
+	$RC_CONF $0
+    service devd restart
+    service webcamd restart
+    user_name='x'
+    while [ -n "$user_name" ]; do
+	read -p 'Username to use webcam? (Press Enter to skip) ' user_name
+	if [ -n "$user_name" ]; then
+	    pw groupmod webcamd -m $user_name
+	fi
+    done
+    printf "Run pwcview -d /dev/video0 to test.\n"
+    ;;
+
+*)
+    # FIXME: Make auto-unsupported-os return 1?
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

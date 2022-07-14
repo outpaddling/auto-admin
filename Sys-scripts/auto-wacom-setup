@@ -2,10 +2,10 @@
 
 ##########################################################################
 #   Synopsis:
-#       auto-webcamd-setup
+#       auto-wacom-setup
 #
 #   Description:
-#       Install and configure software needed for webcams.  Also
+#       Install and configure software needed for wacom tablets.  Also
 #       prompts to enable individual users.
 #
 #   Arguments:
@@ -37,21 +37,28 @@ fi
 	
 case $(auto-ostype) in
 FreeBSD)
+    # pkg-message:
+    # moused(8) may interfere with tablet input by attaching to fake /dev/ums*.
+    # To prevent that add a usb_quirk(4) then detach and attach the tablet.
+    # /usr/local/etc/rc.d/wacom is an example how preserve quirks across reboot.
+
     # https://www.davidschlachter.com/misc/freebsd-webcam-browser
     LOADER_CONF=/boot/loader.conf
     RC_COND=/etc/rc.conf
-    pkg install -y webcamd pwcview v4l-utils v4l_compat
+    pkg install -y webcamd libwacom xf86-input-wacom xorg-server
+    
+    # Load cuse now and at reboot
     kldload cuse || true
     auto-set-conf-var cuse_load '"YES"' $LOADER_CONF $0
+
+    # Enable and start webcamd
     auto-enable-service webcamd $0
-    dmesg | grep ^ugen | tail
-    while [ -z "$ugen" ]; do
-	printf "Enter the ugen number shown above for your camera.\n"
-	read -p "ugen device? (e.g. 1.5) " ugen
-    done
-    sysrc webcamd_0_flags="-d ugen$ugen"
+
+    # Restart devd
+    auto-enable-service devd $0
     service devd restart
-    service webcamd restart
+    
+    # Add users to webcamd to allow access to tablet
     user_name='x'
     while [ -n "$user_name" ]; do
 	read -p 'Username to use webcam? (Press Enter to skip) ' user_name
@@ -59,7 +66,6 @@ FreeBSD)
 	    pw groupmod webcamd -m $user_name
 	fi
     done
-    printf "Run pwcview -d /dev/video0 to test.\n"
     ;;
 
 *)
