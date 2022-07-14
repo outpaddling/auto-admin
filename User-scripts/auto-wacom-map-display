@@ -6,54 +6,64 @@ if [ $(whoami) = root ]; then
     exit 1
 fi
 
-# Based on
-# http://www.unibia.com/unibianet/freebsd/configure-your-wacom-tablet-use-only-one-screen-freebsd-and-x11
-# Xsetup - run as root before the login dialog appears
-
-# .... <You may or may not have other stuff in here already> ....
-
-# Case sensitive search for tablet vendor
-TABLET_VENDOR="Wacom"
-
-printf "Available displays:\n"
-xrandr --listactivemonitors | awk '{ print $4 }'
-printf "\n"
-
-# Get the primary display's port
-PRIMARY_DISPLAY=$(xrandr --listactivemonitors \
-    | awk '$2 ~ /\+\*/ { gsub(/\+\*/, ""); print $2}')
-
-if [ -z $PRIMARY_DISPLAY ]; then 
-    printf "Unable to find primary display\n\n";
-else
-    printf "Primary display appears to be $PRIMARY_DISPLAY.\n\n"
-fi
-
-while [ -z "$wacom_display" ]; do
-    printf "Enter the name of the display to which Wacom drawing should be mapped: "
-    read wacom_display
-done
-
-# Grab list of tablet device ID's
-DEVICE_IDS=$(xinput | awk '/'${TABLET_VENDOR}'/ && match($0, /id=[[:space:]]*[0-9]+/) { dev=substr($0, RSTART, RLENGTH); gsub(/id=[[:space:]]*/, "", dev); print dev }')
-echo $DEVICE_IDS
-
-# Map devices to the display
-for device in $DEVICE_IDS; do
-    xinput map-to-output $device $wacom_display
-done
-
-# Doesn't work with XDM/Lumina
-exit
-printf "Save to ~/.xprofile for next login? [y]/n "
-read save
-if [ 0$save != 0n ]; then
-    cat << EOM > $HOME/.xprofile
+case $(auto-ostype) in
+FreeBSD)
+    # Based on
+    # http://www.unibia.com/unibianet/freebsd/configure-your-wacom-tablet-use-only-one-screen-freebsd-and-x11
+    # Xsetup - run as root before the login dialog appears
+    
+    # .... <You may or may not have other stuff in here already> ....
+    
+    # Case sensitive search for tablet vendor
+    TABLET_VENDOR="Wacom"
+    
+    printf "Available displays:\n"
+    xrandr --listactivemonitors | awk '{ print $4 }'
+    printf "\n"
+    
+    # Get the primary display's port
+    PRIMARY_DISPLAY=$(xrandr --listactivemonitors \
+	| awk '$2 ~ /\+\*/ { gsub(/\+\*/, ""); print $2}')
+    
+    if [ -z $PRIMARY_DISPLAY ]; then 
+	printf "Unable to find primary display\n\n";
+    else
+	printf "Primary display appears to be $PRIMARY_DISPLAY.\n\n"
+    fi
+    
+    while [ -z "$wacom_display" ]; do
+	printf "Enter the name of the display to which Wacom drawing should be mapped: "
+	read wacom_display
+    done
+    
+    # Grab list of tablet device ID's
+    DEVICE_IDS=$(xinput | awk '/'${TABLET_VENDOR}'/ && match($0, /id=[[:space:]]*[0-9]+/) { dev=substr($0, RSTART, RLENGTH); gsub(/id=[[:space:]]*/, "", dev); print dev }')
+    echo $DEVICE_IDS
+    
+    # Map devices to the display
+    for device in $DEVICE_IDS; do
+	xinput map-to-output $device $wacom_display
+    done
+    
+    # Doesn't work with XDM/Lumina
+    exit
+    printf "Save to ~/.xprofile for next login? [y]/n "
+    read save
+    if [ 0$save != 0n ]; then
+	cat << EOM > $HOME/.xprofile
 #!/bin/sh -e
 
 for device in `echo $DEVICE_IDS`; do
     xinput map-to-output \$device $wacom_display
 done
 EOM
-chmod 700 $HOME/.xprofile
-fi
+    chmod 700 $HOME/.xprofile
+    fi
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
