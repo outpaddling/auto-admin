@@ -257,6 +257,19 @@ if ! auto-root-check $0; then
     exec su -m root -c "$cmd"
 fi
 
+cat << EOM
+
+***********************************************************************
+* Warning: Updating a live system can cause running processes to fail *
+* when program components are updated.  Refrain from running programs *
+* until this update is complete.  Log out and log back in if any part *
+* of your desktop environment has been updated.  Reboot if the kernel *
+* or any kernel modules have been updated.                            *
+***********************************************************************
+
+EOM
+sleep 5
+
 if [ 0"$1" = 0--sync-pkg-cache ]; then
     if [ $# -ge 2 ]; then
 	sync_pkg_cache=1
