@@ -44,7 +44,14 @@ pause()
     local junk
     
     printf "Press return to continue..."
-    read junk
+    read -t $timeout junk
+}
+
+
+su_exit()
+{
+    printf "Exiting root process due to excessive idle time.\n"
+    exit 0
 }
 
 
@@ -55,6 +62,12 @@ pause()
 if [ $# != 0 ]; then
     usage
 fi
+
+timeout=60   # Exit from su if idle time too long
+
+# FIXME: Figure out how to trap read -t timeout.  This doesn't work.
+# trap su_exit ALRM
+# trap -l
 
 # Prevent user from running a Trojan as root in the case their account
 # was compromised
@@ -98,13 +111,13 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    read -t $timeout -p 'Selection? ' resp
     case 0$resp in
     01)
 	printf '\nThe following users are currently logged in:\n\n'
 	finger
 	printf '\nProceed with system updates? y/[n] '
-	read proceed
+	read -t $timeout proceed
 	if [ 0$proceed = 0y ]; then
 	    cat << EOM | wall
 
