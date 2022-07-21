@@ -461,7 +461,17 @@ EOM
 	# Was CHANGES for FreeBSD.  Is Makefile just as good?
 	if [ -e $PORTSDIR/Makefile ]; then
 	    if [ -e $PORTSDIR/.git ]; then
-		(cd $PORTSDIR && git pull)
+		save_cwd=$(pwd)
+		cd $PORTSDIR
+		printf "Stashing bsd.local.mk...\n"
+		git stash push Mk/bsd.local.mk
+
+		printf "Pulling...\n"
+		git pull
+
+		printf "Unstashing...\n"
+		git stash pop
+		cd $save_cwd
 	    else
 		cat << EOM
 
