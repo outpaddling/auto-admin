@@ -37,7 +37,7 @@ fi
 	
 case $(auto-ostype) in
 FreeBSD)
-    if ! grep -i 'ugen.*camera' /var/run/dmesg.boot; then
+    if ! grep -iq '^ugen.*camera' /var/run/dmesg.boot; then
 	printf "No webcam detected.  Install a webcam and run $0 again.\n"
 	exit 1
     fi
