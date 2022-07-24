@@ -37,6 +37,11 @@ fi
 	
 case $(auto-ostype) in
 FreeBSD)
+    if ! grep -i 'ugen.*camera' /var/run/dmesg.boot; then
+	printf "No webcam detected.  Install a webcam and run $0 again.\n"
+	exit 1
+    fi
+    
     # https://www.davidschlachter.com/misc/freebsd-webcam-browser
     LOADER_CONF=/boot/loader.conf
     RC_CONF=/etc/rc.conf
