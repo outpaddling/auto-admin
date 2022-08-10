@@ -14,6 +14,9 @@ pause()
 #   History:
 #   Date        Name        Modification
 #   2016-01-04  Jason Bacon Begin
+#
+#   Git version:
+#   replace-me
 ##########################################################################
 
 select_snapshot()
