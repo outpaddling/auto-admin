@@ -464,13 +464,13 @@ EOM
 		save_cwd=$(pwd)
 		cd $PORTSDIR
 		printf "Stashing bsd.local.mk...\n"
-		git stash push Mk/bsd.local.mk
+		git stash push Mk/bsd.local.mk || true
 
 		printf "Pulling...\n"
 		git pull
 
 		printf "Unstashing...\n"
-		git stash pop
+		git stash pop || true   # Returns non-zero if nothing stashed
 		cd $save_cwd
 	    else
 		cat << EOM
