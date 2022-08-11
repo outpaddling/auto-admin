@@ -73,7 +73,9 @@ EOM
 	    read resp
 	done
 	if [ $resp = yes ]; then
-	    freebsd-update install
+	    # Restart sshd immediately in case API changes broken running daemon
+	    # Otherwise we may lose access when upgrading remotely
+	    freebsd-update install && service sshd restart || true
 
 	    cat << EOM
 
@@ -83,9 +85,6 @@ After rebooting, it is best to complete the process from a text console
 If a graphical login screen appears after rebooting, type Ctrl+Alt+F1 to
 go to virtual terminal 0, then log in as root and run
 
-    # Restart sshd immediately in case API changes broken running daemon
-    # Otherwise we may lose access when upgrading remotely
-    freebsd-update install && service sshd restart || true
     auto-update-system --defaults
 
 Another reboot is then a good idea to reload kernel modules and services
