@@ -355,7 +355,7 @@ fi
 if [ -n "$src_update" ]; then
     if [ $mode = interactive ]; then
 	printf "Update with \"$src_update\"? [y]/n "
-	read src_update\
+	read src_update
 	if [ 0$update_from_source != 0n ]; then
 	    update_from_source=y
 	fi
