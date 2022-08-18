@@ -40,7 +40,7 @@ export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 
 case $(auto-ostype) in
 FreeBSD)
-    if [ `whoami` = root ]; then
+    if [ `id -un` = root ]; then
 	default_prefix=/sharedapps
 	printf "auto-ports-setup is not well-tested.  Running as root may harm your system.\n"
 	printf "Continue? y/[n] "

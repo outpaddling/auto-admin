@@ -20,7 +20,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ `whoami` != root ]; then                                                   
+if [ `id -un` != root ]; then                                                   
     printf "$0 must be run as root.\n"                                          
     exit 1                                                                      
 fi                                                                              

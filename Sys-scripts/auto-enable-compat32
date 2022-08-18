@@ -11,7 +11,7 @@ if [ $# != 0 ]; then
 fi
 
 # Must be run by root because it builds and installs system binaries
-if [ `whoami` != 'root' ]; then
+if [ `id -un` != 'root' ]; then
     printf "$0 must be run by root.\n"
     exit 64
 fi

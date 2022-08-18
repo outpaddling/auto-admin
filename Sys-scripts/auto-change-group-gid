@@ -28,7 +28,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ `whoami` != 'root' ]; then
+if [ `id -un` != 'root' ]; then
     printf "Only root can run $0.\n"
     exit 1
 fi

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ `whoami` != 'root' ]; then
+if [ `id -un` != 'root' ]; then
     printf "$0 must be run by root.\n"
     exit 1
 fi

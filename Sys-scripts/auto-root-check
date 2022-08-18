@@ -24,7 +24,7 @@ if [ $# != 1 ] && [ $# != 2 ]; then
     usage
 fi
 
-if [ $(whoami) != root ]; then
+if [ $(id -un) != root ]; then
     printf "$1 requires root privileges.\n"
     if [ $# = 2 ]; then
 	printf "$2\n"

@@ -160,7 +160,7 @@ fi
 
 start_dir=`pwd`
 
-if [ `whoami` = root ]; then
+if [ `id -un` = root ]; then
     # RHEL / CentOS base
     if [ -e /etc/redhat-release ]; then
 	printf "Installing base development tools via yum...\n"
@@ -285,11 +285,11 @@ Type Ctrl+c at any time to stop installation.
 ============================================================================
 EOM
 
-if [ `whoami` != 'root' ]; then
+if [ `id -un` != 'root' ]; then
     cat << EOM
 
 ============================================================================
-Not running as root.  Installing as user $(whoami).  This is fine, but
+Not running as root.  Installing as user $(id -un).  This is fine, but
 is typically only used to install pkgsrc for your own exclusive use
 on a system for which you don't have administrator rights.  If you want
 to install pkgsrc for multiple users, you may prefer to cancel now and
@@ -675,7 +675,7 @@ if [ 0$bootstrap = '0y' ]; then
 	export PKGSRC_USE_FORTIFY=no
     fi
 
-    if [ `whoami` = root ]; then
+    if [ `id -un` = root ]; then
 	./bootstrap \
 	    ${abi_flags} \
 	    --prefix ${install_prefix} \

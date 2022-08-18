@@ -33,7 +33,7 @@ fi
 
 cd
 
-user=`whoami`
+user=`id -un`
 host=`hostname`
 
 # Last command-line argument is remote hostname

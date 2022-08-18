@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-if [ $(whoami) = root ]; then
+if [ $(id -un) = root ]; then
     printf "$0 should be not be run as root.\n"
     printf "Run as the owner of the X11 session.\n"
     exit 1
