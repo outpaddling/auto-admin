@@ -119,6 +119,11 @@ elif [ 0$1 = 0--help ]; then
     usage
 fi
 
+if [ $(uname) = SunOS ] && ! which gtar; then
+    printf "You need gtar on SunOS.  Run pkg install gnu-tar.\n"
+    exit 1
+fi
+
 # Make sure everything from here on is world-readable
 umask=$(umask)
 # Make sure format is consistent across platforms
@@ -176,6 +181,11 @@ if [ $(uname) != NetBSD ]; then
     printf "Checking for required tools...\n"
     for tool in cc c++ javac tar curl git; do
 	if ! which $tool; then
+	    if [ $tool = cc ] && which gcc; then
+		continue;
+	    elif [ $tool = c++ ] && which g++; then
+		continue;
+	    fi
 	    missing="$missing $tool"
 	fi
     done
@@ -196,6 +206,12 @@ On Debian-based systems:
 On Fedora/RHEL-based systems:
 
     yum install -y gcc gcc-g++ gcc-gfortran java-11-openjdk-devel tar curl git
+
+On Illumos:
+
+    pkg update
+    reboot      # To load new boot env
+    pkg install developer/gcc-10 git openjdk18 gtar
 
 EOM
     exit 1
@@ -609,6 +625,11 @@ else
 fi
 
 # Create a new package tree for this installation
+if [ $(uname) = SunOS ]; then
+    tar=gtar
+else
+    tar=tar
+fi
 if [ 0$unpack = 0y ]; then
     # Replace everything if unpacking again
     rm -rf $frameworks_prefix $install_prefix $sys_prefix
@@ -616,11 +637,6 @@ if [ 0$unpack = 0y ]; then
     printf "Unpacking frameworks...\n"
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
-    if [ $(uname) = SunOS ]; then
-	tar=gtar
-    else
-	tar=tar
-    fi
     if [ $(uname) = NetBSD ]; then
 	$tar -zxf pkgsrc$dist_suffix.tar.gz
     else
@@ -662,8 +678,14 @@ if [ 0$bootstrap = '0y' ]; then
     
     # Scrub env to prevent leakage of nonstandard tools into pkgsrc
     unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
-    CC=cc
-    CXX=c++
+    if which cc; then
+	CC=cc
+	CXX=c++
+    else
+	# Verified presence of gcc above
+	CC=gcc
+	CXX=g++
+    fi
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
@@ -1047,11 +1069,10 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
-    if [ \$(uname) = 'NetBSD' ]; then
-	alias man="man -m \$PKGSRC/man"
+    if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
+	alias man="man -M \$PKGSRC/man"
     else
-	which manpath > /dev/null 2>&1
-	if [ \$? = 0 ]; then
+	if which manpath > /dev/null 2>&1; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
 	    export MANPATH
 	fi
@@ -1073,11 +1094,10 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     PKGSRC=$install_prefix
     export PKGSRC
 
-    if [ \$(uname) = 'NetBSD' ]; then
-	alias man="man -m \$PKGSRC/man"
+    if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
+	alias man="man -M \$PKGSRC/man"
     else
-	which manpath > /dev/null 2>&1
-	if [ \$? = 0 ]; then
+	if which manpath > /dev/null 2>&1; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
 	    export MANPATH
 	fi
@@ -1103,8 +1123,8 @@ if ( \$status != 0 ) then
     setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
     unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
-    if ( \`uname\` == 'NetBSD' ) then
-	alias man "man -m \$PKGSRC/man"
+    if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
+	alias man "man -M \$PKGSRC/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
@@ -1125,8 +1145,8 @@ echo \$PATH | fgrep -q "${install_prefix}/bin:"
 if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
 
-    if ( \`uname\` == 'NetBSD' ) then
-	alias man "man -m \$PKGSRC/man"
+    if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
+	alias man "man -M \$PKGSRC/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
@@ -1314,7 +1334,7 @@ chmod 644 $profile_dir/$module_path_script*
 # Basic instructions on installing a package
 make=bmake
 
-printf "umask for pkgsrc builds? [022] "
+printf 'umask for pkgsrc builds? [022] '
 read pkgsrc_umask
 if [ 0$pkgsrc_umask = 0 ]; then
     pkgsrc_umask=022
@@ -1622,7 +1642,7 @@ touch $prefix/pkg$install_suffix/done
 cd $start_dir
 bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
 printf "Creating bootstrap kit: $bootstrap_archive...\n"
-tar zcf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
+$tar zcf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
 cat << EOM
 
 Bootstrap image saved to $bootstrap_archive.

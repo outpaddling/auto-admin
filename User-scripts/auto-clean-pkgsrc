@@ -36,7 +36,8 @@ case $# in
 esac
 
 # Only if the CURRENTLY ACTIVE tree has pkgin installed
-if which pkgin | fgrep $(auto-pkgsrc-prefix); then
+# OpenIndiana sh terminates script if which pkgin fails
+if which pkgin || true | fgrep $(auto-pkgsrc-prefix); then
     printf "Cleaning pkg cache...\n"
     pkgin clean
 fi
