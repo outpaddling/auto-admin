@@ -150,7 +150,8 @@ then specify 16 here.
 EOM
 default_bits=$(auto-get-netmask-bits)
 default_bits=$(( default_bits - 1 ))
-read -p "Bits in prefix covering all local network segments? [$default_bits] " bits
+printf "Bits in prefix covering all local network segments? [$default_bits] "
+read bits
 if [ 0$bits = 0 ]; then
     bits=$default_bits
 fi

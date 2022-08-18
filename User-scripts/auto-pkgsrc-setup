@@ -137,7 +137,8 @@ require them.
 Your umask is $umask.
 
 EOM
-    read -p "Use umask $umask? y/[n] " continue
+    printf "Use umask $umask? y/[n] "
+    read continue
     if [ 0$continue != 0y ]; then
 	printf "Using umask 022.\n"
 	umask 022
@@ -357,7 +358,8 @@ elif [ $snapshot = current ]; then
     printf "Add suffix to installation directories? y/[n] "
     read use_install_suffix
     if [ 0$use_install_suffix = 0y ]; then
-	read -p "Suffix? [$dist_suffix] " chosen_suffix
+	printf "Suffix? [$dist_suffix] "
+	read chosen_suffix
 	if [ 0$chosen_suffix != 0 ]; then
 	    install_suffix="$chosen_suffix"
 	else
@@ -370,7 +372,8 @@ else
     printf "Add suffix to installation directories? [y]/n "
     read use_install_suffix
     if [ 0$use_install_suffix != 0n ]; then
-	read -p "Suffix? [$dist_suffix] " chosen_suffix
+	printf "Suffix? [$dist_suffix] "
+	read chosen_suffix
 	if [ 0$chosen_suffix != 0 ]; then
 	    install_suffix="$chosen_suffix"
 	else
@@ -547,7 +550,8 @@ if [ $snapshot = git ]; then
     save_cwd=`pwd`
     mkdir -p $prefix
     cd $prefix
-    read -p "git URL of pkgsrc tree? " git_url
+    printf "git URL of pkgsrc tree? "
+    read git_url
     git clone $git_url pkgsrc
     cd $save_cwd
 elif [ $snapshot = custom ]; then
@@ -1310,7 +1314,8 @@ chmod 644 $profile_dir/$module_path_script*
 # Basic instructions on installing a package
 make=bmake
 
-read -p 'umask for pkgsrc builds? [022] ' pkgsrc_umask
+printf "umask for pkgsrc builds? [022] "
+read pkgsrc_umask
 if [ 0$pkgsrc_umask = 0 ]; then
     pkgsrc_umask=022
 fi
@@ -1499,7 +1504,8 @@ They can be installed at any time, but doing it now might prevent problems
 for all users of this system.
 
 EOM
-read -p "Install Mozilla certs now? y/[n] " install_certs
+printf "Install Mozilla certs now? y/[n] "
+read install_certs
 if [ 0$install_certs = 0y ]; then
     (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
     (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)

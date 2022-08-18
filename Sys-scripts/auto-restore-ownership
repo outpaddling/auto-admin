@@ -51,7 +51,8 @@ $user_name is a member of $group, which does not exist.
 Files owned by group $gid will not be updated.
 
 EOM
-	read -p 'Continue? y/[n] ' continue
+	printf "Continue? y/[n] "
+	read continue
 	if [ 0$continue != 0y ]; then
 	    exit
 	fi

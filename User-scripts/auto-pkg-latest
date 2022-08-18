@@ -62,7 +62,8 @@ is more important that software on this system be as stable as possible, you
 may want to stay with the quarterly packages instead.
 
 EOM
-	read -p "Are you sure you want to switch to latest? y/n [n] " proceed
+	printf "Are you sure you want to switch to latest? y/n [n] "
+	read proceed
 	if [ 0$proceed != 0y ]; then
 	    exit
 	fi

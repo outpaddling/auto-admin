@@ -67,7 +67,8 @@ Q.. Quit
 
 EOM
 
-    read -p 'Service? ' service
+    printf "Service? "
+    read service
     if [ 0$service = 0q ]; then
 	exit 0
     fi
@@ -79,7 +80,8 @@ EOM
 Q.. Quit
 
 EOM
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     if [ 0$resp = 0q ]; then
 	exit 0
     fi
@@ -111,7 +113,8 @@ EOM
 3.. Lets Encrypt and py-certbot
 
 EOM
-	    read -p "Selection? " https
+	    printf "Selection? "
+	    read https
 	    case 0"$https" in
 	    01)
 		;;

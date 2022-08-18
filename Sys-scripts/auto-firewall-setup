@@ -52,7 +52,8 @@ connections, such as ssh sessions, unless you really know what you're doing.
 *****************************************************************************
 
 EOM
-read -p 'Are you sure you want to proceed? y/[n] ' proceed
+printf "Are you sure you want to proceed? y/[n] "
+read proceed
 if [ 0$proceed != 0y ]; then
     exit
 fi
@@ -107,7 +108,8 @@ EOM
     2)
 	sysrc firewall_type="client"
 	default_subnet="$(auto-get-network octet)/$(auto-get-netmask-bits)"
-	read -p "Local subnet? [$default_subnet] " subnet
+	printf "Local subnet? [$default_subnet] "
+	read subnet
 	if [ 0$subnet = 0 ]; then
 	    subnet=$default_subnet
 	fi

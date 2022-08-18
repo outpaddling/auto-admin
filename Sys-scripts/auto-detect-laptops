@@ -29,7 +29,8 @@ the "mac" section of $xkb_dir/us-macbook.
 
 EOM
 	
-	read -p "Remap right Cmd and Alt keys to Alt and Ctrl? y/[n] " remap
+	printf "Remap right Cmd and Alt keys to Alt and Ctrl? y/[n] "
+	read remap
 	if [ 0$remap = 0y ]; then
 	    aa_dir=/usr/local/etc/auto-admin
 	    mkdir -p $aa_dir

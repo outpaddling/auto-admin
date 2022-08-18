@@ -96,7 +96,8 @@ SUBNET=`ifconfig $private_iface | awk '$1 == "inet" {print $2}' | cut -d ":" -f 
 
 if [ ! -f /root/centos6.iso ]; then
     printf "\n\n"
-    read -p "Insert CentOS DVD, close its window that auto-opens, then press [ENTER]." 
+    printf "Insert CentOS DVD, close its window that auto-opens, then press [ENTER]."
+    read 
     printf "Creating ISO file from CD. This will take a few minutes...\n"
     umount /dev/cdrom
     dd if=/dev/cdrom of=/root/centos6.iso bs=2048

@@ -197,7 +197,8 @@ EOM
 EOM
 	selection=0
 	while [ $selection -lt 1 ] || [ $selection -gt 4 ]; do
-	    read -p "Selection? [1] " selection
+	    printf "Selection? [1] "
+	    read selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
@@ -257,7 +258,8 @@ EOM
 EOM
 	selection=0
 	while [ $selection -lt 1 ] || [ $selection -gt 5 ]; do
-	    read -p "Selection? [1] " selection
+	    printf "Selection? [1] "
+	    read selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
@@ -327,7 +329,8 @@ EOM
 EOM
 	selection=0
 	while [ $selection -lt 1 ] || [ $selection -gt 4 ]; do
-	    read -p "Selection? [1] " selection
+	    printf "Selection? [1] "
+	    read selection
 	    if [ 0$selection = 0 ]; then
 		selection=1
 	    fi
@@ -417,7 +420,8 @@ If you have changed kld_list in /etc/rc.conf, you should reboot now to test
 the new module.
 
 EOM
-read -p "Reboot now? (y/n) [y] " reboot
+printf "Reboot now? (y/n) [y] "
+read reboot
 if [ "0$reboot" != 0n ]; then
     shutdown -r now
 fi

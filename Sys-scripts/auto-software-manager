@@ -97,7 +97,8 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     case $resp in
     1)
 	$installed_cmd | more
@@ -115,13 +116,15 @@ EOM
 	;;
 
     3)
-	read -p 'Enter any part of the package name: ' pattern
+	printf "Enter any part of the package name: "
+	read pattern
 	$search_cmd "$pattern" | more
 	pause
 	;;
     
     4)
-	read -p 'Enter the package name(s): ' names
+	printf "Enter the package name(s): "
+	read names
 	if [ 0"$names" != 0 ]; then
 	    $install_cmd $names
 	    pause
@@ -129,10 +132,12 @@ EOM
 	;;
     
     5)
-	read -p 'Enter the package name(s): ' names
+	printf "Enter the package name(s): "
+	read names
 	if [ 0"$names" != 0 ]; then
 	    $remove_cmd $names
-	    read -p 'Automatically remove unneeded dependencies? [y]/n ' deps
+	    printf "Automatically remove unneeded dependencies? [y]/n "
+	    read deps
 	    if [ 0$deps != 0n ]; then
 		$autoremove_cmd
 	    fi
@@ -141,7 +146,8 @@ EOM
 	;;
     
     6)
-	read -p 'Enter category/name: ' names
+	printf "Enter category/name: "
+	read names
 	if [ 0"$names" != 0 ]; then
 	    $install_from_source_cmd $names
 	    pause
@@ -188,9 +194,11 @@ compatible with dependent ports/packages.  (This is an issue whether mixing
 source builds and binary packages or building everything from source.)
 
 EOM
-	read -p 'category/port? ' port
+	printf "category/port? "
+	read port
 	if [ 0"$port" != 0 ]; then
-	    read -p 'Reason for installing from source? (one word, e.g. license) ' reason
+	    printf "Reason for installing from source? (one word, e.g. license) "
+	    read reason
 	    auto-mark-install-from-source $port $reason
 	    printf "Edit /usr/local/etc/auto-admin/install-from-source to cancel.\n"
 	    pause
@@ -215,7 +223,8 @@ Desktop-installer automatically tags certain packages, such as the chosedn
 desktop environment or window manager, xorg, etc.
 
 EOM
-	read -p 'Package name? ' package
+	printf "Package name? "
+	read package
 	if [ 0"$package" != 0 ]; then
 	    auto-mark-package-critical $package || true
 	    pause

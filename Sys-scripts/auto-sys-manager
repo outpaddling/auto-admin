@@ -68,10 +68,12 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     case 0$resp in
     01)
-	read -p 'New hostname? ' hostname
+	printf "New hostname? "
+	read hostname
 	auto-set-hostname $hostname
 	;;
     

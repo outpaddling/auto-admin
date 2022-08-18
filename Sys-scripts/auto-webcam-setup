@@ -52,7 +52,8 @@ FreeBSD)
     sleep 2
     dmesg | grep ^ugen | fgrep -i camera | uniq
     while [ -z "$ugen" ]; do
-	read -p "ugen device? (e.g. 1.5) " ugen
+	printf "ugen device? (e.g. 1.5) "
+	read ugen
     done
     auto-append-line webcamd_0_flags "webcamd_0_flags=\"-d ugen$ugen\"" \
 	$RC_CONF $0
@@ -60,7 +61,8 @@ FreeBSD)
     service webcamd restart
     user_name='x'
     while [ -n "$user_name" ]; do
-	read -p 'Username to use webcam? (Press Enter to skip) ' user_name
+	printf "Username to use webcam? (Press Enter to skip) "
+	read user_name
 	if [ -n "$user_name" ]; then
 	    pw groupmod webcamd -m $user_name
 	fi

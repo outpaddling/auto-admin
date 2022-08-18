@@ -380,7 +380,8 @@ packages, or try again later.  Most problems are fixed within a few days.
 
 EOM
 		if [ -t 1 ]; then
-		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
+		    printf "Continue with upgrades anyway? y/[n] "
+		    read upgrade_anyway
 		    if [ 0$upgrade_anyway != 0y ]; then
 			exit
 		    fi
@@ -656,7 +657,8 @@ RHEL)
 	yum-complete-transaction || true
 	yum update
 	if [ $(auto-os-release) = RHEL7 ]; then
-	    read -p 'Auto-remove unneeded dependencies? [y]/n ' autoremove
+	    printf "Auto-remove unneeded dependencies? [y]/n "
+	    read autoremove
 	    if [ 0$autoremove != 0n ]; then
 		yum autoremove -y || true
 	    fi

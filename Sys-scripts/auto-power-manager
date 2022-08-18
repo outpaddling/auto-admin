@@ -85,7 +85,8 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     if [ 0"$resp" = 0q ]; then
 	break
     fi
@@ -96,7 +97,8 @@ EOM
     if [ 0$proceed = 0y ]; then
 	case 0$resp in
 	01)
-	    read -p 'Minutes to shutdown? [2] ' minutes
+	    printf "Minutes to shutdown? [2] "
+	    read minutes
 	    if [ 0$minutes = 0 ]; then
 		minutes=2
 	    fi
@@ -104,7 +106,8 @@ EOM
 	    ;;
 	
 	02)
-	    read -p 'Minutes to restart? [2] ' minutes
+	    printf "Minutes to restart? [2] "
+	    read minutes
 	    if [ 0$minutes = 0 ]; then
 		minutes=2
 	    fi
@@ -112,7 +115,8 @@ EOM
 	    ;;
 	
 	03)
-	    read -p 'Minutes before sleep mode? [2] ' minutes
+	    printf "Minutes before sleep mode? [2] "
+	    read minutes
 	    if [ 0$minutes = 0 ]; then
 		minutes=2
 	    fi

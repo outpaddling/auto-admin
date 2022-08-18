@@ -127,9 +127,11 @@ is necessary.
 
 EOM
 	    auto-update-system --defaults
-	    read -p 'Reboot? [y]/n ' reboot
+	    printf "Reboot? [y]/n "
+	    read reboot
 	    if [ 0$reboot != 0n ]; then
-		read -p "Minutes before reboot? [2] " minutes
+		printf "Minutes before reboot? [2] "
+		read minutes
 		if [ 0$minutes = 0 ]; then
 		    minutes=2
 		fi

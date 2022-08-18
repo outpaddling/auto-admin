@@ -68,11 +68,13 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     case 0$resp in
     01)
 	printf "This will temporarily break all network connections.\n"
-	read -p 'Proceed? y/[n] ' proceed
+	printf "Proceed? y/[n] "
+	read proceed
 	if [ 0"$proceed" = 0y ]; then
 	    auto-network-restart
 	    pause

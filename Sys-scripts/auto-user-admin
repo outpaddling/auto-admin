@@ -55,7 +55,8 @@ The system must not be shut down or rebooted during this process.
 Are you sure you want to proceed with this now?
 
 EOM
-    read -p "Proceed? y/[n] " proceed
+    printf "Proceed? y/[n] "
+    read proceed
 }
 
 
@@ -85,18 +86,21 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     case $resp in
     1)
 	auto-adduser
 	;;
     
     2)
-	read -p 'Username? ' username
+	printf "Username? "
+	read username
 	if [ ! -z $username ]; then
 	    printf "Current group membership for $username:\n"
 	    if groups $username; then
-		read -p 'Supplementary group to add? ' groupname
+		printf "Supplementary group to add? "
+		read groupname
 		if [ ! -z $groupname ]; then
 		    if auto-add-to-group $username $groupname; then
 			printf "Changes will take effect in the next login session.\n"
@@ -107,11 +111,13 @@ EOM
 	;;
     
     3)
-	read -p 'Username? ' username
+	printf "Username? "
+	read username
 	if [ ! -z $username ]; then
 	    printf "Current group membership for $username:\n"
 	    if groups $username; then
-		read -p 'Supplementary group to add? ' groupname
+		printf "Supplementary group to add? "
+		read groupname
 		if [ ! -z $groupname ]; then
 		    if auto-remove-from-group $username $groupname; then
 			printf "Changes will take effect in the next login session.\n"
@@ -124,9 +130,11 @@ EOM
     4)
 	uid_warning
 	if [ 0$proceed = 0y ]; then
-	    read -p 'Username? ' username
+	    printf "Username? "
+	    read username
 	    if [ ! -z $username ]; then
-		read -p "New UID? " new_uid
+		printf "New UID? "
+		read new_uid
 		if [ ! -z $new_uid ]; then
 		    auto-change-uid $username $new_uid / || true
 		fi
@@ -137,9 +145,11 @@ EOM
     5)
 	uid_warning
 	if [ 0$proceed = 0y ]; then
-	    read -p 'Username? ' username
+	    printf "Username? "
+	    read username
 	    if [ ! -z $username ]; then
-		read -p "New GID or group name? " new_gid
+		printf "New GID or group name? "
+		read new_gid
 		if [ ! -z $new_gid ]; then
 		    auto-change-primary-group $username $new_gid / || true
 		fi
@@ -150,9 +160,11 @@ EOM
     6)
 	uid_warning
 	if [ 0$proceed = 0y ]; then
-	    read -p 'Group name? ' groupname
+	    printf "Group name? "
+	    read groupname
 	    if [ ! -z $groupname ]; then
-		read -p "New GID? " new_gid
+		printf "New GID? "
+		read new_gid
 		if [ ! -z $new_gid ]; then
 		    auto-change-group-gid $groupname $new_gid / || true
 		fi
@@ -163,7 +175,8 @@ EOM
     7)
 	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
 	printf "Current users:\n\n$users\n\n"
-	read -p 'Username? ' user_name
+	printf "Username? "
+	read user_name
 	if [ 0"$user_name" != 0 ]; then
 	    auto-lock-user $user_name
 	fi
@@ -172,7 +185,8 @@ EOM
     8)
 	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
 	printf "Current users:\n\n$users\n\n"
-	read -p 'Username? ' user_name
+	printf "Username? "
+	read user_name
 	if [ 0"$user_name" != 0 ]; then
 	    auto-unlock-user $user_name
 	fi

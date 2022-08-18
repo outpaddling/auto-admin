@@ -61,7 +61,8 @@ FreeBSD)
     # Add users to webcamd to allow access to tablet
     user_name='x'
     while [ -n "$user_name" ]; do
-	read -p 'Username to use webcam? (Press Enter to skip) ' user_name
+	printf "Username to use webcam? (Press Enter to skip) "
+	read user_name
 	if [ -n "$user_name" ]; then
 	    pw groupmod webcamd -m $user_name
 	fi

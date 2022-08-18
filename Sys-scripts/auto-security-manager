@@ -67,10 +67,12 @@ Q.. Quit
 
 EOM
 
-    read -p 'Selection? ' resp
+    printf "Selection? "
+    read resp
     case 0$resp in
     01)
-	read -p 'Maximum idle time in minutes? ' minutes
+	printf "Maximum idle time in minutes? "
+	read minutes
 	auto-enable-autologout $minutes
 	;;
     
@@ -79,8 +81,10 @@ EOM
 	;;
     
     03)
-	read -p 'User name? ' user_name
-	read -p 'Days to expiration? ' days
+	printf "User name? "
+	read user_name
+	printf "Days to expiration? "
+	read days
 	auto-passwd-user-expiration $user_name $days
 	;;
     

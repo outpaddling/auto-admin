@@ -200,7 +200,8 @@ and mailing lists for problems related to the packages, or try again later.
 
 EOM
 		if [ -t 1 ]; then
-		    read -p "Continue with upgrades anyway? y/[n] " upgrade_anyway
+		    printf "Continue with upgrades anyway? y/[n] "
+		    read upgrade_anyway
 		    if [ 0$upgrade_anyway != 0y ]; then
 			exit
 		    fi
@@ -353,7 +354,8 @@ fi
 
 if [ -n "$src_update" ]; then
     if [ $mode = interactive ]; then
-	read -p "Update with \"$src_update\"? [y]/n " update_from_source
+	printf "Update with \"$src_update\"? [y]/n "
+	read src_update\
 	if [ 0$update_from_source != 0n ]; then
 	    update_from_source=y
 	fi

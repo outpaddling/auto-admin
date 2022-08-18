@@ -50,7 +50,8 @@ while [ 0$medium != 01 ] && [ 0$medium != 02 ]; do
 2.. Wireless
 
 EOM
-    read -p 'Medium? ' medium
+    printf "Medium? "
+    read medium
 done
 if [ $medium = 1 ]; then
     medium=wired
@@ -65,7 +66,8 @@ FreeBSD)
     0)
 	printf "Network interfaces via pciconf -lv:\n\n"
 	pciconf -lv | grep -B 3 -A 1 'class.*network'
-	read -p 'Network interface? ' iface
+	printf "Network interface? "
+	read iface
 	;;
     
     1)
@@ -79,7 +81,8 @@ FreeBSD)
 	iface_args="WPA "
     fi
     
-    read -p 'IP address? [DHCP] ' ip
+    printf "IP address? [DHCP] "
+    read ip
     if [ 0$ip = 0 ]; then
 	ip=DHCP
 	auto-set-conf-var ifconfig_$iface "\"${iface_args}DHCP\"" $RC_CONF $0
@@ -87,16 +90,21 @@ FreeBSD)
 	router=$(awk '$1 == "option" && $2 == "routers" { print $3 }' /var/db/dhclient.leases.$iface | tail -1 | tr -d ';~')
     else
 	while [ 0"$netmask" = 0 ]; do
-	    read -p 'Netmask? (e.g. 255.255.255.0) ' netmask
+	    printf "Netmask? (e.g. 255.255.255.0) "
+	    read netmask
 	done
 	while [ 0"$router" = 0 ]; do
-	    read -p 'Router IP? ' router
+	    printf "Router IP? "
+	    read router
 	done
 	while [ 0"$nameserver1" = 0 ]; do
-	    read -p 'Name server 1 IP? ' nameserver1
+	    printf "Name server 1 IP? "
+	    read nameserver1
 	done
-	read -p 'Name server 2 IP? ' nameserver2
-	read -p 'Search domain? ' search
+	printf "Name server 2 IP? "
+	read nameserver2
+	printf "Search domain? "
+	read search
 
 	# Router
 	sysrc defaultrouter=$router

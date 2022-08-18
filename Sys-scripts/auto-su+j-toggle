@@ -53,7 +53,8 @@ EOM
 	fi
     done
     printf "Changes will not take effect until the system is rebooted.\n"
-    read -p "Reboot now? [y]/n " reboot
+    printf "Reboot now? [y]/n "
+    read reboot
     if [ 0$reboot != 0n ]; then
 	shutdown -r now
     fi
