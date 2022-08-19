@@ -367,10 +367,14 @@ if [ -n "$src_update" ]; then
 	# and their dependencies.  Dependencies first.
 	# cwrappers, openssl deps for pkg_install
 	for pkg in pkgtools/cwrappers security/openssl pkgtools/pkg_install; do
+	    # FIXME: installed_up_to_date seems to be true when
+	    # openssl is not installed
 	    if installed_up_to_date $pkg; then
 		printf "\n**** Running make replace for $pkg...\n"
 		cd $PKGSRCDIR/$pkg
-		$make replace
+		# Make replace will fail if package is not installed
+		# so fall back on install target
+		$make replace || $make install
 	    else
 		printf "$pkg is up-to-date.\n"
 	    fi
