@@ -37,9 +37,12 @@ esac
 
 # Only if the CURRENTLY ACTIVE tree has pkgin installed
 # OpenIndiana sh terminates script if which pkgin fails
-if which pkgin || true | fgrep $(auto-pkgsrc-prefix); then
+if [ -e $(auto-pkgsrc-prefix)/bin/pkgin ]; then
     printf "Cleaning pkg cache...\n"
-    pkgin clean
+    # May be two pkgsrc trees in PATH, e.g. NetBSD non-priv and /usr/pkg
+    pkgin clean || true
+else
+    printf "No $(auto-pkgsrc-prefix)/bin/pkgin.  Skipping pkgin clean...\n"
 fi
 
 cd "$pkgsrc"
