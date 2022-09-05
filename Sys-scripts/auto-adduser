@@ -239,11 +239,15 @@ case $gecos_source in
 	ad_user_name=$default_ad_user
     fi
     
-    printf "AD password? "
-    stty -echo
-    read ad_pw
-    stty echo
-
+    ad_pw=''
+    while [ -z "$ad_pw" ]; do
+	printf "AD password? "
+	stty -echo
+	read ad_pw
+	stty echo
+	printf '\n'
+    done
+    
     ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
     echo $ldap_verified_uid
     if [ 0$ldap_verified_uid != 0$user_name ]; then
