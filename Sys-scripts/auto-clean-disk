@@ -22,7 +22,7 @@ FreeBSD)
     mount_points=`awk '$3 == "ufs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free block on $dir? y/[n] "
+	printf "Zero free blocks on $dir? y/[n] "
 	read zero
 	if [ 0$zero = 0y ]; then
 	    fs=$(df -T $dir | fgrep -v Filesystem | awk '{ print $2 }')
@@ -51,7 +51,7 @@ NetBSD)
     mount_points=`awk '$3 == "ffs" { print $2 }' /etc/fstab`
     set +e
     for dir in $mount_points; do
-	printf "Zero free block on $dir? y/[n] "
+	printf "Zero free blocks on $dir? y/[n] "
 	read zero
 	if [ 0$zero = 0y ]; then
 	    cd $dir
