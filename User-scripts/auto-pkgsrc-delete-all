@@ -24,6 +24,6 @@ if [ $# != 0 ]; then
     usage
 fi
 
-packages=`pkg_info | awk '{print $1}' | egrep -v 'bmake|pkg_install|bootstrap-mk-files|cwrappers'`
+packages=`pkg_info | awk '{print $1}' | egrep -v 'bmake|pkg_install|openssl|bootstrap-mk-files|cwrappers'`
 pkg_delete -f $packages
 pkg_info
