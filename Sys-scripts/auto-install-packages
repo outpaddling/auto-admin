@@ -77,6 +77,9 @@ FreeBSD)
     PORTSDIR='/usr/ports'
     latest_package_name=0
     
+    if [ ! -e $PORTSDIR ]; then
+	auto-ports-checkout
+    fi
     while [ 0$(printf "%s" $1 | cut -c 1,1) = 0'-' ]; do
 	if [ 0$1 = 0'-l' ]; then
 	    latest_package_name=1
