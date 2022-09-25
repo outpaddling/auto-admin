@@ -107,7 +107,7 @@ installed_up_to_date()
     pkgname=$(pkg_info -I $pkgbase | awk '{ print $1 }') || true
     installed_version=${pkgname#$pkgbase-}
     pkgsrc_version=$(auto-print-make-variable $pkg PKGVERSION)
-    printf "pkg_install: Installed = $installed_version pkgsrc = $pkgsrc_version\n"
+    printf "$pkg: Installed = $installed_version pkgsrc = $pkgsrc_version\n"
     if [ 0$installed_version = 0$pkgsrc_version ]; then
 	return 1
     else
