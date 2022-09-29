@@ -110,30 +110,36 @@ case $(auto-ostype) in
 FreeBSD)
     more << EOM
 
+We will now attempt to detect your GPU and provide some guidance.  This
+will automatically install the stable version of the drm-kmod (Direct
+Rendering Kernel Module).
+
+===
+
 Given the wide variety of graphics chipsets available, it is virtually
 impossible to configure the graphics environment automatically.
 
 If your screen goes blank during the next boot, you probably have a chipset
 not supported by the drm module.  In that case, tap the power button and wait
 a minute for a graceful shutdown.  You can also try to ssh in from another
-host.  Hold the power button to force power off only if absolutely necessary
-as this causes file system damage on any system (which is usually repaired
-during the next boot, but not always).
+host.  Hold the power button to force power off only if absolutely necessary,
+as this may cause file system damage on any system.
 
 Then boot into single-user mode and do the following:
 
-mount -u -o rw
+mount -u -o rw /
 vi /etc/rc.conf
 
 Remove the "kms" module (e.g. i915kms, radeonkms) from the "kld_list" setting.
 Save and reboot.
 
-We will now attempt to detect your GPU and provide some guidance.  This
-will automatically install a stable version of the drm-kmod (Direct
-Rendering Kernel Module).  Note that there may also be newer, experimental
-drm-kmod ports such as /usr/ports/graphics/drm-510-kmod that better support
-bleeding-edge hardware.  You can install one of these manually if you want
-to try them.
+Then run auto-gpu-setup again and try different options.
+
+===
+
+There may also occasionally be bad interactions between the DRI/DRM, Xorg,
+and specific software such as GTK, QT, Gnome, etc.  Using a different driver
+such as vesa or scfb is often a good temporary workaround.
 
 EOM
     pause
