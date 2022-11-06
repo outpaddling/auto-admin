@@ -406,3 +406,4 @@ if [ -e $plugin ]; then
 fi
 
 printf "Update complete!\n"
+date    # Show date in tail, esp for cron jobs
