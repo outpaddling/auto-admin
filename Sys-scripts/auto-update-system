@@ -803,9 +803,18 @@ interactive)
     ;;
 esac
 if [ 0$reboot = 0y ]; then
+    if [ $mode = interactive ]; then
+	printf "Minutes to reboot? [2] "
+	read minutes
+	if [ -z "$minutes" ]; then
+	    minutes=2
+	fi
+    else
+	minutes=2
+    fi
     printf "Rebooting...\n"
     sync    # Attempt to prevent Linux kernel update failures
-    shutdown -r now
+    shutdown -r +$minutes
 else
     cat << EOM
 
