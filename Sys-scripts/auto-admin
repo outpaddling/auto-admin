@@ -180,8 +180,9 @@ EOM
 	;;
     
     010)
-	bin=$(dirname `which auto-admin`)
-	ls $bin/auto-* | more
+	sbin=$(dirname `which auto-admin`)
+	bin=$(echo $sbin | sed -e 's|sbin|bin|')
+	ls $sbin/auto-* $bin/auto-* | more
 	printf "$(ls $bin/auto-* | wc -l) scripts in total.\n"
 	pause
 	;;
