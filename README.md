@@ -34,7 +34,7 @@ to guide you through a pkgsrc installation.  Auto-pkgsrc-setup is actually
 part of auto-admin, but designed to run independently to solve the chicken-egg
 problem of getting pkgsrc running before auto-admin is installed.
 
-It is also possible, but not recommended, to perform a "cave man install"
+It is also possible, but not recommended, to perform a "caveman install"
 by downloading the source from Github and running "make install".
 
 Auto-admin includes well over 100 scripts for performing systems management

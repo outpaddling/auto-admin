@@ -405,5 +405,6 @@ if [ -e $plugin ]; then
     fi
 fi
 
-printf "Update complete!\n"
-date    # Show date in tail, esp for cron jobs
+# Show completion date and time, mainly for cron job logs
+printf "Pkgsrc update complete.\n"
+date

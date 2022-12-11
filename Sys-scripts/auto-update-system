@@ -790,6 +790,10 @@ Darwin)
 
 esac
 
+# Show completion date and time, mainly for cron job logs
+printf "System update completed.\n"
+date
+
 # FIXME: Find a secure way to give back to the central cache host
 # Requires root access
 # Push newly downloaded packages back to central host
