@@ -42,8 +42,7 @@ FreeBSD)
     if [ $devnum -gt 0 ]; then
 	cat << EOM
 
-=================================== Warning ==================================
-
+===========================================================================
 One or more sound devices already detected.
 
 $0 works by detecting kernel messages
@@ -56,6 +55,7 @@ and reboot.
 If you believe you have a device for which the driver is not loaded, (if
 you have installed a new sound card since the last scan, for instance),
 then it might make sense to scan now.
+===========================================================================
 
 EOM
 	printf "Scan for additional sound devices? (y/[n]) "
