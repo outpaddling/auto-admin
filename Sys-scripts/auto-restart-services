@@ -1,18 +1,63 @@
 #!/bin/sh -e
 
-localbin=/usr/local/sbin
-usrbin=/usr/sbin
+##########################################################################
+#   Synopsis:
+#       auto-restart-services
+#
+#   Description:
+#       Install and configure software needed for wacom tablets.  Also
+#       prompts to enable individual users.
+#
+#   Arguments:
+#       None.
+#
+#   Returns:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2022-12-28  J Bacon     Begin
+##########################################################################
 
-for var in $(grep -i '^.*_enable=.*yes' /etc/rc.conf | cut -d = -f 1); do
-    service=${var%_enable}
-    if [ $service = nfs_server ]; then
-	auto-nfs-restart
-    elif [ $service = nfsuserd ]; then
-	# Already handled by auto-nfs-restart
-    elif [ -r $localbin/auto-$service-restart ]; then
-	$auto-$service-restart
-    elif [ -r $localbin/$service ] || [ -r $usrbin/$service ]; then
-	service $service restart
-    fi
-done
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
 
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+	
+case $(auto-ostype) in
+FreeBSD)
+    localbin=/usr/local/sbin
+    usrbin=/usr/sbin
+    
+    for var in $(grep -i '^.*_enable=.*yes' /etc/rc.conf | cut -d = -f 1); do
+	service=${var%_enable}
+	if [ $service = nfs_server ]; then
+	    auto-nfs-restart
+	elif [ $service = nfsuserd ]; then
+	    # Already handled by auto-nfs-restart
+	elif [ -r $localbin/auto-$service-restart ]; then
+	    $auto-$service-restart
+	elif [ -r $localbin/$service ] || [ -r $usrbin/$service ]; then
+	    service $service restart
+	fi
+    done
+    ;;
+
+*)
+    # FIXME: Make auto-unsupported-os return 1?
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
