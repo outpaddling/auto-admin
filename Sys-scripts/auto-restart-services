@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+localbin=/usr/local/sbin
+usrbin=/usr/sbin
+
+for var in $(grep -i '^.*_enable=.*yes' /etc/rc.conf | cut -d = -f 1); do
+    service=${var%_enable}
+    if [ $service = nfs_server ]; then
+	auto-nfs-restart
+    elif [ $service = nfsuserd ]; then
+	# Already handled by auto-nfs-restart
+    elif [ -r $localbin/auto-$service-restart ]; then
+	$auto-$service-restart
+    elif [ -r $localbin/$service ] || [ -r $usrbin/$service ]; then
+	service $service restart
+    fi
+done
+

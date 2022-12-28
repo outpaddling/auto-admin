@@ -638,6 +638,15 @@ rebooting if a reboot is needed.
 
 EOM
 		fi
+		
+		# Reboot only if kernel or modules updated
+		if [ 0$reboot_requested = 0y ] && grep -q '^/boot' $tmpfile; then
+		    printf "Kernel componented updated.  System will reboot.\n"
+		    reboot=y
+		else
+		    printf "No kernel componented updated.  No reboot necessary.\n"
+		    reboot=n
+		fi
 	    fi
 	    rm $tmpfile
     
@@ -805,16 +814,20 @@ date
 
 case $mode in
 binary|defaults)
-    reboot=n
+    reboot_requested=n
     ;;
 binary+reboot|defaults+reboot|yes)
-    reboot=y
+    reboot_requested=y
     ;;
 interactive)
     printf "Reboot? y/[n] "
-    read reboot
+    read reboot_requested
     ;;
 esac
+
+# Restart services in case daemons were updated
+auto-restart-services
+
 if [ 0$reboot = 0y ]; then
     if [ $mode = interactive ]; then
 	printf "Minutes to reboot? [2] "
