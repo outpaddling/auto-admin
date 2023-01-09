@@ -142,14 +142,18 @@ pause
 
 case $# in
 0)
-    user_name=''
+    user_name='x'
     # FIXME: Check for illegal chars
-    while [ x$user_name = x ]; do
+    while [ 0$user_name = 0x ]; do
 	printf "Username? "
 	read user_name
+	if [ -z "$user_name" ]; then
+	    printf "No user name entered, quitting.\n"
+	    exit 0
+	fi
 	if user_exists $user_name; then
 	    printf "User $user_name already exists.\n"
-	    user_name=''    # re-prime the loop
+	    user_name='x'    # re-prime the loop
 	fi
     done
     ;;
