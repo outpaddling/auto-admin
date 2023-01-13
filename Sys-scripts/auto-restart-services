@@ -5,8 +5,7 @@
 #       auto-restart-services
 #
 #   Description:
-#       Install and configure software needed for wacom tablets.  Also
-#       prompts to enable individual users.
+#       Restart all services currently enabled.
 #
 #   Arguments:
 #       None.
@@ -44,6 +43,10 @@ FreeBSD)
 	service=${var%_enable}
 	if [ $service = nfs_server ]; then
 	    auto-nfs-restart
+	elif [ $service = ntpdate ]; then
+	    auto-fix-date
+	elif [ $service = ntpd ]; then
+	    printf "Skipping ntpd, done by auto-fix-date...\n"
 	elif [ $service = nfsuserd ]; then
 	    # Already handled by auto-nfs-restart
 	elif [ -r $localbin/auto-$service-restart ]; then
