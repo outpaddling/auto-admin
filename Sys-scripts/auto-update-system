@@ -826,7 +826,9 @@ interactive)
 esac
 
 # Restart services in case daemons were updated
-auto-restart-services
+# FIXME: Not ideal to tolerate failures in service restarts, but there
+# are too many things that can result in a non-zero exit status
+auto-restart-services || true
 
 if [ 0$reboot = 0y ]; then
     if [ $mode = interactive ]; then
