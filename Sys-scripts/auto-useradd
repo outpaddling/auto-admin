@@ -25,6 +25,11 @@ if [ `id -un` != root ]; then
     exit 1                                                                      
 fi                                                                              
 
+if [ $1 = '--no-local-pw' ]; then
+    no_local_pw=1
+    shift
+fi
+
 if [ $# -lt 5 ]; then
     usage
 fi
@@ -80,10 +85,14 @@ FreeBSD)
 
 esac
 
-printf "Set local password? [y]/n "
-read local_pw
-if [ 0$local_pw != 0n ]; then
-    passwd $user_name
-else
+if [ 0$no_local_pw = 01 ]; then
     auto-lock-local-pw $user_name
+else
+    printf "Set local password? [y]/n "
+    read local_pw
+    if [ 0$local_pw != 0n ]; then
+	passwd $user_name
+    else
+	auto-lock-local-pw $user_name
+    fi
 fi

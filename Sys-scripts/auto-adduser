@@ -97,6 +97,11 @@ add_group()
 
 set -e
 
+if [ $1 = '--no-local-pw' ]; then
+    useradd_flags=$1
+    shift
+fi
+
 if [ $# -gt 1 ]; then
     usage
 fi
@@ -400,4 +405,5 @@ printf "Adding user $user_name...\n"
 # useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
 # $agroup_flags -m $user_name
 
-auto-useradd $user_name $uid $primary_group "$gecos" $shell $agroup_flags
+auto-useradd $useradd_flags \
+    $user_name $uid $primary_group "$gecos" $shell $agroup_flags
