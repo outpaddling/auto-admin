@@ -561,67 +561,69 @@ else
     exit 1
 fi
 
-# Download new pkgsrc dist if a new install number was provided
-if [ $snapshot = git ]; then
-    save_cwd=`pwd`
-    mkdir -p $prefix
-    cd $prefix
-    printf "git URL of pkgsrc tree? "
-    read git_url
-    git clone $git_url pkgsrc
-    cd $save_cwd
-elif [ $snapshot = custom ]; then
-    download='n'
-    cat << EOM
+if [ $snapshot = custom ] || [ $snapshot = git ]; then
+    replace_frameworks='n'
+elif [ -e $frameworks_prefix ]; then
+    printf "$frameworks_prefix already exists.  Replace? y/[n] "
+    read replace_frameworks
+else
+    replace_frameworks='y'
+fi
+
+if [ 0$replace_frameworks = 0y ]; then
+    # Download new pkgsrc dist if a new install number was provided
+    if [ $snapshot = git ]; then
+	save_cwd=`pwd`
+	mkdir -p $prefix
+	cd $prefix
+	printf "git URL of pkgsrc tree? "
+	read git_url
+	git clone $git_url pkgsrc
+	cd $save_cwd
+    elif [ $snapshot = custom ]; then
+	download='n'
+	cat << EOM
 
 ===========================================================================
 Place your custom source tree in $frameworks_prefix now.
 ===========================================================================
 
 EOM
-    pause
-elif [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
-    printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
-    read download
-else
-    download='y'
-fi
-
-if [ 0$download = 0y ]; then
-    printf "Downloading dist...\n\n"
-    # Replace everything after new download
-    rm -rf $frameworks_prefix $install_prefix $sys_prefix
-    mkdir -p $prefix/Dist
-    cd $prefix/Dist
-    rm -f pkgsrc.tar.gz
-
-    fetched=no
-    for dist in \
-	ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz; do
-	
-	echo $dist
-	if $fetch_cmd $dist; then
-	    fetched=yes
-	    break
+	pause
+    elif [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
+	printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
+	read download
+    else
+	download='y'
+    fi
+    
+    if [ 0$download = 0y ]; then
+	printf "Downloading dist...\n\n"
+	# Replace everything after new download
+	rm -rf $frameworks_prefix $install_prefix $sys_prefix
+	mkdir -p $prefix/Dist
+	cd $prefix/Dist
+	rm -f pkgsrc.tar.gz
+    
+	fetched=no
+	for dist in \
+	    ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz; do
+	    
+	    echo $dist
+	    if $fetch_cmd $dist; then
+		fetched=yes
+		break
+	    fi
+	done
+	if [ $fetched = no ]; then
+	    printf "Unable to fetch $snapshot from any mirror.  Giving up...\n"
+	    exit 1
 	fi
-    done
-    if [ $fetched = no ]; then
-	printf "Unable to fetch $snapshot from any mirror.  Giving up...\n"
-	exit 1
+	# Make sure dist is in the form pkgsrc-yearQquarter.tar.gz
+	if echo $dist | fgrep ftp.netbsd.org; then
+	    mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
+	fi
     fi
-    # Make sure dist is in the form pkgsrc-yearQquarter.tar.gz
-    if echo $dist | fgrep ftp.netbsd.org; then
-	mv pkgsrc.tar.gz pkgsrc$dist_suffix.tar.gz
-    fi
-fi
-
-if [ $snapshot = custom ] || [ $snapshot = git ]; then
-    unpack='n'
-elif [ -e $frameworks_prefix ]; then
-    printf "$frameworks_prefix already exists.  Replace? y/[n] "
-    read unpack
-else
-    unpack='y'
 fi
 
 # Create a new package tree for this installation
@@ -630,7 +632,8 @@ if [ $(uname) = SunOS ]; then
 else
     tar=tar
 fi
-if [ 0$unpack = 0y ]; then
+
+if [ 0$replace_frameworks = 0y ]; then
     # Replace everything if unpacking again
     rm -rf $frameworks_prefix $install_prefix $sys_prefix
     cd $prefix/Dist
@@ -1075,7 +1078,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
-	alias man="man -M \$PKGSRC/man"
+	alias man="man -m \$PKGSRC/man"
     else
 	if which manpath > /dev/null 2>&1; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
@@ -1100,7 +1103,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     export PKGSRC
 
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
-	alias man="man -M \$PKGSRC/man"
+	alias man="man -m \$PKGSRC/man"
     else
 	if which manpath > /dev/null 2>&1; then
 	    MANPATH=\$PKGSRC/man:\$(manpath)
@@ -1129,7 +1132,7 @@ if ( \$status != 0 ) then
     unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
-	alias man "man -M \$PKGSRC/man"
+	alias man "man -m \$PKGSRC/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
@@ -1151,7 +1154,7 @@ if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
-	alias man "man -M \$PKGSRC/man"
+	alias man "man -m \$PKGSRC/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
