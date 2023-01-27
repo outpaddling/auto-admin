@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Synopsis:
@@ -38,8 +38,10 @@ case $(auto-ostype) in
 FreeBSD)
     localbin=/usr/local/sbin
     usrbin=/usr/sbin
+    localrc=/usr/local/etc/rc.d
+    rc=/etc/rc.d
     
-    for var in $(grep -i '^.*_enable=.*yes' /etc/rc.conf | cut -d = -f 1); do
+    for var in $(grep -v '^#' /etc/rc.conf | grep -i '^.*_enable=.*yes' | cut -d = -f 1); do
 	service=${var%_enable}
 	if [ $service = nfs_server ]; then
 	    auto-nfs-restart
@@ -51,7 +53,7 @@ FreeBSD)
 	    # Already handled by auto-nfs-restart
 	elif [ -r $localbin/auto-$service-restart ]; then
 	    $auto-$service-restart
-	elif [ -r $localbin/$service ] || [ -r $usrbin/$service ]; then
+	elif [ -e $localrc/$service ] || [ -e $rc/$service ]; then
 	    service $service restart
 	fi
     done
