@@ -179,7 +179,7 @@ fi
 
 if [ $(uname) != NetBSD ]; then
     printf "Checking for required tools...\n"
-    for tool in cc c++ javac tar curl git; do
+    for tool in cc c++ tar curl git; do
 	if ! which $tool; then
 	    if [ $tool = cc ] && which gcc; then
 		continue;
@@ -640,7 +640,7 @@ if [ 0$replace_frameworks = 0y ]; then
     printf "Unpacking frameworks...\n"
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
-    if [ $(uname) = NetBSD ]; then
+    if [ $(uname) = NetBSD ] || [ $(uname) = OpenBSD ]; then
 	$tar -zxf pkgsrc$dist_suffix.tar.gz
     else
 	$tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
