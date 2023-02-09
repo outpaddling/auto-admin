@@ -97,7 +97,7 @@ add_group()
 
 set -e
 
-if [ $1 = '--no-local-pw' ]; then
+if [ $# -gt 0 ] && [ $1 = '--no-local-pw' ]; then
     useradd_flags=$1
     shift
 fi
