@@ -1,0 +1,145 @@
+#!/bin/sh
+
+pause()
+{
+    printf "Press return to continue...\n"
+    read junk
+}
+
+
+##########################################################################
+#   Script description:
+#       Interactive interface for quick LDAP/AD lookups
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-02-10  J Bacon     Derived from auto-adduser
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [username]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+set -e
+
+if [ $# -gt 1 ]; then
+    usage
+fi
+
+if [ `id -un` != "root" ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+CONF_DIR=/usr/local/share/auto-admin
+
+case $(auto-ostype) in
+FreeBSD)
+    ldap_conf=/usr/local/etc/ldap.conf
+    ldap_flags=''
+    default_shell="/bin/tcsh"
+    ;;
+
+RHEL)
+    ldap_conf=/etc/openldap/ldap.conf
+    ldap_flags='-x'
+    default_shell="/bin/bash"
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
+
+case $# in
+0)
+    printf "Username? "
+    read user_name
+    if [ -z "$user_name" ]; then
+	printf "No user name entered, quitting.\n"
+	exit 0
+    fi
+    ;;
+1)
+    user_name=$1
+    ;;
+*)
+    printf "Usage: $0 [username]\n"
+    exit 1
+    ;;
+esac
+
+while [ 0$auth_db != 01 ] && [ 0$auth_db != 02 ] && [ 0$auth_db != 03 ]; do
+    cat << EOM
+
+Get user information from:
+
+1.. LDAP (Lightweight Directory Access Protocol)
+2.. AD (Active Directory)
+
+EOM
+    printf "Selection: "
+    read auth_db
+done
+
+case $auth_db in
+1)
+    if [ -e $ldap_conf ]; then
+	# Flag usernames not in LDAP
+	ldap_verified_uid=`ldapsearch $ldap_flags uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+	if [ 0$ldap_verified_uid != 0$user_name ]; then
+	    printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	    read resp
+	    if [ 0$resp != 0'y' ]; then
+		exit 0
+	    fi
+	fi
+	default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    else
+	default_gecos=''
+    fi
+    ;;
+
+2)
+    this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
+    default_server=ad.${this_domain}:3268
+    printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
+    read server
+    if [ 0$server = 0 ]; then
+	server=$default_server
+    fi
+    
+    default_ad_user=$USER
+    printf "YOUR AD Username for user query? [$default_ad_user] "
+    read ad_user_name
+    if [ 0$ad_user_name = 0 ]; then
+	ad_user_name=$default_ad_user
+    fi
+    
+    ad_pw=''
+    while [ -z "$ad_pw" ]; do
+	printf "AD password? "
+	stty -echo
+	read ad_pw
+	stty echo
+	printf '\n'
+    done
+    
+    set -x
+    ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\$ad_user_name" cn=$user_name
+    ;;
+
+*)
+    printf "Invalid selection.\n" >> /dev/stderr
+    exit 1
+    ;;
+esac

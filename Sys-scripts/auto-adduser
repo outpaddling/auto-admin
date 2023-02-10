@@ -205,8 +205,8 @@ while [ 0$gecos_source != 01 ] && [ 0$gecos_source != 02 ] && [ 0$gecos_source !
 
 Get user information from:
 
-1.. LDAP
-2.. Active Directory
+1.. LDAP (Lightweight Directory Access Protocol)
+2.. AD (Active Directory)
 3.. Enter manually
 
 EOM
