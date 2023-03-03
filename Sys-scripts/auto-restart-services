@@ -49,6 +49,12 @@ FreeBSD)
 	    auto-fix-date
 	elif [ $service = ntpd ]; then
 	    printf "Skipping ntpd, done by auto-fix-date...\n"
+	elif [ $service = sddm ]; then
+	    printf "Skipping sddm to avoid terminating login sessions...\n"
+	    printf "Restart sddm manually when ready.\n"
+	elif [ $service = gdm ]; then
+	    printf "Skipping gdm to avoid terminating login sessions...\n"
+	    printf "Restart gdm manually when ready.\n"
 	elif [ $service = nfsuserd ]; then
 	    # Already handled by auto-nfs-restart
 	elif [ -r $localbin/auto-$service-restart ]; then
