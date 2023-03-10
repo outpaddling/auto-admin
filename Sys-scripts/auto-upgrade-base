@@ -2,17 +2,58 @@
 
 ##########################################################################
 #   Script description:
-#       Switch XDM on or off
+#       Upgrade the base system to a new release.
 #       
 #   History:
 #   Date        Name        Modification
-#   2012-01-08  Jason Bacon Begin
+#   2020?       Jason Bacon Begin
 ##########################################################################
 
 usage()
 {
     printf "Usage: $0 [release]\n"
     exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Run freebsd-update on next reboot.  The update script removes
+#       itself after successful completion.
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-03-10  J Bacon     Begin
+##########################################################################
+
+update_on_boot()
+{
+    rc_dir=/etc/rc.local.d
+    update_script=freebsd-update-install.sh
+    
+    mkdir -p $rc_dir
+    cat << EOM > $rc_dir/$update_script
+#!/bin/sh -e
+
+/usr/sbin/freebsd-update install
+/usr/sbin/pkg upgrade -f
+rm -f $rc_dir/$update_script
+
+EOM
+    chmod 755 $rc_dir/$update_script
+    
+    if ! fgrep -q $rc_dir /etc/rc.local; then
+	cat << EOM >> /etc/rc.local
+
+# Added by auto-upgrade-base
+for script in $rc_dir/*; do
+    /bin/sh \$script
+done
+# End auto-upgrade-base addition
+EOM
+    fi
+    
+    return 0
 }
 
 
@@ -75,20 +116,17 @@ EOM
 	if [ $resp = yes ]; then
 	    # Restart sshd immediately in case API changes broken running daemon
 	    # Otherwise we may lose access when upgrading remotely
-	    freebsd-update install && service sshd restart || true
+	    freebsd-update install
+	    service sshd restart || true
 
 	    cat << EOM
 
-After rebooting, it is best to complete the process from a text console
-(virtual terminal) rather than a GUI session.
-
-If a graphical login screen appears after rebooting, type Ctrl+Alt+F1 to
-go to virtual terminal 0, then log in as root and run
-
-    auto-update-system --defaults
-
-Another reboot is then a good idea to reload kernel modules and services
-upgraded by auto-update-system.
+The system must be rebooted to load the new kernel.  If you choose to
+reboot now, "freebsd-update install" and "pkg upgrade" will run
+automatically to complete the update.  If you choose not to reboot
+now, you must run "freebsd-update install" at mininum to complete
+the base update. For major upgrades, it will be necessary to update
+installed packages as well.
 
 EOM
 	    resp=""
@@ -97,6 +135,7 @@ EOM
 		read resp
 	    done
 	    if [ $resp = yes ]; then
+		update_on_boot
 		shutdown -r now
 	    fi
 	fi
