@@ -36,7 +36,7 @@ update_on_boot()
 #!/bin/sh -e
 
 /usr/sbin/freebsd-update install
-/usr/sbin/pkg upgrade -f
+/usr/sbin/pkg upgrade -y
 rm -f $rc_dir/$update_script
 
 EOM
@@ -62,6 +62,15 @@ EOM
 ##########################################################################
 
 auto-root-check $0
+
+cat << EOM
+
+The system should be fully up-to-date on the current release before
+upgrading the base.  Run "auto-update-system --yes" if you have not
+updated recently.
+
+EOM
+pause
 
 case $(auto-ostype) in
 FreeBSD)
