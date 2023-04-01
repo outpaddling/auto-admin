@@ -220,18 +220,6 @@ freebsd_autoremove()
 }
 
 
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2023-04-01  Jason Bacon Begin
-##########################################################################
-
 ifs_corrupt()
 {
     cat << EOM
@@ -244,6 +232,25 @@ Each line must contain the following three columns:
 category/port  reason-for-installing-from-source  newer|always
 
 A 4th column indicating the port flavor is optional.
+****************************************************************************
+
+EOM
+    exit 1
+}
+
+
+ifs_needs_update()
+{
+    cat << EOM
+
+****************************************************************************
+Error: $install_from_source needs to be
+updated to include "newer" or "always" in the third column of every entry.
+Use "newer" to reinstall from source only when the port is newer than the
+installed package, and "always" to reinstall from source every time
+auto-update-system is run.
+
+Please update this file and try again.
 ****************************************************************************
 
 EOM
@@ -446,6 +453,9 @@ EOM
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
 		cols=$(echo $line | wc -w)
+		if [ $cols -lt 3 ]; then
+		    ifs_needs_update
+		fi
 		when=$(echo $line | awk '{ print $3 }')
 		if [ 0"$when" != 0newer ] && [ 0"$when" != 0always ]; then
 		    ifs_corrupt
@@ -454,20 +464,7 @@ EOM
 		    flavor="$(echo $line | awk '{ print $4 }')"
 		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE) || true
 		elif [ $cols = 2 ]; then
-		    cat << EOM
-
-****************************************************************************
-Error: $install_from_source needs to be
-updated to include "newer" or "always" in the third column of every entry.
-Use "newer" to reinstall from source only when the port is newer than the
-installed package, and "always" to reinstall from source every time
-auto-update-system is run.
-
-Please update this file and try again.
-****************************************************************************
-
-EOM
-		    exit 1
+		    ifs_needs_update
 		elif [ $cols = 3 ]; then
 		    unset flavor
 		    pkgbase=$(auto-print-make-variable $port PKGBASE) || true
