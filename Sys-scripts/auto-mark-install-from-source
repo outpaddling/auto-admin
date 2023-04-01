@@ -13,7 +13,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 category/package[@flavor] reason
+Usage: $0 category/package[@flavor] reason when
 
 Marks a port for reinstalling from source by auto-update-system.  This
 may be desirable to restore port options clobbered by "pkg upgrade",
@@ -27,13 +27,22 @@ The "reason" argument must not contain spaces.  It is a brief message that
 will be displayed by auto-upgrade-system when rebuilding a package from
 source.
 
+"when" must be either "newer", in which case the port is reinstalled
+from source only if newer than the installed package, or "always", in
+which case the port is reinstalled from source regardless.  The latter
+is useful when there are KBI incompatibilities between two extant
+FreeBSD versions.  This occasionally affects kernel modules, such
+that the package built on FreeBSD x.y is incompatible with FreeBSD x.(y+1).
+Packages are built on x.y until it reaches EOL, about 3 months after
+the release of x.(y+1).
+
 Examples:
 
-    $0 audio/lame license
-    $0 math/openblas optimization
-    $0 math/R build-options
-    $0 wip/auto-admin work-in-progress
-
+    $0 audio/lame license newer
+    $0 math/openblas optimization newer
+    $0 math/R build-options newer
+    $0 wip/auto-admin work-in-progress newer
+    $0 emulators/virtualbox-ose-kmod kbi always
 EOM
     exit 1
 }
@@ -43,7 +52,7 @@ EOM
 #   Main
 ##########################################################################
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     usage
 fi
 pkg=$1
@@ -55,6 +64,7 @@ if echo $pkg | fgrep -q '@'; then
     pkg=$(echo $pkg | cut -d @ -f 1)
 fi
 reason=$2
+when=$3
 
 case $(auto-ostype) in
 FreeBSD)
@@ -65,7 +75,7 @@ FreeBSD)
     fi
     mkdir -p $(auto-localbase)/etc/auto-admin
     # Check for port/package name only.  Don't duplicate if reason differs.
-    auto-append-line $pkg "$pkg $reason $flavor" \
+    auto-append-line $pkg "$pkg $reason $when $flavor" \
 	$(auto-localbase)/etc/auto-admin/install-from-source nocomment
     ;;
 
