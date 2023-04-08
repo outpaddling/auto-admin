@@ -225,7 +225,7 @@ ifs_corrupt()
     cat << EOM
 
 ****************************************************************************
-Error: $install_from_source is corrupt.
+Error: $INSTALL_FROM_SOURCE is corrupt.
 
 Each line must contain the following three columns:
 
@@ -239,22 +239,11 @@ EOM
 }
 
 
-ifs_needs_update()
+ifs_update()
 {
-    cat << EOM
-
-****************************************************************************
-Error: $install_from_source needs to be
-updated to include "newer" or "always" in the third column of every entry.
-Use "newer" to reinstall from source only when the port is newer than the
-installed package, and "always" to reinstall from source every time
-auto-update-system is run.
-
-Please update this file and try again.
-****************************************************************************
-
-EOM
-    exit 1
+    awk '{ if ( NF == 2 ) print $0 " newer"; else print $0; }' \
+	$INSTALL_FROM_SOURCE > $INSTALL_FROM_SOURCE.new
+    mv -f $INSTALL_FROM_SOURCE.new $INSTALL_FROM_SOURCE
 }
 
 
@@ -381,6 +370,16 @@ FreeBSD|DragonFly)
 	abuse_warning
     fi
     
+    readonly INSTALL_FROM_SOURCE=$(auto-localbase)/etc/auto-admin/install-from-source
+    while read line; do
+	port=$(echo $line | awk '{ print $1 }')
+	cols=$(echo $line | wc -w)
+	if [ $cols -lt 3 ]; then
+	    ifs_update
+	    break
+	fi
+    done < $INSTALL_FROM_SOURCE
+    
     # Don't group questions: Need to pause after each step to view output
     case $mode in
     binary|binary+reboot|defaults|defaults+reboot|yes)
@@ -444,8 +443,7 @@ EOM
 	
 	freebsd_autoremove
 
-	install_from_source=$(auto-localbase)/etc/auto-admin/install-from-source
-	if [ -e $install_from_source ]; then
+	if [ -e $INSTALL_FROM_SOURCE ]; then
 	    printf "Cataloging install-from-source versions before upgrade...\n"
 	    installed_versions_db=$(auto-localbase)/etc/auto-admin/old-pkg-versions
 	    mkdir -p $(auto-localbase)/etc/auto-admin/
@@ -453,9 +451,6 @@ EOM
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
 		cols=$(echo $line | wc -w)
-		if [ $cols -lt 3 ]; then
-		    ifs_needs_update
-		fi
 		when=$(echo $line | awk '{ print $3 }')
 		if [ 0"$when" != 0newer ] && [ 0"$when" != 0always ]; then
 		    ifs_corrupt
@@ -463,8 +458,6 @@ EOM
 		if [ $cols = 4 ]; then
 		    flavor="$(echo $line | awk '{ print $4 }')"
 		    pkgbase=$(auto-print-make-variable --flavor $flavor $port PKGBASE) || true
-		elif [ $cols = 2 ]; then
-		    ifs_needs_update
 		elif [ $cols = 3 ]; then
 		    unset flavor
 		    pkgbase=$(auto-print-make-variable $port PKGBASE) || true
@@ -473,7 +466,7 @@ EOM
 		fi
 		installed_version=$(pkg query '%v' $pkgbase) || true
 		printf "$pkgbase $installed_version\n" >> $installed_versions_db
-	    done < $install_from_source
+	    done < $INSTALL_FROM_SOURCE
 	fi
 	
 	auto_admin_old_version=$(pkg query '%v' auto-admin)
@@ -577,9 +570,9 @@ EOM
 	# Process ports marked by auto-mark-install-from-source
 	printf "Checking for ports to be installed from source...\n"
 	printf "Use auto-mark-install-from-source to update the list\n"
-	printf "or edit $install_from_source.\n"
+	printf "or edit $INSTALL_FROM_SOURCE.\n"
 	set +e  # pkg query
-	if [ -e "$install_from_source" ]; then
+	if [ -e "$INSTALL_FROM_SOURCE" ]; then
 	    while read line; do
 		port=$(echo $line | awk '{ print $1 }')
 		if [ $(echo $line | wc -w) = 4 ]; then
@@ -618,7 +611,7 @@ EOM
 		else
 		    printf "$pkgbase is not installed.\n"
 		fi
-	    done < $install_from_source
+	    done < $INSTALL_FROM_SOURCE
 	fi
 	set -e
     fi
