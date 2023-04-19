@@ -18,5 +18,7 @@
 # The user can choose any directories during bootstrap.  Find a more
 # reliable way.
 
-prefix=`auto-pkgsrc-prefix`
-printf ${prefix} | sed 's|pkg|pkgsrc|'
+printf "%%PKGSRCDIR%%\n"
+
+#prefix=`auto-pkgsrc-prefix`
+#printf ${prefix} | sed 's|pkg|pkgsrc|'
