@@ -1,11 +1,40 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Update pkgsrc binary packages and source on any platform
+#   Synopsis:
+#       auto-update-pkgsrc
+#           [--sync-pkg-cache user@host] [--binary | --defaults]
 #
+#   Description:
+#       Update a pkgsrc tree and update binary packages using pkgin
+#       if available, or pkg_chk otherwise.  When run with no flags,
+#       auto-update-pkgsrc runs interactively, prompting the user
+#       to determine which components to update.
+#       
 #   Arguments:
-#       Same as auto-update-system
+#       --sync-pkg-cache user@host: rsync binary packages from user@host
+#       --binary: Update only binary packages
+#       --defaults: Update pkgsrc tree and installed packages
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise
+#
+#   Examples:
+#       auto-update-pkgsrc --defaults
+#
+#   Files:
+#       $PREFIX/etc/auto-admin/critical-packages: Do not proceed
+#       with binary updates if packages listed here are not available
+#
+#       $PREFIX/etc/auto-admin/install-from-source: Rebuild and install
+#       these packages from source even if binary packages are available
+#
+#   Environment:
+#       PKGSRCDIR: Overrides the default location of the pkgsrc tree,
+#       which is otherwise determined via the PKGSRCDIR make variable
+#       when the auto-admin package is installed.
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
@@ -16,7 +45,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 [--sync-pkg-cache user@host] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+Usage: $0 [--sync-pkg-cache user@host] [--binary | --defaults]
 
 user@host is used to rsync packages from another host that has been updated
 more recently than this one.  This reduces load on the primary package servers
@@ -127,27 +156,21 @@ mode=interactive    # Default
 if [ $# = 1 ]; then
     if [ $1 = --binary ]; then
 	mode=binary
-    elif [ $1 = --binary+reboot ]; then
-	mode=binary+reboot
-    elif [ $1 = --defaults+reboot ]; then
-	mode=defaults+reboot
     elif [ $1 = --defaults ]; then
 	mode=defaults
-    elif [ $1 = --yes ]; then
-	mode=yes
     else
 	usage
     fi
 fi
 
 # auto-pkgsrc-prefix exits non-zero if no tree found
-PKGSRC=$(auto-pkgsrc-prefix) || true
-if [ -z "$PKGSRC" ]; then
+PREFIX=$(auto-pkgsrc-prefix) || true
+if [ -z "$PREFIX" ]; then
     printf "$0: No active pkgsrc tree found.\n"
     exit 1
 fi
 PKGSRCDIR=$(auto-pkgsrc-dir)
-install_from_source=$PKGSRC/etc/auto-admin/install-from-source
+install_from_source=$PREFIX/etc/auto-admin/install-from-source
     
 if [ ! -t 0 ]; then
     # Input redirected.  Being fed y/n responses.
@@ -158,12 +181,12 @@ fi
 #   Update binary packages if possible and desired
 ##########################################################################
 
-if [ ! -e $PKGSRC/bin/pkgin ]; then
-    printf "No $PKGSRC/bin/pkgin: Skipping binary package updates.\n"
+if [ ! -e $PREFIX/bin/pkgin ]; then
+    printf "No $PREFIX/bin/pkgin: Skipping binary package updates.\n"
 else
     # Don't group questions: Need to pause after each step to view output
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot|yes)
+    binary|defaults)
 	update_packages=y
 	abuse_warning
 	;;
@@ -174,7 +197,7 @@ else
     esac
     
     if [ 0$update_packages != 0n ]; then
-	critical_pkg_file=$PKGSRC/etc/auto-admin/critical-packages
+	critical_pkg_file=$PREFIX/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
 	    printf "Use auto-mark-package-critical to update the list\n"
@@ -253,10 +276,10 @@ fi
 ##########################################################################
 
 case $mode in
-defaults|defaults+reboot|yes)
+defaults)
     update_pkgsrc=y
     ;;
-binary|binary+reboot)
+binary)
     update_pkgsrc=n
     ;;
 interactive)
@@ -265,8 +288,8 @@ interactive)
     ;;
 esac
 
-if [ -e $PKGSRC/bin/sbmake ]; then
-    make=$PKGSRC/bin/sbmake
+if [ -e $PREFIX/bin/sbmake ]; then
+    make=$PREFIX/bin/sbmake
 else
     make=make
 fi
@@ -288,8 +311,8 @@ if [ 0$update_pkgsrc != 0n ]; then
 	printf "\n**** Updating $PKGSRCDIR...\n"
 	(cd $PKGSRCDIR && $cvs -q update -dP) || true
     fi
-    if [ -e $PKGSRC/bin/wip-update ]; then
-	$PKGSRC/bin/wip-update
+    if [ -e $PREFIX/bin/wip-update ]; then
+	$PREFIX/bin/wip-update
     elif [ -d $PKGSRCDIR/wip ]; then
 	(cd $PKGSRCDIR/wip && git pull)
     fi
@@ -299,7 +322,7 @@ fi
 #   Process packages marked by auto-mark-install-from-source
 ##########################################################################
 
-if [ -e $install_from_source ] && [ -e $PKGSRC/bin/pkgin ]; then
+if [ -e $install_from_source ] && [ -e $PREFIX/bin/pkgin ]; then
     printf "Checking for packages to be installed from source...\n"
     printf "Use auto-mark-install-from-source to update the list\n"
     printf "or edit $install_from_source.\n"
@@ -342,10 +365,10 @@ fi
 ##########################################################################
 
 src_update=''
-if [ ! -e $PKGSRC/bin/pkgin ]; then
-    if [ -e $PKGSRC/sbin/pkg_rolling-replace ]; then
+if [ ! -e $PREFIX/bin/pkgin ]; then
+    if [ -e $PREFIX/sbin/pkg_rolling-replace ]; then
 	src_update='pkg_rolling-replace -sv'
-    elif [ -e $PKGSRC/sbin/pkg_chk ]; then
+    elif [ -e $PREFIX/sbin/pkg_chk ]; then
 	src_update='pkg_chk -su'
     else
 	(cd $PKGSRCDIR/pkgtools/pkg_chk && $make install)
@@ -389,7 +412,7 @@ fi
 #   Run post-update plugin scripts if present
 ##########################################################################
 
-plugin=$PKGSRC/etc/auto-update-pkgsrc-post-src
+plugin=$PREFIX/etc/auto-update-pkgsrc-post-src
 if [ -e $plugin ]; then
     owner=`stat -L $plugin | awk '{ print $5 }'`
     group_write=`stat -L $plugin | awk '{ print $3 }' | cut -c 6`
