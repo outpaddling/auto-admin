@@ -9,13 +9,4 @@
 #   2018?       Jason Bacon Begin
 ##########################################################################
 
-printf "%%PREFIX%%\n"
-
-#pkg_add=`which pkg_add`
-#prefix=${pkg_add%/sbin/pkg_add}
-
-# Compensate for NetBSD where pkg_add is in base
-#if [ $prefix = /usr ] && [ -e /usr/pkg/sbin/pkg_add ]; then
-#    prefix=/usr/pkg
-#fi
-#printf "$prefix\n"
+printf "/usr/pkg\n"

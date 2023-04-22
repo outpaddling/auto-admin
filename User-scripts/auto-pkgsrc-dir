@@ -10,15 +10,8 @@
 #   2018?       Jason Bacon Begin
 ##########################################################################
 
-##########################################################################
-#   Main
-##########################################################################
-
-# FIXME: pkgsrc is almost always a sibling of pkg, but not necessarily.
-# The user can choose any directories during bootstrap.  Find a more
-# reliable way.
-
-printf "%%PKGSRCDIR%%\n"
-
-#prefix=`auto-pkgsrc-prefix`
-#printf ${prefix} | sed 's|pkg|pkgsrc|'
+if [ -n "$PKGSRCDIR" ]; then
+    printf "$PKGSRCDIR\n"
+else
+    printf "/usr/pkgsrc\n"
+fi
