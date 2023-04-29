@@ -13,5 +13,8 @@
 if [ -n "$PKGSRCDIR" ]; then
     printf "$PKGSRCDIR\n"
 else
-    printf "/usr/pkgsrc\n"
+    dir="/usr/pkgsrc"
+    if [ -e $dir ]; then
+	printf "$dir\n"
+    fi
 fi

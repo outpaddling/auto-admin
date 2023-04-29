@@ -9,4 +9,8 @@
 #   2018?       Jason Bacon Begin
 ##########################################################################
 
-printf "/usr/pkg\n"
+prefix="/usr/pkg"
+
+if [ -e $prefix ]; then
+    printf "$prefix\n"
+fi
