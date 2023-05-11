@@ -11,10 +11,11 @@
 ##########################################################################
 
 if [ -n "$PKGSRCDIR" ]; then
-    printf "$PKGSRCDIR\n"
+    dir="$PKGSRCDIR"
 else
     dir="/usr/pkgsrc"
-    if [ -e $dir ]; then
-	printf "$dir\n"
-    fi
+fi
+
+if [ -e $dir ]; then
+    printf "$dir\n"
 fi
