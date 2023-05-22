@@ -50,21 +50,23 @@ FreeBSD)
     ;;
 
 Darwin|NetBSD|RHEL)
-    if ! which pkgin; then
-	cat << EOM
-
-$0 currently depends on pkgsrc binary packages and no pkgin
-command has been found.
-
-EOM
-	exit 1
+    if [ -e $(auto-pkgsrc-prefix)/bin/pkgin; then
+	installed_cmd='pkgin list'
+	available_cmd='pkgin avail'
+	search_cmd='pkgin search'
+	install_cmd='pkgin -y install'
+	remove_cmd='pkgin -y remove'
+	autoremove_cmd='pkgin -y autoremove'
+    else
+	installed_cmd='pkg_info'
+	available_cmd="find $(auto-pkgsrc-dir) -mindepth 3 -maxdepth 3 -name Makefile | awk -F '/' '\$0 !~ \"/wip/\" { printf(\"%s/%s\n\", \$(NF-2), \$(NF-1)); }'"
+	search_cmd="find $(auto-pkgsrc-dir) -mindepth 2 -maxdepth 2 | grep -E"
+	install_cmd='no-pkgin'
+	remove_cmd='pkg_delete'
+	autoremove_cmd='no-autoremove'
     fi
-    installed_cmd='pkgin list'
-    available_cmd='pkgin avail'
-    search_cmd='pkgin search'
-    install_cmd='pkgin -y install'
-    remove_cmd='pkgin -y remove'
-    autoremove_cmd='pkgin -y autoremove'
+    # FIXME: Add pkgsrc support to auto-install-packages
+    # install_from_source_cmd='auto-install-packages -n -s'
     ;;
 
 *)
@@ -118,16 +120,21 @@ EOM
     3)
 	printf "Enter any part of the package name: "
 	read pattern
-	$search_cmd "$pattern" | more
+	eval $search_cmd "$pattern" | more
 	pause
 	;;
     
     4)
-	printf "Enter the package name(s): "
-	read names
-	if [ 0"$names" != 0 ]; then
-	    $install_cmd $names
+	if [ $install_cmd = 'no-pkgin' ]; then
+	    printf "No pkgin command for this tree.  Use install from source.\n"
 	    pause
+	else
+	    printf "Enter the package name(s): "
+	    read names
+	    if [ 0"$names" != 0 ]; then
+		$install_cmd $names
+		pause
+	    fi
 	fi
 	;;
     
@@ -135,10 +142,13 @@ EOM
 	printf "Enter the package name(s): "
 	read names
 	if [ 0"$names" != 0 ]; then
-	    $remove_cmd $names
 	    printf "Automatically remove unneeded dependencies? [y]/n "
 	    read deps
-	    if [ 0$deps != 0n ]; then
+	    if [ $remove_cmd = pkg_delete ]; then
+		$remove_flags='-rR'
+	    fi
+	    $remove_cmd $remove_flags $names
+	    if [ 0$deps != 0n ] && [ $autoremove_cmd != 'no-autoremove' ]; then
 		$autoremove_cmd
 	    fi
 	    pause
@@ -149,13 +159,30 @@ EOM
 	printf "Enter category/name: "
 	read names
 	if [ 0"$names" != 0 ]; then
-	    $install_from_source_cmd $names
+	    # FIXME: Change when auto-install-packages supports pkgsrc
+	    if [ 0$install_from_source_cmd = 0auto-install-packages ]; then
+		$install_from_source_cmd $names
+	    else
+		for make in sbmake bmake make; do
+		    if [ -e $(auto-pkgsrc-prefix)/bin/$make ]; then
+			break;
+		    fi
+		done
+		
+		for name in $names; do
+		    cd $(auto-pkgsrc-dir)/$name
+		    $make clean clean-depends install
+		done
+	    fi
 	    pause
 	fi
 	;;
 
     7)
-	cat << EOM
+	if [ $install_cmd = 'no-pkgin' ]; then
+	    printf "No pkgin command for this tree.  Tagging makes no sense here.\n"
+	else
+	    cat << EOM
 
 Users may need to install some ports/packages from source even though they use
 binary packages for most installs, because some ports/packages cannot be
@@ -194,19 +221,23 @@ compatible with dependent ports/packages.  (This is an issue whether mixing
 source builds and binary packages or building everything from source.)
 
 EOM
-	printf "category/port? "
-	read port
-	if [ 0"$port" != 0 ]; then
-	    printf "Reason for installing from source? (one word, e.g. license) "
-	    read reason
-	    auto-mark-install-from-source $port $reason
-	    printf "Edit /usr/local/etc/auto-admin/install-from-source to cancel.\n"
-	    pause
+	    printf "category/port? "
+	    read port
+	    if [ 0"$port" != 0 ]; then
+		printf "Reason for installing from source? (one word, e.g. license) "
+		read reason
+		auto-mark-install-from-source $port $reason
+		printf "Edit /usr/local/etc/auto-admin/install-from-source to cancel.\n"
+	    fi
 	fi
+	pause
 	;;
     
     8)
-	cat << EOM
+	if [ $install_cmd = 'no-pkgin' ]; then
+	    printf "No pkgin command for this tree.  Tagging makes no sense here.\n"
+	else
+	    cat << EOM
 
 Occasionally an important port becomes broken and running package upgrades
 will remove it from your system as a result. This is almost never an issue
@@ -223,16 +254,21 @@ Desktop-installer automatically tags certain packages, such as the chosedn
 desktop environment or window manager, xorg, etc.
 
 EOM
-	printf "Package name? "
-	read package
-	if [ 0"$package" != 0 ]; then
-	    auto-mark-package-critical $package || true
-	    pause
+	    printf "Package name? "
+	    read package
+	    if [ 0"$package" != 0 ]; then
+		auto-mark-package-critical $package || true
+	    fi
 	fi
+	pause
 	;;
     
     9)
-	auto-pkg-latest
+	if [ $install_cmd = 'no-pkgin' ]; then
+	    printf "No pkgin command for this tree.  Switching makes no sense here.\n"
+	else
+	    auto-pkg-latest
+	fi
 	pause
 	;;
     
