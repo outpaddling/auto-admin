@@ -1554,16 +1554,6 @@ if [ 0$install_certs = 0y ]; then
     (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)
 fi
 
-(cd $frameworks_prefix/sysutils/auto-admin && bmake clean install)
-auto-software-manager
-
-cat << EOM
-
-Run auto-software-manager for a menu interface to pkgsrc.
-
-EOM
-pause
-
 cat << EOM
 
 ********************************** WARNING **********************************
@@ -1682,5 +1672,14 @@ Bootstrap image saved to $bootstrap_archive.
 
 You can unpack this file to / on other identical $(uname) systems in order to
 quickly replicate this installation.
+
+EOM
+
+(cd $frameworks_prefix/sysutils/auto-admin && bmake clean install)
+auto-software-manager
+
+cat << EOM
+
+Run auto-software-manager for a menu interface to pkgsrc.
 
 EOM
