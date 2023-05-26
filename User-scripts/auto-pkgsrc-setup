@@ -239,6 +239,13 @@ EOM
 	exit 1
     fi
     os_major=`uname -r | cut -d . -f 1`
+
+    # On 13.4, bootstrap fails with "C compiler cannot create executables"
+    # export MACOSX_DEPLOYMENT_TARGET=`sw_vers --productVersion`
+
+    # Just use the /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk symlink
+    # instead of a specific MacOSX.x.y.sdk
+    export OSX_TOLERATE_SDK_SKEW=yes
     ;;
 
 CYGWIN*)
@@ -527,9 +534,9 @@ cat << EOM
 
 ============================================================================
 Compiling with -march=native can result in executables that run up to 30%
-faster in many cases, sometimes even more.  The binary packages created
+faster in some cases, though usually less.  The binary packages created
 will not be portable, however, and will only run on CPUs with all the
-features of this one.
+same features as this one.
 
 If you are using this system to generate binary packages for use on other
 systems, answer 'n' here.
@@ -731,6 +738,14 @@ if [ 0$bootstrap = '0y' ]; then
 
     # Separate bootstrap settings
     printf "\n.ifdef BSD_PKG_MK       # Begin auto-pkgsrc-setup customizations\n\n" >> $mk_conf
+
+    if [ -n "$OSX_TOLERATE_SDK_SKEW" ]; then
+	printf "OSX_TOLERATE_SDK_SKEW=\tyes\n" >> $mk_conf
+    fi
+
+    #if [ -n "$MACOSX_DEPLOYMENT_TARGET" ]; then
+    #    printf "MACOSX_DEPLOYMENT_TARGET=\t\t$\MACOSX_DEPLOYMENT_TARGET\n" >> $mk_conf
+    #fi
 
     printf "# For pkg_chk, etc.\n" >> $mk_conf
     printf "PKGSRCDIR=\t\t$frameworks_prefix\n" >> $mk_conf
@@ -1538,6 +1553,16 @@ if [ 0$install_certs = 0y ]; then
     (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
     (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)
 fi
+
+(cd $frameworks_prefix/sysutils/auto-admin && bmake clean install)
+auto-software-manager
+
+cat << EOM
+
+Run auto-software-manager for a menu interface to pkgsrc.
+
+EOM
+pause
 
 cat << EOM
 
