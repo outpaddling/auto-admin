@@ -389,9 +389,8 @@ if [ -n "$src_update" ]; then
 	# FIXME: Do this for all packages marked not for deletion
 	# and their dependencies.  Dependencies first.
 	# cwrappers, openssl deps for pkg_install
-	for pkg in pkgtools/cwrappers security/openssl pkgtools/pkg_install; do
-	    # FIXME: installed_up_to_date seems to be true when
-	    # openssl is not installed
+	for pkg in pkgtools/cwrappers security/openssl \
+		   pkgtools/pkg_install pkgtools/bootstrap-mk-files; do
 	    if installed_up_to_date $pkg; then
 		printf "\n**** Running make replace for $pkg...\n"
 		cd $PKGSRCDIR/$pkg
