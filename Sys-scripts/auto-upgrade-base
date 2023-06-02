@@ -90,8 +90,22 @@ case $(auto-ostype) in
 FreeBSD)
     case $# in
     0)
-	printf "New release? (e.g. 13.1-RELEASE, 13.2-BETA1) "
+	current_release=$(uname -r)
+	version=${current_release%-*}
+	branch=${current_release#*-}
+	branch=${branch%%-*}    # Remove -p*
+	major=${version%.*}
+	minor=${version#*.}
+	if [ $branch = RELEASE ]; then
+	    next_release=$major.$(($minor + 1))-$branch
+	else
+	    next_release=$major.$minor-$branch
+	fi
+	printf "New release? [$next_release] "
 	read release
+	if [ -z "$release" ]; then
+	    release=$next_release
+	fi
 	;;
     1)
 	release=$1
