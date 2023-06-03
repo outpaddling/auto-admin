@@ -23,6 +23,8 @@ MNT_GROUP=operator
 MNT_MODE=775
 EOM
     service devd restart
+    
+    # FIXME: Replace this with npmount
     cat << EOM
 
 Presently is is necessary to make /sbin/umount SUID root to allow ordinary
