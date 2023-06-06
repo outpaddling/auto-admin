@@ -49,12 +49,41 @@ EOM
 
 
 ##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
-if [ $# != 3 ]; then
+case $# in
+2)
+    printf "Disk label? [$2] "
+    read label
+    if [ -z "$label" ]; then
+	label="$2"
+    fi
+    ;;
+
+3)
+    label="$3"
+    ;;
+
+*)
     usage
-fi
+    ;;
+
+esac
 
 device=$1
 if ! echo $device | fgrep -q /dev/; then
@@ -85,7 +114,6 @@ EOM
     fi
     
     fs=$2
-    label="$3"
     
     gpart destroy -F $device 2> /dev/null || true
     
@@ -132,6 +160,7 @@ EOM
     
     printf "New partition scheme:\n\n"
     gpart show $device
+    pause
     ;;
 
 *)
