@@ -16,7 +16,7 @@ FreeBSD)
     #fi
     pkg install -y exfat-utils fusefs-exfat
     
-    pkg install -y fusefs-ntfs fusefs-ext2 \
+    pkg install -y fusefs-ntfs fusefs-ext2 fusefs-lkl \
 	fusefs-hfsfuse fusefs-simple-mtpfs
     
     kldload fusefs || true
