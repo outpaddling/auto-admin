@@ -16,7 +16,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 device filesystem label
+Usage: $0 [--temp-file filename] device filesystem [label]
 
 Do not specify partition for device.  Drive will be automatically reformatted
 with a single partition.  E.g. use "da1", not "da1s1" or "da1p1".
@@ -65,6 +65,14 @@ pause()
 ##########################################################################
 #   Main
 ##########################################################################
+
+# Create file to flag successful format
+# Used by qmediamanager, which cannot get exit status through urxvt
+if [ "$1" = --temp-file ]; then
+    temp_file=$2
+    shift
+    shift
+fi
 
 case $# in
 2)
@@ -160,6 +168,7 @@ EOM
     
     printf "New partition scheme:\n\n"
     gpart show $device
+    touch $temp_file
     pause
     ;;
 
