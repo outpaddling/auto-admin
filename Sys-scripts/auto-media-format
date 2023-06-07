@@ -35,8 +35,9 @@ Filesystems:
     fat16 (Old DOS format for small drives < 2GB)
     fat32 (Old DOS format for larger drives)
     exfat (Standard for large FLASH media, recommended for portability)
-    ufs2 (FreeBSD native, not readable on most other operating systems)
     ntfs (Windows NT and later, proprietary)
+    ufs2 (FreeBSD native, not readable on most other operating systems)
+    ext4 (Linux native, not readable on most other operating systems)
 
     * Warning: A UFS2 filesystem that is removed without being properly unmounted
     will be marked "dirty" and will not mount again until cleaned with:
@@ -143,13 +144,6 @@ EOM
 	mkfs.exfat -n "$label" ${device}s1
 	;;
     
-    ufs2)
-	dd if=/dev/zero of=$device bs=2m count=1
-	gpart create -s GPT $device
-	gpart add -t freebsd-ufs $device
-	newfs -L "$label" ${device}p1
-	;;
-    
     ntfs)
 	dd if=/dev/zero of=$device bs=2m count=1
 	sleep 1
@@ -160,6 +154,24 @@ EOM
 	mkntfs --fast --label "$label" --verbose ${device}s1
 	;;
     
+    ufs2)
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s GPT $device
+	gpart add -t freebsd-ufs $device
+	newfs -L "$label" ${device}p1
+	;;
+
+    ext4)
+	if ! which mkfs.ext4; then
+	    printf "mke2fs is not available.  Run pkg install e2fsprogs-core.\n"
+	    exit 1
+	fi
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s GPT $device
+	gpart add -t freebsd-ufs $device
+	mkfs.ext4 -L "$label" ${device}p1
+	;;
+    
     *)
 	printf "Invalid filesystem choice: $fs\n" >> /dev/stderr
 	usage
@@ -168,7 +180,9 @@ EOM
     
     printf "New partition scheme:\n\n"
     gpart show $device
-    touch $temp_file
+    if [ -n "$temp_file" ]; then
+	touch $temp_file
+    fi
     pause
     ;;
 
