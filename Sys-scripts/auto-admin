@@ -44,7 +44,7 @@ pause()
     local junk
     
     printf "Press return to continue..."
-    read -t $timeout junk
+    read $read_flags junk
 }
 
 
@@ -63,7 +63,11 @@ if [ $# != 0 ]; then
     usage
 fi
 
-timeout=60   # Exit from su if idle time too long
+# FIXME: Add other platforms that support read -t timeout
+if [ $(auto-ostype) == FreeBSD ]; then
+    # Exit from su if idle time too long
+    read_flags='-t 60'
+fi
 
 # FIXME: Figure out how to trap read -t timeout.  This doesn't work.
 # trap su_exit ALRM
@@ -111,13 +115,13 @@ Q.. Quit
 
 EOM
 
-    read -t $timeout -p 'Selection? ' resp
+    read $read_flags -p 'Selection? ' resp
     case 0$resp in
     01)
 	printf '\nThe following users are currently logged in:\n\n'
 	finger
 	printf '\nProceed with system updates? y/[n] '
-	read -t $timeout proceed
+	read $read_flags proceed
 	if [ 0$proceed = 0y ]; then
 	    cat << EOM | wall
 
@@ -180,9 +184,8 @@ EOM
 	;;
     
     010)
-	sbin=$(dirname `which auto-admin`)
-	bin=$(echo $sbin | sed -e 's|sbin|bin|')
-	ls $sbin/auto-* $bin/auto-* | more
+	bin=$(dirname `which auto-admin`)
+	ls $bin/auto-* | more
 	printf "$(ls $bin/auto-* | wc -l) scripts in total.\n"
 	pause
 	;;

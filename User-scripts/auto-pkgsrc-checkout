@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+if [ $# != 1 ]; then
+    printf "Usage: $0 stable|current\n"
+    exit 1
+fi
+branch=$1
+
+if [ -e pkgsrc ]; then
+    cat << EOM
+./pkgsrc already exists.
+Rename it, remove it, or go to a different directory to
+check out another copy of pkgsrc.
+EOM
+    exit 1
+fi
+
+ftp ftp://ftp.netbsd.org/pub/pkgsrc/$branch/pkgsrc.tar.gz
+printf "Unpacking...\n"
+tar -zxf pkgsrc.tar.gz
