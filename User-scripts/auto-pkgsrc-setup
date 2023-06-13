@@ -710,27 +710,32 @@ if [ 0$bootstrap = '0y' ]; then
     if [ $(uname) = Linux ]; then
 	export PKGSRC_USE_FORTIFY=no
     fi
+    if [ $(uname) != NetBSD ]; then
+	prefer_pkgsrc='--prefer-pkgsrc=yes'
+    else
+	prefer_pkgsrc=''
+    fi
 
     if [ `id -un` = root ]; then
 	./bootstrap \
-	    ${abi_flags} \
+	    $abi_flags \
 	    --prefix ${install_prefix} \
 	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
-	    --prefer-pkgsrc=yes \
+	    $prefer_pkgsrc \
 	    --workdir ${sys_prefix}/work 2>&1 \
 	    "$@" \
 	    | tee bootstrap$dist_suffix.log
     else
 	./bootstrap \
-	    ${abi_flags} \
+	    $abi_flags \
 	    --unprivileged \
 	    --prefix ${install_prefix} \
 	    --pkgdbdir ${sys_prefix}/pkgdb \
 	    --sysconfdir ${sys_prefix}/etc \
 	    --varbase ${sys_prefix}/var \
-	    --prefer-pkgsrc=yes \
+	    $prefer_pkgsrc \
 	    --workdir ${sys_prefix}/work 2>&1 \
 	    "$@" \
 	    | tee bootstrap$dist_suffix.log
