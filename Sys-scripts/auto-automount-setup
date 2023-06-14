@@ -18,6 +18,7 @@ NetBSD)
     # Install from wip if necessary
     pkgin -y install automount-devpubd npmount qmediamanager || true
     cp -f $(auto-pkgsrc-prefix)/share/automount-devpubd/03-automount /libexec/devpubd-hooks/
+    chmod 555 /libexec/devpubd-hooks/03-automount
     auto-enable-service devpubd $0
     ;;
 
