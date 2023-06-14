@@ -12,6 +12,17 @@ EOM
     service devd restart
     ;;
 
+NetBSD)
+    auto-fusefs-install
+    pkgin install -y automount npmount qmediamanager || true
+    cat << EOM > $(auto-pkgsrc-prefix)/etc/automount.conf
+FM=$(auto-pkgsrc-prefix)/bin/qmediamanager
+MNT_GROUP=operator
+MNT_MODE=775
+EOM
+    service devd restart
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1
