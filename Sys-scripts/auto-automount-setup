@@ -14,13 +14,16 @@ EOM
 
 NetBSD)
     auto-fusefs-install
+    # These may not be available in binary packages yet
+    # Install from wip if necessary
     pkgin install -y automount npmount qmediamanager || true
     cat << EOM > $(auto-pkgsrc-prefix)/etc/automount.conf
 FM=$(auto-pkgsrc-prefix)/bin/qmediamanager
 MNT_GROUP=operator
 MNT_MODE=775
 EOM
-    service devd restart
+    cp -f $(auto-pkgsrc-prefix)/share/automount-devpubd/03-automount /libexec/devpubd-hooks/
+    auto-enable-service devpubd
     ;;
 
 *)
