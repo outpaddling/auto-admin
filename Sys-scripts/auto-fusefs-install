@@ -39,7 +39,7 @@ NetBSD)
     pkgin -y install fuse-exfat
     
     # FreeBSD uses fuse-lkl for ext4, NetBSD fuse-ext2 (2023-06)
-    pkgin -y install -y fuse-ntfs fuse-ext2
+    pkgin -y install fuse-ntfs fuse-ext2
     
     # FIXME: How to enable fuse on NetBSD?
     #kldload fusefs || true
