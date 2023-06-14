@@ -34,18 +34,21 @@ case $# in
     usage
     ;;
 esac
-    
-case $(auto-ostype) in
-FreeBSD)
-    if [ `echo $port | awk -F / ' { print NF }'` != 2 ]; then
-	usage
-    fi
-    
+
+if [ `echo $port | awk -F / ' { print NF }'` = 2 ]; then
     name=`auto-print-make-variable $* PKGNAME`
     if [ $? != 0 ]; then
 	printf "$name"
 	exit 2
     fi
+elif [ `echo $port | awk -F / ' { print NF }'` = 1 ]; then
+    name=$port
+else
+    usage
+fi
+    
+case $(auto-ostype) in
+FreeBSD)
     
     major_name=${name%-*}
     if pkg info ${name} > /dev/null 2>&1; then
@@ -65,25 +68,15 @@ FreeBSD)
 
 *)
     if auto-using-pkgsrc; then
-	if [ `echo $port | awk -F / ' { print NF }'` != 2 ]; then
-	    usage
-	fi
-	
-	name=`auto-print-make-variable $* PKGNAME`
-	if [ $? != 0 ]; then
-	    printf "$name"
-	    exit 2
-	fi
-	
 	major_name=${name%-*}
 	if pkg_info ${name} > /dev/null 2>&1; then
-	    printf "$name is installed.\n"
+	    printf "$major_name is installed.\n"
 	    exit 0;
 	elif pkg_info $major_name > /dev/null 2>&1; then
-	    version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
+	    version=`pkg_info $major_name | awk -F '[ :]' '$1 == "Information" { print $3 }'`
 	    installed="$major_name-$version"
 	    if [ $installed != $name ]; then
-		printf "$installed is installed (your ports tree contains $name).\n"
+		printf "$installed is installed (your pkgsrc tree contains $name).\n"
 	    fi
 	else
 	    printf "$major_name is not installed.\n"
