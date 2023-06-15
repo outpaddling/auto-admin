@@ -111,10 +111,11 @@ fi
 ostype=`auto-ostype`
 case $ostype in
 FreeBSD)
+    # FIXME: Make sure /etc/passwd is being updated
     pw groupmod $group_name -g $new_gid
     ;;
 
-RHEL)
+NetBSD|RHEL)
     groupmod -g $new_gid $group_name
     ;;
 
@@ -139,6 +140,7 @@ done
 if [ 0"$dirs" != 0 ]; then
     # Can't use auto-change-group-ownership here because it requires
     # a username as well as a group name.  Should that be changed?
+    printf "Searching $dirs for files with old gid...\n"
     find $dirs -fstype nfs -prune -o \
 	-group $old_gid -exec chgrp $verbose -h $group_name '{}' +
 fi

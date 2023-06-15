@@ -24,7 +24,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $1 = -g ]; then
+if [ 0$1 = 0-g ]; then
     gid_flags="-g $2"
     shift
     shift
@@ -41,8 +41,8 @@ FreeBSD)
     pw groupadd $group_name $gid_flags
     ;;
 
-RHEL)
-    groupadd $group_flags $group_name
+NetBSD|RHEL)
+    groupadd $gid_flags $group_name
     ;;
 
 *)

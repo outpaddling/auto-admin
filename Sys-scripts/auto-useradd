@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 username uid primary-group-name 'Comment' shell max-password-age additional useradd flags]\n"
+    printf "Usage: $0 username uid primary-group-name gid 'Comment' shell max-password-age additional useradd flags]\n"
     exit 1
 }
 
@@ -25,12 +25,12 @@ if [ `id -un` != root ]; then
     exit 1                                                                      
 fi                                                                              
 
-if [ $1 = '--no-local-pw' ]; then
+if [ 0$1 = 0'--no-local-pw' ]; then
     no_local_pw=1
     shift
 fi
 
-if [ $# -lt 5 ]; then
+if [ $# -lt 6 ]; then
     usage
 fi
 
@@ -39,9 +39,10 @@ os_type=`auto-ostype`
 user_name="$1"
 user_id="$2"
 group_name="$3"
-gecos="$4"
-shell="$5"
-shift; shift; shift; shift; shift
+gid="$4"
+gecos="$5"
+shell="$6"
+shift; shift; shift; shift; shift; shift
 
 # Create group if necessary
 found_name=`awk -F : '$1 == "'$group_name'" { print $1 }' /etc/group`
@@ -49,33 +50,19 @@ if [ 0$found_name = 0$group_name ]; then
     printf "$group_name already exists.\n"
 else
     printf "Creating $group_name\n"
-    case $os_type in
-    FreeBSD)
-	pw groupadd $group_name -g $user_id
-	;;
-    
-    RHEL)
-	groupadd -g $user_id $group_name
-	;;
-
-    *)
-	auto-unsupported-os $0
-	exit 1
-	;;
-
-    esac
+    auto-add-group -g $gid $group_name
 fi
 
 # Create user
 case $os_type in
-RHEL)
-    useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
-	$user_name
-    ;;
-
 FreeBSD)
     pw useradd $user_name -c "$gecos" -g $group_name -m \
 	-s $shell -u $user_id $@
+    ;;
+
+NetBSD|RHEL)
+    useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
+	$user_name
     ;;
 
 *)

@@ -120,6 +120,12 @@ FreeBSD)
     default_shell="/bin/tcsh"
     ;;
 
+NetBSD)
+    ldap_conf=$(auto-pkgsrc-prefix)/etc/openldap/ldap.conf
+    ldap_flags='-x'
+    default_shell="/bin/ksh"
+    ;;
+
 RHEL)
     ldap_conf=/etc/openldap/ldap.conf
     ldap_flags='-x'
@@ -332,7 +338,7 @@ fi
 
 # Some users may belong to multiple groups.  If so, add them here.
 case $(auto-ostype) in
-FreeBSD)
+FreeBSD|NetBSD)
     printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
     read add
     if [ 0$add = 0y ]; then
@@ -345,12 +351,15 @@ FreeBSD)
 	add_group wheel
     fi
     
-    printf "Add $user_name to video group for optimal graphics performance? [y]/n "
-    read add
-    if [ 0$add != 0n ]; then
-	add_group video
+    if [ $(auto-ostype) = FreeBSD ]; then
+	printf "Add $user_name to video group for optimal graphics performance? [y]/n "
+	read add
+	if [ 0$add != 0n ]; then
+	    add_group video
+	fi
     fi
 esac
+
 group='x'
 while [ $group ]; do
     printf "Enter another supplementary group or just press return to move on] "
@@ -406,4 +415,4 @@ printf "Adding user $user_name...\n"
 # $agroup_flags -m $user_name
 
 auto-useradd $useradd_flags \
-    $user_name $uid $primary_group "$gecos" $shell $agroup_flags
+    $user_name $uid $primary_group $gid "$gecos" $shell $agroup_flags

@@ -33,6 +33,10 @@ FreeBSD)
     pw unlock $user_name
     ;;
 
+NetBSD)
+    usermod -C no $user_name
+    ;;
+
 RHEL)
     # FIXME: Is there a way in Linux to lock an account and restore to
     # exact config (shell and expiration date) later?

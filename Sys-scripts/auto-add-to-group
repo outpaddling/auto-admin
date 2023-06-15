@@ -36,6 +36,10 @@ FreeBSD)
     pw groupmod $group_name -m $user_name
     ;;
 
+NetBSD)
+    usermod -G $group_name $user_name
+    ;;
+    
 RHEL)
     usermod -a -G $group_name $user_name
     ;;

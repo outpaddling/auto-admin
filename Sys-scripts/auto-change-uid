@@ -119,7 +119,7 @@ FreeBSD)
     pw usermod $user_name -u $new_uid
     ;;
 
-RHEL)
+NetBSD|RHEL)
     usermod -u $new_uid $user_name
     ;;
 

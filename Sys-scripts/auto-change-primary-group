@@ -73,7 +73,7 @@ FreeBSD)
     pw usermod $user_name -g $new_group
     ;;
 
-RHEL)
+NetBSD|RHEL)
     usermod -g $new_group $user_name
     ;;
 
