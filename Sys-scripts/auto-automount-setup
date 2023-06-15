@@ -16,9 +16,9 @@ NetBSD)
     auto-fusefs-install
     # These may not be available in binary packages yet
     # Install from wip if necessary
-    pkgin -y install automount-devpubd npmount qmediamanager || true
-    cp -f $(auto-pkgsrc-prefix)/share/automount-devpubd/03-automount /libexec/devpubd-hooks/
-    chmod 555 /libexec/devpubd-hooks/03-automount
+    pkgin -y install devpub-mount npmount qmediamanager || true
+    cp -f $(auto-pkgsrc-prefix)/share/devpub-mount/03-devpub-mount /libexec/devpubd-hooks/
+    chmod 555 /libexec/devpubd-hooks/03-devpub-mount
     auto-enable-service devpubd $0
     ;;
 
