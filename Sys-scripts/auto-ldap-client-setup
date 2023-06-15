@@ -38,7 +38,7 @@ FreeBSD)
 	export EDITOR=vi
     fi
     
-    # Let this install as a dependency pkg_add -r openldap23-client
+    # Let this install as a dependency?
     auto-install-packages security/pam_ldap net/nss_ldap
     
     # Install cert
