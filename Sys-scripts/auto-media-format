@@ -49,6 +49,40 @@ EOM
 }
 
 
+fdisk_add()
+{
+    printf "$*\n"
+    case $1 in
+    fat16)
+	id=6
+	;;
+    fat32)
+	id=11
+	;;
+    ntfs|exfat)
+	id=7
+	;;
+    ext4)
+	id=238
+	;;
+    ufs|ffs)
+	id=default
+    esac
+    got_it='n'
+    while [ 0"$got_it" != 0"got it" ]; do
+	printf "======================================================\n"
+	printf "Update partition 0.\n"
+	printf "Enter sysid $id when asked.\n"
+	printf "======================================================\n"
+	printf "Type 'got it' to continue: "
+	read got_it
+    done
+    
+    fdisk -u $2
+    return 0
+}
+
+
 ##########################################################################
 #   Function description:
 #       Pause until user presses return
@@ -168,7 +202,7 @@ EOM
 	fi
 	dd if=/dev/zero of=$device bs=2m count=1
 	gpart create -s GPT $device
-	gpart add -t freebsd-ufs $device
+	gpart add -t linux-data $device
 	mkfs.ext4 -L "$label" ${device}p1
 	;;
     
@@ -183,7 +217,54 @@ EOM
     if [ -n "$temp_file" ]; then
 	touch $temp_file
     fi
-    pause
+    ;;
+
+NetBSD)
+    printf "Current partition table:\n"
+    printf "===========================================================\n"
+    gpt show $device || true  # Should show MBR or GPT
+    printf "===========================================================\n"
+    
+    cat << EOM
+
+This tool is designed to quickly reformat a USB stick or other media using
+a single partition and filesystem.
+
+EOM
+    printf "All data on $device will be lost.  Continue? y/[n] "
+    read continue
+    if [ 0"$continue" != 0y ]; then
+	exit
+    fi
+    
+    fs=$2
+    char_device="/dev/r${device##/dev/}"
+    
+    gpt destroy $device 2> /dev/null || true
+    
+    case $fs in
+    fat16|fat32)
+	dd if=/dev/zero of=$device bs=2m count=1
+	fdisk_add $fs $device
+	bits=${fs#fat}
+	newfs_msdos -F $bits -L "$label" ${char_device}e
+	;;
+    
+    # exfat, ffs and ext4 are a bit complicated
+    # Disk sizes are coming out incorrect
+    # disklabel must be used before newfs
+    
+    *)
+	printf "Invalid filesystem choice: $fs\n" >> /dev/stderr
+	usage
+	;;
+    esac
+    
+    printf "New partition scheme:\n\n"
+    gpt show $device
+    if [ -n "$temp_file" ]; then
+	touch $temp_file
+    fi
     ;;
 
 *)
@@ -192,3 +273,5 @@ EOM
     ;;
 
 esac
+pause
+

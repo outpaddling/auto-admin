@@ -13,12 +13,16 @@ usage()
 {
     cat << EOM
 
-Usage: $0 category/package[@flavor] reason when
+Usage: $0 --list
 
-Marks a port for reinstalling from source by auto-update-system.  This
-may be desirable to restore port options clobbered by "pkg upgrade",
-upgrade ports that cannot be packaged, or build with optimized CFLAGS set
-in /etc/make.conf.
+Lists ports/packages currently marked for install from source
+
+Usage: $0 category/name[@flavor] reason when
+
+Marks a port/package for reinstalling from source by auto-update-system.
+This may be desirable to restore options clobbered by "pkg[in] upgrade",
+upgrade ports that cannot be packaged due to licensing restrictions, or
+build with optimized CFLAGS set in /etc/make.conf.
 
 FreeBSD ports: If the port/package supports flavors and no flavor is
 specified, the default flavor is assumed.
@@ -51,6 +55,22 @@ EOM
 ##########################################################################
 #   Main
 ##########################################################################
+
+if [ $# = 1 ] && [ $1 = '--list' ]; then
+    if [ $(auto-ostype) = FreeBSD ]; then
+	prefix=$(auto-localbase)
+    elif $(auto-using-pkgsrc); then
+	prefix=$(auto-pkgsrc-prefix)
+    else
+	printf "$0: Cannot determine install prefix.\n"
+	exit 1
+    fi
+    config=$prefix/etc/auto-admin/install-from-source
+    if [ -e $config ]; then
+	cat $config
+    fi
+    exit 0
+fi
 
 if [ $# -ne 3 ]; then
     usage
