@@ -350,16 +350,33 @@ if [ $# = 1 ]; then
 	mode=binary
     elif [ "$1" = --binary+reboot ]; then
 	mode=binary+reboot
-    elif [ "$1" = --defaults+reboot ]; then
+    elif [ "$1" = --defaults+reboot ] || [ "$1" = --yes ]; then
 	mode=defaults+reboot
     elif [ "$1" = --defaults ]; then
 	mode=defaults
-    elif [ "$1" = --yes ]; then
-	mode=yes
     else
 	usage
     fi
 fi
+
+##########################################################################
+#   Reboot will only occur if needed, e.g. if freebsd-update updated
+#   something in /boot.  --yes and --defaults+reboot are conditioned
+#   on this.
+##########################################################################
+
+case $mode in
+binary|defaults)
+    reboot_requested=n
+    ;;
+binary+reboot|defaults+reboot)
+    reboot_requested=y
+    ;;
+interactive)
+    printf "Reboot? y/[n] "
+    read reboot_requested
+    ;;
+esac
 
 case $os_type in
 FreeBSD|DragonFly)
@@ -382,7 +399,7 @@ FreeBSD|DragonFly)
     
     # Don't group questions: Need to pause after each step to view output
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot|yes)
+    binary|binary+reboot|defaults|defaults+reboot)
 	update_packages=y
 	abuse_warning
 	;;
@@ -489,7 +506,7 @@ EOM
     fi
     
     case $mode in
-    defaults|defaults+reboot|yes)
+    defaults|defaults+reboot)
 	update_ports=y
 	portsnap_flags=--interactive
 	;;
@@ -654,7 +671,7 @@ EOM
 	update_base=n
     else
 	case $mode in
-	binary|binary+reboot|defaults|defaults+reboot|yes)
+	binary|binary+reboot|defaults|defaults+reboot)
 	    update_base=y
 	    freebsd_update_flags=--not-running-from-cron
 	    ;;
@@ -695,7 +712,7 @@ EOM
 		printf "No kernel componented updated.  No reboot necessary.\n"
 		reboot=n
 	    fi
-	    rm $tmpfile
+	    # rm $tmpfile
     
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
@@ -735,7 +752,7 @@ RHEL)
 	yum update -y
 	yum autoremove -y
 	;;
-    binary+reboot|defaults+reboot|yes)
+    binary+reboot|defaults+reboot)
 	yes | yum-complete-transaction || true
 	yes | yum update -y
 	yum autoremove -y
@@ -825,7 +842,7 @@ Darwin)
     
     # FIXME: Add softwareupdate logic for base updates
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot|yes)
+    binary|binary+reboot|defaults|defaults+reboot)
 	update_base=y
 	;;
     interactive)
@@ -858,19 +875,6 @@ date
 #    printf "Syncing to $pkg_cache_host...\n"
 #    rsync -av $pkg_cache/ ${pkg_cache_host}:$pkg_cache
 #fi
-
-case $mode in
-binary|defaults)
-    reboot_requested=n
-    ;;
-binary+reboot|defaults+reboot|yes)
-    reboot_requested=y
-    ;;
-interactive)
-    printf "Reboot? y/[n] "
-    read reboot_requested
-    ;;
-esac
 
 if [ 0$reboot = 0y ]; then
     if [ $mode = interactive ]; then
