@@ -672,10 +672,11 @@ EOM
 		cp -Rp /boot /boot.save
 	    fi
 	    tmpfile=update-system.tmp
-	    freebsd-update $freebsd_update_flags fetch | tee $tmpfile
+	    freebsd-update $freebsd_update_flags fetch 2>&1 | tee $tmpfile
 	    
 	    if ! fgrep -q 'No updates' $tmpfile; then
-		freebsd-update $freebsd_update_flags install
+		freebsd-update $freebsd_update_flags install 2>&1 | tee $tmpfile
+		# FIXME: Is this still necessary?  IB may be part of base now.
 		if [ -e /boot/modules/ibcore.ko ]; then
 		    cat << EOM
 
