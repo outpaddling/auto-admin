@@ -688,7 +688,7 @@ EOM
 	    if [ ! -e /boot.save ]; then
 		cp -Rp /boot /boot.save
 	    fi
-	    tmpfile=update-system.tmp
+	    tmpfile=/tmp/auto-update-system.tmp
 	    freebsd-update $freebsd_update_flags fetch 2>&1 | tee $tmpfile
 	    
 	    if ! fgrep -q 'No updates' $tmpfile; then
@@ -712,7 +712,7 @@ EOM
 		printf "No kernel componented updated.  No reboot necessary.\n"
 		reboot=n
 	    fi
-	    # rm $tmpfile
+	    rm $tmpfile
     
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
