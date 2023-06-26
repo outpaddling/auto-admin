@@ -21,10 +21,11 @@
 #       0 on success, non-zero on failure
 #
 #   Files:
-#       /etc/fstab (FreeBSD)
+#       /etc/fstab (FreeBSD, NetBSD)
 #
 #   See also:
-#       swapon(1), mdconfig(1) (FreeBSD)
+#       swapon(8), mdconfig(8) (FreeBSD)
+#       swapctl(8) (NetBSD)
 #       
 #   History:
 #   Date        Name        Modification
@@ -67,7 +68,7 @@ FreeBSD)
 	#service zvol restart
     else
 	if grep -q "$swapfile" /etc/fstab; then
-	    printf "Error: swapfile is already configured in fstab.\n"
+	    printf "Error: swapfile is already configured in /etc/fstab.\n"
 	    exit 1
 	else
 	    # FIXME: Probably won't work with ZFS
@@ -86,6 +87,24 @@ FreeBSD)
 		/etc/fstab $0
 	    swapon -aL
 	fi
+    fi
+    ;;
+
+NetBSD)
+    if grep -q "$swapfile" /etc/fstab; then
+	printf "Error: swapfile is already configured in /etc/fstab.\n"
+	exit 1
+    else
+	# FIXME: Probably won't work with ZFS
+	if [ ! -e $swapfile ]; then
+	    printf "Creating $swapfile...\n"
+	    dd if=/dev/zero of=$swapfile bs=1m count=$mbytes
+	else
+	    printf "Using existing $swapfile...\n"
+	fi
+	chmod 600 $swapfile
+	auto-append-line "$swapfile\tnone\tswap\tsw" /etc/fstab $0
+	swapctl -A
     fi
     ;;
 
