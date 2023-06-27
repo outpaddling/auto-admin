@@ -16,6 +16,8 @@ pause()
 ##########################################################################
 #   Description:
 #       Set address space limit limits.d
+#       FIXME: This is a temporary hack used for SPCM quick setup.
+#       A more robust and flexible design would be good.
 #
 #   Arguments:
 #       Virtual memory limit in kilobytes
@@ -89,6 +91,11 @@ EOM
 
 FreeBSD)
     : ${EDITOR:=vi}
+    realmem=$(sysctl -n hw.realmem)
+    echo $realmem
+    maxdsiz=$(($realmem * 2))
+    echo $maxdsiz
+    auto-set-conf-var kern.maxdsiz $maxdsiz /boot/loader.conf $0
     cat << EOM
 
 Editing /etc/login.conf.  Change vmemoryuse under the appropriate user class.
