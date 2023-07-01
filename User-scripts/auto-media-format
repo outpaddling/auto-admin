@@ -164,28 +164,23 @@ EOM
     fat16|fat32)
 	dd if=/dev/zero of=$device bs=2m count=1
 	gpart create -s MBR $device
-	sleep 1
 	gpart add -t $fs $device
 	bits=${fs#fat}
 	newfs_msdos -F $bits -L "$label" ${device}s1
 	;;
     
+    ntfs)
+	dd if=/dev/zero of=$device bs=2m count=1
+	gpart create -s MBR $device
+	gpart add -t ntfs $device
+	mkntfs --fast --label "$label" --verbose ${device}s1
+	;;
+    
     exfat)
 	dd if=/dev/zero of=$device bs=2m count=1
 	gpart create -s MBR $device
-	#sleep 1
 	gpart add -t ntfs $device
 	mkfs.exfat -n "$label" ${device}s1
-	;;
-    
-    ntfs)
-	dd if=/dev/zero of=$device bs=2m count=1
-	sleep 1
-	gpart create -s MBR $device
-	sleep 1
-	gpart add -t ntfs $device
-	sleep 1
-	mkntfs --fast --label "$label" --verbose ${device}s1
 	;;
     
     ufs2)
