@@ -1,0 +1,100 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-image2dev [--success-file file] file.img|file.iso device
+#
+#   Arguments:
+#       --success-file file Name a file to create upon success.
+#       file.img|file.iso   A file containing an image of a disk with
+#       device              Device name under /dev for the writable device
+#
+#   Description:
+#       .B auto-image2dev
+#       bit-copies a disk image to a writable storage disk device such as
+#       a USB thumb drive.  All data on the device, including any existing
+#       partition table, will be lost.
+#
+#       The --success-file option is useful when running auto-image2dev
+#       from a GUI application through a terminal emulator, which typically
+#       do not not pass back the exit status of the processes running under
+#       them.
+#
+#       The image file should be a complete disk image containing one
+#       or more filesystems, such as a .iso file, a macOS .dmg file,
+#       or a FreeBSD .img installer image.
+#
+#       The device name can generally be determined by running dmesg
+#       after connecting it.  On FreeBSD, device names are typically
+#       da0, da1, etc.  On Linux and NetBSD, sd0, sd1, etc.  The device
+#       name can be given with or without a /dev/ prefix.
+#       
+#   Returns:
+#       0 on success, non-zero error code on failure
+#
+#   Examples:
+#       auto-image2dev FreeBSD-13.2-RELEASE-amd64-memstick.img /dev/da0
+#
+#   See also:
+#       dd(1), auto-media-format(1)
+#       
+#   History:
+#   Date        Name        Modification
+#   2010?       Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--success-file file] disk-image-file device\n"
+    printf "\nExample:\n\n$0 FreeBSD-13.2-amd64-memstick.img /dev/da0\n"
+    printf "\nUse da0, not da0a, da0s1, etc.\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ 0$1 = 0--success-file ]; then
+    success_file=$2
+    shift
+    shift
+fi
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+image=$1
+dev=$2
+
+if [ `echo $dev | cut -c 1-4` != '/dev' ]; then
+    dev="/dev/$dev"
+fi
+
+case $(uname) in
+FreeBSD)
+    flags="status=progress"
+    ;;
+
+NetBSD)
+    flags="progress=1"
+    ;;
+
+*)
+    ;;
+
+esac
+
+printf "\nMake sure that no partions on $dev are currently mounted.\n"
+printf "This operation will overwrite all data on $dev.\n\n"
+printf "Are you sure you want to continue? y/[n] "
+read continue
+if [ 0"$continue" != 0y ]; then
+    exit
+fi
+set -x
+# 64k block size is much faster than smaller blocks
+dd if=$image of=$dev $flags bs=64k conv=sync
+touch $success_file
