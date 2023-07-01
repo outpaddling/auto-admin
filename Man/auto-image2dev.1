@@ -27,6 +27,9 @@ bit-copies a disk image to a writable storage disk device such as
 a USB thumb drive.  All data on the device, including any existing
 partition table, will be lost.
 
+Note that this does not copy the file to the filesystem on the
+device, but makes the device itself a copy of the file.
+
 The --success-file option is useful when running auto-image2dev
 from a GUI application through a terminal emulator, which typically
 do not not pass back the exit status of the processes running under

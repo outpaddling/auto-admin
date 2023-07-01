@@ -15,6 +15,9 @@
 #       a USB thumb drive.  All data on the device, including any existing
 #       partition table, will be lost.
 #
+#       Note that this does not copy the file to the filesystem on the
+#       device, but makes the device itself a copy of the file.
+#
 #       The --success-file option is useful when running auto-image2dev
 #       from a GUI application through a terminal emulator, which typically
 #       do not not pass back the exit status of the processes running under
@@ -75,14 +78,16 @@ fi
 
 case $(uname) in
 FreeBSD)
-    flags="status=progress"
+    # 64k block size is much faster than smaller blocks
+    cmd="dd if=$image of=$dev status=progress bs=64k conv=sync"
     ;;
 
 NetBSD)
-    flags="progress=1"
+    cmd="progress -f $image dd of=$dev bs=64k conv=sync"
     ;;
 
 *)
+    auto-unsupport-os $0
     ;;
 
 esac
@@ -92,9 +97,12 @@ printf "This operation will overwrite all data on $dev.\n\n"
 printf "Are you sure you want to continue? y/[n] "
 read continue
 if [ 0"$continue" != 0y ]; then
-    exit
+    exit 0
 fi
 set -x
-# 64k block size is much faster than smaller blocks
-dd if=$image of=$dev $flags bs=64k conv=sync
+if ! $cmd; then
+    set +x
+    printf "Copy failed.  Is the device mounted?\n"
+    exit 1
+fi
 touch $success_file
