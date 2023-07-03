@@ -54,6 +54,35 @@ FreeBSD)
     fi
     ;;
 
+NetBSD)
+    # FIXME: Find a deterministic way to glean the quaterly branch
+    # instead of relying on time stamps
+    if awk '$1 == "url:" { print $2 }' /usr/pkg/etc/pkgin/repositories.conf \
+	    2> /dev/null | fgrep -q pkgsrc.smartos.org; then
+	printf "latest\n"
+    else
+	# meta.txz should be time stamped with the latest update
+	# to the package repo
+	vers=$(uname -r)
+	arch=$(uname -m)
+	tmpfile=auto-pkg-branch-summary.tgz
+	rm -f $tmpfile
+	# echo 'https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/9.3/All/pkg_summary.gz'
+	fetch -o $tmpfile \
+	    https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$arch/$vers/All/pkg_summary.gz
+	
+	mod_time=$(stat -t '%Y-%m' $tmpfile | awk '{ print $10 }' | tr -d '"')
+	year=${mod_time%-*}
+	month=${mod_time#*-}
+	rm -f $tmpfile
+	quarter=$((($month - 1) / 3))
+	branch=${year}Q$quarter
+	
+	printf "$branch\n"
+    fi
+    
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1
