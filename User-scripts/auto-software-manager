@@ -50,7 +50,7 @@ FreeBSD)
     ;;
 
 Darwin|NetBSD|RHEL)
-    if [ -e $(auto-pkgsrc-prefix)/bin/pkgin; then
+    if [ -e $(auto-pkgsrc-prefix)/bin/pkgin ]; then
 	installed_cmd='pkgin list'
 	available_cmd='pkgin avail'
 	search_cmd='pkgin search'
@@ -65,6 +65,7 @@ Darwin|NetBSD|RHEL)
 	remove_cmd='pkg_delete'
 	autoremove_cmd='no-autoremove'
     fi
+    
     # FIXME: Add pkgsrc support to auto-install-packages
     # install_from_source_cmd='auto-install-packages -n -s'
     ;;
@@ -126,7 +127,7 @@ EOM
 	;;
     
     4)
-	if [ $install_cmd = 'no-pkgin' ]; then
+	if [ "$install_cmd" = 'no-pkgin' ]; then
 	    printf "No pkgin command for this tree.  Use install from source.\n"
 	    pause
 	else
@@ -145,11 +146,11 @@ EOM
 	if [ 0"$names" != 0 ]; then
 	    printf "Automatically remove unneeded dependencies? [y]/n "
 	    read deps
-	    if [ $remove_cmd = pkg_delete ]; then
+	    if [ "$remove_cmd" = pkg_delete ]; then
 		$remove_flags='-rR'
 	    fi
 	    $remove_cmd $remove_flags $names
-	    if [ 0$deps != 0n ] && [ $autoremove_cmd != 'no-autoremove' ]; then
+	    if [ 0"$deps" != 0n ] && [ $autoremove_cmd != 'no-autoremove' ]; then
 		$autoremove_cmd
 	    fi
 	    pause
@@ -161,7 +162,7 @@ EOM
 	read names
 	if [ 0"$names" != 0 ]; then
 	    # FIXME: Change when auto-install-packages supports pkgsrc
-	    if [ 0$install_from_source_cmd = 0auto-install-packages ]; then
+	    if [ 0"$install_from_source_cmd" = 0auto-install-packages ]; then
 		$install_from_source_cmd $names
 	    else
 		for make in sbmake bmake make; do
@@ -180,7 +181,7 @@ EOM
 	;;
 
     7)
-	if [ $install_cmd = 'no-pkgin' ]; then
+	if [ "$install_cmd" = 'no-pkgin' ]; then
 	    printf "No pkgin command for this tree.  Tagging makes no sense here.\n"
 	else
 	    cat << EOM
@@ -235,7 +236,7 @@ EOM
 	;;
     
     8)
-	if [ $install_cmd = 'no-pkgin' ]; then
+	if [ "$install_cmd" = 'no-pkgin' ]; then
 	    printf "No pkgin command for this tree.  Tagging makes no sense here.\n"
 	else
 	    cat << EOM
@@ -269,7 +270,7 @@ EOM
 	    printf "This will update your pkgsrc tree and all installed packages.\n"
 	    printf "Proceed? y/[n] "
 	    read proceed
-	    if [ 0$proceed = 0y ]; then
+	    if [ 0"$proceed" = 0y ]; then
 		auto-update-pkgsrc --defaults
 	    fi
 	else

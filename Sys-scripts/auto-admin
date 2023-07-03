@@ -26,15 +26,6 @@
 ##########################################################################
 
 ##########################################################################
-#   Main
-##########################################################################
-
-if [ $# != 0 ]; then
-    usage
-fi
-
-
-##########################################################################
 #   Function description:
 #       Pause until user presses return
 ##########################################################################
@@ -64,7 +55,7 @@ if [ $# != 0 ]; then
 fi
 
 # FIXME: Add other platforms that support read -t timeout
-if [ $(auto-ostype) == FreeBSD ]; then
+if [ $(auto-ostype) = FreeBSD ]; then
     # Exit from su if idle time too long
     read_flags='-t 60'
 fi
