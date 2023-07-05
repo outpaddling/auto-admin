@@ -30,7 +30,7 @@ Example:
 
     $0 da1 fat32 SANDISK64
 
-Filesystems:
+Filesystems (not all filesystems are supported on all platforms):
 
     fat16 (Old DOS format for small drives < 2GB)
     fat32 (Old DOS format for larger drives)
@@ -45,6 +45,25 @@ Filesystems:
     fsck /dev/device
 
 EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Notify user of invalid FS selection
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-07-05  Charlie &,,,Begin
+##########################################################################
+
+invalid_fs()
+{
+    printf "\nInvalid filesystem choice: $fs\n" >> /dev/stderr
+    printf "Please consider helping the project by adding support for $fs\n"
+    printf "to $0 if possible.\n\n"
+    pause
     exit 1
 }
 
@@ -202,8 +221,7 @@ EOM
 	;;
     
     *)
-	printf "Invalid filesystem choice: $fs\n" >> /dev/stderr
-	usage
+	invalid_fs
 	;;
     esac
     
@@ -261,8 +279,7 @@ EOM
     # disklabel must be used before newfs
     
     *)
-	printf "Invalid filesystem choice: $fs\n" >> /dev/stderr
-	usage
+	invalid_fs
 	;;
     esac
     
