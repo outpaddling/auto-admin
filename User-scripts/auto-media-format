@@ -244,8 +244,19 @@ EOM
 	bits=${fs#fat}
 	newfs_msdos -F $bits -L "$label" ${char_device}e
 	;;
+
+    # Requires fuse-exfat 1.4.0 or later
+    exfat)
+	if mkfs.exfat 2>&1 | fgrep 1.3.0; then
+	    printf "Error: You need fuse-exfat 1.4.0 or later.\n"
+	    exit 1
+	fi
+	dd if=/dev/zero of=$device bs=2m count=1
+	fdisk_add $fs $device
+	mkfs.exfat -n "$label" ${device}e
+	;;
     
-    # exfat, ffs and ext4 are a bit complicated
+    # ffs and ext4 are a bit complicated
     # Disk sizes are coming out incorrect
     # disklabel must be used before newfs
     
