@@ -3,7 +3,7 @@
 case $(auto-ostype) in
 FreeBSD)
     auto-fusefs-install
-    pkg install -y automount npmount qmediamanager
+    pkg install -y devd-mount npmount qmediamanager
     cat << EOM > /usr/local/etc/automount.conf
 FM=/usr/local/bin/qmediamanager
 MNT_GROUP=operator
