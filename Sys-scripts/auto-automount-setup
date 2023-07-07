@@ -3,6 +3,7 @@
 case $(auto-ostype) in
 FreeBSD)
     auto-fusefs-install
+    pkg remove -y automount     # Duplicates devd-mount actions
     pkg install -y devd-mount npmount qmediamanager
     cat << EOM > /usr/local/etc/automount.conf
 FM=/usr/local/bin/qmediamanager
