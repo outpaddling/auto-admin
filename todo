@@ -1,4 +1,6 @@
 
+Make sure all man pages are in section 8
+
 auto-update-system: Identify ports that cannot be packaged and rebuild
 from source when necessary.  E.g. audio/lame
 
