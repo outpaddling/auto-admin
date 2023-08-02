@@ -2,8 +2,9 @@
 
 ##########################################################################
 #   Synopsis:
-#       auto-update-system [--sync-pkg-cache user@host] \\
-#       [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+#       auto-update-system [ --sync-pkg-cache user@host ] \\
+#       [ --pause ] \\
+#       [ --binary | --binary+reboot | --defaults | --defaults+reboot | --yes ]
 #       
 #   Description:
 #       auto-update-system performs a comprehensive system update
@@ -98,6 +99,7 @@
 #
 #   Arguments:
 #       --sync-pkg-cache user@host  Sync package cache from host
+#       --pause                     Prompt user before exit
 #       --binary                    Binary packages and base only
 #       --binary+reboot             Same as above + auto reboot
 #       --defaults                  All components that can be easily updated
@@ -132,7 +134,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 [--sync-pkg-cache user@host] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+Usage: $0 [--sync-pkg-cache user@host] [--pause] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
 
 user@host is used to rsync packages from another host that has been updated
 more recently than this one.  This reduces load on the primary package servers
@@ -300,23 +302,30 @@ cat << EOM
 EOM
 sleep 10
 
-if [ 0"$1" = 0--sync-pkg-cache ]; then
-    if [ $# -ge 2 ]; then
-	sync_pkg_cache=1
-	pkg_cache_host=$2
-	if echo $pkg_cache_host | fgrep -q '@'; then
-	    shift
-	    shift
+while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
+    if [ 0"$1" = 0--sync-pkg-cache ]; then
+	if [ $# -ge 2 ]; then
+	    sync_pkg_cache=1
+	    pkg_cache_host=$2
+	    if echo $pkg_cache_host | fgrep -q '@'; then
+		shift
+		shift
+	    else
+		usage
+	    fi
 	else
 	    usage
 	fi
-    else
-	usage
+    elif [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
+	sync_pkg_cache=1
+	pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
     fi
-elif [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
-    sync_pkg_cache=1
-    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
-fi
+    
+    if [ 0"$1" = 0--pause ]; then
+	pause=yes
+	shift
+    fi
+done
 
 if [ -n "$pkg_cache_host" ]; then
     case $os_type in
@@ -888,6 +897,9 @@ if [ 0$reboot = 0y ]; then
     fi
     printf "Rebooting...\n"
     sync    # Attempt to prevent Linux kernel update failures
+    if [ 0$pause = 0yes ]; then
+	pause
+    fi
     shutdown -r +$minutes
 else
     # Restart services in case daemons were updated
@@ -901,4 +913,7 @@ Be sure to reboot if you've updated the kernel, or restart any services
 affected by package upgrades.
 
 EOM
+    if [ 0$pause = 0yes ]; then
+	pause
+    fi
 fi
