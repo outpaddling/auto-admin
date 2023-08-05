@@ -170,7 +170,7 @@ if [ `id -un` = root ]; then
     # RHEL / CentOS base
     if [ -e /etc/redhat-release ]; then
 	printf "Installing base development tools via yum...\n"
-	yum install -y gcc-gfortran gcc-c++ gcc java-11-openjdk-devel tar git
+	yum install -y gcc-gfortran gcc-c++ gcc java-11-openjdk-devel tar git ncompress
     elif [ -e /etc/debian_version ]; then
 	printf "Installing base development tools via apt...\n"
 	apt install -y gcc g++ gfortran default-jdk-headless tar curl git
