@@ -789,53 +789,61 @@ RHEL)
 NetBSD)
     auto-update-pkgsrc "$@"
     record_update_time
+
+    case $mode in
+    interactive)
+	printf "Update base system? [y]/n "
+	read update_base
+	if [ 0$update_base != 0n ]; then
+	    export CVS_RSH=ssh 
+	    if [ ! -e /usr/src ]; then
+		cd /usr
+		release=netbsd-`uname -r | cut -d . -f 1,2 | tr . - `
+		printf "Checking out $release src...\n"
+		pause
+		cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot co -r $release -P src
+		cd src
+	    else
+		cd /usr/src
+		cvs -q up -dP
+	    fi
+	    mkdir -p /usr/obj /usr/tools
+	    
+	    # Build tools
+	    # Added -U to silence warning
+	    ./build.sh -O /usr/obj -T /usr/tools -U -u tools
+	    
+	    # Build kernel
+	    arch=$(uname -m)
+	    kern=AUTOUPDATE
+	    cp sys/arch/$arch/conf/GENERIC sys/arch/$arch/conf/$kern
+	    ./build.sh -O ../obj -T ../tools -U kernel=$kern
+	    
+	    # Build userland
+	    ./build.sh -O ../obj -T ../tools -U distribution
+	    
+	    # Install everything
+	    mv /netbsd /netbsd.old
+	    mv /usr/obj/sys/arch/$arch/compile/$kern/netbsd /
     
-    printf "Update base system? [y]/n "
-    read update_base
-    if [ 0$update_base != 0n ]; then
-	export CVS_RSH=ssh 
-	if [ ! -e /usr/src ]; then
-	    cd /usr
-	    release=netbsd-`uname -r | cut -d . -f 1,2 | tr . - `
-	    printf "Checking out $release src...\n"
-	    pause
-	    cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot co -r $release -P src
-	    cd src
-	else
-	    cd /usr/src
-	    cvs -q up -dP
-	fi
-	mkdir -p /usr/obj /usr/tools
-	
-	# Build tools
-	# Added -U to silence warning
-	./build.sh -O /usr/obj -T /usr/tools -U -u tools
-	
-	# Build kernel
-	arch=$(uname -m)
-	kern=AUTOUPDATE
-	cp sys/arch/$arch/conf/GENERIC sys/arch/$arch/conf/$kern
-	./build.sh -O ../obj -T ../tools -U kernel=$kern
-	
-	# Build userland
-	./build.sh -O ../obj -T ../tools -U distribution
-	
-	# Install everything
-	mv /netbsd /netbsd.old
-	mv /usr/obj/sys/arch/$arch/compile/$kern/netbsd /
-
-	cat << EOM
-
+	    cat << EOM
+    
 Rebooting...
 
 After reboot, run the following to install the new userland:
 
 cd /usr/src
 ./build.sh -O ../obj -T ../tools -U install=/
-EOM
-	pause
-	shutdown -r now
-    fi
+    EOM
+	    pause
+	    shutdown -r now
+	fi
+	;;
+    
+    *)
+	;;
+
+    esac
     ;;
 
 Darwin)
