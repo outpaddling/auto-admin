@@ -834,7 +834,7 @@ After reboot, run the following to install the new userland:
 
 cd /usr/src
 ./build.sh -O ../obj -T ../tools -U install=/
-    EOM
+EOM
 	    pause
 	    shutdown -r now
 	fi
