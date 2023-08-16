@@ -716,10 +716,10 @@ EOM
 	    # Reboot only if kernel or modules updated
 	    if [ 0$reboot_requested = 0y ] && grep -q '^/boot' $tmpfile; then
 		printf "Kernel componented updated.  System will reboot.\n"
-		reboot=y
+		reboot_needed=y
 	    else
 		printf "No kernel componented updated.  No reboot necessary.\n"
-		reboot=n
+		reboot_needed=n
 	    fi
 	    rm $tmpfile
     
@@ -893,22 +893,27 @@ date
 #    rsync -av $pkg_cache/ ${pkg_cache_host}:$pkg_cache
 #fi
 
-if [ 0$reboot = 0y ]; then
-    if [ $mode = interactive ]; then
-	printf "Minutes to reboot? [2] "
-	read minutes
-	if [ -z "$minutes" ]; then
+if [ 0$reboot_requested = 0y ]; then
+    if [ $reboot_needed = y ]; then
+	if [ $mode = interactive ] || [ 0$pause = 0yes ]; then
+	    printf "Minutes to reboot? [2] "
+	    read minutes
+	    if [ -z "$minutes" ]; then
+		minutes=2
+	    fi
+	else
 	    minutes=2
 	fi
+	printf "Rebooting...\n"
+	sync    # Attempt to prevent Linux kernel update failures
+	shutdown -r +$minutes
     else
-	minutes=2
+	printf "Reboot requested, but no kernel updates installed.\n"
+	printf "Reboot manually if you feel it is necessary.\n"
+	if [ 0$pause = 0yes ]; then
+	    pause
+	fi
     fi
-    printf "Rebooting...\n"
-    sync    # Attempt to prevent Linux kernel update failures
-    if [ 0$pause = 0yes ]; then
-	pause
-    fi
-    shutdown -r +$minutes
 else
     # Restart services in case daemons were updated
     # FIXME: Not ideal to tolerate failures in service restarts, but there
