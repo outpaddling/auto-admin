@@ -908,8 +908,21 @@ if [ 0$reboot_requested = 0y ]; then
 	sync    # Attempt to prevent Linux kernel update failures
 	shutdown -r +$minutes
     else
-	printf "Reboot requested, but no kernel updates installed.\n"
-	printf "Reboot manually if you feel it is necessary.\n"
+	auto-restart-services || true
+	cat << EOM
+
+****************************************************************************
+    A reboot was requested, but no kernel updates were installed.
+    Most services have been restarted instead.
+    Reboot manually if you want to be sure the system boots normally
+    with the latest updates.
+    
+    Otherwise, all users should log out and log back in to restart any
+    updated programs started by login sessions.  If X11 components were
+    updated, restart the X11 server (or reboot if you do not know how).
+****************************************************************************
+
+EOM
 	if [ 0$pause = 0yes ]; then
 	    pause
 	fi
