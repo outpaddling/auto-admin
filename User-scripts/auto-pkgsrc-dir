@@ -11,8 +11,16 @@
 ##########################################################################
 
 if [ -n "$PKGSRCDIR" ]; then
+    # User-controlled
     dir="$PKGSRCDIR"
+elif [ -e "$(auto-pkgsrc-prefix)src" ]; then
+    # Common practice to use /parent/pkgsrc with /parent/pkg
+    dir="$(auto-pkgsrc-prefix)src"
 else
+    # Default, replaced by $PKGSRCDIR in pkgsrc package
+    # Binary packages built elsewhere may have a different source
+    # tree location than the target system, so this is unreliable
+    # when using pkg_add or pkgin
     dir="/usr/pkgsrc"
 fi
 
