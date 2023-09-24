@@ -1555,7 +1555,14 @@ EOM
 printf "Install Mozilla certs now? y/[n] "
 read install_certs
 if [ 0$install_certs = 0y ]; then
-    (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
+    save_cwd=$(pwd)
+    cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install
+    cd $frameworks_prefix/security/mozilla-rootcerts-openssl
+    if ! bmake clean install; then
+	printf "Warning: mozilla-rootcerts-openssl failed.\n"
+	pause
+    fi
+    cd $save_cwd
 fi
 
 cat << EOM
