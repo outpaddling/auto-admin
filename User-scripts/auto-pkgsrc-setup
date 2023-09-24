@@ -35,7 +35,7 @@ See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
 1.. Install a quarterly snapshot
 2.. Install current
 3.. Install from git -current snapshot
-4.. Install from a custom source tree
+4.. Install from a custom source tree (must already exist)
 
 EOM
     
@@ -1556,7 +1556,6 @@ printf "Install Mozilla certs now? y/[n] "
 read install_certs
 if [ 0$install_certs = 0y ]; then
     (cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install)
-    (cd $frameworks_prefix/security/mozilla-rootcerts-openssl && bmake clean install)
 fi
 
 cat << EOM
