@@ -1,0 +1,101 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check out a new instance of FreeBSD-ports-wip
+#
+#   Arguments:
+#       None
+#
+#   History:
+#   Date        Name        Modification
+#   2019-11-17  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+if [ `id -un` != root ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    if [ ! -e /usr/ports/CHANGES ]; then
+	auto-ports-checkout
+    fi
+    # Need for github cert
+    pkg install -y ca_root_nss
+    if [ ! -e $(auto-localbase)/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
+	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
+	sh ./freebsd-wip-checkout
+	rm -f freebsd-wip-checkout
+    fi
+    ;;
+
+DragonFly)
+    export PORTSDIR=/usr/dports
+    
+    if [ ! -e /usr/dports/Makefile ]; then
+	auto-ports-checkout
+    fi
+    # Need for github cert
+    pkg install -y ca_root_nss
+    if [ ! -e $(auto-localbase)/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
+	fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout
+	sh ./freebsd-wip-checkout
+	rm -f freebsd-wip-checkout
+    fi
+    ;;
+
+OpenBSD)
+    : ${PORTSDIR:=/usr/ports}
+    if [ -e $PORTSDIR/openbsd-wip ]; then
+	printf "OpenBSD WIP ports already installed.\n"
+    else
+	if [ ! -e $PORTSDIR/README ]; then
+	    auto-ports-checkout
+	fi
+	cd $PORTSDIR
+	if ! which git; then
+	    pkg_add git
+	fi
+	git clone https://github.com/jasperla/openbsd-wip
+	auto-append-line PORTSDIR_PATH=${PORTSDIR}:${PORTSDIR}/openbsd-wip /etc/mk.conf $0
+    fi
+    ;;
+    
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
