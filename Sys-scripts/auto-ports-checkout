@@ -66,6 +66,16 @@ DragonFly)
     make dports-create-shallow
     ;;
 
+OpenBSD)
+    cat << EOM
+    
+Not yet implemented on OpenBSD.
+See https://www.openbsd.org/faq/ports/ports.html#PortsFetch
+for instructions.
+
+EOM
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1
