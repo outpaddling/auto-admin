@@ -106,7 +106,8 @@ Q.. Quit
 
 EOM
 
-    read $read_flags -p 'Selection? ' resp
+    printf 'Selection? '
+    read $read_flags resp
     case 0$resp in
     01)
 	printf '\nThe following users are currently logged in:\n\n'

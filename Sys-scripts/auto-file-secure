@@ -33,8 +33,8 @@ fi
 owner=`ls -l $filename | awk '{ print $3 }'`
 group=`ls -l $filename | awk '{ print $4 }'`
 # FIXME: Check permissions and suid bits
-if [ $owner != root ] || [ $group != root ] && [ $group != wheel ]; then
-    printf "%s is not owned by root:root or root:wheel.\n" $filename
+if [ $owner != root ] || [ $group != root ] && [ $group != wheel ] && [ $group != bin ]; then
+    printf "%s is not owned by root:root or root:wheel or root:bin.\n" $filename
     ls -l $filename
     exit 1
 fi
