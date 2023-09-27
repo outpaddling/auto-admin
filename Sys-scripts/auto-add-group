@@ -41,7 +41,7 @@ FreeBSD)
     pw groupadd $group_name $gid_flags
     ;;
 
-NetBSD|RHEL)
+OpenBSD|NetBSD|RHEL)
     groupadd $gid_flags $group_name
     ;;
 

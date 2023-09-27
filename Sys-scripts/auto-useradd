@@ -60,7 +60,7 @@ FreeBSD)
 	-s $shell -u $user_id $@
     ;;
 
-NetBSD|RHEL)
+OpenBSD|NetBSD|RHEL)
     useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
 	$user_name
     ;;

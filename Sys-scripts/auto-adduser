@@ -120,6 +120,13 @@ FreeBSD)
     default_shell="/bin/tcsh"
     ;;
 
+OpenBSD)
+    # FIXME: Determine location of ldap config file and optimal flags
+    ldap_conf=''
+    ldap_flags=''
+    default_shell="/bin/ksh"
+    ;;
+
 NetBSD)
     ldap_conf=$(auto-pkgsrc-prefix)/etc/openldap/ldap.conf
     ldap_flags='-x'
@@ -338,7 +345,7 @@ fi
 
 # Some users may belong to multiple groups.  If so, add them here.
 case $(auto-ostype) in
-FreeBSD|NetBSD)
+FreeBSD|OpenBSD|NetBSD)
     printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
     read add
     if [ 0$add = 0y ]; then
