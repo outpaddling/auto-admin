@@ -67,13 +67,11 @@ DragonFly)
     ;;
 
 OpenBSD)
-    cat << EOM
-    
-Not yet implemented on OpenBSD.
-See https://www.openbsd.org/faq/ports/ports.html#PortsFetch
-for instructions.
-
-EOM
+    cd /usr
+    ftp https://cdn.openbsd.org/pub/OpenBSD/$(uname -r)/{ports.tar.gz,SHA256.sig}
+    signify -Cp /etc/signify/openbsd-$(uname -r | cut -c 1,3)-base.pub -x SHA256.sig ports.tar.gz
+    tar xzf ports.tar.gz
+    rm -f ports.tar.gz
     ;;
 
 *)
