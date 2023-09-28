@@ -67,6 +67,7 @@ DragonFly)
     ;;
 
 OpenBSD)
+    # FIXME: Use CVS.  Requires choosing an anoncvs mirror.
     cd /usr
     ftp https://cdn.openbsd.org/pub/OpenBSD/$(uname -r)/{ports.tar.gz,SHA256.sig}
     signify -Cp /etc/signify/openbsd-$(uname -r | cut -c 1,3)-base.pub -x SHA256.sig ports.tar.gz

@@ -254,7 +254,7 @@ ifs_update()
 ##########################################################################
 
 case $(auto-ostype) in
-FreeBSD)
+FreeBSD|OpenBSD)
     : ${PORTSDIR:=/usr/ports}
     ;;
 
@@ -336,6 +336,9 @@ if [ -n "$pkg_cache_host" ]; then
 	# FIXME: This depends on the bootstrap options
 	pkg_cache=/var/db/pkgin/cache
 	;;
+    OpenBSD)
+	pkg_cache=/var/db/pkg
+	;;
     RHEL)
 	pkg_cache=/var/cache/yum
 	;;
@@ -382,7 +385,7 @@ binary+reboot|defaults+reboot)
     reboot_requested=y
     ;;
 interactive)
-    printf "Reboot? y/[n] "
+    printf "Reboot after updates? y/[n] "
     read reboot_requested
     ;;
 esac
@@ -738,6 +741,75 @@ EOM
     fi
     ;;
 
+OpenBSD)
+    
+    # Don't group questions: Need to pause after each step to view output
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot)
+	update_packages=y
+	abuse_warning
+	;;
+    interactive)
+	printf "Update installed packages? [y]/n "
+	read update_packages
+	;;
+    esac
+    if [ 0$update_packages != 0n ]; then
+	printf "\n**** Updating installed packages...\n"
+	pkg_add -u || true
+    fi
+    
+    # Ports tree
+    case $mode in
+    defaults|defaults+reboot)
+	update_ports=y
+	portsnap_flags=--interactive
+	;;
+    binary|binary+reboot)
+	update_ports=n
+	;;
+    interactive)
+	printf "Update ports tree? [y]/n "
+	read update_ports
+	;;
+    esac
+    
+    if [ 0$update_ports != 0n ]; then
+	cd $PORTSDIR
+	printf "Updating $(pwd)...\n"
+	if ! fgrep -q '@' CVS/Root; then
+	    cat << EOM
+	
+You need to set your CVSROOT to one of the anoncvs URLs listed at
+anoncvs@obsdacvs.cs.toronto.edu:/cvs.
+
+Opening $PORTSDIR/CVS/Root using $EDITOR.
+
+EOM
+	    pause
+	    $EDITOR CVS/Root
+	    find . -name CVS -type d -exec cp CVS/Root '{}' \;
+	fi
+	cvs -q up -dP
+    fi
+    
+    # Base system
+    case $mode in
+    binary|binary+reboot|defaults|defaults+reboot)
+	update_base=y
+	freebsd_update_flags=--not-running-from-cron
+	;;
+    interactive)
+	printf "Update base system? [y]/n "
+	read update_base
+	;;
+    esac
+    
+    if [ 0$update_base != 0n ]; then
+	syspatch
+    fi
+    ;;
+    
 RHEL)
     # Complete interrupted yum updates if the tool is installed and there
     # are any

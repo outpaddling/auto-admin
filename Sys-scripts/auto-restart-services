@@ -57,6 +57,8 @@ FreeBSD)
 	    printf "Restart gdm manually when ready.\n"
 	elif [ $service = nfsuserd ]; then
 	    # Already handled by auto-nfs-restart
+	    # elif needs a command
+	    ls > /dev/null
 	elif [ -r $localbin/auto-$service-restart ]; then
 	    $auto-$service-restart
 	elif [ -e $localrc/$service ] || [ -e $rc/$service ]; then
