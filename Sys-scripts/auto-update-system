@@ -776,7 +776,7 @@ OpenBSD)
     
     if [ 0$update_ports != 0n ]; then
 	cd $PORTSDIR
-	printf "Updating $(pwd)...\n"
+	printf "\n**** Updating $(pwd)...\n"
 	if ! fgrep -q '@' CVS/Root; then
 	    cat << EOM
 	
@@ -797,7 +797,6 @@ EOM
     case $mode in
     binary|binary+reboot|defaults|defaults+reboot)
 	update_base=y
-	freebsd_update_flags=--not-running-from-cron
 	;;
     interactive)
 	printf "Update base system? [y]/n "
@@ -806,6 +805,7 @@ EOM
     esac
     
     if [ 0$update_base != 0n ]; then
+	printf "\n**** Updating base with syspatch...\n"
 	syspatch
     fi
     ;;
