@@ -30,14 +30,16 @@ if auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
 else
     make=make
     port_or_package=port
-    if [ $(auto-ostype) = FreeBSD ]; then
+    if [ $(auto-ostype) = FreeBSD ] || [ $(auto-ostype) = OpenBSD ]; then
 	if [ -z "$PORTSDIR" ]; then
 	    base_dir=/usr/ports
 	else
 	    base_dir=$PORTSDIR
 	fi
     else
-	base_dir=`auto-pkgsrc-dir`
+	printf "Cannot find pkgsrc dir.\n" >> /dev/stderr
+	auto-unsupported-os $0
+	exit 1
     fi
 fi
 
@@ -73,4 +75,5 @@ fi
 cd $base_dir/$port_dir
 # FIXME: Is this still relevant?
 # Prevent HAVE_GNOME from adding -gnome to PKGNAME
+# FIXME: OpenBSD make does not support -v
 ${make} $flavor WITHOUT_GNOME=yes -v $variable

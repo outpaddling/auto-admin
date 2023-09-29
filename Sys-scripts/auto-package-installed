@@ -67,7 +67,8 @@ FreeBSD)
     ;;
 
 *)
-    if auto-using-pkgsrc; then
+    # pkg_info is very similar on OpenBSD ports and pkgsrc
+    if auto-using-pkgsrc || [ $(uname) = OpenBSD ]; then
 	major_name=${name%-*}
 	if pkg_info ${name} > /dev/null 2>&1; then
 	    printf "$major_name is installed.\n"
