@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# $FreeBSD$
+#
+
+# /etc/rc.d/local_early
+# Run custom commands early in the boot process (unlike /etc/rc.d/local
+# which runs after everything else)
+# tunefs will not operate on dirty filesystems, so run after fsck
+
+# PROVIDE: local_early
+# REQUIRE: fsck
+# BEFORE:  DAEMON
+
+. /etc/rc.subr
+
+name="local_early"
+desc="Run /etc/rc.local_early and /etc/rc.shutdown.local_early"
+start_cmd="local_early_start"
+stop_cmd="local_early_stop"
+
+local_early_start()
+{
+	if [ -f /etc/rc.local_early ]; then
+		echo -n 'Starting local_early daemons:'
+		. /etc/rc.local_early
+		echo '.'
+	fi
+}
+
+local_early_stop()
+{
+	if [ -f /etc/rc.shutdown.local_early ]; then
+		echo -n 'Shutting down local_early daemons:'
+		. /etc/rc.shutdown.local_early
+		echo '.'
+	fi
+}
+
+load_rc_config $name
+run_rc_command "$1"

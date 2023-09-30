@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# /etc/rc.local_early
+
+for script in /etc/rc.local_early.d/*; do
+    /bin/sh $script
+done

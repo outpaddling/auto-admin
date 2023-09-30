@@ -11,7 +11,8 @@
 
 usage()
 {
-    printf "Usage: $0 on|off\n"
+    printf "Usage: $0 on|off fs [fs ...]\n"
+    printf "       $0 on|off all\n"
     exit 1
 }
 
@@ -20,7 +21,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# -lt 2 ]; then
     usage
 fi
 
@@ -37,25 +38,66 @@ FreeBSD)
 	usage
 	;;
     esac
+    shift
     
-    for fs in $(awk '$3 == "ufs" { print $1 }' /etc/fstab); do
-	mount_opts="$(mount -t ufs | awk -v fs=$fs '$1 == fs { print $0 }')"
-	if [ 0"$mount_opts" != 0 ] && ! echo $mount_opts | fgrep read-only; then
+    if [ $1 = all ]; then
+	fs_list=$(awk '$3 == "ufs" { print $1 }' /etc/fstab)
+    else
+	fs_list="$@"
+    fi
+
+    # Cannot use /usr/local/etc as it may not be mounted yet
+    rc_dir=/etc/rc.local_early.d
+    mkdir -p $rc_dir
+    rc_file=$rc_dir/auto-su+j-toggle.sh
+    cp -f /usr/local/share/auto-admin/local_early /etc/rc.d
+    cp -f /usr/local/share/auto-admin/rc.local_early /etc
+    
+    echo $fs_list
+    df
+    
+    for fs in $fs_list; do
+	printf "Checking $fs...\n"
+	mount_opts="$(mount -t ufs | awk -v fs=$fs '($1 == fs) || ($3 == fs) { print $0 }')"
+	echo $mount_opts
+	if [ -n "$mount_opts" ] && ! echo $mount_opts | fgrep read-only; then
 	    cat << EOM
-$fs is mounted with write enabled, cannot tune it.
-Reboot to single-user mode and try again.
+
+$fs is mounted with write enabled, cannot tune it.  
+Scheduling change for next reboot.
 
 EOM
-	    exit 1
+	    rc_list="$rc_list $fs"
 	else
 	    printf "Tuning $fs...\n"
 	    tunefs -j $state $fs
 	fi
     done
-    printf "Changes will not take effect until the system is rebooted.\n"
-    printf "Reboot now? [y]/n "
+    
+    if [ ! -z "$rc_list" ]; then
+	cat << EOM > $rc_file
+#!/bin/sh
+
+# $rc_file
+
+printf "Toggling soft-updates journals.  System will reboot automatically.\n"
+sleep 2
+for fs in $rc_list; do
+    tunefs -j $state \$fs
+    mount -u -o rw \$fs || mount \$fs
+    rm -f $rc_file
+done
+reboot
+EOM
+    else
+	rm -f $rc_file
+    fi
+    
+    printf "Changes will not take effect until the next mount of each FS.\n"
+    printf "Either unmount and remount each FS, or reboot the system.\n"
+    printf "Reboot now? y/[n] "
     read reboot
-    if [ 0$reboot != 0n ]; then
+    if [ 0$reboot = 0y ]; then
 	shutdown -r now
     fi
     ;;
