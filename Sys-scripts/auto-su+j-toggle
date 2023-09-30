@@ -84,7 +84,7 @@ printf "Toggling soft-updates journals.  System will reboot automatically.\n"
 sleep 2
 for fs in $rc_list; do
     tunefs -j $state \$fs
-    mount -u -o rw \$fs || mount \$fs
+    mount -u -o rw /
     rm -f $rc_file
 done
 reboot
