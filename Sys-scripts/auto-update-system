@@ -302,6 +302,12 @@ cat << EOM
 EOM
 sleep 10
 
+# Check this first and allow --sync-pkg-cache to override
+if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
+    sync_pkg_cache=1
+    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
+fi
+
 while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
     if [ 0"$1" = 0--sync-pkg-cache ]; then
 	if [ $# -ge 2 ]; then
@@ -316,9 +322,6 @@ while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
 	else
 	    usage
 	fi
-    elif [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
-	sync_pkg_cache=1
-	pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
     fi
     
     if [ 0"$1" = 0--pause ]; then
