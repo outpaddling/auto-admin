@@ -88,7 +88,9 @@ OpenBSD)
 	if ! which git; then
 	    pkg_add git
 	fi
-	git clone https://github.com/jasperla/openbsd-wip
+	# git clone https://github.com/jasperla/openbsd-wip
+	# FIXME: Using fork temporarily while awaiting commit rights
+	git clone https://github.com/outpaddling/openbsd-wip
 	auto-append-line PORTSDIR_PATH=${PORTSDIR}:${PORTSDIR}/openbsd-wip /etc/mk.conf $0
     fi
     ;;
