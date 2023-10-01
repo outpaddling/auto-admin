@@ -90,10 +90,10 @@ all:
 
 install:
 	${MKDIR} -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/sbin \
-	    ${DESTDIR}${MANDIR}/man1 ${DESTDIR}${DATADIR}
+	    ${DESTDIR}${MANDIR}/man8 ${DESTDIR}${DATADIR}
 	${INSTALL} -m 0755 Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 	${INSTALL} -m 0755 User-scripts/* ${DESTDIR}${PREFIX}/bin
-	${INSTALL} -m 0644 Man/* ${DESTDIR}${MANDIR}/man1
+	${INSTALL} -m 0644 Man/* ${DESTDIR}${MANDIR}/man8
 	${CP} -R Data/* ${DESTDIR}${DATADIR}
 
 help:

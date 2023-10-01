@@ -1,14 +1,4 @@
 
-Make sure all man pages are in section 8
-
-auto-update-system: Identify ports that cannot be packaged and rebuild
-from source when necessary.  E.g. audio/lame
-
-Eliminate all platform-specific directories and add platform checks
-(auto-os-release) to each script that doesn't support all platforms.
-
-Use sysrc to edit rc.conf?
-
 auto-pkgsrc-setup
     Check for BSD compatibility in echo (fails on Ubuntu)
 	Set sh to /bin/bash
@@ -25,26 +15,4 @@ auto-replace-file should take extension as third arg, otherwise use numbers
 
 Clean ports after successful install
 
-Rename auto-package-installed to auto-port-installed
-
 soft quote all strings that might contain spaces
-
-pkg_add should have option to specify version for cases like eigen/eigen2
-
-Add to rc.suspend
-    if fgrep amd_enable="YES" /etc/rc.conf; then
-	/etc/rc.d/amd stop
-    fi
-    if fgrep moused_enable="YES" /etc/rc.conf; then
-	/etc/rc.d/moused stop
-    fi
-    
-Add to rc.resume
-    if fgrep amd_enable="YES" /etc/rc.conf; then
-	/etc/rc.d/amd start
-    fi
-    if fgrep moused_enable="YES" /etc/rc.conf; then
-	/etc/rc.d/moused start
-    fi
-
-Scripts that enable amd, moused should re-run auto-set-suspend-on-lid
