@@ -73,7 +73,20 @@ if [ ! -d $base_dir/$port ]; then
 fi
 
 cd $base_dir/$port_dir
-# FIXME: Is this still relevant?
-# Prevent HAVE_GNOME from adding -gnome to PKGNAME
-# FIXME: OpenBSD make does not support -v
-${make} $flavor WITHOUT_GNOME=yes -v $variable
+if [ $(uname) = OpenBSD ]; then
+    # FIXME: Ugly hack.  Look for a cleaner approach.
+    tmp_makefile=Makefile.print-make-variable
+    cp Makefile $tmp_makefile
+    sed -e "/^.include/i\\
+print-make-variable:\\
+	@echo \${$variable}\\
+\\
+" Makefile > $tmp_makefile
+    make -f $tmp_makefile print-make-variable
+    rm -f $tmp_makefile
+else
+    # FIXME: Is this still relevant?
+    # Prevent HAVE_GNOME from adding -gnome to PKGNAME
+    # FIXME: OpenBSD make does not support -v
+    ${make} $flavor WITHOUT_GNOME=yes -v $variable
+fi
