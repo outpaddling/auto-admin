@@ -703,11 +703,12 @@ EOM
 	    if [ ! -e /boot.save ]; then
 		cp -Rp /boot /boot.save
 	    fi
-	    tmpfile=/tmp/auto-update-system.tmp
-	    freebsd-update $freebsd_update_flags fetch 2>&1 | tee $tmpfile
+	    fetch_output=/tmp/auto-update-system-fetch.out
+	    install_output=/tmp/auto-update-system-install.out
+	    freebsd-update $freebsd_update_flags fetch 2>&1 | tee $fetch_output
 	    
-	    if ! fgrep -q 'No updates' $tmpfile; then
-		freebsd-update $freebsd_update_flags install 2>&1 | tee $tmpfile
+	    if ! fgrep -q 'No updates' $fetch_output; then
+		freebsd-update $freebsd_update_flags install 2>&1 | tee $install_output
 		# FIXME: Is this still necessary?  IB may be part of base now.
 		if [ -e /boot/modules/ibcore.ko ]; then
 		    cat << EOM
@@ -720,14 +721,14 @@ EOM
 	    fi
 	    
 	    # Reboot only if kernel or modules updated
-	    if [ 0$reboot_requested = 0y ] && grep -q '^/boot' $tmpfile; then
+	    if [ 0$reboot_requested = 0y ] && grep -q '^/boot' $fetch_output; then
 		printf "Kernel componented updated.  System will reboot.\n"
 		reboot_needed=y
 	    else
 		printf "No kernel componented updated.  No reboot necessary.\n"
 		reboot_needed=n
 	    fi
-	    rm $tmpfile
+	    rm $fetch_output $install_output
     
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
