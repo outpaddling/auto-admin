@@ -728,7 +728,7 @@ EOM
 		printf "No kernel componented updated.  No reboot necessary.\n"
 		reboot_needed=n
 	    fi
-	    rm $fetch_output $install_output
+	    rm -f $fetch_output $install_output
     
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
