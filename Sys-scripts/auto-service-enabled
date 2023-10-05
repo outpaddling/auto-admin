@@ -8,7 +8,14 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     service=$1
-    fgrep -q "${service}_enable=\"YES\"" /etc/rc.conf
+    grep -q "^${service}_enable=.*YES.*" /etc/rc.conf
+    exit $?
+    ;;
+    
+NetBSD)
+    service=$1
+    set -x
+    grep -q "^${service}=.*YES.*" /etc/rc.conf
     exit $?
     ;;
     

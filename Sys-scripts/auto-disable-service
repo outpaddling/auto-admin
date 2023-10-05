@@ -10,8 +10,15 @@ FreeBSD)
     service=$1
     service $service stop || true
     if auto-service-enabled $service; then
-	sed -I '.bak' -e "s|${service}_enable=\"YES\"|${service}_enable=\"NO\"|g" \
-	    /etc/rc.conf
+	sysrc ${service}_enable=NO
+    fi
+    ;;
+
+NetBSD)
+    service=$1
+    service $service stop || true
+    if auto-service-enabled $service; then
+	sed -I'.bak' -e "s|^${service}=.*$|${service}=NO|" /etc/rc.conf
     fi
     ;;
     

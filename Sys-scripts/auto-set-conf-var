@@ -35,8 +35,19 @@ if [ ! -e $file ]; then
     exit 1
 fi
 
+case $(uname) in
+NetBSD)
+    in_place="-i''"
+    ;;
+
+*)
+    in_place="-i ''"
+    ;;
+
+esac
+
 if grep -q "^$variable=" $file; then
-    sed -i '' -e "s|^$variable=.*|$variable=$value|" $file
+    sed $in_place -e "s|^$variable=.*|$variable=$value|" $file
 else
     auto-append-line "$variable=$value" $file $caller
 fi

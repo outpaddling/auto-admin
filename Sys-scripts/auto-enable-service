@@ -75,11 +75,13 @@ NetBSD)
 	exit 0
     fi
     
+    set -x
     if grep -q "^${service}=NO" /etc/rc.conf; then
-	sed -i '' "s|${service}=NO|${service}=YES|g" /etc/rc.conf
+	sed -i'' -e "s|${service}=NO|${service}=YES|g" /etc/rc.conf
+    else
+	auto-set-conf-var $service YES /etc/rc.conf $caller
     fi
 
-    auto-set-conf-var $service YES /etc/rc.conf $caller
     stop_service
     if [ -e /etc/rc.d/$script ]; then
 	service $script start
