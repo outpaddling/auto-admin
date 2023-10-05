@@ -14,7 +14,6 @@ FreeBSD)
     
 NetBSD)
     service=$1
-    set -x
     grep -q "^${service}=.*YES.*" /etc/rc.conf
     exit $?
     ;;
