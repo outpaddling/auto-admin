@@ -98,6 +98,9 @@ FreeBSD)
 	minor=${version#*.}
 	if [ $branch = RELEASE ]; then
 	    next_release=$major.$(($minor + 1))-$branch
+	elif echo $branch | grep -q BETA; then
+	    beta=${branch#BETA}
+	    next_release=$major.BETA$(($beta + 1))
 	else
 	    next_release=$major.$minor-$branch
 	fi
