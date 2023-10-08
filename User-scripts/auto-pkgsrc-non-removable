@@ -1,0 +1,52 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-pkgsrc-non-removable
+#
+#   Description:
+#       .B auto-pkgsrc-non-removable
+#       lists currently installed pkgsrc packages that are marked
+#       not for deletion to stdout.  Such packages cannot be deleted using
+#       pkg_delete, pkgin remove, or make deinstall, and can only be
+#       upgraded using "make replace".
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, 1 if no pkg_info command is found
+#
+#   See also:
+#       pkg_info
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-10-08  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+if ! which pkg_info > /dev/null 2>&1; then
+    printf "No pkgsrc tree in PATH.\n" >> /dev/stderr
+    exit 1
+fi
+
+for pkg in $(pkg_info | awk '{ print $1 }'); do
+    if pkg_info -B $pkg | fgrep -q 'MAY NOT BE DELETED'; then
+	printf "$pkg\n"
+    fi
+done
