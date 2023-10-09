@@ -3,16 +3,33 @@
 kernel=`uname`
 case $kernel in
 Linux)
+    # GNU/Linux systems can be vastly different from each other in terms
+    # of sysadmin tools they provide.  The fact that an OS uses the Linux
+    # kernel tells us nothing useful here.
     if [ -e /etc/redhat-release ]; then
+	# RHEL, CentOS, Alma, Rocky, ...
+	# Distinguish major versions using auto-os-release
+	# 6.x and 7.x use entirely different subsystems in some cases
 	printf "RHEL\n"
     elif [ -e /etc/debian_version ]; then
+	# Debian, *ubuntu, ...
+	# Distinguish Debian-bases distros using auto-os-variant
 	printf "Debian\n"
     else
-	printf "$kernel\n"
+	cat << EOM
+
+$0: This Linux distribution is not currently supported.
+
+Please consider helping the open source community by adding and fully testing
+support for this distribution, and submitting a patch (e.g. on Github.)
+
+EOM
+	exit 1
     fi
     ;;
 *)
+    # GhostBSD uname returns FreeBSD.
+    # Distinguish them using auto-os-variant (if this is ever necessary).
     printf "$kernel\n"
     ;;
 esac
-

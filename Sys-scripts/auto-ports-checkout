@@ -50,7 +50,7 @@ FreeBSD)
     fi
 
     # FIXME: Factor out to something like $(auto-os-variant)
-    if [ -e /etc/rc.conf.ghostbsd ]; then
+    if [ $(auto-os-variant) = GhostBSD ]; then
 	printf "Cloning GhostBSD ports...\n"
 	git clone --depth 1 \
 	    https://github.com/ghostbsd/ghostbsd-ports $PORTSDIR

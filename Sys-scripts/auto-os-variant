@@ -1,0 +1,54 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-10-09  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    if [ -e /etc/rc.conf.ghostbsd ]; then
+	printf "GhostBSD\n"
+    else
+	printf "FreeBSD\n"
+    fi
+    ;;
+
+# FIXME: Add code to distinguish Ubuntu from Debian, etc.
+*)
+    printf $(auto-ostype)
+    ;;
+
+esac
