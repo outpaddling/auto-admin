@@ -49,9 +49,15 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
+    
     if [ ! -e /usr/ports/CHANGES ]; then
 	auto-ports-checkout
     fi
+
+    if ! which git; then
+	pkg install -y git
+    fi
+    
     # Need for github cert
     pkg install -y ca_root_nss
     if [ ! -e $(auto-localbase)/sbin/wip-update ] || [ ! -e $PORTSDIR/wip ]; then
