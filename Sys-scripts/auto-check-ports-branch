@@ -58,6 +58,11 @@ case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     export PORTSDIR
+
+    if ! which git > /dev/null 2>&1; then
+	printf "$0: Installing git...\n" >> /dev/stderr
+	pkg install -y git > /dev/null 2>&1
+    fi
     
     repo_branch=$(auto-pkg-branch)
     # Debug: 
