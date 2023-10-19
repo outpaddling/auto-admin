@@ -23,7 +23,15 @@ usage()
 #   Main
 ##########################################################################
 
-if auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
+if [ $(auto-ostype) = NetBSD ]; then
+    port_or_package=package
+    base_dir=`auto-pkgsrc-dir`
+    if [ -e $base_dir/bin/bmake ]; then
+	make=bmake
+    else
+	make=make
+    fi
+elif auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
     make=bmake
     port_or_package=package
     base_dir=`auto-pkgsrc-dir`
@@ -41,6 +49,10 @@ else
 	auto-unsupported-os $0
 	exit 1
     fi
+fi
+
+if [ $# -lt 2 ]; then
+    usage
 fi
 
 while [ $(echo $1 | cut -c 1) = '-' ]; do
