@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+cd $(auto-pkgsrc-dir)
+
 printf "pkgsrc-wip username? [none] "
 read username
 if [ 0$username = 0 ]; then
