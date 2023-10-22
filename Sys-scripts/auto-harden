@@ -183,7 +183,6 @@ pause
 clear
 printf '\nAdding resource limits to prevent fork bombs, etc...\n\n'
 
-# FIXME: Move CentOS cluster-admin limit scripts here
 case $os_type in
 FreeBSD)
     # Resource limits to contain fork bombs, etc.

@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       NFS mounts may be set to noauto since CentOS 7 "bg" option does
+#       NFS mounts may be set to noauto since RHEL 7 "bg" option does
 #       not work, or to reduce boot time on FreeBSD, where each bg mount
 #       takes 1.5 minutes to time out by default.  This is especially
 #       helpful on the head node, which is likely to be booted before

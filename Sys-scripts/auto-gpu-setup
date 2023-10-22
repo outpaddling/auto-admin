@@ -361,8 +361,8 @@ EOM
 
 The nVidia driver binary packages include Linux support.  We will now
 install the Linux compatibility system of your choice.  Enter '6'
-for CentOS 6 compatibility or '7' for CentOS 7.  Some packages such
-as Linux Flash plugin may require CentOS 6.
+for RHEL 6 compatibility or '7' for RHEL 7.  Some packages such
+as Linux Flash plugin may require RHEL 6.
 
 EOM
 		auto-install-linux_base

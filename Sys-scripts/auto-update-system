@@ -10,7 +10,7 @@
 #       auto-update-system performs a comprehensive system update
 #       including installed binary packages, a ports or pkgsrc tree if
 #       one is found, and the base system if such a thing exists on the
-#       platform (on CentOS, there is no base system separate from Yum
+#       platform (on RHEL, there is no base system separate from Yum
 #       packages).
 #
 #       CAUTION: auto-update-system should not be run in parallel on

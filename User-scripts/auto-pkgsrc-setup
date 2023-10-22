@@ -445,7 +445,7 @@ it will look for gfortran in the PATH when building certain packages.
 EOM
 
 # Avoid software from other package managers or cave-man installs
-# This may need alteration on some platforms, but it works on CentOS,
+# This may need alteration on some platforms, but it works on RHEL,
 # FreeBSD, NetBSD, and OS X.
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
@@ -698,7 +698,7 @@ if [ 0$bootstrap = '0y' ]; then
     fi
     # OS X 10.12.6 needs full path for bmake build
     CPP=`which cpp`
-    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on RHEL
     # Enable it in the future if/when most of the issues are resolved
     # PKGSRC_USE_FORTIFY=no
     # Leave fortify on and just disable -Werror.  Sufficient for cwrappers.
@@ -706,7 +706,7 @@ if [ 0$bootstrap = '0y' ]; then
     # export CC CXX CPP NOGCCERROR # PKGSRC_USE_FORTIFY
     export CC CXX CPP
     
-    # Problems with gcc8 generating code with infinite loops on CentOS
+    # Problems with gcc8 generating code with infinite loops on RHEL
     if [ $(uname) = Linux ]; then
 	export PKGSRC_USE_FORTIFY=no
     fi
@@ -755,12 +755,12 @@ if [ 0$bootstrap = '0y' ]; then
     printf "# For pkg_chk, etc.\n" >> $mk_conf
     printf "PKGSRCDIR=\t\t$frameworks_prefix\n" >> $mk_conf
     
-    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on CentOS
+    # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on RHEL
     # Enable it in the future if/when most of the issues are resolved
     # printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     # Leave fortify on and just disable -Werror
-    # gcc49,5,6 fail on CentOS 7 with just this
-    # gcc49,5 on CentOS 6
+    # gcc49,5,6 fail on RHEL 7 with just this
+    # gcc49,5 on RHEL 6
     # printf "NOGCCERROR=\t\tyes\n" >> $mk_conf
 
     ######################################
@@ -774,7 +774,7 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "X11_TYPE=\t\tmodular\n" >> $mk_conf
     fi
     
-    # Testing: Fortify may be causing problems with gcc8 on CentOS 7
+    # Testing: Fortify may be causing problems with gcc8 on RHEL 7
     if [ $(uname) = Linux ]; then
 	printf "PKGSRC_USE_FORTIFY=\tno\n" >> $mk_conf
     fi
@@ -914,7 +914,7 @@ EOM
 fi  # bootstrap
 
 # FIXME: Verify that this is the minimal list of $base_gcc deps
-# Pkgsrc 2017Q2 assumes a c++11 compiler.  Force CentOS 6 to build everything
+# Pkgsrc 2017Q2 assumes a c++11 compiler.  Force RHEL 6 to build everything
 # using a pkgsrc GCC instead of its native GCC 4.4.7, which has only partial
 # c++11 support and does not support the -std=c++11 flag.
 # Hopefully pkgsrc will handle cases like this automatically in the near
@@ -1093,7 +1093,7 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
     export PKGSRC
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
-    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    # RHEL 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
     
@@ -1147,7 +1147,7 @@ if ( \$status != 0 ) then
     setenv PKGSRC           $install_prefix
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
-    # CentOS 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
+    # RHEL 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
     unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
 

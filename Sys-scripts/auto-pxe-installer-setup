@@ -771,14 +771,14 @@ RHEL)
 # 600 centiseconds = 60 seconds
 timeout 600
 ui menu.c32
-menu title CentOS PXE Installer Boot Menu
+menu title RHEL PXE Installer Boot Menu
 
 label localboot
   menu label Boot from local disk
   localboot
 
 label install
-  menu label Install CentOS
+  menu label Install RHEL
   kernel images/$installer_leaf_dir/images/pxeboot/vmlinuz
   # FIXME: Can ksdevice be ommitted to support hetergeneous hardware?
   append initrd=images/$installer_leaf_dir/images/pxeboot/initrd.img ksdevice=$iface load_ramdisk=1 network ks=nfs:${local_ip}:/$installer_path/ks.cfg
@@ -804,11 +804,11 @@ EOM
 	printf "Make sure no other tftp servers are running.\n"
 	pause
     
-	# CentOS 6
+	# RHEL 6
 	# chkconfig xinetd on
 	# service xinetd restart
 
-	# CentOS 7
+	# RHEL 7
 	# http://www.cyberphoton.com/tftp-server-in-rhel7/
 	# FIXME: Need selinux set to permissive?
 	systemctl enable xinetd
@@ -1101,7 +1101,7 @@ EOM
     local_ip=`auto-ask pxe-local-ip 'IP address of this server?' $default_ip`
     
     # Needed by both dhcp_setup and nfs_setup
-    # FIXME: CentOS 7 needs octets, not bit count
+    # FIXME: RHEL 7 needs octets, not bit count
     default_mask=`ip address show dev $iface 2> /dev/null | \
 	awk '$1 == "inet" { print $2 }' | cut -d / -f 2`
     default_mask='255.255.128.0'
@@ -1198,7 +1198,7 @@ install
 # ncurses mode
 text
 # terminal mode
-# (CentOS 6.6 minimal fails with "In interactive step tasksel can't continue")
+# (RHEL 6.6 minimal fails with "In interactive step tasksel can't continue")
 # cmdline
 autostep
 reboot
