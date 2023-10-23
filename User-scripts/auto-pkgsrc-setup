@@ -30,7 +30,7 @@ control at the end of each quarter and contain fewer bugs.
 
 The "current" snapshot contains the latest commits of each package.
 
-See ftp://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
+See https://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
 
 1.. Install a quarterly snapshot
 2.. Install current
@@ -614,7 +614,7 @@ EOM
     
 	fetched=no
 	for dist in \
-	    ftp://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz; do
+	    https://ftp.netbsd.org/pub/pkgsrc/$snapshot/pkgsrc.tar.gz; do
 	    
 	    echo $dist
 	    if $fetch_cmd $dist; then
