@@ -101,6 +101,9 @@ FreeBSD)
 	elif echo $branch | grep -q BETA; then
 	    beta=${branch#BETA}
 	    next_release=$version-BETA$(($beta + 1))
+	elif echo $branch | grep -q RC; then
+	    rc=${branch#RC}
+	    next_release=$version-RC$(($rc + 1))
 	else
 	    next_release=$major.$minor-$branch
 	fi
