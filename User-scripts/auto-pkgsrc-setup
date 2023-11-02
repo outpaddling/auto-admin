@@ -34,7 +34,7 @@ See https://ftp.netbsd.org/pub/pkgsrc/ for a list of available snapshots.
 
 1.. Install a quarterly snapshot
 2.. Install current
-3.. Install from git -current snapshot
+3.. Install from git URL
 4.. Install from a custom source tree (must already exist)
 
 EOM
@@ -323,7 +323,7 @@ re-run this script as root.
 EOM
     # Not all systems have a realpath command
     mkdir -p $HOME/Pkgsrc
-    default_prefix=`(cd "$HOME/Pkgsrc"; pwd -P)`
+    default_parent=`(cd "$HOME/Pkgsrc"; pwd -P)`
 else
     cat << EOM
     
@@ -333,9 +333,9 @@ Running as root.  Installing globally.
 
 EOM
     if [ $(uname) = Darwin ]; then
-	default_prefix="/opt"
+	default_parent="/opt"
     else
-	default_prefix="/usr"
+	default_parent="/usr"
     fi
 fi
 printf "OK to proceed? [y]/n "
@@ -344,12 +344,12 @@ if [ "0$proceed" = "0n" ]; then
     exit
 fi
 
-printf "Installation prefix? [$default_prefix] "
-read prefix
-if [ 0"$prefix" = 0 ]; then
-    prefix=$default_prefix
+printf "Installation parent directory? [$default_parent] "
+read parent
+if [ 0"$parent" = 0 ]; then
+    parent=$default_parent
 else
-    rmdir $default_prefix || true
+    rmdir $default_parent || true
 fi
 
 select_snapshot
@@ -363,67 +363,67 @@ fi
 cat << EOM
 =============================================================================
 Pkgsrc supports multiple installations on the same computer.
-Auto-pkgsrc-setup handles multiple installations under the same prefix by
+Auto-pkgsrc-setup handles multiple installations under the same parent by
 appending the date of a current snapshot or the name of a quarterly snapshot.
 
 It is recommended that you use an install suffix unless you are sure that
 you will not need another pkgsrc tree under 
 
-    $prefix
+    $parent
     
 It also helps identify the version of each tree.
 =============================================================================
 EOM
 
 if [ $snapshot = custom ] || [ $snapshot = git ]; then
-    use_install_suffix=n
+    use_dir_suffix=n
 elif [ $snapshot = current ]; then
     printf "Add suffix to installation directories? y/[n] "
-    read use_install_suffix
-    if [ 0$use_install_suffix = 0y ]; then
+    read use_dir_suffix
+    if [ 0$use_dir_suffix = 0y ]; then
 	printf "Suffix? [$dist_suffix] "
 	read chosen_suffix
 	if [ 0$chosen_suffix != 0 ]; then
-	    install_suffix="$chosen_suffix"
+	    dir_suffix="$chosen_suffix"
 	else
-	    install_suffix="$dist_suffix"
+	    dir_suffix="$dist_suffix"
 	fi
     else
-	install_suffix=''
+	dir_suffix=''
     fi
 else
     printf "Add suffix to installation directories? [y]/n "
-    read use_install_suffix
-    if [ 0$use_install_suffix != 0n ]; then
+    read use_dir_suffix
+    if [ 0$use_dir_suffix != 0n ]; then
 	printf "Suffix? [$dist_suffix] "
 	read chosen_suffix
 	if [ 0$chosen_suffix != 0 ]; then
-	    install_suffix="$chosen_suffix"
+	    dir_suffix="$chosen_suffix"
 	else
-	    install_suffix="$dist_suffix"
+	    dir_suffix="$dist_suffix"
 	fi
     fi
 fi
 
-install_prefix=$prefix/pkg$install_suffix
-frameworks_prefix=$prefix/pkgsrc$install_suffix
-sys_prefix=$prefix/pkg$install_suffix
-mk_conf=$sys_prefix/etc/mk.conf
+prefix=$parent/pkg$dir_suffix
+pkgsrc_dir=$parent/pkgsrc$dir_suffix
+sys_dir=$parent/pkg$dir_suffix
+mk_conf=$sys_dir/etc/mk.conf
 
 cat << EOM
 
 ============================================================================
 Packages will be installed under
 
-    $install_prefix
+    $prefix
     
 Frameworks for building and installing will be under
 
-    $frameworks_prefix
+    $pkgsrc_dir
 
 System files will be under
 
-    $sys_prefix
+    $sys_dir
 ============================================================================
 
 EOM
@@ -515,7 +515,7 @@ or
 
     PKGSRC_FORTRAN=g95
 
-in $sys_prefix/etc/mk.conf.
+in $sys_dir/etc/mk.conf.
 ============================================================================
 
 EOM
@@ -544,7 +544,7 @@ systems, answer 'n' here.
 If you want executables optimized for maximum speed on this system, answer
 'y'.  This will append -march=native to CFLAGS, CXXFLAGS, and FFLAGS in
 
-    $sys_prefix/etc/mk.conf
+    $sys_dir/etc/mk.conf
 
 You can add additional compiler flags here as well, all of which will be
 applied to every pkgsrc build.
@@ -568,10 +568,10 @@ else
     exit 1
 fi
 
-if [ $snapshot = custom ] || [ $snapshot = git ]; then
+if [ $snapshot = custom ]; then
     replace_frameworks='n'
-elif [ -e $frameworks_prefix ]; then
-    printf "$frameworks_prefix already exists.  Replace? y/[n] "
+elif [ -e $pkgsrc_dir ]; then
+    printf "$pkgsrc_dir already exists.  Replace? y/[n] "
     read replace_frameworks
 else
     replace_frameworks='y'
@@ -581,8 +581,8 @@ if [ 0$replace_frameworks = 0y ]; then
     # Download new pkgsrc dist if a new install number was provided
     if [ $snapshot = git ]; then
 	save_cwd=`pwd`
-	mkdir -p $prefix
-	cd $prefix
+	mkdir -p $parent
+	cd $parent
 	printf "git URL of pkgsrc tree? "
 	read git_url
 	git clone $git_url pkgsrc
@@ -592,12 +592,12 @@ if [ 0$replace_frameworks = 0y ]; then
 	cat << EOM
 
 ===========================================================================
-Place your custom source tree in $frameworks_prefix now.
+Place your custom source tree in $pkgsrc_dir now.
 ===========================================================================
 
 EOM
 	pause
-    elif [ -e $prefix/Dist/pkgsrc$dist_suffix.tar.gz ]; then
+    elif [ -e $parent/Dist/pkgsrc$dist_suffix.tar.gz ]; then
 	printf "pkgsrc$dist_suffix.tar.gz already exists.  Replace? y/[n] "
 	read download
     else
@@ -607,9 +607,9 @@ EOM
     if [ 0$download = 0y ]; then
 	printf "Downloading dist...\n\n"
 	# Replace everything after new download
-	rm -rf $frameworks_prefix $install_prefix $sys_prefix
-	mkdir -p $prefix/Dist
-	cd $prefix/Dist
+	rm -rf $pkgsrc_dir $prefix $sys_dir
+	mkdir -p $parent/Dist
+	cd $parent/Dist
 	rm -f pkgsrc.tar.gz
     
 	fetched=no
@@ -640,10 +640,10 @@ else
     tar=tar
 fi
 
-if [ 0$replace_frameworks = 0y ]; then
+if [ 0$replace_frameworks = 0y ] && [ $snapshot != git ]; then
     # Replace everything if unpacking again
-    rm -rf $frameworks_prefix $install_prefix $sys_prefix
-    cd $prefix/Dist
+    rm -rf $pkgsrc_dir $prefix $sys_dir
+    cd $parent/Dist
     printf "Unpacking frameworks...\n"
     # Use of -o and --no-same-permissions is a security requirement.  It
     # prevents root from installing a tree owned by an ordinary user.
@@ -652,15 +652,15 @@ if [ 0$replace_frameworks = 0y ]; then
     else
 	$tar --no-same-permissions -zoxf pkgsrc$dist_suffix.tar.gz
     fi
-    rm -rf $frameworks_prefix $sys_prefix $install_prefix
-    mv pkgsrc $frameworks_prefix
+    rm -rf $pkgsrc_dir $sys_dir $prefix
+    mv pkgsrc $pkgsrc_dir
     if [ 0$EXTRACT_ONLY != 0 ]; then
 	exit 0
     fi
 fi
 
-if [ -e $install_prefix/bin/bmake ]; then
-    printf "$install_prefix already exists.  Rebuild? y/[n] "
+if [ -e $prefix/bin/bmake ]; then
+    printf "$prefix already exists.  Rebuild? y/[n] "
     read bootstrap
 else
     bootstrap='y'
@@ -683,8 +683,8 @@ fi
 # Bootstrap the installation
 if [ 0$bootstrap = '0y' ]; then
     # Keep old frameworks, but rebuild installation dir and system files
-    rm -rf $sys_prefix $install_prefix
-    cd $frameworks_prefix/bootstrap
+    rm -rf $sys_dir $prefix
+    cd $pkgsrc_dir/bootstrap
     
     # Scrub env to prevent leakage of nonstandard tools into pkgsrc
     unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
@@ -719,24 +719,24 @@ if [ 0$bootstrap = '0y' ]; then
     if [ `id -un` = root ]; then
 	./bootstrap \
 	    $abi_flags \
-	    --prefix ${install_prefix} \
-	    --pkgdbdir ${sys_prefix}/pkgdb \
-	    --sysconfdir ${sys_prefix}/etc \
-	    --varbase ${sys_prefix}/var \
+	    --prefix ${prefix} \
+	    --pkgdbdir ${sys_dir}/pkgdb \
+	    --sysconfdir ${sys_dir}/etc \
+	    --varbase ${sys_dir}/var \
 	    $prefer_pkgsrc \
-	    --workdir ${sys_prefix}/work 2>&1 \
+	    --workdir ${sys_dir}/work 2>&1 \
 	    "$@" \
 	    | tee bootstrap$dist_suffix.log
     else
 	./bootstrap \
 	    $abi_flags \
 	    --unprivileged \
-	    --prefix ${install_prefix} \
-	    --pkgdbdir ${sys_prefix}/pkgdb \
-	    --sysconfdir ${sys_prefix}/etc \
-	    --varbase ${sys_prefix}/var \
+	    --prefix ${prefix} \
+	    --pkgdbdir ${sys_dir}/pkgdb \
+	    --sysconfdir ${sys_dir}/etc \
+	    --varbase ${sys_dir}/var \
 	    $prefer_pkgsrc \
-	    --workdir ${sys_prefix}/work 2>&1 \
+	    --workdir ${sys_dir}/work 2>&1 \
 	    "$@" \
 	    | tee bootstrap$dist_suffix.log
     fi
@@ -753,7 +753,7 @@ if [ 0$bootstrap = '0y' ]; then
     #fi
 
     printf "# For pkg_chk, etc.\n" >> $mk_conf
-    printf "PKGSRCDIR=\t\t$frameworks_prefix\n" >> $mk_conf
+    printf "PKGSRCDIR=\t\t$pkgsrc_dir\n" >> $mk_conf
     
     # PKGSRC_USE_FORTIFY causes some breakage, including cwrappers on RHEL
     # Enable it in the future if/when most of the issues are resolved
@@ -850,7 +850,7 @@ EOM
 		getline;
 		for (c=1; c<NF; ++c) printf("%s ", $c);
 	    }
-	}' $frameworks_prefix/mk/license.mk > $tmpfile
+	}' $pkgsrc_dir/mk/license.mk > $tmpfile
 	licenses=`cat $tmpfile`
 	rm -f $tmpfile
     
@@ -1072,8 +1072,8 @@ else
 fi
 
 # Install latest security checks
-${install_prefix}/sbin/pkg_admin \
-    -K ${sys_prefix}/pkgdb fetch-pkg-vulnerabilities
+${prefix}/sbin/pkg_admin \
+    -K ${sys_dir}/pkgdb fetch-pkg-vulnerabilities
 
 ##########################################################################
 #   Some improvements to the base installation
@@ -1086,10 +1086,10 @@ ${install_prefix}/sbin/pkg_admin \
 
 # Generate startup script segments
 
-cat << EOM > ${sys_prefix}/etc/pkgsrc.sh
+cat << EOM > ${sys_dir}/etc/pkgsrc.sh
 # Generated by auto-pkgsrc-setup
-if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
-    PKGSRC=$install_prefix
+if ! echo \$PATH | fgrep -q "${prefix}/bin:"; then
+    PKGSRC=$prefix
     export PKGSRC
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
@@ -1116,10 +1116,10 @@ fi
 EOM
 
 # Keep this in sync with the script above.  Just remove the scrub lines.
-cat << EOM > ${sys_prefix}/etc/pkgsrc-non-exclusive.sh
+cat << EOM > ${sys_dir}/etc/pkgsrc-non-exclusive.sh
 # Generated by auto-pkgsrc-setup
-if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
-    PKGSRC=$install_prefix
+if ! echo \$PATH | fgrep -q "${prefix}/bin:"; then
+    PKGSRC=$prefix
     export PKGSRC
 
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
@@ -1140,11 +1140,11 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/bin:"; then
 fi
 EOM
 
-cat << EOM > ${sys_prefix}/etc/pkgsrc.csh
+cat << EOM > ${sys_dir}/etc/pkgsrc.csh
 # Generated by auto-pkgsrc-setup
-echo \$PATH | fgrep -q "${install_prefix}/bin:"
+echo \$PATH | fgrep -q "${prefix}/bin:"
 if ( \$status != 0 ) then
-    setenv PKGSRC           $install_prefix
+    setenv PKGSRC           $prefix
     
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
     # RHEL 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
@@ -1167,11 +1167,11 @@ endif
 EOM
 
 # Keep this in sync with the script above.  Just remove the scrub lines.
-cat << EOM > ${sys_prefix}/etc/pkgsrc-non-exclusive.csh
+cat << EOM > ${sys_dir}/etc/pkgsrc-non-exclusive.csh
 # Generated by auto-pkgsrc-setup
-echo \$PATH | fgrep -q "${install_prefix}/bin:"
+echo \$PATH | fgrep -q "${prefix}/bin:"
 if ( \$status != 0 ) then
-    setenv PKGSRC           $install_prefix
+    setenv PKGSRC           $prefix
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
 	alias man "man -m \$PKGSRC/man"
@@ -1192,14 +1192,14 @@ if [ -e /etc/profile.d ]; then
     printf "Add this pkgsrc installation to default path for all users? y/[n] "
     read add2path
     if [ 0$add2path = 0y ]; then
-	cp ${sys_prefix}/etc/pkgsrc.*sh /etc/profile.d
+	cp ${sys_dir}/etc/pkgsrc.*sh /etc/profile.d
     fi
 fi
 
 # Generate module files
-mkdir -p ${sys_prefix}/etc/modulefiles/pkgsrc
+mkdir -p ${sys_dir}/etc/modulefiles/pkgsrc
 
-cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
+cat << EOM > ${sys_dir}/etc/modulefiles/pkgsrc/${dist_suffix#-}
 #%Module1.0#####################################################################
 proc ModulesHelp { } {
     puts stdout "\n\tAll software installed via the pkgsrc package management"
@@ -1209,8 +1209,8 @@ proc ModulesHelp { } {
 
 module-whatis   "All software installed via pkgsrc"
 
-set     version         ${dist_suffix#-}
-set     install_prefix  ${install_prefix}
+set     version ${dist_suffix#-}
+set     prefix  ${prefix}
 
 # Scrub PATH before adding pkgsrc to prevent leakage during builds
 setenv  PATH    /usr/bin:/usr/sbin:/bin:/sbin
@@ -1226,18 +1226,18 @@ unsetenv        LD
 unsetenv        LDFLAGS
 unsetenv        LD_LIBRARY_PATH
 
-prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+prepend-path    PATH    \$prefix/bin:\$prefix/sbin
 # FIXME: Prepend pkgsrc to existing man path
-prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
-prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
+prepend-path    MANPATH         \$prefix/man:/usr/share/man
+prepend-path    MODULEPATH      \$sys_dir/etc/modulefiles
 
-setenv          PKGSRC          \$install_prefix
-setenv          PKGSRC_INCLUDE  \$install_prefix/include
-setenv          PKGSRC_LIB      \$install_prefix/lib
+setenv          PKGSRC          \$prefix
+setenv          PKGSRC_INCLUDE  \$prefix/include
+setenv          PKGSRC_LIB      \$prefix/lib
 EOM
 
 # Keep this in sync with the script.  Just remove the scrub lines.
-cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}-non-exclusive
+cat << EOM > ${sys_dir}/etc/modulefiles/pkgsrc/${dist_suffix#-}-non-exclusive
 #%Module1.0#####################################################################
 proc ModulesHelp { } {
     puts stdout "\n\tAll software installed via the pkgsrc package management"
@@ -1254,28 +1254,28 @@ puts stderr "that are not part of this pkgsrc tree or the base system to remain 
 puts stderr "PATH and LD_LIBRARY_PATH.  This may cause some programs to malfunction."
 puts stderr "======================================================================\n"
 
-set     version         ${dist_suffix#-}
-set     install_prefix  ${install_prefix}
+set     version ${dist_suffix#-}
+set     prefix  ${prefix}
 
-prepend-path    PATH    \$install_prefix/bin:\$install_prefix/sbin
+prepend-path    PATH    \$prefix/bin:\$prefix/sbin
 # FIXME: Prepend pkgsrc to existing man path
-prepend-path    MANPATH         \$install_prefix/man:/usr/share/man
-prepend-path    MODULEPATH      \$sys_prefix/etc/modulefiles
+prepend-path    MANPATH         \$prefix/man:/usr/share/man
+prepend-path    MODULEPATH      \$sys_dir/etc/modulefiles
 
-setenv          PKGSRC          \$install_prefix
-setenv          PKGSRC_INCLUDE  \$install_prefix/include
-setenv          PKGSRC_LIB      \$install_prefix/lib
+setenv          PKGSRC          \$prefix
+setenv          PKGSRC_INCLUDE  \$prefix/include
+setenv          PKGSRC_LIB      \$prefix/lib
 EOM
 
 # GCC scripts and modules
 gcc=7   # Lowest supported
-while [ -e $frameworks_prefix/lang/gcc$gcc ]; do
-    cat << EOM > ${sys_prefix}/etc/gcc$gcc.sh
+while [ -e $pkgsrc_dir/lang/gcc$gcc ]; do
+    cat << EOM > ${sys_dir}/etc/gcc$gcc.sh
 # Generated by auto-pkgsrc-setup
 # Assumes pkgsrc already in path
 # Use alone only if you know what you're doing
-if ! echo \$PATH | fgrep -q "${install_prefix}/gcc$gcc/bin:"; then
-    PKGSRC=$install_prefix
+if ! echo \$PATH | fgrep -q "${prefix}/gcc$gcc/bin:"; then
+    PKGSRC=$prefix
     export PKGSRC
     
     PATH=\$PKGSRC/gcc$gcc/bin:\$PATH
@@ -1290,13 +1290,13 @@ if ! echo \$PATH | fgrep -q "${install_prefix}/gcc$gcc/bin:"; then
 fi
 EOM
 
-    cat << EOM > ${sys_prefix}/etc/gcc$gcc.csh
+    cat << EOM > ${sys_dir}/etc/gcc$gcc.csh
 # Generated by auto-pkgsrc-setup
 # Assumes pkgsrc already in path
 # Use alone only if you know what you're doing
-echo \$PATH | fgrep -q "${install_prefix}/gcc$gcc/bin:"
+echo \$PATH | fgrep -q "${prefix}/gcc$gcc/bin:"
 if ( \$status != 0 ) then
-    setenv PKGSRC   $install_prefix
+    setenv PKGSRC   $prefix
     
     setenv PATH                 \$PKGSRC/gcc$gcc/bin:\$PATH
     # pkgsrc gcc man pages broken
@@ -1306,7 +1306,7 @@ if ( \$status != 0 ) then
 endif
 EOM
 
-    cat << EOM > ${sys_prefix}/etc/modulefiles/pkgsrc/gcc$gcc
+    cat << EOM > ${sys_dir}/etc/modulefiles/pkgsrc/gcc$gcc
 #%Module1.0#####################################################################
 proc ModulesHelp { } {
     puts stdout "\n\tpkgsrc gcc$gcc"
@@ -1316,48 +1316,48 @@ proc ModulesHelp { } {
 
 module-whatis   "pkgsrc gcc$gcc"
 
-set     version         ${dist_suffix#-}
-set     install_prefix  ${install_prefix}
+set     version ${dist_suffix#-}
+set     prefix  ${prefix}
 
-prepend-path    PATH    \$install_prefix/gcc$gcc/bin
+prepend-path    PATH    \$prefix/gcc$gcc/bin
 # pkgsrc gcc man pages broken
-# prepend-path    MANPATH \$install_prefix/gcc$gcc/man:\$install_prefix/man:/usr/share/man
+# prepend-path    MANPATH \$prefix/gcc$gcc/man:\$prefix/man:/usr/share/man
 
-setenv          PKGSRC_GCC_INCLUDE  \$install_prefix/gcc$gcc/include
-setenv          PKGSRC_GCC_LIB      \$install_prefix/gcc$gcc/lib
+setenv          PKGSRC_GCC_INCLUDE  \$prefix/gcc$gcc/include
+setenv          PKGSRC_GCC_LIB      \$prefix/gcc$gcc/lib
 EOM
     gcc=$(($gcc + 1))
     if [ $gcc = 11 ]; then  # No gcc11 in pkgsrc
 	gcc=$(($gcc + 1))
     fi    
-done    # while [ -e $frameworks_prefix/lang/gcc$gcc ]
+done    # while [ -e $pkgsrc_dir/lang/gcc$gcc ]
 
 if [ ! -z $base_gcc ]; then
-    ln -f ${sys_prefix}/etc/$base_gcc.sh ${sys_prefix}/etc/gcc-base.sh
-    ln -f ${sys_prefix}/etc/$base_gcc.csh ${sys_prefix}/etc/gcc-base.csh
-    ln -f ${sys_prefix}/etc/modulefiles/pkgsrc/$base_gcc \
-	${sys_prefix}/etc/modulefiles/pkgsrc/gcc-base
+    ln -f ${sys_dir}/etc/$base_gcc.sh ${sys_dir}/etc/gcc-base.sh
+    ln -f ${sys_dir}/etc/$base_gcc.csh ${sys_dir}/etc/gcc-base.csh
+    ln -f ${sys_dir}/etc/modulefiles/pkgsrc/$base_gcc \
+	${sys_dir}/etc/modulefiles/pkgsrc/gcc-base
 fi
 
 ##########################################################################
 #   Generate profile.d scripts for updating MODULEPATH
 ##########################################################################
 
-profile_dir="$sys_prefix/etc/profile.d"
+profile_dir="$sys_dir/etc/profile.d"
 mkdir -p $profile_dir
 # Should come alphabetically after modules.sh and modules.csh
-module_path_script=modulez`echo $install_prefix | tr '/' '-'`
+module_path_script=modulez`echo $prefix | tr '/' '-'`
 cat << EOM > $profile_dir/$module_path_script.sh
-MODULEPATH=\${MODULEPATH}:$sys_prefix/etc/modulefiles
+MODULEPATH=\${MODULEPATH}:$sys_dir/etc/modulefiles
 export MODULEPATH
 EOM
 cat << EOM > $profile_dir/$module_path_script.csh
-setenv MODULEPATH \${MODULEPATH}:$sys_prefix/etc/modulefiles
+setenv MODULEPATH \${MODULEPATH}:$sys_dir/etc/modulefiles
 EOM
 chmod 644 $profile_dir/$module_path_script*
 
 # Update PATH for installing packages below
-. ${sys_prefix}/etc/pkgsrc.sh
+. ${sys_dir}/etc/pkgsrc.sh
 
 # Basic instructions on installing a package
 make=bmake
@@ -1367,18 +1367,18 @@ read pkgsrc_umask
 if [ 0$pkgsrc_umask = 0 ]; then
     pkgsrc_umask=022
 fi
-cat << EOM2 > $install_prefix/bin/safe-bmake
+cat << EOM2 > $prefix/bin/safe-bmake
 #!/bin/sh -e
 
-if ! pwd -P | fgrep -q $frameworks_prefix/; then
+if ! pwd -P | fgrep -q $pkgsrc_dir/; then
     cat << EOM
     
 			    ===== Error =====
 
 You are running \$(which safe-bmake) from the wrong directory.
-It should only be used from within $frameworks_prefix/.
+It should only be used from within $pkgsrc_dir/.
 Load the correct environment module so that you are using the appropriate
-bmake for \$(pwd) or go to $frameworks_prefix/.
+bmake for \$(pwd) or go to $pkgsrc_dir/.
 
 EOM
     exit 1
@@ -1388,8 +1388,8 @@ umask $pkgsrc_umask
 bmake "\$@"
 EOM2
 
-ln -sf $install_prefix/bin/safe-bmake $install_prefix/bin/sbmake
-chmod 755 $install_prefix/bin/*bmake
+ln -sf $prefix/bin/safe-bmake $prefix/bin/sbmake
+chmod 755 $prefix/bin/*bmake
 
 cat << EOM
 
@@ -1405,7 +1405,7 @@ EOM
 printf "Install pkgsrc-wip? y/[n] "
 read install_wip
 if [ 0$install_wip = 0y ]; then
-    cd $frameworks_prefix
+    cd $pkgsrc_dir
     
     if ! which git; then
 	cat << EOM
@@ -1470,11 +1470,11 @@ binary packages, enter the full package server URL(s) here, e.g.:
 
 The default PKG_PATH will be set to
 
-    <URL>/pkgsrc/packages/$install_prefix/$os/All
+    <URL>/pkgsrc/packages/$prefix/$os/All
 
 Edit
 
-    $sys_prefix/etc/pkg_install.conf
+    $sys_dir/etc/pkg_install.conf
 
 if this is incorrect.
 
@@ -1488,15 +1488,15 @@ just press enter if you won't be using binary packages.
 EOM
 read package_server
 if [ 0$package_server != 0 ]; then
-    pkg_path=${pkg_path}$package_server/pkgsrc/packages$install_prefix/$os/All\;
-    pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$install_prefix/$os/All\n"
+    pkg_path=${pkg_path}$package_server/pkgsrc/packages$prefix/$os/All\;
+    pkgin_path="${pkgin_path}$package_server/pkgsrc/packages$prefix/$os/All\n"
 fi
 
 if [ 0$pkg_path != 0 ]; then
-    printf "PKG_PATH=$pkg_path\n" >> $sys_prefix/etc/pkg_install.conf
+    printf "PKG_PATH=$pkg_path\n" >> $sys_dir/etc/pkg_install.conf
 
     # Rebuild pkg_install with SSL support
-    cd $frameworks_prefix/pkgtools/pkg_install
+    cd $pkgsrc_dir/pkgtools/pkg_install
     bmake clean
     bmake clean-depends
     bmake replace ALLOW_VULNERABLE_PACKAGES=yes
@@ -1509,12 +1509,12 @@ if [ 0$pkg_path != 0 ]; then
     # mk.conf should contain "PKG_OPTIONS.libfetch=inet6 openssl" by now
     pkg_delete -f libfetch pkgin
     save_cwd=`pwd`
-    cd $frameworks_prefix/pkgtools/pkgin
+    cd $pkgsrc_dir/pkgtools/pkgin
     bmake clean
     bmake clean-depends
     bmake install
     if [ $? = 0 ]; then
-	printf "${pkgin_path}" >> $sys_prefix/etc/pkgin/repositories.conf
+	printf "${pkgin_path}" >> $sys_dir/etc/pkgin/repositories.conf
 	pkgin update
 	cat << EOM
 
@@ -1526,7 +1526,7 @@ EOM
 	    pkgin -y install $base_gcc
 	fi
     else
-	printf "Failed to install pkgin.\nCheck $sys_prefix/etc/pkg_install.conf.\n"
+	printf "Failed to install pkgin.\nCheck $sys_dir/etc/pkg_install.conf.\n"
     fi
     cd $save_cwd
     pause
@@ -1556,8 +1556,8 @@ printf "Install Mozilla certs now? y/[n] "
 read install_certs
 if [ 0$install_certs = 0y ]; then
     save_cwd=$(pwd)
-    cd $frameworks_prefix/security/mozilla-rootcerts && bmake clean install
-    cd $frameworks_prefix/security/mozilla-rootcerts-openssl
+    cd $pkgsrc_dir/security/mozilla-rootcerts && bmake clean install
+    cd $pkgsrc_dir/security/mozilla-rootcerts-openssl
     if ! bmake clean install; then
 	printf "Warning: mozilla-rootcerts-openssl failed.\n"
 	pause
@@ -1592,16 +1592,16 @@ cat << EOM
 Users running sh-compatible shells can use the following to configure the
 environment for this installation:
 
-    . ${sys_prefix}/etc/pkgsrc.sh
+    . ${sys_dir}/etc/pkgsrc.sh
 
 Users running csh-compatible shells can use the following:
 
-    source ${sys_prefix}/etc/pkgsrc.csh
+    source ${sys_dir}/etc/pkgsrc.csh
 
 On systems with the "module" command, users can use the following instead
 of one of the commands above:
 
-    module load ${sys_prefix}/etc/modulefiles/pkgsrc/${dist_suffix#-}
+    module load ${sys_dir}/etc/modulefiles/pkgsrc/${dist_suffix#-}
 ============================================================================
 EOM
 pause
@@ -1610,11 +1610,11 @@ cat << EOM
 ============================================================================
 To install a package, type:
 
-    cd $frameworks_prefix/<category>/<package>
+    cd $pkgsrc_dir/<category>/<package>
     safe-bmake install
 
 Ex.
-    cd $frameworks_prefix/math/blas
+    cd $pkgsrc_dir/math/blas
     safe-bmake install
 ============================================================================
 EOM
@@ -1642,7 +1642,7 @@ cat << EOM
 You can keep your pkgsrc tree up-to-date by periodically running the
 following commands:
 
-    cd $frameworks_prefix
+    cd $pkgsrc_dir
     cvs -q update -dP
 
 The devel/scmcvs package provides a cvs command in case your system does
@@ -1670,26 +1670,24 @@ if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/pkgsrc.pdf ]; then
     printf "A copy of the pkgsrc guide has been placed on your desktop.\n"
 fi
 
-touch $prefix/pkg$install_suffix/done
+touch $parent/pkg$dir_suffix/done
 
 # Generate bootstrap kit
 cd $start_dir
-bootstrap_archive=`echo pkgsrc-$os-$compiler$install_prefix.tgz | tr / -`
+bootstrap_archive=`echo pkgsrc-$os-$compiler$prefix.tgz | tr / -`
 printf "Creating bootstrap kit: $bootstrap_archive...\n"
-$tar zcf $bootstrap_archive $install_prefix $frameworks_prefix $sys_prefix || true
+$tar zcf $bootstrap_archive $prefix $pkgsrc_dir $sys_dir || true
 cat << EOM
 
 Bootstrap image saved to $bootstrap_archive.
 
-You can unpack this file to / on other identical $(uname) systems in
-order to quickly replicate this installation:
-
-    tar -C / -zxf $bootstrap_archive
+You can unpack this file to / on other identical $(uname) systems in order to
+quickly replicate this installation.
 
 EOM
 pause
 
-(cd $frameworks_prefix/sysutils/auto-admin && bmake clean install)
+(cd $pkgsrc_dir/sysutils/auto-admin && bmake clean install)
 auto-software-manager
 
 cat << EOM
