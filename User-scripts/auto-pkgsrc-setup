@@ -1681,10 +1681,13 @@ cat << EOM
 
 Bootstrap image saved to $bootstrap_archive.
 
-You can unpack this file to / on other identical $(uname) systems in order to
-quickly replicate this installation.
+You can unpack this file to / on other identical $(uname) systems in
+order to quickly replicate this installation:
+
+    tar -C / -zxf $bootstrap_archive
 
 EOM
+pause
 
 (cd $frameworks_prefix/sysutils/auto-admin && bmake clean install)
 auto-software-manager
