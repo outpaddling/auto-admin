@@ -284,7 +284,13 @@ if ! auto-root-check $0; then
     # exec quotes '$absolute --flag', causing usage error
     # Assigning to cmd works around the problem
     cmd="$absolute $@"
-    exec su -m root -c "$cmd"
+    while ! su -m root -c "$cmd"; do
+	printf "Command failed, possibly due to an incorrect password.  Try again? [y]/n "
+	read again
+	if [ 0"$again" = 0n ]; then
+	    exit 0
+	fi
+    done
 fi
 
 cat << EOM
