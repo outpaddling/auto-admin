@@ -291,6 +291,7 @@ if ! auto-root-check $0; then
 	    exit 0
 	fi
     done
+    exit 0
 fi
 
 cat << EOM
