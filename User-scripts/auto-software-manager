@@ -165,12 +165,7 @@ EOM
 	    if [ 0"$install_from_source_cmd" = 0auto-install-packages ]; then
 		$install_from_source_cmd $names
 	    else
-		for make in sbmake bmake make; do
-		    if [ -e $(auto-pkgsrc-prefix)/bin/$make ]; then
-			break;
-		    fi
-		done
-		
+		make=$(auto-pkgsrc-make)
 		for name in $names; do
 		    cd $(auto-pkgsrc-dir)/$name
 		    $make clean clean-depends install

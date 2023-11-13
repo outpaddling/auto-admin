@@ -28,14 +28,15 @@ packages=`pkg_info | awk '{print $1}' | egrep -v 'bmake|pkg_install|openssl|boot
 pkgsrc_dir=$(auto-pkgsrc-dir)
 
 # First do make replace on not-for-delete packages, before removing anything
+make=$(auto-pkgsrc-make)
 for pkg in $packages; do
     if pkg_info -B $pkg | fgrep -q 'PACKAGE MAY NOT BE DELETED'; then
-        dir=$pkgsrc_dir/$(pkg_info -B $pkg | awk -F = '$1 == "PKGPATH" { print $2 }')
-        printf "Rebuilding $dir...\n"
-        cd $dir
-        sbmake clean clean-depends replace
+	dir=$pkgsrc_dir/$(pkg_info -B $pkg | awk -F = '$1 == "PKGPATH" { print $2 }')
+	printf "Rebuilding $dir...\n"
+	cd $dir
+	$make clean clean-depends replace
     else
-        pkg_delete -f $pkg
+	pkg_delete -f $pkg
     fi
 done
 pkg_info

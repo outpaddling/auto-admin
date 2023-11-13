@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+prefix=$(auto-pkgsrc-prefix)
+if [ -e $prefix/bin/sbmake ]; then
+    printf "$prefix/sbmake\n"
+elif [ -e $prefix/bin/bmake ]; then
+    printf "$prefix/bmake\n"
+else
+    printf "make\n"
+fi

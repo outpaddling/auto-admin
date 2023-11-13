@@ -56,9 +56,12 @@ fi
 
 before=`df $df_flags . | awk '$1 != "Filesystem" { print $4 }'`
 
+make=$(auto-pkgsrc-make)
 for dir in */*/work; do
-    printf "$dir\n"
-    rm -rf $dir
+    if [ -e $dir ]; then
+	(cd $dir/.. && $make clean)
+	# rm -rf $dir   # Fails due to permissions for pkglint
+    fi
 done
 
 printf "Remove distfiles? y/[n] "

@@ -288,12 +288,7 @@ interactive)
     ;;
 esac
 
-if [ -e $PREFIX/bin/sbmake ]; then
-    make=$PREFIX/bin/sbmake
-else
-    make=make
-fi
-
+make=$(auto-pkgsrc-make)
 if [ 0$update_pkgsrc != 0n ]; then
     cvs=cvs
     
