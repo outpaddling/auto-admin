@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+for file in Sys-scripts/* User-scripts/*; do
+    printf "Remove $file? y/[n] "
+    read remove
+    if [ 0$remove = 0y ]; then
+	git rm $file
+    fi
+done
