@@ -2,9 +2,9 @@
 
 prefix=$(auto-pkgsrc-prefix)
 if [ -e $prefix/bin/sbmake ]; then
-    printf "$prefix/sbmake\n"
+    printf "$prefix/bin/sbmake\n"
 elif [ -e $prefix/bin/bmake ]; then
-    printf "$prefix/bmake\n"
+    printf "$prefix/bin/bmake\n"
 else
     printf "make\n"
 fi
