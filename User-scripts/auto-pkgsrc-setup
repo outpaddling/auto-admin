@@ -165,12 +165,14 @@ EOM
 fi
 
 start_dir=`pwd`
+YUM_JAVA_VERSION=11
+YUM_TOOLS="gcc gcc-c++ gcc-gfortran java-$YUM_JAVA_VERSION-openjdk-devel tar curl git ncompress"
 
 if [ `id -un` = root ]; then
     # RHEL / CentOS base
     if [ -e /etc/redhat-release ]; then
 	printf "Installing base development tools via yum...\n"
-	yum install -y gcc-gfortran gcc-c++ gcc java-11-openjdk-devel tar git ncompress
+	yum install -y $YUM_TOOLS
     elif [ -e /etc/debian_version ]; then
 	printf "Installing base development tools via apt...\n"
 	apt install -y gcc g++ gfortran default-jdk-headless tar curl git
@@ -179,7 +181,7 @@ fi
 
 if [ $(uname) != NetBSD ]; then
     printf "Checking for required tools...\n"
-    for tool in cc c++ tar curl git; do
+    for tool in cc c++ java tar curl git; do
 	if ! which $tool; then
 	    if [ $tool = cc ] && which gcc; then
 		continue;
@@ -205,7 +207,7 @@ On Debian-based systems:
 
 On Fedora/RHEL-based systems:
 
-    yum install -y gcc gcc-g++ gcc-gfortran java-11-openjdk-devel tar curl git
+    yum install -y $YUM_TOOLS
 
 On Illumos:
 
