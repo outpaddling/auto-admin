@@ -88,6 +88,7 @@ FreeBSD)
 	    swapon -aL
 	fi
     fi
+    swapinfo
     ;;
 
 NetBSD)
@@ -106,12 +107,34 @@ NetBSD)
 	auto-append-line "$swapfile\tnone\tswap\tsw" /etc/fstab $0
 	swapctl -A
     fi
+    swapinfo
     ;;
 
+RHEL)
+    # https://linuxize.com/post/create-a-linux-swap-file/
+    if grep -q "$swapfile" /etc/fstab; then
+	printf "Error: swapfile is already configured in /etc/fstab.\n"
+	exit 1
+    else
+	# FIXME: Probably won't work with ZFS
+	if [ ! -e $swapfile ]; then
+	    printf "Creating $swapfile...\n"
+	    fallocate -l ${mbytes}MiB $swapfile
+	    dd if=/dev/zero of=$swapfile bs=1M count=$mbytes
+	else
+	    printf "Using existing $swapfile...\n"
+	fi
+	chmod 600 $swapfile
+	mkswap $swapfile
+	swapon $swapfile
+	auto-append-line "$swapfile\tswap\tswap\tdefaults\t0\t0" /etc/fstab $0
+	swapon --show
+    fi
+    ;;
+    
 *)
     auto-unsupported-os $0
     exit
     ;;
 
 esac
-swapinfo
