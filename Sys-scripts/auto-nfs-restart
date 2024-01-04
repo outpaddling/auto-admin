@@ -2,26 +2,38 @@
 
 case $(auto-os-release) in
 FreeBSD*)
-    # http://havokmon.blogspot.com/2012/07/proper-nfs-server-service-restart.html
-    # killall -9 mountd
-    # service nfsd stop
-    # service rpcbind onestop
-    # service rpcbind onestart
-    # service nfsd start
-    
-    # Should suffice on modern FreeBSD
-    service nfsd restart
-    service mountd onereload
+    # Thorough restart that should resolve stale NFS mounts and
+    # client I/O errors
     if grep -q '^nfsuserd_enable="YES"' /etc/rc.conf; then
-	service nfsuserd restart
+	service nfsuserd stop
+    fi
+    service nfsd stop
+    if grep -q '^rpc_lockd_enable="YES"' /etc/rc.conf; then
+	service lockd stop
+    fi
+    if grep -q '^rpc_statd_enable="YES"' /etc/rc.conf; then
+	service statd stop
+    fi
+
+    # rpcbind is not strictly strictly necessary for NFSv4-only servers
+    # man mountd, -R flag
+    service rpcbind onerestart
+    service mountd onerestart
+    
+    if grep -q '^rpc_statd_enable="YES"' /etc/rc.conf; then
+	service statd start
+    fi
+    if grep -q '^rpc_lockd_enable="YES"' /etc/rc.conf; then
+	service lockd start
+    fi
+    service nfsd start
+    if grep -q '^nfsuserd_enable="YES"' /etc/rc.conf; then
+	service nfsuserd start
     fi
     ;;
 
-RHEL6)
-    service nfs restart
-    ;;
-
 RHEL7|RHEL8)
+    # FIXME: Make this more thorough, as the FreeBSD case
     systemctl restart nfs
     ;;
 
