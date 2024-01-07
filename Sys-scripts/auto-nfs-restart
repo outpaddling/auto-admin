@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if ! auto-root-check $0; then
+    exit 1
+fi
+
 case $(auto-os-release) in
 FreeBSD*)
     # Thorough restart that should resolve stale NFS mounts and
