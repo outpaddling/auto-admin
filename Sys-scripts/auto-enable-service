@@ -29,18 +29,17 @@ stop_service()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ] && [ $# != 4 ]; then
-    printf "Usage: $0 [-s rc.d-script-name] rc.conf-name calling-program-name\n"
-    printf "Example: $0 -s kerberos5_server kerberos my-setup-script\n"
-    exit 1
-fi
-
-if [ $# = 4 ]; then
+if [ $# = 4 ] && [ $1 = '-s' ]; then
     script=$2
     shift
     shift
-else
+elif [ $# = 2 ]; then
     script=$1
+else
+    # FIXME: Tailor usage message to OS.  Currently BSD-centric.
+    printf "Usage: $0 [-s rc.d-script-name] rc.conf-name calling-program-name\n"
+    printf "Example: $0 -s kerberos5_server kerberos my-setup-script\n"
+    exit 1
 fi
 service=$1
 caller=$2
@@ -90,6 +89,33 @@ NetBSD)
 	service $script start
     else
 	printf "Warning: No service startup script found for $service.\n"
+    fi
+    ;;
+
+RHEL)
+    pkgsrc_dir1="/usr/pkg/share/$service/Systemd"
+    pkgsrc_dir2="/usr/pkg/lib/systemd/system"
+    systemd_dir='/etc/systemd/system'
+    # Prefer pkgsrc, since it's an add-on.
+    # FIXME: Add ability to specify a full path, so users can override?
+    found=false
+    for dir in $pkgsrc_dir1 $pkgsrc_dir2 $systemd_dir $systemd_dir/*.wants; do
+	path=$dir/$script.service
+	printf "Checking $path...\n"
+	if [ -e $path ]; then
+	    found=true
+	    printf "Enabling $path...\n"
+	    set -x
+	    systemctl enable $path
+	    systemctl start $script.service
+	    
+	    # May be more than one .service file.  Stop after enabling one.
+	    break
+	fi
+    done
+    if [ $found = false ]; then
+	printf "$script: No such service found.\n" >> /dev/stderr
+	exit 1
     fi
     ;;
     
