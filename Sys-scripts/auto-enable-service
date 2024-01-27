@@ -37,8 +37,23 @@ elif [ $# = 2 ]; then
     script=$1
 else
     # FIXME: Tailor usage message to OS.  Currently BSD-centric.
-    printf "Usage: $0 [-s rc.d-script-name] rc.conf-name calling-program-name\n"
-    printf "Example: $0 -s kerberos5_server kerberos my-setup-script\n"
+    cat << EOM
+
+Usage: $0 [-s script-name] service-name calling-program-name|nocomment
+
+Examples:
+    $0 -s kerberos5_server kerberos my-setup-script
+    $0 -s /usr/pkg/share/lpjs/Systemd/lpjs_compd.service lpjs_compd nocomment
+    $0 -s /usr/pkg/share/lpjs/Launchd/org.pkgsrc.lpjs_compd.plist org.pkgsrc.lpjs_compd nocomment
+
+"script-name" may be an absolute pathname, or just the basename of
+the RC/init/systemd script or launchd .plist file.  If only the
+basename is given, and the script does not exist in the current
+working directory, standard directories such as /etc/rc.d, /etc/systemd,
+and /Library/LaunchDaemons are checked.
+
+EOM
+    
     exit 1
 fi
 service=$1
@@ -61,7 +76,7 @@ FreeBSD)
     if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
 	# Use restart instead of start to prevent desktop-installer
 	# from exiting after killing rogue devd?
-	service $script restart || true
+	service $(basename $script) restart || true
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi
@@ -83,7 +98,11 @@ NetBSD)
 
     stop_service
     if [ -e /etc/rc.d/$script ]; then
-	service $script start
+	service $(basename $script) start
+    elif [ -e $script ]; then
+	cp $script /etc/rc.d
+	service $(basename $script) start
+    # This is the canonical location for pkgsrc RC scripts
     elif [ -e $(auto-localbase)/share/examples/rc.d/$script ]; then
 	cp $(auto-localbase)/share/examples/rc.d/$script /etc/rc.d
 	service $script start
@@ -96,6 +115,9 @@ RHEL)
     pkgsrc_dir1="/usr/pkg/share/$service/Systemd"
     pkgsrc_dir2="/usr/pkg/lib/systemd/system"
     systemd_dir='/etc/systemd/system'
+
+    systemctl stop $script.service || true
+    
     # Prefer pkgsrc, since it's an add-on.
     # FIXME: Add ability to specify a full path, so users can override?
     found=false
@@ -117,6 +139,32 @@ RHEL)
 	printf "$script: No such service found.\n" >> /dev/stderr
 	exit 1
     fi
+    ;;
+
+Darwin)
+    if [ ! -e $script ]; then
+	printf "$script: File not found.\n" >> /dev/stderr
+	exit 1
+    fi
+    
+    dir=/Library/LaunchDaemons
+    installed_script=$dir/$(basename $script)
+    
+    printf "Stopping service...\n"
+    launchctl stop $service || true
+    
+    if [ -e $installed_script ]; then
+	printf "Disabling service...\n"
+	launchctl bootout system $installed_script || true
+    fi
+    
+    cp -f $script /Library/LaunchDaemons/
+    
+    printf "Enabling $installed_script...\n"
+    launchctl bootstrap system $installed_script
+    
+    printf "Starting service...\n"
+    launchctl start $service || true
     ;;
     
 *)
