@@ -55,12 +55,12 @@ fi
 
 # Create user
 case $os_type in
-FreeBSD)
+DragonFly|FreeBSD)
     pw useradd $user_name -c "$gecos" -g $group_name -m \
 	-s $shell -u $user_id $@
     ;;
 
-OpenBSD|NetBSD|RHEL)
+NetBSD|OpenBSD|RHEL)
     useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
 	$user_name
     ;;

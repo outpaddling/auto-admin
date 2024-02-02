@@ -114,7 +114,7 @@ fi
 CONF_DIR=/usr/local/share/auto-admin
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     ldap_conf=/usr/local/etc/ldap.conf
     ldap_flags=''
     default_shell="/bin/tcsh"
@@ -345,7 +345,7 @@ fi
 
 # Some users may belong to multiple groups.  If so, add them here.
 case $(auto-ostype) in
-FreeBSD|OpenBSD|NetBSD)
+DragonFly|FreeBSD|NetBSD|OpenBSD)
     printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
     read add
     if [ 0$add = 0y ]; then
