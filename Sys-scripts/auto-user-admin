@@ -116,7 +116,7 @@ EOM
 	if [ ! -z $username ]; then
 	    printf "Current group membership for $username:\n"
 	    if groups $username; then
-		printf "Supplementary group to add? "
+		printf "Supplementary group to remove? "
 		read groupname
 		if [ ! -z $groupname ]; then
 		    if auto-remove-from-group $username $groupname; then
