@@ -60,7 +60,7 @@ service=$1
 caller=$2
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     if grep -q "^${service}_enable=\"YES\"" /etc/rc.conf; then
 	printf "$service already enabled.\n"
 	printf "If you need the service restarted, you must do it manually.\n"
