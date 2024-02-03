@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # FIXME: Is this the best way to detect a pkgsrc tree?
-if [ -e $(auto-pkgsrc-prefix) ]; then
+if [ -e "$(auto-pkgsrc-prefix)" ]; then
     exit 0;
 else
     exit 1;

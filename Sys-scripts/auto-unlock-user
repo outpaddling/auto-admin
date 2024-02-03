@@ -29,7 +29,7 @@ fi
 user_name=$1
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     pw unlock $user_name
     ;;
 

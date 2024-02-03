@@ -87,8 +87,12 @@ reason=$2
 when=$3
 
 case $(auto-ostype) in
-FreeBSD)
-    : ${PORTSDIR:=/usr/ports}
+DragonFly|FreeBSD)
+    if [ $(auto-ostype) = FreeBSD ]; then
+	: ${PORTSDIR:=/usr/ports}
+    else
+	: ${PORTSDIR:=/usr/dports}
+    fi
     if [ ! -e "$PORTSDIR/$pkg" ]; then
 	printf "$PORTSDIR/$pkg: No such port.\n"
 	exit 1

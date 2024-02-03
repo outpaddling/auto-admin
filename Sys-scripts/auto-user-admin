@@ -90,7 +90,7 @@ EOM
     read resp
     case $resp in
     1)
-	auto-adduser
+	auto-adduser || true
 	;;
     
     2)

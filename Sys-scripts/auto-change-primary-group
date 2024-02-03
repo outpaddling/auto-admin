@@ -69,7 +69,7 @@ fi
 
 # Call me from cluster-change-gid
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     pw usermod $user_name -g $new_group
     ;;
 

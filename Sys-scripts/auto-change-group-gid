@@ -6,7 +6,7 @@
 #
 #   Arguments:
 #       1)  Group name
-#           FreeBSD pw accepts group name or gid, but we require name
+#           DragonFly|FreeBSD pw accepts group name or gid, but we require name
 #           here to simplify the Linux groupmod interface.
 #       2)  New gid (numeric)
 #
@@ -110,7 +110,7 @@ fi
 
 ostype=`auto-ostype`
 case $ostype in
-FreeBSD)
+DragonFly|FreeBSD)
     # FIXME: Make sure /etc/passwd is being updated
     pw groupmod $group_name -g $new_gid
     ;;

@@ -115,7 +115,7 @@ Darwin)
     dscl . -change /Users/$user_name UniqueID $old_uid $new_uid
     ;;
 
-FreeBSD)
+DragonFly|FreeBSD)
     pw usermod $user_name -u $new_uid
     ;;
 

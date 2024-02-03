@@ -44,7 +44,7 @@ if [ $# -lt 1 ]; then
 fi
     
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     install_from_port()
     {
 	save_cwd=$(pwd)
@@ -74,7 +74,11 @@ FreeBSD)
     }
     
     # Default.  Override below.
-    PORTSDIR='/usr/ports'
+    if [ $(uname) = FreeBSD ]; then
+	PORTSDIR='/usr/ports'
+    elif [ $(uname) = DragonFly ]; then
+	PORTSDIR='/usr/dports'
+    fi
     latest_package_name=0
     
     if [ ! -e $PORTSDIR ]; then

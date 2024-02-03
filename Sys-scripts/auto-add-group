@@ -37,7 +37,7 @@ fi
 group_name=$1
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     pw groupadd $group_name $gid_flags
     ;;
 
