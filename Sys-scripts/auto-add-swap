@@ -9,13 +9,18 @@
 #       configures the system to automatically activate it at boot time.
 #       The new swap file serves as additional swap space if a swap
 #       partition is already present.
+#
+#       Note: On SunOS, "swapfile" should be stated as a relative
+#       path under /dev/zvol/dsk/rpool.
 #       
 #   Arguments:
 #       path-to-swapfile    Full pathname of the new swap file
 #       size                Size of swap file in mibibytes
 #       
 #   Examples:
-#       auto-add-swap /swapfile 4096
+#       auto-add-swap /swapfile 4096    # Creates /swapfile
+#
+#       SunOS: auto-add-swap swap1 4096 # Creates /dev/zvol/dsk/rpool/swap1
 #
 #   Returns:
 #       0 on success, non-zero on failure
@@ -130,6 +135,25 @@ RHEL)
 	auto-append-line "$swapfile\tswap\tswap\tdefaults\t0\t0" /etc/fstab $0
 	swapon --show
     fi
+    ;;
+
+SunOS)  # Tested on OpenIndiana
+    # Create a new zvol
+    swapfile=rpool/$swapfile
+    zfs create -V ${mbytes}M -b $(getconf PAGESIZE) -o compression=zle \
+	-o primarycache=metadata -o secondarycache=none \
+	-o sync=always -o logbias=throughput \
+	-o com.sun:auto-snapshot=false $swapfile
+    
+    # Enable swap file
+    swap_path=/dev/zvol/dsk/$swapfile
+    /usr/sbin/swap -a $swap_path
+    
+    # Make it permanent
+    if ! fgrep $swap_path /etc/vfstab; then
+	printf "$swap_path\t-\t-\tswap\t-\tno\t-\n" >> /etc/vfstab
+    fi
+    swap -lh
     ;;
     
 *)
