@@ -115,26 +115,29 @@ RHEL)
     pkgsrc_dir1="/usr/pkg/share/$service/Systemd"
     pkgsrc_dir2="/usr/pkg/lib/systemd/system"
     systemd_dir='/etc/systemd/system'
-
-    systemctl stop $script.service || true
     
-    # Prefer pkgsrc, since it's an add-on.
-    # FIXME: Add ability to specify a full path, so users can override?
     found=false
-    for dir in $pkgsrc_dir1 $pkgsrc_dir2 $systemd_dir $systemd_dir/*.wants; do
-	path=$dir/$script.service
-	printf "Checking $path...\n"
-	if [ -e $path ]; then
-	    found=true
-	    printf "Enabling $path...\n"
-	    set -x
-	    systemctl enable $path
-	    systemctl start $script.service
+    if echo $script | grep -q '^/'; then
+	# Absolute path provided
+	path=$script
+	found=true
+    else
+	# Relative path provided, check common locations
+	# Prefer pkgsrc, since it's an add-on.
+	for dir in $pkgsrc_dir1 $pkgsrc_dir2 $systemd_dir $systemd_dir/*.wants; do
+	    path=$dir/$script.service
+	    printf "Checking $path...\n"
+	    if [ -e $path ]; then
+		found=true
+		break
+	    fi
+	done
+    fi
+    
+    printf "Enabling $path...\n"
+    systemctl enable $path
+    systemctl start $service
 	    
-	    # May be more than one .service file.  Stop after enabling one.
-	    break
-	fi
-    done
     if [ $found = false ]; then
 	printf "$script: No such service found.\n" >> /dev/stderr
 	exit 1
