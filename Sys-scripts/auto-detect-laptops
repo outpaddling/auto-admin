@@ -10,6 +10,7 @@ pause()
 
 case $(auto-ostype) in
 FreeBSD)
+    mkdir -p /etc/X11/xorg.conf.d
     if dmidecode | grep -iq macbook; then
 	printf "$0: MacBook\n"
 	# https://wiki.freebsd.org/AppleMacbook
