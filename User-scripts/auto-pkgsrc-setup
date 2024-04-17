@@ -451,7 +451,17 @@ EOM
 # FreeBSD, NetBSD, and OS X.
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
-unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+
+# Scrub the environment to avoid self-inflicted problems.
+# Users commonly add things to their login scripts to "fix" a particular
+# build, not realizing that the same things break other builds.
+# Use pkgsrc-non-exclusive.sh instead if you really want the env left alone.
+# Some standard variables, not all of which are scrubbed here:
+# https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html
+# https://gcc.gnu.org/onlinedocs/cpp/Environment-Variables.html
+unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
+    C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH \
+    FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
 
 printf "Compilers in your current PATH include:\n\n"
 if ! which cc; then
@@ -689,7 +699,9 @@ if [ 0$bootstrap = '0y' ]; then
     cd $pkgsrc_dir/bootstrap
     
     # Scrub env to prevent leakage of nonstandard tools into pkgsrc
-    unset CFLAGS CXXFLAGS CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
+	C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH \
+	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
     if which cc; then
 	CC=cc
 	CXX=c++
@@ -1097,7 +1109,9 @@ if ! echo \$PATH | fgrep -q "${prefix}/bin:"; then
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
     # RHEL 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     PATH=/usr/bin:/usr/sbin:/bin:/sbin
-    unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
+	C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH \
+	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
     
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
 	alias man="man -m \$PKGSRC/man"
@@ -1151,7 +1165,9 @@ if ( \$status != 0 ) then
     # Scrub PATH and LD_LIBRARY_PATH before adding pkgsrc to prevent leakage
     # RHEL 7 /bin/gcc fails with cannot find cc1, so put /usr/bin first
     setenv PATH             /usr/bin:/usr/sbin:/bin:/sbin
-    unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS FC FFLAGS LD LDFLAGS LD_LIBRARY_PATH
+    unsetenv CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
+	C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH \
+	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
 	alias man "man -m \$PKGSRC/man"
@@ -1227,6 +1243,12 @@ unsetenv        FFLAGS
 unsetenv        LD
 unsetenv        LDFLAGS
 unsetenv        LD_LIBRARY_PATH
+unsetenv        CPATH
+unsetenv        C_INCLUDE_PATH
+unsetenv        CPLUS_INCLUDE_PATH
+unsetenv        OBJC_INCLUDE_PATH
+unsetenv        GFLAGS
+unsetenv        LDLIBS
 
 prepend-path    PATH    \$prefix/bin:\$prefix/sbin
 # FIXME: Prepend pkgsrc to existing man path
