@@ -61,7 +61,7 @@ FreeBSD)
 	    wireless=$wireless_default
 	fi
 	
-	ifconfig wlan0 destroy
+	ifconfig wlan0 destroy || true
 	ifconfig wlan0 create wlandev $wireless
 	;;
     

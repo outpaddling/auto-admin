@@ -154,6 +154,12 @@ DragonFly|FreeBSD)
 	    if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
 		install_from_port
 		status=$?
+	    # FIXME: Doesn't handle dependencies
+	    elif awk '{ print $1 }' \
+		$(auto-localbase)/etc/auto-admin/install-from-source \
+		    | fgrep --line-regexp $port; then
+		install_from_port
+		status=$?
 	    else
 		# New pkgng system
 		unset PACKAGESITE
