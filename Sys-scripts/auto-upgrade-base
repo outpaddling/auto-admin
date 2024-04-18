@@ -118,6 +118,31 @@ FreeBSD)
 	;;
     esac
     
+    new_version=${release%-*}
+    new_minor=${new_version#*.}
+    echo $new_version $new_minor
+    if [ $new_minor -gt 0 ]; then
+	new_major=${new_version%.*}
+	previous_release=$new_major.$(($new_minor - 1))
+	more << EOM
+
+			    ======== Caution ========
+
+The FreeBSD project currently does not guarantee KBI (kernel binary interface)
+compatibility across point releases, and does not provide binary packages
+fully compatible with release x.y until x.(y-1) has reached end-of-life (EOL).
+I.e., packages from x.(y-1) are used on x.y untl x.y EOL.
+
+As result, installing kernel modules using "pkg" on FreeBSD $release
+may cause problems until FreeBSD $previous_release has reached end-of-life,
+at which time package building is switched to FreeBSD $release.
+
+To avoid problems with binary packages, wait until $previous_release
+reaches end-of-life before upgrading to $release.
+
+EOM
+    fi
+    
     more << EOM
 
 			    ======== Warning ========
