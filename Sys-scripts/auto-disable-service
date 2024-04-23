@@ -1,7 +1,11 @@
 #!/bin/sh -e
 
 if [ $# != 1 ]; then
-    printf "Usage: $0 rc.conf-name\n"
+    if [ $(uname) = Darwin ]; then
+	printf "Usage: $0 plist-name[.plist]\n"
+    else
+	printf "Usage: $0 rc.conf-name\n"
+    fi
     exit 1
 fi
     
@@ -22,6 +26,36 @@ NetBSD)
     fi
     ;;
     
+Darwin)
+    plist="$1"
+    dir=/Library/LaunchDaemons
+    if [ -e $dir/$plist ]; then
+	plist=$dir/$(basename $plist)
+    elif [ -e $dir/$plist.plist ]; then
+	plist=$dir/$(basename $plist).plist
+    fi
+    echo $plist
+    
+    printf "Stopping service...\n"
+    launchctl stop $plist || true
+    
+    if [ -e $plist ]; then
+	printf "Disabling service...\n"
+	if ! launchctl bootout system $plist; then
+	    printf "Is $plist already disabled?\n" >> /dev/stderr
+	fi
+    else
+	printf "$install_script not found.\n" >> /dev/stderr
+    fi
+    ;;
+
+RHEL)
+    service="$1"
+    printf "Disabling $service...\n"
+    systemctl stop $service
+    systemctl disable $service
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1
