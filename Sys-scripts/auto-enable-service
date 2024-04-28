@@ -111,35 +111,41 @@ NetBSD)
     fi
     ;;
 
-RHEL)
-    pkgsrc_dir1="/usr/pkg/share/$service/Systemd"
-    pkgsrc_dir2="/usr/pkg/lib/systemd/system"
-    systemd_dir='/etc/systemd/system'
-    
-    found=false
-    if echo $script | grep -q '^/'; then
-	# Absolute path provided
-	path=$script
-	found=true
+Debian|RHEL)
+    if [ -d /etc/systemd/system ]; then
+	pkgsrc_dir1="/usr/pkg/share/$service/Systemd"
+	pkgsrc_dir2="/usr/pkg/lib/systemd/system"
+	systemd_dir='/etc/systemd/system'
+	
+	found=false
+	if echo $script | grep -q '^/'; then
+	    # Absolute path provided
+	    path=$script
+	    found=true
+	else
+	    # Relative path provided, check common locations
+	    # Prefer pkgsrc, since it's an add-on.
+	    for dir in $pkgsrc_dir1 $pkgsrc_dir2 $systemd_dir $systemd_dir/*.wants; do
+		path=$dir/$script.service
+		printf "Checking $path...\n"
+		if [ -e $path ]; then
+		    found=true
+		    break
+		fi
+	    done
+	fi
+	
+	printf "Enabling $path...\n"
+	systemctl enable $path
+	systemctl start $service
+		
+	if [ $found = false ]; then
+	    printf "$script: No such service found.\n" >> /dev/stderr
+	    exit 1
+	fi
     else
-	# Relative path provided, check common locations
-	# Prefer pkgsrc, since it's an add-on.
-	for dir in $pkgsrc_dir1 $pkgsrc_dir2 $systemd_dir $systemd_dir/*.wants; do
-	    path=$dir/$script.service
-	    printf "Checking $path...\n"
-	    if [ -e $path ]; then
-		found=true
-		break
-	    fi
-	done
-    fi
-    
-    printf "Enabling $path...\n"
-    systemctl enable $path
-    systemctl start $service
-	    
-    if [ $found = false ]; then
-	printf "$script: No such service found.\n" >> /dev/stderr
+	printf "$0: Only systemd-based Linux systems are supported at this time.\n"
+	auto-unsupported-os $0
 	exit 1
     fi
     ;;
