@@ -32,14 +32,14 @@ FreeBSD)
     elif awk '$1 == "url:" { print $2 }' /etc/pkg/*.conf | fgrep -q latest; then
 	printf "latest\n"
     else
-	# meta.txz should be time stamped with the latest update
+	# meta should be time stamped with the latest update
 	# to the package repo
 	major=$(uname -r | cut -d . -f 1)
 	arch=$(uname -p)
-	tmpfile=auto-pkg-branch-meta.txz
+	tmpfile=auto-pkg-branch-meta
 	rm -f $tmpfile
 	fetch -o $tmpfile \
-	    http://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/meta.txz
+	    https://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/meta
 	
 	mod_time=$(ls -l -D '%Y-%m' $tmpfile | awk '{ print $6 }')
 	rm -f $tmpfile
@@ -61,11 +61,11 @@ NetBSD)
 	    2> /dev/null | fgrep -q pkgsrc.smartos.org; then
 	printf "latest\n"
     else
-	# meta.txz should be time stamped with the latest update
+	# pkg_summary.gz should be time stamped with the latest update
 	# to the package repo
 	vers=$(uname -r)
 	arch=$(uname -m)
-	tmpfile=auto-pkg-branch-summary.tgz
+	tmpfile=auto-pkg-branch-summary.gz
 	rm -f $tmpfile
 	# echo 'https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/9.3/All/pkg_summary.gz'
 	fetch -o $tmpfile \
