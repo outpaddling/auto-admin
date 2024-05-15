@@ -14,9 +14,14 @@
 
 stop_service()
 {
-    if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
-	service $script stop || true
+    if auto-service-enabled $service; then
+	printf "$service is enabled.\n"
+	service $script stop
+    else
+	printf "$service is not enabled.\n"
+	service $script onestop
     fi
+    # FIXME: Does not work for rpc.statd
     if pkill $service; then
 	printf "Killed rogue $service.\n"
     fi
@@ -61,9 +66,9 @@ caller=$2
 
 case $(auto-ostype) in
 DragonFly|FreeBSD)
-    if grep -q "^${service}_enable=\"YES\"" /etc/rc.conf; then
-	printf "$service already enabled.\n"
-	printf "If you need the service restarted, you must do it manually.\n"
+    if auto-service-enabled $service; then
+	printf "$service already enabled, restarting.\n"
+	service $service restart
 	exit 0
     fi
     
@@ -71,7 +76,7 @@ DragonFly|FreeBSD)
 	sed -i '' "s|${service}_enable=\"NO\"|${service}_enable=\"YES\"|g" /etc/rc.conf
     fi
 
-    auto-set-conf-var ${service}_enable '"YES"' /etc/rc.conf $caller
+    auto-set-conf-var ${service}_enable YES /etc/rc.conf $caller
     stop_service
     if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
 	# Use restart instead of start to prevent desktop-installer
