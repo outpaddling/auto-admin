@@ -27,14 +27,16 @@ NetBSD)
     ;;
     
 Darwin)
-    plist="$1"
+    service="$1"
     dir=/Library/LaunchDaemons
-    if [ -e $dir/$plist ]; then
-	plist=$dir/$(basename $plist)
-    elif [ -e $dir/$plist.plist ]; then
-	plist=$dir/$(basename $plist).plist
+    # Full name of plist file was provided, e.g. org.pkgsrc.lpjs_compd.plist
+    if [ -e $dir/$service ]; then
+	plist=$dir/$service
+    # Just the service name, e.g. lpjs_compd
+    elif [ -e $dir/org.pkgsrc.$service.plist ]; then
+	plist=$dir/org.pkgsrc.$service.plist
     else
-	printf "$plist is not enabled.\n"
+	printf "$service is not installed in $dir.\n"
 	exit 0
     fi
     
