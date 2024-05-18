@@ -141,10 +141,13 @@ Debian|RHEL)
 	    done
 	fi
 	
+	systemctl daemon-reload
+	systemctl stop $service || true
 	printf "Enabling $path...\n"
 	systemctl enable $path
+	printf "Starting $service...\n"
 	systemctl start $service
-		
+	
 	if [ $found = false ]; then
 	    printf "$script: No such service found.\n" >> /dev/stderr
 	    exit 1
