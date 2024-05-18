@@ -89,8 +89,8 @@ DragonFly|FreeBSD)
     
 NetBSD)
     if grep -q "^${service}=YES" /etc/rc.conf; then
-	printf "$service already enabled.\n"
-	printf "If you need the service restarted, you must do it manually.\n"
+	printf "$service already enabled, restarting.\n"
+	service $service restart
 	exit 0
     fi
     
@@ -103,14 +103,15 @@ NetBSD)
 
     stop_service
     if [ -e /etc/rc.d/$script ]; then
-	service $(basename $script) start
+	service $(basename $script) restart
+    # If user supplied a full or relative pathname
     elif [ -e $script ]; then
 	cp $script /etc/rc.d
-	service $(basename $script) start
+	service $(basename $script) restart
     # This is the canonical location for pkgsrc RC scripts
     elif [ -e $(auto-localbase)/share/examples/rc.d/$script ]; then
 	cp $(auto-localbase)/share/examples/rc.d/$script /etc/rc.d
-	service $script start
+	service $script restart
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi
