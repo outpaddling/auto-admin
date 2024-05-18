@@ -33,14 +33,16 @@ Darwin)
 	plist=$dir/$(basename $plist)
     elif [ -e $dir/$plist.plist ]; then
 	plist=$dir/$(basename $plist).plist
+    else
+	printf "$plist is not enabled.\n"
+	exit 0
     fi
-    echo $plist
     
-    printf "Stopping service...\n"
+    printf "Stopping service $plist...\n"
     launchctl stop $plist || true
     
     if [ -e $plist ]; then
-	printf "Disabling service...\n"
+	printf "Disabling service $plist...\n"
 	if ! launchctl bootout system $plist; then
 	    printf "Is $plist already disabled?\n" >> /dev/stderr
 	fi

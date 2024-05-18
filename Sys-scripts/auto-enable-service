@@ -168,11 +168,11 @@ Darwin)
     dir=/Library/LaunchDaemons
     installed_script=$dir/$(basename $script)
     
-    printf "Stopping service...\n"
+    printf "Stopping service $service...\n"
     launchctl stop $service || true
     
     if [ -e $installed_script ]; then
-	printf "Disabling service...\n"
+	printf "Disabling service $service...\n"
 	launchctl bootout system $installed_script || true
     fi
     
@@ -181,7 +181,7 @@ Darwin)
     printf "Enabling $installed_script...\n"
     launchctl bootstrap system $installed_script
     
-    printf "Starting service...\n"
+    printf "Starting service $service...\n"
     launchctl start $service || true
     ;;
     
