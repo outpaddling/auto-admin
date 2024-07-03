@@ -792,15 +792,26 @@ OpenBSD)
 	    cat << EOM
 	
 You need to set your CVSROOT to one of the anoncvs URLs listed at
-anoncvs@obsdacvs.cs.toronto.edu:/cvs.
 
-Opening $PORTSDIR/CVS/Root using $EDITOR.
+https://www.openbsd.org/anoncvs.html#CVSROOT
+
+EOM
+
+printf "Enter hostname:/path for the mirror: "
+read mirror
+printf "$mirror\n" > CVS/Root
+
+            cat << EOM
+
+Opening $PORTSDIR/CVS/Root using $EDITOR for verification.
 
 EOM
 	    pause
 	    $EDITOR CVS/Root
-	    find . -name CVS -type d -exec cp CVS/Root '{}' \;
+	    printf "Updating all CVS/Root files...\n"
+	    find . -name CVS -type d -mindepth 2 -exec cp -f CVS/Root '{}' \;
 	fi
+	printf "Updating repository...\n"
 	cvs -q up -dP
     fi
     
