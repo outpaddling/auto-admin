@@ -129,9 +129,9 @@ FreeBSD)
 			    ======== Caution ========
 
 The FreeBSD project currently does not guarantee KBI (kernel binary interface)
-compatibility across point releases, and does not provide binary packages
-fully compatible with release x.y until x.(y-1) has reached end-of-life (EOL).
-I.e., packages from x.(y-1) are used on x.y untl x.y EOL.
+compatibility across point releases, and does not build binary packages
+on release x.y until x.(y-1) has reached end-of-life (EOL).
+I.e., packages from x.(y-1) are used on x.y until x.(y-1) EOL.
 
 As result, installing kernel modules using "pkg" on FreeBSD $release
 may cause problems until FreeBSD $previous_release has reached end-of-life,
