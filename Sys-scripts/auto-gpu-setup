@@ -316,13 +316,6 @@ EOM
 
 nVidia GPU detected.
 
-Check the nVidia docs to determine which driver version[s] support[s] the
-device shown above.  Then choose a compatible driver version from the
-list of ports below.
-
-EOM
-	cat << EOM
-
 1.. For recent nVidia GPUs, you can try a closed-source nVidia driver
 
 2.. For very old nvidia GPUs, you can try the open-source nv driver
@@ -350,7 +343,12 @@ EOM
 		pause
 		cat << EOM
 
-Press enter to use the latest driver or enter just the version number
+Check the nVidia docs to determine which driver version[s] support[s] the
+device shown above.  Then choose a compatible driver version from the
+list of ports below.  The device may be supported by more than one
+driver version.  We recommend using the latest driver possible.
+
+Just press enter to use the latest driver or enter just the version number
 (the number after the final '-') from the list above.
 
 EOM
