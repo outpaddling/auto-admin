@@ -728,12 +728,22 @@ EOM
 	    fi
 	    
 	    # Reboot only if kernel or modules updated
-	    if [ 0$reboot_requested = 0y ] && grep -q '^/boot' $fetch_output; then
-		printf "Kernel componented updated.  System will reboot.\n"
-		reboot_needed=y
+	    if [ 0$reboot_requested = 0y ]; then
+		if grep -q '^/boot' $fetch_output; then
+		    printf "Kernel componented updated.  System will reboot.\n"
+		    auto_reboot=y
+		else
+		    printf "No kernel componented updated.  No reboot necessary.\n"
+		    auto_reboot=n
+		fi
 	    else
-		printf "No kernel componented updated.  No reboot necessary.\n"
-		reboot_needed=n
+		if grep -q '^/boot' $fetch_output; then
+		    printf "Kernel componented updated.  Reboot manually as soon as possible.\n"
+		    auto_reboot=n
+		else
+		    printf "No kernel componented updated.  No reboot necessary.\n"
+		    auto_reboot=n
+		fi
 	    fi
 	    rm -f $fetch_output $install_output
     
@@ -801,7 +811,7 @@ printf "Enter hostname:/path for the mirror: "
 read mirror
 printf "$mirror\n" > CVS/Root
 
-            cat << EOM
+	    cat << EOM
 
 Opening $PORTSDIR/CVS/Root using $EDITOR for verification.
 
@@ -988,7 +998,7 @@ date
 #fi
 
 if [ 0$reboot_requested = 0y ]; then
-    if [ $reboot_needed = y ]; then
+    if [ $auto_reboot = y ]; then
 	if [ $mode = interactive ] || [ 0$pause = 0yes ]; then
 	    printf "Minutes to reboot? [2] "
 	    read minutes
