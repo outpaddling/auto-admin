@@ -1,13 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Disable file transfer commands.
 #       Useful on cluster head nodes.
 #       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
-#   2013?       Jason Bacon Begin
+#   2024-09-23  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

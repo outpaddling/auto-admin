@@ -1,13 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Search directories for files owned by a user and chown to
 #       a new user.
 #       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
-#   2019-02-05  Jason Bacon - UITS/CEAS - Systems Manager,EMS 974Begin
+#   2024-09-23  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

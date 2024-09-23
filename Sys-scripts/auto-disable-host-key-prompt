@@ -1,17 +1,36 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Disable prompt for unknown host key
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Disable prompt for unknown host key
+#       
 #   Arguments:
 #       1.  short hostname
 #       2.  long hostname
 #       3.  IP
 #       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
 #   2018-08-16  J Bacon     Begin
+#   2024-09-23  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

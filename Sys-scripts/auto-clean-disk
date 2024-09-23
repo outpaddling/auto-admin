@@ -1,5 +1,33 @@
 #!/bin/sh
 
+##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2024-09-23  Jason Bacon Add man page template and usage
+##########################################################################
+
 if [ `id -un` != 'root' ]; then
     printf "$0 must be run by root.\n"
     exit 1

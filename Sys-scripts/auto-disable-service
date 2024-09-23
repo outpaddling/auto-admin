@@ -1,12 +1,50 @@
 #!/bin/sh -e
 
-if [ $# != 1 ]; then
+##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2024-09-23  Jason Bacon Add man page template and usage
+##########################################################################
+
+usage()
+{
     if [ $(uname) = Darwin ]; then
 	printf "Usage: $0 plist-name[.plist]\n"
     else
 	printf "Usage: $0 rc.conf-name\n"
     fi
     exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
 fi
     
 case $(auto-ostype) in

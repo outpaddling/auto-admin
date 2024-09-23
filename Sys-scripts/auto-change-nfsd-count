@@ -1,12 +1,32 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Change NFSD count on a file server
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Change NFSD count on a file server
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
-#   2019-02-08  J Bacon     Begin
+#   2024-09-23  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
