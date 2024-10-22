@@ -15,35 +15,37 @@
 
 stop_service()
 {
+    # FIXME: Don't do OS checks inside functions.  Less confusing if
+    # OS separation is done in one place in each script.
     case $(auto-ostype) in
-        FreeBSD|NetBSD)
-            if auto-service-enabled $service; then
-	        printf "$service is enabled.\n"
-	        service $script stop
-            else
-	        printf "$service is not enabled.\n"
-	        service $script onestop
-            fi
-            # FIXME: Does not work for rpc.statd
-            if pkill $service; then
-	        printf "Killed rogue $service.\n"
-            fi
-            rm -f /var/run/$service.pid
-            return 0
-            ;;
+	FreeBSD|NetBSD)
+	    if auto-service-enabled $service; then
+		printf "$service is enabled.\n"
+		service $script stop
+	    else
+		printf "$service is not enabled.\n"
+		service $script onestop
+	    fi
+	    # FIXME: Does not work for rpc.statd
+	    if pkill $service; then
+		printf "Killed rogue $service.\n"
+	    fi
+	    rm -f /var/run/$service.pid
+	    return 0
+	    ;;
 
-        OpenBSD)
-            if auto-service-enabled $service; then
-                printf $service is enabled.\n
-                rcctl stop $script
-            else
-                printf "$service is not enabled.\n"
-                rcctl -f stop $script
-            fi
+	OpenBSD)
+	    if auto-service-enabled $service; then
+		printf $service is enabled.\n
+		rcctl stop $script
+	    else
+		printf "$service is not enabled.\n"
+		rcctl -f stop $script
+	    fi
 
-            return 0
-            ;;
-        
+	    return 0
+	    ;;
+	
     esac
 }
 
@@ -137,11 +139,11 @@ NetBSD)
 
 OpenBSD)
     if rcctl ls on | grep -q "${service}"; then
-        printf "$service already enabled, restarting.\n"
-        rcctl restart $service
-        exit 0
+	printf "$service already enabled, restarting.\n"
+	rcctl restart $service
+	exit 0
     else
-        rcctl enable $service
+	rcctl enable $service
     fi
 
     stop_service
