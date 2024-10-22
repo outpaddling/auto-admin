@@ -10,23 +10,41 @@
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
+#   2024-10-21  izzy Meyer  Start OpenBSD support
 ##########################################################################
 
 stop_service()
 {
-    if auto-service-enabled $service; then
-	printf "$service is enabled.\n"
-	service $script stop
-    else
-	printf "$service is not enabled.\n"
-	service $script onestop
-    fi
-    # FIXME: Does not work for rpc.statd
-    if pkill $service; then
-	printf "Killed rogue $service.\n"
-    fi
-    rm -f /var/run/$service.pid
-    return 0
+    case $(auto-ostype) in
+        FreeBSD|NetBSD)
+            if auto-service-enabled $service; then
+	        printf "$service is enabled.\n"
+	        service $script stop
+            else
+	        printf "$service is not enabled.\n"
+	        service $script onestop
+            fi
+            # FIXME: Does not work for rpc.statd
+            if pkill $service; then
+	        printf "Killed rogue $service.\n"
+            fi
+            rm -f /var/run/$service.pid
+            return 0
+            ;;
+
+        OpenBSD)
+            if auto-service-enabled $service; then
+                printf $service is enabled.\n
+                rcctl stop $script
+            else
+                printf "$service is not enabled.\n"
+                rcctl -f stop $script
+            fi
+
+            return 0
+            ;;
+        
+    esac
 }
 
 
@@ -114,6 +132,21 @@ NetBSD)
 	service $script restart
     else
 	printf "Warning: No service startup script found for $service.\n"
+    fi
+    ;;
+
+OpenBSD)
+    if rcctl ls on | grep -q "${service}"; then
+        printf "$service already enabled, restarting.\n"
+        rcctl restart $service
+        exit 0
+    else
+        rcctl enable $service
+    fi
+
+    stop_service
+    if [ -e /etc/rc.d/$script ]; then
+	rcctl restart $(basename $script)
     fi
     ;;
 

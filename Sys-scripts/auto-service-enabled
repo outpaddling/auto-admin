@@ -1,5 +1,17 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2024-10-21  izzy Meyer  Start OpenBSD support
+##########################################################################
+
 if [ $# != 1 ]; then
     printf "Usage: $0 rc.conf-name\n"
     exit 1
@@ -17,7 +29,13 @@ NetBSD)
     grep -q "^${service}=.*YES.*" /etc/rc.conf
     exit $?
     ;;
-    
+
+OpenBSD)
+    service=$1
+    rcctl ls on | grep -q "${service}"
+    exit $?
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1
