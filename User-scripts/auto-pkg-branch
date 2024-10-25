@@ -39,7 +39,7 @@ FreeBSD)
 	tmpfile=auto-pkg-branch-meta
 	rm -f $tmpfile
 	fetch -o $tmpfile \
-	    https://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/meta
+	    https://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/data.txz
 	
 	mod_time=$(ls -l -D '%Y-%m' $tmpfile | awk '{ print $6 }')
 	rm -f $tmpfile
