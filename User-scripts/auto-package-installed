@@ -69,12 +69,28 @@ FreeBSD)
 *)
     # pkg_info is very similar on OpenBSD ports and pkgsrc
     if auto-using-pkgsrc || [ $(uname) = OpenBSD ]; then
-	major_name=${name%-*}
-	if pkg_info ${name} > /dev/null 2>&1; then
+        major_name=${name%-*}
+        if [ $(uname) = OpenBSD ]; then
+            is_installed() {
+                pkg_info "$1" | grep -q "^Information for inst:$1"
+            }
+            get_version() {
+                pkg_info "$1" | grep "^Information for inst:" | awk '{print $NF}' | cut -d'-' -f2-
+            }
+        else
+            is_installed() {
+                pkg_info -e "$1" >/dev/null 2>&1
+            }
+            get_version() {
+                pkg_info -e "$1" | awk -F '-' '{print $NF}'
+            }
+        fi
+
+	if is_installed "${name}"; then
 	    printf "$major_name is installed.\n"
 	    exit 0;
-	elif pkg_info $major_name > /dev/null 2>&1; then
-	    version=`pkg_info $major_name | awk -F '[ :]' '$1 == "Information" { print $3 }'`
+	elif is_installed "$major_name"; then
+	    version=$(get_version "$major_name")
 	    installed="$major_name-$version"
 	    if [ $installed != $name ]; then
 		printf "$installed is installed (your pkgsrc tree contains $name).\n"
