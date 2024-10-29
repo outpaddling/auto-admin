@@ -80,6 +80,23 @@ else
 	    exit 1;
 	fi
 	;;
+
+    OpenBSD)
+        major_name=${name%-*}
+        if pkg_info ${name} | grep -q "^Information for inst:${name}" > /dev/null 2>&1; then
+            printf "$name is installed.\n"
+            exit 0;
+        elif pkg_info $major_name | grep -q "^Information for inst:${major_name}" > /dev/null 2>&1; then
+            version=$(pkg_info $major_name | grep "^Information for inst:" | awk '{print $NF}' | cut -d'-' -f2-)
+            installed="$major_name-$version"
+            if [ $installed != $name ]; then
+                printf "$installed is installed (your ports tree contains $name).\n"
+            fi
+        else
+            printf "$major_name is not installed.\n"
+            exit 1;
+        fi
+        ;;
     
     *)
 	printf "No FreeBSD ports or pkgsrc found.\n"
