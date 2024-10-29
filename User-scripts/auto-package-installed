@@ -46,47 +46,45 @@ elif [ `echo $port | awk -F / ' { print NF }'` = 1 ]; then
 else
     usage
 fi
-    
-case $(auto-ostype) in
-FreeBSD)
-    
+
+if auto-using-pkgsrc; then
     major_name=${name%-*}
-    if pkg info ${name} > /dev/null 2>&1; then
-	printf "$name is installed.\n"
+    if pkg_info ${name} > /dev/null 2>&1; then
+	printf "$major_name is installed.\n"
 	exit 0;
-    elif pkg info $major_name > /dev/null 2>&1; then
-	version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
+    elif pkg_info $major_name > /dev/null 2>&1; then
+	version=`pkg_info $major_name | awk -F '[ :]' '$1 == "Information" { print $3 }'`
 	installed="$major_name-$version"
 	if [ $installed != $name ]; then
-	    printf "$installed is installed (your ports tree contains $name).\n"
+	    printf "$installed is installed (your pkgsrc tree contains $name).\n"
 	fi
     else
 	printf "$major_name is not installed.\n"
 	exit 1;
     fi
-    ;;
-
-*)
-    # pkg_info is very similar on OpenBSD ports and pkgsrc
-    if auto-using-pkgsrc || [ $(uname) = OpenBSD ]; then
+else
+    case $(auto-ostype) in
+    FreeBSD)
 	major_name=${name%-*}
-	if pkg_info ${name} > /dev/null 2>&1; then
-	    printf "$major_name is installed.\n"
+	if pkg info ${name} > /dev/null 2>&1; then
+	    printf "$name is installed.\n"
 	    exit 0;
-	elif pkg_info $major_name > /dev/null 2>&1; then
-	    version=`pkg_info $major_name | awk -F '[ :]' '$1 == "Information" { print $3 }'`
+	elif pkg info $major_name > /dev/null 2>&1; then
+	    version=`pkg info $major_name | awk '$1 == "Version" { print $3 }'`
 	    installed="$major_name-$version"
 	    if [ $installed != $name ]; then
-		printf "$installed is installed (your pkgsrc tree contains $name).\n"
+		printf "$installed is installed (your ports tree contains $name).\n"
 	    fi
 	else
 	    printf "$major_name is not installed.\n"
 	    exit 1;
 	fi
-    else
+	;;
+    
+    *)
 	printf "No FreeBSD ports or pkgsrc found.\n"
 	exit 1
-    fi
-    ;;
-
-esac
+	;;
+    
+    esac
+fi
