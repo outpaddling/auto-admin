@@ -57,10 +57,10 @@ EOM
 ##########################################################################
 
 if [ $# = 1 ] && [ $1 = '--list' ]; then
-    if [ $(auto-ostype) = FreeBSD ]; then
-	prefix=$(auto-localbase)
-    elif $(auto-using-pkgsrc); then
+    if $(auto-using-pkgsrc); then
 	prefix=$(auto-pkgsrc-prefix)
+    elif [ $(auto-ostype) = FreeBSD ]; then
+	prefix=$(auto-localbase)
     else
 	printf "$0: Cannot determine install prefix.\n"
 	exit 1

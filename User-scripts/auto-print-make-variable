@@ -23,14 +23,15 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $(auto-ostype) = NetBSD ]; then
+if auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
     make=$(auto-pkgsrc-make)
     port_or_package=package
     base_dir=`auto-pkgsrc-dir`
-elif auto-using-pkgsrc && [ -e $(auto-pkgsrc-prefix)/bin/bmake ]; then
-    make=$(auto-pkgsrc-make)
-    port_or_package=package
-    base_dir=`auto-pkgsrc-dir`
+# FIXME: Make sure this is redundant to auto-using-pkgsrc and remove it
+#elif [ $(auto-ostype) = NetBSD ]; then
+#    make=$(auto-pkgsrc-make)
+#    port_or_package=package
+#    base_dir=`auto-pkgsrc-dir`
 else
     make=make
     port_or_package=port

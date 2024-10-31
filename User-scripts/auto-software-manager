@@ -95,7 +95,7 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 6.. Install port/package from source
 7.. Tag a port/package for installation from source
 8.. Tag a binary package as critical
-9.. Upgrade all ports/packages
+9.. Upgrade all pkgsrc packages
 10. Switch from quarterly to latest packages
 11. Upgrade the base system
 Q.. Quit
