@@ -22,12 +22,14 @@ Flags:
 -p  Use provided PORTSDIR
 -s  Build and install from source not binary package
 -f  As above if binary package is not found
+-U	Do not update packages repository
 
 Environment:
 
 AUTO_BUILD_FROM_SOURCE=yes  Build and install from source not binary package
 AUTO_BUILD_FROM_SOURCE=fall-back    As above if binary install fails
 AUTO_BUILD_NO_CONFIG=yes    Skip config menu (previous user settings apply)
+SKIP_REPO_UPDATE=yes		Skip packages repository update
 AUTO_PACKAGEROOT=URL        Mirror for binary packages
 
 EOM
@@ -101,6 +103,9 @@ DragonFly|FreeBSD)
 	elif [ 0$1 = 0'-n' ]; then
 	    AUTO_BUILD_NO_CONFIG=yes
 	    shift
+	elif [ 0$1 = 0'-U' ]; then
+	    SKIP_REPO_UPDATE=yes
+	    shift
 	else
 	    extra_args="$extra_args $1"
 	    shift
@@ -165,6 +170,9 @@ DragonFly|FreeBSD)
 		unset PACKAGESITE
 		unset PACKAGEROOT
 		pkg_args='install -y'
+		if [ 0$SKIP_REPO_UPDATE = 0yes ]; then
+			pkg_args="$pkg_args -U"
+		fi
 		printf "pkg $pkg_args $extra_args $pkg_name\n"
     
 		# Compensate for network hiccups by retrying
