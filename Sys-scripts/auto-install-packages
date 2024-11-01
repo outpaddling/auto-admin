@@ -17,11 +17,14 @@ Usage: $0 [-l] [-n] [-p PORTSDIR] [-s] [pkg-args] category/port [category/port .
 
 Flags:
 
--l  Use latest package name
--n  Skip config menu (previous user settings apply)
--p  Use provided PORTSDIR
--s  Build and install from source not binary package
--f  As above if binary package is not found
+# FIXME: -f and -n conflict with pkg install
+-l, --latest            Use latest package name
+-n, --no-config-menu    Skip config menu (previous user settings apply)
+-p, --portsdir dir      Use provided PORTSDIR
+-s, --source            Build and install from source, not binary package
+-f, --fallback-source   As above if binary package is not found
+
+* All other flags are passed on to the underlying package install command.
 
 Environment:
 
@@ -85,20 +88,20 @@ DragonFly|FreeBSD)
 	auto-ports-checkout
     fi
     while [ 0$(printf "%s" $1 | cut -c 1,1) = 0'-' ]; do
-	if [ 0$1 = 0'-l' ]; then
+	if [ 0$1 = 0-l ] || [ 0$1 = 0--latest ]; then
 	    latest_package_name=1
 	    shift
-	elif [ 0$1 = 0'-p' ]; then
+	elif [ 0$1 = 0-p ] || [ 0$1 = 0--portsdir ]; then
 	    PORTSDIR=$2
 	    shift
 	    shift
-	elif [ 0$1 = 0'-s' ]; then
+	elif [ 0$1 = 0-s ] || [ 0$1 = 0--source ]; then
 	    AUTO_BUILD_FROM_SOURCE=yes
 	    shift
-	elif [ 0$1 = 0'-f' ]; then
+	elif [ 0$1 = 0-f ] || [ 0$1 = 0--fallback-source ]; then
 	    AUTO_BUILD_FROM_SOURCE=fall-back
 	    shift
-	elif [ 0$1 = 0'-n' ]; then
+	elif [ 0$1 = 0-n ] || [ 0$1 = 0--no-config-menu ]; then
 	    AUTO_BUILD_NO_CONFIG=yes
 	    shift
 	else
