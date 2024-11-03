@@ -32,23 +32,26 @@ FreeBSD)
     elif awk '$1 == "url:" { print $2 }' /etc/pkg/*.conf | fgrep -q latest; then
 	printf "latest\n"
     else
-	# meta should be time stamped with the latest update
-	# to the package repo
-	major=$(uname -r | cut -d . -f 1)
-	arch=$(uname -p)
-	tmpfile=auto-pkg-branch-meta
-	rm -f $tmpfile
-	fetch -o $tmpfile \
-	    https://pkg.freebsd.org/FreeBSD:$major:$arch/quarterly/data.txz
+	# Determine latest branch that *should* exist based on today's date
+	year=$(date +%Y)                # E.g. 2024
+	month=$(date +%m)               # E.g. 11
+	quarter=$(($month / 3 + 1))     # 11 / 3 + 1 = 4
+	branch=${year}Q$quarter         # 2024Q4
 	
-	mod_time=$(ls -l -D '%Y-%m' $tmpfile | awk '{ print $6 }')
-	rm -f $tmpfile
-	year=$(echo $mod_time | cut -d - -f 1)
-	# leading 0 means octal, invalid for 8 and 9
-	padded_month=$(echo $mod_time | cut -d - -f 2)
-	month=${padded_month#0}
-	quarter=$((($month - 1) / 3 + 1))
-	branch=${year}Q$quarter
+	# Branch may not happen immediately at midnight of Jan, April,
+	# Jul, Oct 1, so check for existence of the ports branch and
+	# back up 1 quarter if it's not there yet.
+	# Note: We assume that the new quarterly package repo is created
+	# at the same moment as the ports branch.
+	while ! git ls-remote --branches https://git.freebsd.org/ports.git | grep -q "/$branch$"; do
+	    if [ $quarter = 1 ]; then
+		year=$(($year - 1))
+		quarter=4
+	    else
+		quarter=$(($quarter - 1))
+	    fi
+	    branch=${year}Q$quarter
+	done
 	
 	printf "$branch\n"
     fi
