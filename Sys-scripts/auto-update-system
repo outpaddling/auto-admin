@@ -180,6 +180,21 @@ EOM
 
 
 ##########################################################################
+#   History:
+#   Date        Name        Modification
+#   2024-11-06  Jason Bacon Begin
+##########################################################################
+
+reboot_advice()
+{
+    printf "No kernel componented updated.  Reboot probably not necessary.\n"
+    printf "It may be wise to reboot anyway, or at least restart X11\Wayland.\n"
+    printf "Updates to Xorg/Wayland may require them to be restarted to avoid problems.\n"
+    return 0
+}
+
+
+##########################################################################
 #   Function description:
 #       Record the last time of a full system update in hours since
 #       the epoch
@@ -733,7 +748,7 @@ EOM
 		    printf "Kernel componented updated.  System will reboot.\n"
 		    auto_reboot=y
 		else
-		    printf "No kernel componented updated.  No reboot necessary.\n"
+		    reboot_advice
 		    auto_reboot=n
 		fi
 	    else
@@ -741,7 +756,7 @@ EOM
 		    printf "Kernel componented updated.  Reboot manually as soon as possible.\n"
 		    auto_reboot=n
 		else
-		    printf "No kernel componented updated.  No reboot necessary.\n"
+		    reboot_advice
 		    auto_reboot=n
 		fi
 	    fi
