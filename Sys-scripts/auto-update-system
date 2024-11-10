@@ -822,9 +822,9 @@ https://www.openbsd.org/anoncvs.html#CVSROOT
 
 EOM
 
-printf "Enter hostname:/path for the mirror: "
+printf "Enter hostname:/path for the mirror, e.g. obsdacvs.cs.toronto.edu:/cvs: "
 read mirror
-printf "$mirror\n" > CVS/Root
+printf "anoncvs@$mirror\n" > CVS/Root
 
 	    cat << EOM
 
