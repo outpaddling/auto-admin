@@ -40,6 +40,10 @@ usage()
 ##########################################################################
 #   Main
 ##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
     
 case $(auto-ostype) in
 RHEL)
@@ -71,10 +75,6 @@ RHEL)
     if ! lspci | fgrep -i nvidia; then  
 	printf "No nVidia GPUs found.\n"
 	exit 1
-    fi
-    
-    if [ $# != 1 ]; then
-	usage
     fi
     
     # Enable EPEL repository to supply libvdpau and dkms

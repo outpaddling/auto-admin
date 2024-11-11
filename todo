@@ -1,4 +1,6 @@
 
+Change all usage exits to 64 # sysexits.h
+
 auto-pkgsrc-setup
     Check for BSD compatibility in echo (fails on Ubuntu)
 	Set sh to /bin/bash

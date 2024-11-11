@@ -1,15 +1,41 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Set an auto-logout time limit globally
-#   
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-06  J Bacon     Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
+##########################################################################
+
+##########################################################################
 #   FIXME:
 #       Add support for additional shells if present
 #
 #   History:
 #   Date        Name        Modification
-#   2014-05-06  root        Begin
 ##########################################################################
 
 usage()

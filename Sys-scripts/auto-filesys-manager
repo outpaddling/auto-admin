@@ -1,12 +1,32 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-admin
 #       
@@ -12,6 +18,12 @@
 #       
 #   Returns:
 #       0 upon successful exit, non-zero if certain commands failed
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
 #
 #   See also:
 #       auto-update-system(1), auto-user-admin(1),

@@ -1,5 +1,48 @@
 #!/bin/sh
 
+##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2024-11-11  Jason Bacon Add man page template and usage
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
 # Prevent discovery of last boot time
 case $(auto-ostype) in
 FreeBSD)
@@ -16,4 +59,3 @@ RHEL)
     ;;
 
 esac
-

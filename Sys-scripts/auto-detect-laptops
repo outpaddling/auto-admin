@@ -36,6 +36,21 @@ pause()
     read junk
 }
 
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
 case $(auto-ostype) in
 FreeBSD)
     mkdir -p /etc/X11/xorg.conf.d

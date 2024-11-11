@@ -1,13 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Search directories for files owned by a particular user and
 #       group and change the group ownership.
 #       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
-#   2015-05-21  Jason Bacon - UITS/CEAS - Systems Manager,EMS 974Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

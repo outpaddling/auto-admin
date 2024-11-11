@@ -1,20 +1,37 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Change the gid of an existing group.
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Change the gid of an existing group.
+#       
 #   Arguments:
 #       1)  Group name
 #           DragonFly|FreeBSD pw accepts group name or gid, but we require name
 #           here to simplify the Linux groupmod interface.
 #       2)  New gid (numeric)
-#
+#       
 #   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
-#   2017-04-03  Charlie &   Begin
+#   2017-04-03  J Bacon     Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

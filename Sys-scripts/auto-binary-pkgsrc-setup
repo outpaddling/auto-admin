@@ -1,14 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Install a pkgsrc tree from binary bootstrap kit
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Install a pkgsrc tree from binary bootstrap kit
+#       
 #   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
 #   2018-07-05  root        Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

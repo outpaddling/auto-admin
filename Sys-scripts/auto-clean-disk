@@ -28,9 +28,24 @@
 #   2024-09-23  Jason Bacon Add man page template and usage
 ##########################################################################
 
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
 if [ `id -un` != 'root' ]; then
     printf "$0 must be run by root.\n"
     exit 1
+fi
+
+if [ $# != 0 ]; then
+    usage
 fi
 
 case `auto-ostype` in

@@ -1,16 +1,35 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Create a new group
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Create a new group
+#       
 #   Arguments:
 #       [-g gid]
 #       groupname
 #       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
 #   2018-11-09  J Bacon     Begin
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

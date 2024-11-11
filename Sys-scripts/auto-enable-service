@@ -1,18 +1,35 @@
 #!/bin/sh -e
-    
+
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       
 #   Arguments:
 #       
 #   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
 #   2024-10-21  izzy Meyer  Start OpenBSD support
+#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
-
+    
 stop_service()
 {
     # FIXME: Don't do OS checks inside functions.  Less confusing if
@@ -50,17 +67,8 @@ stop_service()
 }
 
 
-##########################################################################
-#   Main
-##########################################################################
-
-if [ $# = 4 ] && [ $1 = '-s' ]; then
-    script=$2
-    shift
-    shift
-elif [ $# = 2 ]; then
-    script=$1
-else
+usage()
+{
     # FIXME: Tailor usage message to OS.  Currently BSD-centric.
     cat << EOM
 
@@ -80,6 +88,20 @@ and /Library/LaunchDaemons are checked.
 EOM
     
     exit 1
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# = 4 ] && [ $1 = '-s' ]; then
+    script=$2
+    shift
+    shift
+elif [ $# = 2 ]; then
+    script=$1
+else
+    usage
 fi
 service=$1
 caller=$2
