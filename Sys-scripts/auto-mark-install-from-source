@@ -87,8 +87,8 @@ reason=$2
 when=$3
 
 case $(auto-ostype) in
-DragonFly|FreeBSD)
-    if [ $(auto-ostype) = FreeBSD ]; then
+DragonFly|FreeBSD|OpenBSD)
+    if [ $(auto-ostype) = FreeBSD ] || [ $(auto-ostype) = OpenBSD ]; then
 	: ${PORTSDIR:=/usr/ports}
     else
 	: ${PORTSDIR:=/usr/dports}

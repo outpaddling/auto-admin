@@ -838,6 +838,13 @@ EOM
 	fi
 	printf "Updating repository...\n"
 	cvs -q up -dP
+	
+	if [ -e $PORTSDIR/openbsd-wip ]; then
+	    if ! which git; then
+		pkg_add git
+	    fi
+	    (cd $PORTSDIR/openbsd-wip && git pull)
+	fi
     fi
     
     # Base system
