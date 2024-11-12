@@ -1,6 +1,39 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Set up some basic security measures.  This is by no means enough
+#       but will block most naive hacking attempts.
+#
+#       http://wiki.centos.org/HowTos/OS_Protection
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-22  J Bacon     Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
+##########################################################################
+
+##########################################################################
 #   Function description:
 #       Pause until user presses return
 ##########################################################################
@@ -12,19 +45,6 @@ pause()
     printf 'Press return to continue...'
     read junk
 }
-
-
-##########################################################################
-#   Script description:
-#       Set up some basic security measures.  This is by no means enough
-#       but will block most naive hacking attempts.
-#
-#       http://wiki.centos.org/HowTos/OS_Protection
-#       
-#   History:
-#   Date        Name        Modification
-#   2014-11-22  root        Begin
-##########################################################################
 
 usage()
 {
