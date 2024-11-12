@@ -1,15 +1,35 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Configure a FreeBSD or RHEL server to use KRB for sshd auth.
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Configure a FreeBSD or RHEL server to use KRB for sshd auth.
+#       
 #   Arguments:
 #       KRB server ( may be an AD server )
+#       
+#   Returns:
 #
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
-#   2018-05-14  Jason Bacon Begin
+#   2017?       Shawn Kwang Initial RHEL implementation
+#   2018-05-14  Jason Bacon FreeBSD support
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -37,7 +57,6 @@ server=$1
 
 case $(auto-ostype) in
 RHEL)
-    # Shawn Kwang
     yum -t install krb5-workstation pam_krb5 openldap-clients
     authconfig --enablekrb5 --krb5kdc=$server --krb5adminserver=$server \
 	--krb5realm=$server --update

@@ -1,12 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Check remote server status using IPMI
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
 #   2020-02-02  Jason Bacon Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

@@ -1,12 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Install ports/packages either from binary or source
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
 #       
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

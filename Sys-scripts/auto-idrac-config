@@ -1,21 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Configure idrac for standard cluster-admin IP scheme
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Configure idrac for standard cluster-admin IP scheme
+#       
 #   Arguments:
 #       shared: For idrac with shared interface
 #       dedicated: For idrac with dedicated interface
 #       (Most use a shared interface)
+#       
+#   Returns:
 #
-#   FIXME:
-#       Factor out an auto-idrac-config script to set any network
-#       parameters and call it from here.
+#   Examples:
 #
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
 #   2016-08-24  J Bacon     Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
+##########################################################################
+
+##########################################################################
+#   FIXME:
+#       Factor out an auto-idrac-config script to set any network
+#       parameters and call it from here.
 ##########################################################################
 
 usage()

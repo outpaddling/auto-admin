@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       
 #   Description:
@@ -20,6 +26,7 @@
 #   History:
 #   Date        Name        Modification
 #   2021-09-23  Jason Bacon Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

@@ -1,12 +1,33 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Set up linux_base on a FreeBSD system
+#   Title:
+#       Optional, defaults to the name of the script sans extention
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
+#       Set up linux_base on a FreeBSD system
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
 #   2018-08-27  J Bacon     Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

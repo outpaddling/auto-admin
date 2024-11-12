@@ -1,15 +1,29 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-last-update
-#
+#       
 #   Description:
 #       Prints the time in hours since the last successful run of
 #       auto-update-system.
+#       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
 #
 #   Files:
 #       $(auto-localbase)/etc/auto-admin/last-update
+#
+#   Environment:
 #
 #   See also:
 #       auto-update-system(1)
@@ -17,6 +31,7 @@
 #   History:
 #   Date        Name        Modification
 #   2021-12-15  J Bacon     Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -43,4 +58,3 @@ if [ -e $sys_update_file ]; then
 else
     printf "unknown\n"
 fi
-

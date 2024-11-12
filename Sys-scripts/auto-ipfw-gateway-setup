@@ -1,14 +1,35 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       
+#   Description:
 #       Set up local system as a NAT gateway
 #       FIXME: Generalize name and support multiple firewalls
 #       FIXME: Detect LAN network and mask
 #       
+#   Arguments:
+#       
+#   Returns:
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       
 #   History:
 #   Date        Name        Modification
 #   2011-07-24  Jason Bacon Begin
+#   2024-11-12  Jason Bacon Add man page template and usage
 ##########################################################################
 
 pause()
@@ -17,15 +38,20 @@ pause()
     read junk
 }
 
+usage()
+{
+    printf "Usage: $0 public-interface local-interface\n"
+    printf "    Example: $0 bce0 bce1\n"
+    exit 64     # sysexits EX_USAGE
+}
+
 
 ##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# != 2 ]; then
-    printf "Usage: $0 public-interface local-interface\n"
-    printf "    Example: $0 bce0 bce1\n"
-    exit 1
+    usage
 fi
     
 case $(auto-ostype) in
