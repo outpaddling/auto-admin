@@ -57,7 +57,11 @@ FreeBSD)
     if dmidecode | grep -iq macbook; then
 	printf "$0: MacBook\n"
 	# https://wiki.freebsd.org/AppleMacbook
-	auto-set-conf-var atp_load '"YES"' /boot/loader.conf $0
+	# atp(4) does not work on my MacBook Pro 8,3 (dmidecode)
+	# It also appears to be unmaintained (PRs open for years)
+	# wsp(4) works flawlessly
+	# auto-set-conf-var atp_load '"YES"' /boot/loader.conf $0
+	auto-set-conf-var wsp_load '"YES"' /boot/loader.conf $0
 	auto-set-conf-var acpi_video_load '"YES"' /boot/loader.conf $0
 	auto-set-conf-var asmc_load '"YES"' /boot/loader.conf $0
 	
