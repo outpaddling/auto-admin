@@ -57,7 +57,7 @@ LOCALBASE   ?= ${PREFIX}
 
 # Allow caller to override either MANPREFIX or MANDIR
 MANPREFIX   ?= ${PREFIX}
-MANDIR      ?= ${MANPREFIX}/man
+MANDIR      ?= ${MANPREFIX}/share/man
 DATADIR     ?= ${PREFIX}/share/auto-admin
 
 ############################################################################
