@@ -1,0 +1,69 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-change-login-class username|uid new-login-class
+#       
+#   Description:
+#       .B auto-change-login-class
+#       modifies the login class os a user on systems that support the
+#       login class concept, such as FreeBSD, NetBSD, and OpenBSD.
+#       Some non-BSD platforms may not have a concept of login classes.
+#       
+#   Arguments:
+#       username|uid    Text username or numeric user ID of the user
+#       new-login-class Name of a login class in, e.g., /etc/login.conf
+#       
+#   Returns:
+#       0 on success, non-zero error codes on failure
+#
+#   Examples:
+#       auto-set-login-class joe staff
+#       auto-set-login-class erin default
+#
+#   Files:
+#       /etc/login.conf
+#
+#   See also:
+#       login.conf(5), pw(8), usermod(8)
+#       
+#   History:
+#   Date        Name        Modification
+#   2024-11-29  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username|uid new-login-class\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+user=$1
+class=$2
+
+# 
+case $(auto-ostype) in
+FreeBSD)
+    pw usermod -n $user -L $class
+    ;;
+
+NetBSD|OpenBSD)
+    usermod -L $class $user
+    ;;
+    
+*)
+    auto-unsupported-os $0
+    ;;
+esac
