@@ -195,7 +195,6 @@ EOM
 		fi
 	    fi
 	done
-	grep $username /etc/*passwd
 	;;
     
     8)
