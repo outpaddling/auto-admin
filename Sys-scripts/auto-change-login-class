@@ -53,14 +53,14 @@ fi
 user=$1
 class=$2
 
-# 
+# Class could be blank
 case $(auto-ostype) in
-FreeBSD)
-    pw usermod -n $user -L $class
+DragonFly|FreeBSD)
+    pw usermod -n $user -L "$class"
     ;;
 
 NetBSD|OpenBSD)
-    usermod -L $class $user
+    usermod -L "$class" $user
     ;;
     
 *)

@@ -443,3 +443,27 @@ printf "Adding user $user_name...\n"
 
 auto-useradd $useradd_flags \
     $user_name $uid $primary_group $gid "$gecos" $shell $agroup_flags
+
+case $(auto-ostype) in
+DragonFly|FreeBSD|NetBSD|OpenBSD)
+    status=1
+    set +e
+    while [ $status != 0 ]; do
+	cat << EOM
+
+On BSD systems, the login class determines the user's resource limits
+and authentication options.  On OpenBSD, there are some performance
+benefits to being a member of the "staff" class rather than the
+default class.  See login.conf(5) for details.
+
+EOM
+	printf "Login class for $user_name? [default] "
+	read login_class
+	if [ -z "$login_class" ]; then
+	    status=0
+	else
+	    auto-change-login-class $user_name $login_class
+	    status=$?
+	fi
+    done
+esac

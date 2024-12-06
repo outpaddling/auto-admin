@@ -80,8 +80,9 @@ do
 4.. Change user's primary UID
 5.. Change user's primary group
 6.. Change group's GID
-7.. Lock user account
-8.. Unlock user account
+7.. Change user's login class (BSD systems)
+8.. Lock user account
+9.. Unlock user account
 Q.. Quit
 
 EOM
@@ -173,6 +174,31 @@ EOM
 	;;
     
     7)
+	status=1
+	while [ $status != 0 ]; do
+	    printf "Username? "
+	    read username
+	    if [ ! -z $username ]; then
+		printf "Enter login class 'none' for no login class.\n"
+		printf "New login class? [no change] "
+		read new_class
+		if [ -z $new_class ]; then
+		    status=0
+		else
+		    if [ $new_class = none ]; then
+			new_class=''
+		    fi
+		    set +e
+		    auto-change-login-class $username "$new_class"
+		    status=$?
+		    set -e
+		fi
+	    fi
+	done
+	grep $username /etc/*passwd
+	;;
+    
+    8)
 	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
 	printf "Current users:\n\n$users\n\n"
 	printf "Username? "
@@ -182,7 +208,7 @@ EOM
 	fi
 	;;
     
-    8)
+    9)
 	users=$(awk -F : '$0 !~ "^#" { print $1 }' /etc/passwd | tr '\n' ' ')
 	printf "Current users:\n\n$users\n\n"
 	printf "Username? "
