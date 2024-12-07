@@ -1,12 +1,28 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Manage users
+#   Section:
+#       8
 #
+#   Synopsis:
+#       auto-user-admin
+#       
+#   Description:
+#       auto-user-admin is a terminal-based menu for user management
+#       tasks performed by auto-admin(8).
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes on failures
+#
+#   See also:
+#       auto-admin(8)
+#       
 #   History:
 #   Date        Name        Modification
-#   2019-06-04  J Bacon     Begin
+#   2024-12-07  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
