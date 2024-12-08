@@ -1,4 +1,8 @@
 
+auto-detect-laptops:
+    Add Xorg config for MacBook keyboards and other configs
+    https://wiki.freebsd.org/AppleMacbook
+    
 Change all usage exits to 64 # sysexits.h
 
 auto-pkgsrc-setup
