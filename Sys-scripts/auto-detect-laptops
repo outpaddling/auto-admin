@@ -118,6 +118,7 @@ EOM
     elif dmidecode | grep -iq thinkpad; then
 	printf "$0: IBM/Lenovo ThinkPad\n"
 	# bsdfan works with acpi_ibm to control fan speed based
+	# FIXME: Enable in rc.conf?
 	auto-set-conf-var acpi_ibm_load '"YES"' /boot/loader.conf $0
 	pkg install -y bsdfan
     elif dmidecode | grep -iq "Product name: Satellite"; then
