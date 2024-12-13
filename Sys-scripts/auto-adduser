@@ -399,13 +399,6 @@ OpenBSD)
     if [ 0$add = 0y ]; then
 	add_group _shutdown
     fi
-
-    printf "Add $user_name to staff group? [y]/n "
-    read add
-    if [ 0$add != 0n ]; then
-	add_group staff
-    fi
-    ;;
 esac
 
 group='x'
