@@ -366,25 +366,46 @@ fi
 # Some users may belong to multiple groups.  If so, add them here.
 case $(auto-ostype) in
 DragonFly|FreeBSD|NetBSD|OpenBSD)
-    printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
-    read add
-    if [ 0$add = 0y ]; then
-	add_group operator
-    fi
-
     printf "Add $user_name to wheel group to allow su and access to system files? y/[n] "
     read add
     if [ 0$add = 0y ]; then
 	add_group wheel
     fi
-    
-    if [ $(auto-ostype) = FreeBSD ]; then
-	printf "Add $user_name to video group for optimal graphics performance? [y]/n "
-	read add
-	if [ 0$add != 0n ]; then
-	    add_group video
-	fi
+    ;;
+esac
+
+case $(auto-ostype) in
+FreeBSD|NetBSD)
+    printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
+    read add
+    if [ 0$add = 0y ]; then
+	add_group operator
     fi
+    ;;
+esac
+
+case $(auto-ostype) in
+FreeBSD)
+    printf "Add $user_name to video group for optimal graphics performance? [y]/n "
+    read add
+    if [ 0$add != 0n ]; then
+	add_group video
+    fi
+    ;;
+
+OpenBSD)
+    printf "Add $user_name to _shutdown group to allow shutdown, reboot, etc? y/[n] "
+    read add
+    if [ 0$add = 0y ]; then
+	add_group _shutdown
+    fi
+
+    printf "Add $user_name to staff group? [y]/n "
+    read add
+    if [ 0$add != 0n ]; then
+	add_group staff
+    fi
+    ;;
 esac
 
 group='x'
