@@ -36,8 +36,8 @@ DragonFly|FreeBSD)
     pw groupmod $group_name -d $user_name
     ;;
 
-NetBSD)
-    printf "NetBSD lacks a commend for removing a user from a group.\n"
+NetBSD|OpenBSD)
+    printf "$(auto-ostype) lacks a command for removing a user from a group.\n"
     printf "Edit /etc/group manually.\n"
     ;;
 
