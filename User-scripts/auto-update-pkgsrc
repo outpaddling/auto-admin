@@ -385,7 +385,8 @@ if [ -n "$src_update" ]; then
 	# and their dependencies.  Dependencies first.
 	# cwrappers, openssl deps for pkg_install
 	for pkg in pkgtools/cwrappers security/openssl \
-		   pkgtools/pkg_install pkgtools/bootstrap-mk-files; do
+		   pkgtools/pkg_install pkgtools/bootstrap-mk-files \
+		   devel/bmake; do
 	    if installed_up_to_date $pkg; then
 		printf "\n**** Running make replace for $pkg...\n"
 		cd $PKGSRCDIR/$pkg
