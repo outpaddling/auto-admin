@@ -35,8 +35,12 @@ update_on_boot()
     cat << EOM > $rc_dir/$update_script
 #!/bin/sh -e
 
-/usr/sbin/freebsd-update install
-/usr/sbin/pkg upgrade -y
+# Bugs in freebsd-update may cause non-critical failures.
+# Allow auto-update-system to run anyway, otherwise the system won't
+# function after major upgrades, where packages need to be reinstalled
+# for a new major OS version.
+/usr/sbin/freebsd-update install || true
+/usr/local/sbin/auto-update-system --defaults
 rm -f $rc_dir/$update_script
 
 EOM
