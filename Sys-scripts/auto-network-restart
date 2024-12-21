@@ -17,6 +17,11 @@ NetBSD)
     su -m root -c '/usr/sbin/service network restart'
     ;;
 
+OpenBSD)
+    # FIXME: Anything else?
+    sh /etc/netstart
+    ;;
+    
 RHEL)
     # FIXME: Anything else?
     su -m root -c '/usr/sbin/service network restart'

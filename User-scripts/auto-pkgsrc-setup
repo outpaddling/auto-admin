@@ -1114,10 +1114,10 @@ if ! echo \$PATH | fgrep -q "${prefix}/bin:"; then
 	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
     
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
-	alias man="man -m \$PKGSRC/man"
+	alias man="man -m \$PKGSRC/man:\$PKGSRC/share/man"
     else
 	if which manpath > /dev/null 2>&1; then
-	    MANPATH=\$PKGSRC/man:\$(manpath)
+	    MANPATH=\$PKGSRC/man:\$PKGSRC/share/man:\$(manpath)
 	    export MANPATH
 	fi
     fi
@@ -1139,10 +1139,10 @@ if ! echo \$PATH | fgrep -q "${prefix}/bin:"; then
     export PKGSRC
 
     if [ \$(uname) = 'NetBSD' ] || [ \$(uname) = 'SunOS' ]; then
-	alias man="man -m \$PKGSRC/man"
+	alias man="man -m \$PKGSRC/man:\$PKGSRC/share/man"
     else
 	if which manpath > /dev/null 2>&1; then
-	    MANPATH=\$PKGSRC/man:\$(manpath)
+	    MANPATH=\$PKGSRC/man:\$PKGSRC/share/man:\$(manpath)
 	    export MANPATH
 	fi
     fi
@@ -1170,11 +1170,11 @@ if ( \$status != 0 ) then
 	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
-	alias man "man -m \$PKGSRC/man"
+	alias man "man -m \$PKGSRC/man:\$PKGSRC/share/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
-	    setenv MANPATH \$PKGSRC/man:\`manpath\`
+	    setenv MANPATH \$PKGSRC/man:\$PKGSRC/share/man:\`manpath\`
 	endif
     endif
     
@@ -1192,11 +1192,11 @@ if ( \$status != 0 ) then
     setenv PKGSRC           $prefix
 
     if ( \`uname\` == 'NetBSD' || \`uname\` == 'SunOS' ) then
-	alias man "man -m \$PKGSRC/man"
+	alias man "man -m \$PKGSRC/man:\$PKGSRC/share/man"
     else
 	which manpath >& /dev/null
 	if ( \$status == 0 ) then
-	    setenv MANPATH \$PKGSRC/man:\`manpath\`
+	    setenv MANPATH \$PKGSRC/man:\$PKGSRC/share/man:\`manpath\`
 	endif
     endif
     
@@ -1305,7 +1305,7 @@ if ! echo \$PATH | fgrep -q "${prefix}/gcc$gcc/bin:"; then
     PATH=\$PKGSRC/gcc$gcc/bin:\$PATH
     export PATH
     # pkgsrc gcc man pages broken
-    # MANPATH=\$PKGSRC/gcc$gcc/man:\$PKGSRC/man:/usr/share/man
+    # MANPATH=\$PKGSRC/gcc$gcc/man:\$PKGSRC/man:\$PKGSRC/share/man:/usr/share/man
     # export MANPATH
     PKGSRC_GCC_INCLUDE=\$PKGSRC/gcc$gcc/include
     export PKGSRC_INCLUDE
@@ -1324,7 +1324,7 @@ if ( \$status != 0 ) then
     
     setenv PATH                 \$PKGSRC/gcc$gcc/bin:\$PATH
     # pkgsrc gcc man pages broken
-    # setenv MANPATH            \$PKGSRC/gcc$gcc/man:\$PKGSRC/man:/usr/share/man
+    # setenv MANPATH            \$PKGSRC/gcc$gcc/man:\$PKGSRC/man:\$PKGSRC/share/man:/usr/share/man
     setenv PKGSRC_GCC_INCLUDE   \$PKGSRC/gcc$gcc/include
     setenv PKGSRC_GCC_LIB       \$PKGSRC/gcc$gcc/lib
 endif

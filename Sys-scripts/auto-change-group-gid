@@ -132,7 +132,7 @@ DragonFly|FreeBSD)
     pw groupmod $group_name -g $new_gid
     ;;
 
-NetBSD|RHEL)
+NetBSD|OpenBSD|RHEL)
     groupmod -g $new_gid $group_name
     ;;
 

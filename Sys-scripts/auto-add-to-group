@@ -55,7 +55,7 @@ DragonFly|FreeBSD)
     pw groupmod $group_name -m $user_name
     ;;
 
-NetBSD)
+NetBSD|OpenBSD)
     usermod -G $group_name $user_name
     ;;
     

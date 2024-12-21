@@ -19,19 +19,12 @@
 #   Returns:
 #       0 upon successful exit, non-zero if certain commands failed
 #
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
-#
 #   See also:
 #       auto-update-system(1), auto-user-admin(1),
-#       auto-software-manager(1), auto-network-manager(1),
-#       auto-power-manager(1), auto-filesys-manager(1),
-#       auto-security-manager(1), auto-sys-manager(1),
-#       auto-services-manager(1)
 #       
+#   FIXME:  Write a script to auto-generate this man page with a SEE ALSO
+#           for all existing man pages.
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
