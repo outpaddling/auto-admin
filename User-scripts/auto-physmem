@@ -1,0 +1,61 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-physmem
+#
+#   Section:
+#       8
+#       
+#   Description:
+#       Report the total physical memory, in bytes.
+#       
+#   Arguments:
+#       None.
+#       
+#   Returns:
+#       0 on success, non-zero if OS is not yet supported.
+#
+#   Examples:
+#       #!/bin/sh -e
+#
+#       printf "%s MiB\n" $((`auto-physmem` / 1024 / 1024))
+#
+#   See also:
+#       sysctl(8), /proc/meminfo (Linux)
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-08-17  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+DragonFly|FreeBSD|NetBSD|OpenBSD|Darwin)
+    sysctl -n hw.physmem
+    ;;
+
+RHEL)
+    awk '$1 == "MemTotal:" { print $2 * 1024 }' /proc/meminfo
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
