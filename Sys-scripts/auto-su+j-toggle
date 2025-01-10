@@ -53,13 +53,25 @@ FreeBSD)
     cp -f /usr/local/share/auto-admin/local_early /etc/rc.d
     cp -f /usr/local/share/auto-admin/rc.local_early /etc
     
-    echo $fs_list
+    echo "fs list = " $fs_list
     df
     
     for fs in $fs_list; do
 	printf "Checking $fs...\n"
 	mount_opts="$(mount -t ufs | awk -v fs=$fs '($1 == fs) || ($3 == fs) { print $0 }')"
 	echo $mount_opts
+	
+	# If old .sujournal exists, tunefs will refuse to enable su+j
+	if [ $state = enable ] && [ -n "$mount_opts" ] && ! echo $mount_opts | fgrep journal; then
+	    if echo $fs | grep -q '/dev'; then
+		mount_point=$(awk -v dev=\$fs '\$1 == dev { print \$2 }' /etc/fstab)
+	    else
+		mount_point=$fs
+	    fi
+	    rm -f $mount_point/.sujournal
+	fi
+	
+	# If fs is read-only, tune it now
 	if [ -n "$mount_opts" ] && ! echo $mount_opts | fgrep read-only; then
 	    cat << EOM
 
@@ -69,6 +81,7 @@ Scheduling change for next reboot.
 EOM
 	    rc_list="$rc_list $fs"
 	else
+	    # If rw, schedule tuning for single-user mode of next reboot
 	    printf "Tuning $fs...\n"
 	    tunefs -j $state $fs
 	fi
@@ -82,11 +95,12 @@ EOM
 
 printf "Toggling soft-updates journals.  System will reboot automatically.\n"
 sleep 2
+set -x
 for fs in $rc_list; do
     tunefs -j $state \$fs
-    mount -u -o rw /
-    rm -f $rc_file
 done
+mount -u -o rw /
+rm -f $rc_file
 reboot
 EOM
     else
