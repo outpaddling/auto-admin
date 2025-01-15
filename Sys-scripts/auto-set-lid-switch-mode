@@ -1,5 +1,10 @@
 #!/bin/sh -e
-    
+
+if ! sysctl hw.acpi > /dev/null 2>&1; then
+    printf "$0: ACPI not supported on this architecture.\n" >> /dev/stderr
+    exit 1
+fi
+
 case $(auto-ostype) in
 FreeBSD)
     if [ $# != 1 ]; then

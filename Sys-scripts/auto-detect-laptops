@@ -54,7 +54,7 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     mkdir -p /etc/X11/xorg.conf.d
-    if dmidecode | grep -iq macbook; then
+    if dmidecode 2> /dev/null | grep -iq macbook; then
 	printf "$0: MacBook\n"
 	# https://wiki.freebsd.org/AppleMacbook
 	# atp(4) does not work on my MacBook Pro 8,3 (dmidecode)
@@ -115,13 +115,13 @@ Section "InputClass"
 EndSection
 EOM
 	chmod 644 /etc/X11/xorg.conf.d/macbook-xkb.conf
-    elif dmidecode | grep -iq thinkpad; then
+    elif dmidecode 2> /dev/null | grep -iq thinkpad; then
 	printf "$0: IBM/Lenovo ThinkPad\n"
 	# bsdfan works with acpi_ibm to control fan speed based
 	# FIXME: Enable in rc.conf?
 	auto-set-conf-var acpi_ibm_load '"YES"' /boot/loader.conf $0
 	pkg install -y bsdfan
-    elif dmidecode | grep -iq "Product name: Satellite"; then
+    elif dmidecode 2> /dev/null | grep -iq "Product name: Satellite"; then
 	printf "$0: Toshiba Satellite\n"
     fi
     ;;
