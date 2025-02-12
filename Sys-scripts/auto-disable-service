@@ -86,6 +86,7 @@ Darwin)
 	if ! launchctl bootout system $plist; then
 	    printf "Is $plist already disabled?\n" >> /dev/stderr
 	fi
+	rm -f $plist
     else
 	printf "$install_script not found.\n" >> /dev/stderr
     fi
