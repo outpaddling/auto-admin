@@ -84,6 +84,12 @@ NetBSD)
     # FIXME: Add automount -u to /etc/rc.suspend
     ;;
 
+RHEL)
+    yum install -y autofs nfs-utils
+    systemctl enable autofs
+    systemctl restart autofs
+    ;;
+    
 *)
     auto-unsupported-os $0
     exit 1
