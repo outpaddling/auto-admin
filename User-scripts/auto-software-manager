@@ -95,9 +95,6 @@ or browse the collection at https://www.freebsd.org/ports/index.html.
 6.. Install port/package from source
 7.. Tag a port/package for installation from source
 8.. Tag a binary package as critical
-9.. Upgrade all pkgsrc packages
-10. Switch from quarterly to latest packages
-11. Upgrade the base system
 Q.. Quit
 
 EOM
@@ -275,30 +272,6 @@ EOM
 		auto-mark-package-critical $package || true
 	    fi
 	fi
-	pause
-	;;
-    
-    9)
-	if auto-using-pkgsrc; then
-	    printf "This will update your pkgsrc tree and all installed packages.\n"
-	    printf "Proceed? y/[n] "
-	    read proceed
-	    if [ 0"$proceed" = 0y ]; then
-		auto-update-pkgsrc --defaults
-	    fi
-	else
-	    printf 'Not using pkgsrc.  Use "Update system" in the auto-admin main menu.\n'
-	fi
-	pause
-	;;
-	
-    10)
-	auto-pkg-latest
-	pause
-	;;
-    
-    11)
-	auto-upgrade-base
 	pause
 	;;
     

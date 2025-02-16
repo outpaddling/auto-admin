@@ -1,0 +1,123 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Manage software packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-27  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true
+do
+    clear
+    auto-admin-banner
+    cat << EOM
+
+1.. Update all system components
+2.. Upgrade all pkgsrc packages
+3.. Switch from quarterly to latest packages
+4.. Upgrade the base system
+Q.. Quit
+
+EOM
+
+    printf 'Selection? '
+    read $read_flags resp
+    case 0$resp in
+    01)
+	printf '\nThe following users are currently logged in:\n\n'
+	finger
+	printf '\nProceed with system updates? y/[n] '
+	read $read_flags proceed
+	if [ 0$proceed = 0y ]; then
+	    cat << EOM | wall
+
+This server may need to be rebooted shortly to complete the installation of
+important security updates.  An additional notice will follow if a reboot
+is necessary.
+
+EOM
+	    auto-update-system --defaults
+	    printf "Reboot? [y]/n "
+	    read reboot
+	    if [ 0$reboot != 0n ]; then
+		printf "Minutes before reboot? [2] "
+		read minutes
+		if [ 0$minutes = 0 ]; then
+		    minutes=2
+		fi
+		cat << EOM | wall
+
+This server will be rebooted shortly to complete the installation of
+important security updates.  It should be available again after about
+$((minutes + 5)) minutes.
+
+EOM
+		shutdown -r +$minutes
+	    fi
+	fi
+	;;
+    
+    02)
+	if auto-using-pkgsrc; then
+	    printf "This will update your pkgsrc tree and all installed packages.\n"
+	    printf "Proceed? y/[n] "
+	    read proceed
+	    if [ 0"$proceed" = 0y ]; then
+		auto-update-pkgsrc --defaults
+	    fi
+	else
+	    printf 'Not using pkgsrc.  Use "Update system" in the auto-admin main menu.\n'
+	fi
+	pause
+	;;
+	
+    03)
+	auto-pkg-latest
+	pause
+	;;
+    
+    04)
+	auto-upgrade-base
+	pause
+	;;
+
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+done
