@@ -98,11 +98,11 @@ functionality.  To see what else is available via the command-line, choose
 
 Full documentation is in the works and will be included in a future release.
 
-1.. Update management
-2.. User management
-3.. Software management
-4.. Network management
-5.. Power management
+1.. Update manager
+2.. User manager
+3.. Software manager
+4.. Network manager
+5.. Power manager
 6.. File system actions and settings
 7.. Security settings
 8.. System settings
