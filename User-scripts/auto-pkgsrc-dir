@@ -10,12 +10,15 @@
 #   2018?       Jason Bacon Begin
 ##########################################################################
 
+prefix=$(auto-pkgsrc-prefix)
 if [ -n "$PKGSRCDIR" ]; then
     # User-controlled
     dir="$PKGSRCDIR"
-elif [ -e "$(auto-pkgsrc-prefix)src" ]; then
+elif [ -e "${prefix}src" ]; then
     # Common practice to use /parent/pkgsrc with /parent/pkg
-    dir="$(auto-pkgsrc-prefix)src"
+    dir="${prefix}src"
+elif [ -e ${prefix%/pkg}/dreckly ]; then
+    dir="${prefix%/pkg}/dreckly"
 else
     # Default, replaced by $PKGSRCDIR in pkgsrc package
     # Binary packages built elsewhere may have a different source
