@@ -300,11 +300,15 @@ if [ 0$update_pkgsrc != 0n ]; then
 	# non-interactive mode
 	echo n | auto-clean-pkgsrc
 	
-	if ! which cvs; then
-	    (cd $PKGSRCDIR/devel/scmcvs && $make install)
-	fi
 	printf "\n**** Updating $PKGSRCDIR...\n"
-	(cd $PKGSRCDIR && $cvs -q update -dP) || true
+	if [ -e $PKGSRCDIR/CVS ]; then
+	    if ! which cvs; then
+		(cd $PKGSRCDIR/devel/scmcvs && $make install)
+	    fi
+	    (cd $PKGSRCDIR && $cvs -q update -dP) || true
+	elif [ -e $PKGSRCDIR/.git ]; then
+	    (cd $PKGSRCDIR && git pull -r) || true
+	fi
     fi
     if [ -e $PREFIX/bin/wip-update ]; then
 	$PREFIX/bin/wip-update
