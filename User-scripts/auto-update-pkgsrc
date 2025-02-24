@@ -169,7 +169,10 @@ if [ -z "$PREFIX" ]; then
     printf "$0: No active pkgsrc tree found.\n"
     exit 1
 fi
-PKGSRCDIR=$(auto-pkgsrc-dir)
+if [ -z "$PKGSRCDIR" ]; then
+    PKGSRCDIR=$(auto-pkgsrc-dir)
+    export PKGSRCDIR
+fi
 install_from_source=$PREFIX/etc/auto-admin/install-from-source
     
 if [ ! -t 0 ]; then
@@ -371,6 +374,7 @@ if [ ! -e $PREFIX/bin/pkgin ]; then
 	src_update='pkg_chk -su'
     else
 	(cd $PKGSRCDIR/pkgtools/pkg_chk && $make install)
+	src_update='pkg_chk -su'
     fi
 fi
 
@@ -403,6 +407,7 @@ if [ -n "$src_update" ]; then
 	    cd ../..
 	done
 	printf "\n**** Running $src_update...\n"
+	printf "PKGSRCDIR = $PKGSRCDIR\n"
 	$src_update
     fi
 fi
