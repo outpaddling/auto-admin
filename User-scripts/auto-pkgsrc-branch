@@ -30,10 +30,17 @@ if [ -z "$PKGSRC" ]; then
     exit 1
 fi
 
-branch=$(cd $PKGSRC && \
-    cvs status -v Makefile | awk '$1 == "Sticky" && $2 == "Tag:" { print $3 }')
-if [ "$branch" = "(none)" ]; then
-    printf "current\n"
+if [ -e $PKGSRC/CVS ]; then
+    branch=$(cd $PKGSRC && \
+	cvs status -v Makefile | awk '$1 == "Sticky" && $2 == "Tag:" { print $3 }')
+    if [ "$branch" = "(none)" ]; then
+	printf "current\n"
+    else
+	printf "$branch\n" | cut -d - -f 2
+    fi
 else
-    printf "$branch\n" | cut -d - -f 2
+    // FIXME: Add support for pkgsrc via git.  How to check?
+    // Assuming no CVS means we're using dreckly
+    // Dreckly does not have quarterly branches at this time
+    printf "current\n"
 fi
