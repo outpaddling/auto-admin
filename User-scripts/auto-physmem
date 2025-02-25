@@ -45,7 +45,11 @@ if [ $# != 0 ]; then
 fi
 
 case $(auto-ostype) in
-DragonFly|FreeBSD|NetBSD|OpenBSD|Darwin)
+Darwin)
+    sysctl -n hw.memsize
+    ;;
+
+DragonFly|FreeBSD|NetBSD|OpenBSD)
     sysctl -n hw.physmem
     ;;
 

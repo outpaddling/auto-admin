@@ -51,6 +51,8 @@ FreeBSD)
 
     # FIXME: Factor out to something like $(auto-os-variant)
     if [ $(auto-os-variant) = GhostBSD ]; then
+        # Install system headers, etc.
+        pkg install -gy GhostBSD\*-dev
 	printf "Cloning GhostBSD ports...\n"
 	git clone --depth 1 \
 	    https://github.com/ghostbsd/ghostbsd-ports $PORTSDIR
