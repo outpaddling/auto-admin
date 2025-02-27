@@ -115,7 +115,11 @@ fi
 
 if [ $(uname) != NetBSD ]; then
     printf "Checking for required tools...\n"
-    for tool in cc c++ java tar curl git; do
+    tools="cc c++ tar curl git"
+    if [ $(uname) != OpenBSD ]; then
+	tools="$tools java"
+    fi
+    for tool in $tools; do
 	if ! which $tool; then
 	    if [ $tool = cc ] && which gcc; then
 		continue;
@@ -363,8 +367,15 @@ EOM
 # Avoid software from other package managers or cave-man installs
 # This may need alteration on some platforms, but it works on RHEL,
 # FreeBSD, NetBSD, and OS X.
-PATH=/usr/bin:/usr/sbin:/bin:/sbin
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 export PATH
+
+for cmd in git; do
+    if ! which $cmd 2>&1 > /dev/null; then
+	printf "No $cmd command in PATH.  Please install $cmd and try again.\n"
+	exit 1
+    fi
+done
 
 # Scrub the environment to avoid self-inflicted problems.
 # Users commonly add things to their login scripts to "fix" a particular
@@ -463,14 +474,14 @@ EOM
 printf "Build all compiled packages with -march=native? y/[n] "
 read march_native
 
-if which curl > /dev/null; then
-    fetch_cmd='curl -O'
-elif which wget > /dev/null; then
-    fetch_cmd=wget
-elif which fetch > /dev/null; then
+if which fetch > /dev/null; then
     fetch_cmd=fetch
 elif [ -e /usr/pkg/bin/fetch ]; then
     fetch_cmd=/usr/pkg/bin/fetch
+elif which curl > /dev/null; then
+    fetch_cmd='curl -O'
+elif which wget > /dev/null; then
+    fetch_cmd=wget
 elif which ftp > /dev/null; then
     fetch_cmd=ftp
 else
@@ -493,8 +504,13 @@ if [ 0$replace_frameworks = 0y ]; then
 	save_cwd=`pwd`
 	mkdir -p $parent
 	cd $parent
-	printf "git URL of dreckly tree? "
+	rm -rf $dreckly_dir $prefix $sys_dir
+	default_url='https://github.com/drecklypkg/dreckly.git'
+	printf "git URL of dreckly tree? [$default_url] "
 	read git_url
+	if [ -z "$git_url" ]; then
+	    git_url=$default_url
+	fi
 	git clone $git_url $dreckly_dir
 	cd $save_cwd
     elif [ $snapshot = custom ]; then
@@ -517,7 +533,6 @@ EOM
     if [ 0$download = 0y ]; then
 	printf "Downloading dist...\n\n"
 	# Replace everything after new download
-	rm -rf $dreckly_dir $prefix $sys_dir
 	mkdir -p $parent/Dist
 	cd $parent/Dist
 	rm -f dreckly.tar.gz
@@ -725,7 +740,7 @@ if [ 0$bootstrap = '0y' ]; then
 	if ! which curl; then
 	    cat << EOM
 
-You must install curl via your native Linus package manager, e.g.
+You must install curl via your native Linux package manager, e.g.
 
 	yum install curl
 	apt install curl
@@ -1329,22 +1344,12 @@ read install_wip
 if [ 0$install_wip = 0y ]; then
     cd $dreckly_dir
     
-    if ! which git; then
-	cat << EOM
-
-No git command found.  Skipping pkgsrc-wip install for now.
-
-See https://dreckly.org/wip/ for instructions on installing it later.
-
-EOM
-	pause
+    # git sometimes returns non-zero status when it succeeded
+    set +e
+    if [ -d wip ]; then
+	printf "pkgsrc-wip alreading installed.\n"
     else
-	# git sometimes returns non-zero status when it succeeded
-	set +e
-	if [ -d wip ]; then
-	    printf "pkgsrc-wip alreading installed.\n"
-	else
-	    cat << EOM
+	cat << EOM
 
 If you have a pkgsrc-wip account, you can use it to check out pkgsrc-wip,
 the work-in-progress category of dreckly packages.
@@ -1354,19 +1359,18 @@ press Enter.
 
 EOM
 
-	    # NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
-	    # It is here so that this script can work as a standalone.
-	    # Be sure to keep this in sync with the separate script!
-	    printf "pkgsrc-wip username? [none] "
-	    read username
-	    if [ 0$username = 0 ]; then
-		git clone git://wip.dreckly.org/pkgsrc-wip.git wip
-	    else
-		git clone $username@wip.dreckly.org:/pkgsrc-wip wip
-	    fi
+	# NOTE: This is a duplicate of auto-pkgsrc-wip-checkout.
+	# It is here so that this script can work as a standalone.
+	# Be sure to keep this in sync with the separate script!
+	printf "pkgsrc-wip username? [none] "
+	read username
+	if [ 0$username = 0 ]; then
+	    git clone git://wip.dreckly.org/pkgsrc-wip.git wip
+	else
+	    git clone $username@wip.dreckly.org:/pkgsrc-wip wip
 	fi
-	set -e
     fi
+    set -e
 fi
 
 # Set up package server if necessary
@@ -1554,7 +1558,7 @@ Ex. Assuming your Makefile uses CFLAGS for compiling and LFLAGS for link:
 
     make CFLAGS="-Wall -g -I\$DRECKLY_INCLUDE" LFLAGS="-L\$DRECKLY_LIB"
 ============================================================================
-For more information, go to http://www.netbsd.org/docs/dreckly/
+For more information, go to https://www.netbsd.org/docs/pkgsrc/
 ============================================================================
 EOM
 pause
@@ -1585,10 +1589,12 @@ EOM
 
 # Install dreckly guide onto desktop
 if [ -e $HOME/Desktop ] && [ ! -e $HOME/Desktop/Guides/dreckly.pdf ]; then
+    PATH=$PATH:/usr/local/bin   # Find curl on BSD
+    export PATH
     mkdir -p $HOME/Desktop/Guides
     cd $HOME/Desktop/Guides
     printf "Fetching manual...\n"
-    $fetch_cmd http://www.netbsd.org/docs/dreckly/dreckly.pdf
+    $fetch_cmd https://www.netbsd.org/docs/pkgsrc/pkgsrc.pdf
     printf "A copy of the dreckly guide has been placed on your desktop.\n"
 fi
 
