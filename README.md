@@ -24,15 +24,15 @@ robustness, fast and easy setup and management.
 ## Installing
 
 The preferred installation method is using a package manager such as
-FreeBSD ports or [pkgsrc](https://pkgsrc.org), a high-quality
+FreeBSD ports or [dreckly](https://github.com/drecklypkg/dreckly), a high-quality
 cross-platform package manager with an extensive package collection that
 works on virtually any POSIX platform.  Packages may exist in other package
-managers as well, but we maintain a FreeBSD port and a pkgsrc package and
-update them regularly with new releases.  New pkgsrc users may want to
-try out [auto-pkgsrc-setup](https://github.com/outpaddling/auto-admin/blob/master/User-scripts/auto-pkgsrc-setup), a simple script
-to guide you through a pkgsrc installation.  Auto-pkgsrc-setup is actually
+managers as well, but we maintain a FreeBSD port and a dreckly package and
+update them regularly with new releases.  New dreckly users may want to
+try out [auto-dreckly-setup](https://github.com/outpaddling/auto-admin/blob/master/User-scripts/auto-dreckly-setup), a simple script
+to guide you through a dreckly installation.  Auto-dreckly-setup is actually
 part of auto-admin, but designed to run independently to solve the chicken-egg
-problem of getting pkgsrc running before auto-admin is installed.
+problem of getting dreckly running before auto-admin is installed.
 
 It is also possible, but not recommended, to perform a "caveman install"
 by downloading the source from Github and running "make install".
@@ -42,5 +42,3 @@ tasks as well as a simple menu system for the most common ones, such as
 installing software, adding users, etc.
 
 To get started, simple open a terminal and run auto-admin.
-
-[More information](https://acadix.biz/auto-admin.php)
