@@ -367,7 +367,7 @@ EOM
 # Avoid software from other package managers or cave-man installs
 # This may need alteration on some platforms, but it works on RHEL,
 # FreeBSD, NetBSD, and OS X.
-PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin:/usr/pkg/bin
 export PATH
 
 for cmd in git; do
@@ -474,9 +474,9 @@ EOM
 printf "Build all compiled packages with -march=native? y/[n] "
 read march_native
 
-if which fetch > /dev/null; then
+if which /usr/bin/fetch > /dev/null; then   # FreeBSD
     fetch_cmd=fetch
-elif [ -e /usr/pkg/bin/fetch ]; then
+elif [ -e /usr/pkg/bin/fetch ]; then        # NetBSD
     fetch_cmd=/usr/pkg/bin/fetch
 elif which curl > /dev/null; then
     fetch_cmd='curl -O'
@@ -1483,7 +1483,10 @@ read install_certs
 if [ 0$install_certs = 0y ]; then
     save_cwd=$(pwd)
     cd $dreckly_dir/security/mozilla-rootcerts && bmake clean install
-    cd $dreckly_dir/security/mozilla-rootcerts-openssl
+    # mozilla-rootcerts-openssl won't install on NetBSD
+    if [ $(uname) != NetBSD ] || [ $(id -un) = root ]; then
+	cd $dreckly_dir/security/mozilla-rootcerts-openssl
+    fi
     if ! bmake clean install; then
 	printf "Warning: mozilla-rootcerts-openssl failed.\n"
 	pause
