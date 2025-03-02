@@ -48,10 +48,11 @@ fi
 cd "$pkgsrc"
 
 printf "Cleaning $pkgsrc...\n"
+# OpenBSD df does not support -m
 if [ $(uname) = Linux ]; then
-    df_flags=-Pm    # Is this appropriate for all Linux distros?
+    df_flags=-Pk    # Is this appropriate for all Linux distros?
 else
-    df_flags=-m
+    df_flags=-k
 fi
 
 before=`df $df_flags . | awk '$1 != "Filesystem" { print $4 }'`
@@ -71,7 +72,9 @@ if [ 0$dist = 0y ]; then
 fi
 
 after=`df $df_flags . | awk '$1 != "Filesystem" { print $4 }'`
-printf "Initial free space: %d\n" $before
-printf "Final free space: %d\n" $after
+before=$(($before / 1000))
+after=$(($after / 1000))
+printf "Initial free space: %d MB\n" $before
+printf "Final free space: %d MB\n" $after
 diff=$(($after - $before))
-printf "%d megabytes freed.\n" $diff
+printf "%d MB freed.\n" ${diff}
