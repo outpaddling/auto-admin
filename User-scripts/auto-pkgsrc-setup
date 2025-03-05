@@ -937,52 +937,39 @@ fi  # bootstrap
 # gmake, gsed, and libiconv are for NetBSD
 
 if [ $(uname) = Linux ] || [ $(uname) = NetBSD ]; then
-    selection=999
-    while [ 0"$selection" -gt 05 ]; do
-	cat << EOM
-    
-Select a minimum GCC version.  Many packages will not build with older
-GCC suites such as the GCC 4.4 provided by RHEL/CentOS 6.  When you select
-a newer compiler here, a pkgsrc gcc will be used to build all packages
-except itself.
+    major=999
+    cat << EOM
+=========================================================================
 
-0.. None, use base compiler
-1.. 12
-2.. 13
-3.. 14
+If you would like to use a pkgsrc GCC compiler to build most packages
+(all but GCC itself), enter the major version number below.  The major
+version is the number following "gcc" in the list of packages below.
+
+This should only be necessary if the native compiler is very old, which
+may be the case for older versions of Enterprise Linux, etc.
+
+If you want to use the native compiler rather than a pkgsrc GCC package,
+just press enter.  The native compiler should work fine for most
+modern operating systems.
+
+Available gcc packages:
 
 EOM
-	# Keep this in sync with pbulk-setup
-	default_minimum=0
-	printf "Selection? [$default_minimum] "
-	read selection
-	if [ 0$selection = 0 ]; then
-	    selection=$default_minimum
-	fi
-	case $selection in
-	0)
+    (cd $pkgsrc_dir && ls -d lang/gcc[0-9] lang/gcc[0-9][0-9])
+    while [ ! -e $pkgsrc_dir/lang/gcc$major ]; do
+	printf "\nGCC major version? [just press enter for none] "
+	read major
+
+	if [ -z "$major" ]; then
 	    base_gcc=""
-	    ;;
-	1)
-	    base_gcc=gcc12
-	    gcc_version=12.0
-	    ;;
-	2)
-	    base_gcc=gcc13
-	    gcc_version=13.0
-	    ;;
-	3)
-	    base_gcc=gcc14
-	    gcc_version=14.0
-	    ;;
-    
-	*)
-	    printf "Invalid selection.\n"
-	    ;;
-	
-	esac
+	elif [ -e $pkgsrc_dir/lang/gcc$major ]; then
+	    base_gcc=gcc$major
+	    gcc_version=$major.0
+	else
+	    printf "$pkgsrc_dir/lang/gcc$major: No such package.\n"
+	fi
     done
-    
+
     # Keep this in sync with pbulk-setup for installations that use both
     # binary packages and build from source.
     if [ ! -z $base_gcc ]; then
