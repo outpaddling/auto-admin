@@ -41,6 +41,8 @@ update_on_boot()
 # for a new major OS version.
 /usr/sbin/freebsd-update install || true
 # Reboot in case kernel modules are rebuilt via install-from-source
+# when KBI incompatibilities between point releases
+# The binary package for x.y may not work on x.(y+1)
 # One more reboot at this point won't hurt
 /usr/local/sbin/auto-update-system --yes
 rm -f $rc_dir/$update_script
