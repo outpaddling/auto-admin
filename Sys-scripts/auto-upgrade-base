@@ -40,7 +40,9 @@ update_on_boot()
 # function after major upgrades, where packages need to be reinstalled
 # for a new major OS version.
 /usr/sbin/freebsd-update install || true
-/usr/local/sbin/auto-update-system --defaults
+# Reboot in case kernel modules are rebuilt via install-from-source
+# One more reboot at this point won't hurt
+/usr/local/sbin/auto-update-system --yes
 rm -f $rc_dir/$update_script
 
 EOM
