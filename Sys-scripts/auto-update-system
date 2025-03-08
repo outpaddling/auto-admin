@@ -657,9 +657,9 @@ EOM
 			save_cwd=$(pwd)
 			cd $PORTSDIR/$port
 			if [ -n "$flavor" ]; then
-			    make clean reinstall clean FLAVOR=$flavor
+			    make -DBATCH clean reinstall clean FLAVOR=$flavor
 			else
-			    make clean reinstall clean
+			    make -DBATCH clean reinstall clean
 			fi
 			cd $save_cwd
 		    else
