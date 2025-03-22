@@ -179,7 +179,8 @@ DragonFly|FreeBSD)
 		install_from_port
 		status=$?
 	    # FIXME: Doesn't handle dependencies
-	    elif awk '{ print $1 }' \
+	    elif [ -e $(auto-localbase)/etc/auto-admin/install-from-source ] \
+		&& awk '{ print $1 }' \
 		$(auto-localbase)/etc/auto-admin/install-from-source \
 		    | fgrep --line-regexp $port; then
 		install_from_port

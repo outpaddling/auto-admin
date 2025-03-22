@@ -428,14 +428,16 @@ FreeBSD|DragonFly)
     fi
     
     readonly INSTALL_FROM_SOURCE=$(auto-localbase)/etc/auto-admin/install-from-source
-    while read line; do
-	port=$(echo $line | awk '{ print $1 }')
-	cols=$(echo $line | wc -w)
-	if [ $cols -lt 3 ]; then
-	    ifs_update
-	    break
-	fi
-    done < $INSTALL_FROM_SOURCE
+    if [ -e $INSTALL_FROM_SOURCE ]; then
+	while read line; do
+	    port=$(echo $line | awk '{ print $1 }')
+	    cols=$(echo $line | wc -w)
+	    if [ $cols -lt 3 ]; then
+		ifs_update
+		break
+	    fi
+	done < $INSTALL_FROM_SOURCE
+    fi
     
     # Don't group questions: Need to pause after each step to view output
     case $mode in
