@@ -66,143 +66,99 @@ EOM
 if [ $# -lt 1 ]; then
     usage
 fi
-    
-case $(auto-ostype) in
-DragonFly|FreeBSD)
-    install_from_port()
+
+latest_package_name=0
+while [ 0$(printf "%s" $1 | cut -c 1,1) = 0'-' ]; do
+    if [ 0$1 = 0-l ] || [ 0$1 = 0--latest ]; then
+	latest_package_name=1
+	shift
+    elif [ 0$1 = 0-p ] || [ 0$1 = 0--portsdir ]; then
+	PORTSDIR=$2
+	shift
+	shift
+    elif [ 0$1 = 0-s ] || [ 0$1 = 0--source ]; then
+	AUTO_BUILD_FROM_SOURCE=yes
+	shift
+    elif [ 0$1 = 0-f ] || [ 0$1 = 0--fallback-source ]; then
+	AUTO_BUILD_FROM_SOURCE=fall-back
+	shift
+    elif [ 0$1 = 0-n ] || [ 0$1 = 0--no-config-menu ]; then
+	AUTO_BUILD_NO_CONFIG=yes
+	shift
+    else
+	extra_args="$extra_args $1"
+	shift
+    fi
+done
+
+if auto-using-pkgsrc; then
+    install_from_source()
     {
 	save_cwd=$(pwd)
-	cd $PORTSDIR/$port
+	cd $(auto-pkgsrc-dir)/$pkg
 	
-	printf "Installing non-wip dependencies via pkg if possible...\n"
-	deps=$(make run-depends-list | cut -d / -f 4- | grep -v '^wip/' || true)
-	if [ -n "$deps" ]; then
+	deps=$($make show-depends | cut -d / -f 3- | grep -v '^wip/' || true)
+	if [ -n "$deps" ] && [ -e $(auto-pkgsrc-prefix)/bin/pkgin ]; then
+	    printf "Installing non-wip dependencies via pkgin if possible...\n"
 	    auto-install-packages -f -A $deps
 	fi
 	
-	# Configure this port, but install dependencies with default options
-	if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
-	    make config
-	else
-	    make_flags="-DBATCH"
-	fi
-	
 	# Remove other versions that might block install
-	pkg remove -y $(auto-print-make-variable $port PKGBASE) || true
+	pkg_delete -f $(auto-print-make-variable $pkg PKGBASE) || true
 	
-	make clean
-	make deinstall
-	make $make_flags reinstall
-	make clean
+	$make clean
+	$make deinstall
+	$make $make_flags reinstall
+	$make clean
 	cd $save_cwd
     }
-    
-    # Default.  Override below.
-    if [ $(uname) = FreeBSD ]; then
-	PORTSDIR='/usr/ports'
-    elif [ $(uname) = DragonFly ]; then
-	PORTSDIR='/usr/dports'
-    fi
-    latest_package_name=0
-    
-    if [ ! -e $PORTSDIR ]; then
-	auto-ports-checkout
-    fi
-    while [ 0$(printf "%s" $1 | cut -c 1,1) = 0'-' ]; do
-	if [ 0$1 = 0-l ] || [ 0$1 = 0--latest ]; then
-	    latest_package_name=1
-	    shift
-	elif [ 0$1 = 0-p ] || [ 0$1 = 0--portsdir ]; then
-	    PORTSDIR=$2
-	    shift
-	    shift
-	elif [ 0$1 = 0-s ] || [ 0$1 = 0--source ]; then
-	    AUTO_BUILD_FROM_SOURCE=yes
-	    shift
-	elif [ 0$1 = 0-f ] || [ 0$1 = 0--fallback-source ]; then
-	    AUTO_BUILD_FROM_SOURCE=fall-back
-	    shift
-	elif [ 0$1 = 0-n ] || [ 0$1 = 0--no-config-menu ]; then
-	    AUTO_BUILD_NO_CONFIG=yes
-	    shift
-	else
-	    extra_args="$extra_args $1"
-	    shift
-	fi
-    done
 
-    # FIXME: Is this still relevant?
-    # Allow mirrors to be used without having PACKAGEROOT set globally.
-    if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
-	export PACKAGEROOT=$AUTO_PACKAGEROOT
-    else
-	export PACKAGEROOT="ftp://ftp.freebsd.org"
-    fi
-    
-    # Use -stable instead of -release for release candidates
-    if uname -r | fgrep -q RELEASE; then
-	# Keep whole version and remove -RELEASE
-	release=$(uname -r | cut -d '-' -f 1)'-release'
-    else
-	# Keep only major version
-	release=$(uname -r | cut -d '.' -f 1)'-stable'
-    fi
-    
-    if [ 0$latest_package_name = 01 ]; then
-	release=$release/Latest
-    else
-	release=$release/All
-    fi
-    
-    PACKAGEDIR=$(uname -p)'/packages-'$release
-    export PACKAGESITE=$PACKAGEROOT/pub/FreeBSD/ports/$PACKAGEDIR/
-    
-    for port in $*; do
-	# Make sure each is given as category/port
-	if ! printf $port | fgrep -q '/'; then
-	    printf "${0}: $port missing category.\n"
+    make=$(auto-pkgsrc-make)
+    for pkg in $*; do
+	echo $pkg
+	# Make sure each is given as category/pkg
+	if ! printf $pkg | fgrep -q '/'; then
+	    printf "${0}: $pkg missing category.\n"
 	    exit 1
 	fi
 	
-	if [ ! -d ${PORTSDIR}/$port ]; then
-	    printf "$port does not exist.\n"
+	if [ ! -d $(auto-pkgsrc-dir)/$pkg ]; then
+	    printf "$pkg does not exist.\n"
 	    break
 	fi
 	
 	# FIXME: Is --base-dir really needed?
-	pkg_name=`auto-print-make-variable --base-dir $PORTSDIR $port PKGNAME`
+	pkg_name=`auto-print-make-variable --base-dir $(auto-pkgsrc-dir) $pkg PKGNAME`
 	if [ $latest_package_name = 1 ]; then
 	    pkg_name=${pkg_name%%-[0-9]*}
 	fi
-	if ! auto-package-installed -p $PORTSDIR $port; then
+	if ! auto-package-installed -p $(auto-pkgsrc-dir) $pkg; then
 	    if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
-		install_from_port
+		install_from_source
 		status=$?
 	    # FIXME: Doesn't handle dependencies
-	    elif [ -e $(auto-localbase)/etc/auto-admin/install-from-source ] \
-		&& awk '{ print $1 }' \
+	    elif awk '{ print $1 }' \
 		$(auto-localbase)/etc/auto-admin/install-from-source \
-		    | fgrep --line-regexp $port; then
-		install_from_port
+		    | fgrep --line-regexp $pkg; then
+		install_from_source
 		status=$?
 	    else
 		# New pkgng system
-		unset PACKAGESITE
-		unset PACKAGEROOT
-		pkg_args='install -y'
-		printf "pkg $pkg_args $extra_args $pkg_name\n"
+		pkgin_args='-y install'
+		printf "pkgin $pkg_args $extra_args $pkg_name\n"
     
 		# Compensate for network hiccups by retrying
 		tries=2
 		# pkg returns 0 when it can't find a package, so grep the
+		# fixme: pkgin as well?
 		# output to detect failures.
 		success=0
 		tmp=auto-install-packages.tmp
 		while [ $success = 0 ] && [ $tries -gt 1 ]; do
-		    pkg $pkg_args $extra_args $pkg_name 2>&1 | tee $tmp
+		    pkgin $pkg_args $extra_args $pkg_name 2>&1 | tee $tmp
 		    if fgrep -q 'No package' $tmp; then
 			tries=$((tries-1))
-			printf "Error installing $port.  $tries more tries.\n"
+			printf "Error installing $pkg.  $tries more tries.\n"
 			sleep 5
 		    else
 			success=1
@@ -214,7 +170,7 @@ DragonFly|FreeBSD)
 		else
 		    if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
 			printf "Giving up on binary package.  Attempting to build from source...\n"
-			install_from_port
+			install_from_source
 			status=$?
 		    else
 			# Better status value (from pkg_add?)
@@ -225,11 +181,147 @@ DragonFly|FreeBSD)
 	fi
     done
     exit $status
-    ;;
+else
+    case $(auto-ostype) in
+    DragonFly|FreeBSD)
+	install_from_port()
+	{
+	    save_cwd=$(pwd)
+	    cd $PORTSDIR/$port
+	    
+	    printf "Installing non-wip dependencies via pkg if possible...\n"
+	    deps=$(make run-depends-list | cut -d / -f 4- | grep -v '^wip/' || true)
+	    if [ -n "$deps" ]; then
+		auto-install-packages -f -A $deps
+	    fi
+	    
+	    # Configure this port, but install dependencies with default options
+	    if [ 0$AUTO_BUILD_NO_CONFIG != 0yes ]; then
+		make config
+	    else
+		make_flags="-DBATCH"
+	    fi
+	    
+	    # Remove other versions that might block install
+	    pkg remove -y $(auto-print-make-variable $port PKGBASE) || true
+	    
+	    make clean
+	    make deinstall
+	    make $make_flags reinstall
+	    make clean
+	    cd $save_cwd
+	}
+	
+	# Default.  Override below.
+	if [ $(uname) = FreeBSD ]; then
+	    PORTSDIR='/usr/ports'
+	elif [ $(uname) = DragonFly ]; then
+	    PORTSDIR='/usr/dports'
+	fi
+	
+	if [ ! -e $PORTSDIR ]; then
+	    auto-ports-checkout
+	fi
     
-*)
-    auto-unsupported-os $0
-    exit 1
-    ;;
-
-esac
+	# FIXME: Is this still relevant?
+	# Allow mirrors to be used without having PACKAGEROOT set globally.
+	if [ 0$AUTO_BUILD_FROM_SOURCE != 0yes ] && [ 0$AUTO_PACKAGEROOT != 0 ]; then
+	    export PACKAGEROOT=$AUTO_PACKAGEROOT
+	else
+	    export PACKAGEROOT="ftp://ftp.freebsd.org"
+	fi
+	
+	# Use -stable instead of -release for release candidates
+	if uname -r | fgrep -q RELEASE; then
+	    # Keep whole version and remove -RELEASE
+	    release=$(uname -r | cut -d '-' -f 1)'-release'
+	else
+	    # Keep only major version
+	    release=$(uname -r | cut -d '.' -f 1)'-stable'
+	fi
+	
+	if [ 0$latest_package_name = 01 ]; then
+	    release=$release/Latest
+	else
+	    release=$release/All
+	fi
+	
+	PACKAGEDIR=$(uname -p)'/packages-'$release
+	export PACKAGESITE=$PACKAGEROOT/pub/FreeBSD/ports/$PACKAGEDIR/
+	
+	for port in $*; do
+	    # Make sure each is given as category/port
+	    if ! printf $port | fgrep -q '/'; then
+		printf "${0}: $port missing category.\n"
+		exit 1
+	    fi
+	    
+	    if [ ! -d ${PORTSDIR}/$port ]; then
+		printf "$port does not exist.\n"
+		break
+	    fi
+	    
+	    # FIXME: Is --base-dir really needed?
+	    pkg_name=`auto-print-make-variable --base-dir $PORTSDIR $port PKGNAME`
+	    if [ $latest_package_name = 1 ]; then
+		pkg_name=${pkg_name%%-[0-9]*}
+	    fi
+	    if ! auto-package-installed -p $PORTSDIR $port; then
+		if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
+		    install_from_port
+		    status=$?
+		# FIXME: Doesn't handle dependencies
+		elif awk '{ print $1 }' \
+		    $(auto-localbase)/etc/auto-admin/install-from-source \
+			| fgrep --line-regexp $port; then
+		    install_from_port
+		    status=$?
+		else
+		    # New pkgng system
+		    unset PACKAGESITE
+		    unset PACKAGEROOT
+		    pkg_args='install -y'
+		    printf "pkg $pkg_args $extra_args $pkg_name\n"
+	
+		    # Compensate for network hiccups by retrying
+		    tries=2
+		    # pkg returns 0 when it can't find a package, so grep the
+		    # output to detect failures.
+		    success=0
+		    tmp=auto-install-packages.tmp
+		    while [ $success = 0 ] && [ $tries -gt 1 ]; do
+			pkg $pkg_args $extra_args $pkg_name 2>&1 | tee $tmp
+			if fgrep -q 'No package' $tmp; then
+			    tries=$((tries-1))
+			    printf "Error installing $port.  $tries more tries.\n"
+			    sleep 5
+			else
+			    success=1
+			fi
+			rm $tmp
+		    done
+		    if [ $tries -gt 1 ]; then
+			status=0
+		    else
+			if [ 0$AUTO_BUILD_FROM_SOURCE = 0fall-back ]; then
+			    printf "Giving up on binary package.  Attempting to build from source...\n"
+			    install_from_port
+			    status=$?
+			else
+			    # Better status value (from pkg_add?)
+			    status=1
+			fi
+		    fi
+		fi
+	    fi
+	done
+	exit $status
+	;;
+	
+    *)
+	auto-unsupported-os $0
+	exit 1
+	;;
+    
+    esac
+fi
