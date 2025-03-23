@@ -61,7 +61,26 @@ FreeBSD)
 	# It also appears to be unmaintained (PRs open for years)
 	# wsp(4) works flawlessly
 	# auto-set-conf-var atp_load '"YES"' /boot/loader.conf $0
-	auto-set-conf-var wsp_load '"YES"' /boot/loader.conf $0
+	cat << EOM
+
+There are two touchpad drivers for MacBooks.
+
+"wsp" is the new driver, with added features like two-finger tap.  It is
+likely the better choice for most hardware currently in use.  It may not
+work on very old hardware, though.
+
+"atp" is the old driver, which may not work at all on newer hardware.
+
+EOM
+	driver=''
+	while [ 0"$driver" != 0wsp ] && [ 0"$driver" != 0atp ]; do
+	    printf "Driver to use? [wsp] "
+	    read driver
+	    if [ -z "$driver" ]; then
+		driver=wsp
+	    fi
+	done
+	auto-set-conf-var ${driver}_load '"YES"' /boot/loader.conf $0
 	auto-set-conf-var acpi_video_load '"YES"' /boot/loader.conf $0
 	auto-set-conf-var asmc_load '"YES"' /boot/loader.conf $0
 	
