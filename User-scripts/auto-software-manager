@@ -54,6 +54,8 @@ if auto-using-pkgsrc; then
 	remove_cmd='pkg_delete'
 	autoremove_cmd='no-autoremove'
     fi
+    auto_install_packages='auto-install-packages -n -s'
+    install_from_source_cmd="$auto_install_packages"
 else
     case $(auto-ostype) in
     DragonFly|FreeBSD)
@@ -158,9 +160,7 @@ EOM
 	if [ 0"$names" != 0 ]; then
 	    # FIXME: Change when auto-install-packages supports pkgsrc
 	    if [ 0"$install_from_source_cmd" = 0"$auto_install_packages" ]; then
-		set -x
 		$install_from_source_cmd $names
-		set +x
 	    else
 		make=$(auto-pkgsrc-make)
 		for name in $names; do
