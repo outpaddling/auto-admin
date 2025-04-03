@@ -962,6 +962,7 @@ EOM
 
 	if [ -z "$major" ]; then
 	    base_gcc=""
+	    break
 	elif [ -e $pkgsrc_dir/lang/gcc$major ]; then
 	    base_gcc=gcc$major
 	    gcc_version=$major.0
