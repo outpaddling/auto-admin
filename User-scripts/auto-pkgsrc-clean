@@ -35,7 +35,7 @@ case $# in
     ;;
 esac
 
-if [ $0 = auto-clean-pkgsrc ]; then
+if [ $(basename $0) = auto-clean-pkgsrc ]; then
     cat << EOM
 
 Warning: auto-clean-pkgsrc is deprecated.  Please update all your scripts

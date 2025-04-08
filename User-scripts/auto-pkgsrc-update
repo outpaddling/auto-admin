@@ -152,7 +152,7 @@ if [ $# -gt 2 ]; then
     usage
 fi
 
-if [ $0 = auto-update-pkgsrc ]; then
+if [ $(basename $0) = auto-update-pkgsrc ]; then
     cat << EOM
 
 Warning: auto-pkgsrc-update is deprecated.  Please update all your scripts
