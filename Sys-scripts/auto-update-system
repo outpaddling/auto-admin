@@ -906,7 +906,7 @@ RHEL)
 	exit 1
     fi
     if auto-using-pkgsrc; then
-	auto-update-pkgsrc "$@"
+	auto-pkgsrc-update "$@"
 	record_update_time
     fi
     
@@ -918,7 +918,7 @@ RHEL)
     ;;
 
 NetBSD)
-    auto-update-pkgsrc "$@"
+    auto-pkgsrc-update "$@"
     record_update_time
 
     case $mode in
@@ -985,7 +985,7 @@ Darwin)
 	exit 1
     fi
     if auto-using-pkgsrc; then
-	auto-update-pkgsrc "$@"
+	auto-pkgsrc-update "$@"
     fi
     
     # FIXME: Add softwareupdate logic for base updates

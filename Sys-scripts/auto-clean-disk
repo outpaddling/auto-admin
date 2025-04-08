@@ -88,7 +88,7 @@ NetBSD)
     printf "Clean pkgsrc cache and tree? [y]/n "
     read clean
     if [ 0$clean != 0n ]; then
-	auto-clean-pkgsrc
+	auto-pkgsrc-clean
     fi
     
     mount_points=`awk '$3 == "ffs" { print $2 }' /etc/fstab`

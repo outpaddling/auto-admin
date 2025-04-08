@@ -95,7 +95,7 @@ EOM
 	    printf "Proceed? y/[n] "
 	    read proceed
 	    if [ 0"$proceed" = 0y ]; then
-		auto-update-pkgsrc --defaults
+		auto-pkgsrc-update --defaults
 	    fi
 	else
 	    printf 'Not using pkgsrc.  Use "Update system" in the auto-admin main menu.\n'
