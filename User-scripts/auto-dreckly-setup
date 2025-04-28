@@ -845,8 +845,8 @@ if [ $(uname) = Linux ] || [ $(uname) = NetBSD ]; then
     cat << EOM
 =========================================================================
 
-Some packages will likely require a newer compiler than the native
-GCC for this operating system, especially if you are using an older
+Some packages may require a newer compiler than the native GCC
+for this operating system, especially if you are using an older
 operating system or an enterprise Linux system, which uses older
 tools and libraries for better stability and backward-compatibility
 with commercial software.
@@ -861,13 +861,12 @@ Available gcc packages:
 EOM
     (cd $dreckly_dir && ls -d lang/gcc[0-9] lang/gcc[0-9][0-9])
     while [ ! -e $dreckly_dir/lang/gcc$major ]; do
-	printf "\nGCC major version? [default=13] "
+	printf "\nGCC major version? [just press enter for none] "
 	read major
-
 	if [ -z "$major" ]; then
-	    major=13
-	fi
-	if [ -e $dreckly_dir/lang/gcc$major ]; then
+	    base_gcc=""
+	    break
+	elif [ -e $dreckly_dir/lang/gcc$major ]; then
 	    base_gcc=gcc$major
 	    gcc_version=$major.0
 	else
