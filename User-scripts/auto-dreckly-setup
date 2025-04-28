@@ -945,12 +945,15 @@ GFORTRAN_VERSION=$gcc_version
 # Keep this in sync with pbulk-setup
 .if (exists(/etc/redhat-release) || exists(/etc/amazon)) && !empty(PKGPATH:Mlang/gcc*)
 
+# FIXME: binutils is broken and might not be necessary anymore anyway.
+# This was added for CentOS 6.
+#
 # RHEL systems may have an outdated "as" that cannot translate instructions
 # from current GCC code generators, so force dreckly binutils.
-CONFIGURE_ARGS+=        --with-gnu-as --with-as=\${PREFIX}/bin/gas
-CONFIGURE_ARGS+=        --with-gnu-ld --with-ld=\${PREFIX}/bin/gld
-BUILDLINK_DEPMETHOD.binutils=   full
-.  include "../../devel/binutils/buildlink3.mk"
+# CONFIGURE_ARGS+=        --with-gnu-as --with-as=\${PREFIX}/bin/gas
+# CONFIGURE_ARGS+=        --with-gnu-ld --with-ld=\${PREFIX}/bin/gld
+# BUILDLINK_DEPMETHOD.binutils=   full
+# .  include "../../devel/binutils/buildlink3.mk"
 
 # dreckly gcc packages don't install libgcc_s on some platforms, to
 # avoid problems when mixing compiler versions.  This breaks our use
