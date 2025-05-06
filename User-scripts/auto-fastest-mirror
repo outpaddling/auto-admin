@@ -49,7 +49,7 @@ FreeBSD)
     # Start with primary server, then compare all mirrors
     fastest_mirror=''
     # ping sometimes outputs "Alarm clock"
-    fastest_time=`ping -o -n -t 1 ftp.freebsd.org 2> /dev/null \
+    fastest_time=`ping -o -n -t 1 download.freebsd.org 2> /dev/null \
 	    | fgrep -vi alarm \
 	    | awk '$2 == "bytes" { print $7 }' | awk -F '=' ' { print $2 }' \
 	    | awk -F '.' ' { print $1 }'`
@@ -92,7 +92,7 @@ FreeBSD)
     done
     
     # Print name of fastest mirror
-    printf "http://ftp%s.freebsd.org\n" $fastest_mirror
+    printf "https://ftp%s.freebsd.org\n" $fastest_mirror
     ;;
     
 *)
