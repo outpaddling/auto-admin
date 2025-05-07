@@ -30,11 +30,18 @@ FreeBSD)
     export PORTSDIR
 
     if ! which git > /dev/null 2>&1; then
-	printf "$0: Installing git...\n" >> /dev/stderr
-	pkg install -y git > /dev/null 2>&1
+	if [ $(id -u) = 0 ]; then
+	    printf "$0: Installing git...\n" >> /dev/stderr
+	    pkg install -y git > /dev/null 2>&1
+	else
+	    printf "$0: You must install git before running this script.\n" >> /dev/stderr
+	    printf "$0: Run 'pkg install git' as root.\n" >> /dev/stderr
+	    exit 1
+	fi
     fi
 
     cd $PORTSDIR
+    # FIXME: Remove svn support
     if [ -e .svn ]; then
 	if svn info | grep -q '^URL.*head$'; then
 	    branch=latest
@@ -43,8 +50,12 @@ FreeBSD)
 	fi
 	printf "$branch\n"
     elif [ -e .git ]; then
+	if ! git branch > /dev/null; then
+	    printf "$0: Cannot determine git branch.\n"
+	    exit 1
+	fi
 	git_branch=$(git branch | awk '{ print $2 }')
-	if [ $git_branch = main ]; then
+	if [ 0"$git_branch" = 0main ]; then
 	    branch=latest
 	else
 	    branch=$git_branch

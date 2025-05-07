@@ -32,6 +32,17 @@ FreeBSD)
     elif awk '$1 == "url:" { print $2 }' /etc/pkg/*.conf | fgrep -q latest; then
 	printf "latest\n"
     else
+	if ! which git > /dev/null 2>&1; then
+	    if [ $(id -u) = 0 ]; then
+		printf "$0: Installing git...\n" >> /dev/stderr
+		pkg install -y git > /dev/null 2>&1
+	    else
+		printf "$0: You must install git before running this script.\n" >> /dev/stderr
+		printf "$0: Run 'pkg install git' as root.\n" >> /dev/stderr
+		exit 1
+	    fi
+	fi
+	
 	# Determine latest branch that *should* exist based on today's date
 	year=$(date +%Y)                # E.g. 2024
 	month=$(date +%m)               # E.g. 11
