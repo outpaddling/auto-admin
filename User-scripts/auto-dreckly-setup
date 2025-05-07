@@ -125,6 +125,8 @@ if [ `id -un` = root ]; then
     elif [ -e /etc/debian_version ]; then
 	printf "Installing base development tools via apt...\n"
 	apt install -y gcc g++ gfortran default-jdk-headless tar curl git
+    elif [ $(uname) = FreeBSD ]; then
+	pkg install -y gcc openjdk17 curl git
     fi
 fi
 if [ $(uname) != NetBSD ]; then
@@ -445,6 +447,22 @@ if [ 0$proceed = 0n ]; then
 fi
 
 if ! which gfortran; then
+    # Dreckly GCC packages don't currently build on FreeBSD.
+    # It's better to use the ports gfortran anyway, since it's easier
+    # to install and tested for compatibility with FreeBSD clang.
+    if [ $(uname) = FreeBSD ]; then
+	cat << EOM
+
+No gfortran found.  On FreeBSD, you must install gfortran via
+FreeBSD ports before running $0.  The FreeBSD ports
+gfortran is much easier to install than the dreckly packages,
+and is tested for compatibility with FreeBSD clang.
+
+Run 'pkg install gcc' as root, then run $0 again.
+
+EOM
+	exit 1
+    fi
     cat << EOM
 
 ============================================================================
