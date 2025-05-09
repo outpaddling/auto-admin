@@ -54,7 +54,7 @@ FreeBSD)
 	    printf "$0: Cannot determine git branch.\n"
 	    exit 1
 	fi
-	git_branch=$(git branch | awk '{ print $2 }')
+	git_branch=$(git branch | awk '$1 == "*" { print $2 }')
 	if [ 0"$git_branch" = 0main ]; then
 	    branch=latest
 	else
