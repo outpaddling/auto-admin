@@ -942,6 +942,8 @@ Available gcc packages:
 
 EOM
     (cd $dreckly_dir && ls -d lang/gcc[0-9] lang/gcc[0-9][0-9])
+    printf "\nCurrent GCC version:\n\n"
+    gcc --version | head -n 1
     while [ ! -e $dreckly_dir/lang/gcc$major ]; do
 	printf "\nGCC major version? [just press enter for none] "
 	read major
