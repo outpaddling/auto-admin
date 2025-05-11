@@ -116,6 +116,7 @@ fi
 start_dir=`pwd`
 YUM_JAVA_VERSION=11
 YUM_TOOLS="gcc gcc-c++ gcc-gfortran java-$YUM_JAVA_VERSION-openjdk-devel tar curl git ncompress"
+APT_TOOLS="gcc g++ gfortran default-jdk-headless tar curl git"
 
 if [ `id -un` = root ]; then
     # RHEL / CentOS base
@@ -124,7 +125,7 @@ if [ `id -un` = root ]; then
 	yum install -y $YUM_TOOLS
     elif [ -e /etc/debian_version ]; then
 	printf "Installing base development tools via apt...\n"
-	apt install -y gcc g++ gfortran default-jdk-headless tar curl git
+	apt install -y $APT_TOOLS
     elif [ $(uname) = FreeBSD ]; then
 	pkg install -y gcc openjdk17 curl git
     fi
@@ -138,6 +139,14 @@ if [ $(uname) != NetBSD ]; then
 Warning: No Java installation detected and the openjdk packages only build
 on certain BSD and SunOS systems.  On Linux, Mac OS X, and other platforms,
 you should install the JDK of your choice before bootstrapping dreckly.
+
+On Debian-based systems, run the following as root:
+
+	apt install $APT_TOOLS
+
+On RHEL-based systems, run:
+
+	yum install $YUM_TOOLS
 
 EOM
 	printf "Continue without Java? y/[n] "
@@ -173,7 +182,7 @@ On Linux systems you should also install gfortran along with gcc and g++.
 
 On Debian-based systems:
 
-    apt install -y gcc g++ gfortran default-jdk-headless tar curl git
+    apt install -y $APT_TOOLS
 
 On Fedora/RHEL-based systems:
 
