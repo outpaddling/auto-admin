@@ -39,6 +39,8 @@ update_on_boot()
 # Allow auto-update-system to run anyway, otherwise the system won't
 # function after major upgrades, where packages need to be reinstalled
 # for a new major OS version.
+printf "\nRunning 1-time script $rc_dir/$update_script...\n"
+printf "to complete base upgrade.\n"
 /usr/sbin/freebsd-update install || true
 # Reboot in case kernel modules are rebuilt via install-from-source
 # when KBI incompatibilities between point releases
