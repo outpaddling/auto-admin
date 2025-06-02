@@ -116,7 +116,7 @@ NetBSD)
     swapinfo
     ;;
 
-RHEL)
+Debian|RHEL)
     # https://linuxize.com/post/create-a-linux-swap-file/
     if grep -q "$swapfile" /etc/fstab; then
 	printf "Error: swapfile is already configured in /etc/fstab.\n"
