@@ -86,6 +86,7 @@ scrub_packages()
 	xf86-video-amdgpu 'xf86-video-ati*' \
 	xf86-video-intel \
 	xf86-video-nv 'nvidia-driver*' || true
+    pkg autoremove -y
 }
 
 

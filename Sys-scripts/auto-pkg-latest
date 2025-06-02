@@ -70,7 +70,6 @@ EOM
     fi
     
     mkdir -p $dir
-    # Don't create backup files.  They might be used by pkg.
     # auto-backup-file $file
     cat << EOM > $file
 FreeBSD-kmods: {
