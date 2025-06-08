@@ -139,16 +139,31 @@ FreeBSD)
 			    ======== Caution ========
 
 The FreeBSD project currently does not guarantee KBI (kernel binary interface)
-compatibility across point releases, and does not build binary packages
-on release x.y until x.(y-1) has reached end-of-life (EOL).
-I.e., packages from x.(y-1) are used on x.y until x.(y-1) EOL.
+compatibility across point releases.  Most ports are only built on the
+oldest supported point release in each major version, e.g. while $major.$minor
+and $major.$(($minor + 1)) are both supported, most packages are only built
+on $major.$minor.
 
-As result, installing kernel modules using "pkg" on FreeBSD $release
-may cause problems until FreeBSD $previous_release has reached end-of-life,
-at which time package building is switched to FreeBSD $release.
+For ports that install kernel modules, packages are built on both point
+releases.  However, you must ensure that your pkg configuration specifies
+both the FreeBSD-kmods and FreeBSD pkg repositories, with FreeBSD-kmods
+having a higher priority.  For example:
 
-To avoid problems with binary packages, wait until $previous_release
-reaches end-of-life before upgrading to $release.
+FreeBSD-kmods: {
+  url: "pkg+https://pkg.FreeBSD.org/${ABI}/kmods_latest_${VERSION_MINOR}",
+  priority: 1
+}
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"
+}
+
+The default configuration is in /etc/pkg/FreeBSD.conf.  Custom configurations
+can be installed in /usr/local/etc/pkg/repos/*.conf.  FreeBSD 14.3 and
+later releases have a correct default configuration.  If you install a
+custom configuration in /usr/local/etc/pkg/repos, or if you are running
+a release older than 14.3, you must ensure that your pkg configuration
+specifies both repositories, otherwise some kernel modules installed by pkg
+will be incompatible.
 
 EOM
     fi
