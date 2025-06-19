@@ -294,6 +294,49 @@ if ! auto-file-secure "$absolute"; then
     exit 1
 fi
 
+# Check this first and allow --sync-pkg-cache to override
+if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
+    sync_pkg_cache=1
+    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
+fi
+
+while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
+    if [ 0"$1" = 0--sync-pkg-cache ]; then
+	if [ $# -ge 2 ]; then
+	    sync_pkg_cache=1
+	    pkg_cache_host=$2
+	    if echo $pkg_cache_host | fgrep -q '@'; then
+		shift
+		shift
+	    else
+		usage
+	    fi
+	else
+	    usage
+	fi
+    fi
+    
+    if [ 0"$1" = 0--pause ]; then
+	pause=yes
+	shift
+    fi
+done
+
+mode=interactive    # Default
+if [ $# = 1 ]; then
+    if [ "$1" = --binary ]; then
+	mode=binary
+    elif [ "$1" = --binary+reboot ]; then
+	mode=binary+reboot
+    elif [ "$1" = --defaults+reboot ] || [ "$1" = --yes ]; then
+	mode=defaults+reboot
+    elif [ "$1" = --defaults ]; then
+	mode=defaults
+    else
+	usage
+    fi
+fi
+
 if ! auto-root-check $0; then
     printf "Root "
     # exec quotes '$absolute --flag', causing usage error
@@ -327,34 +370,7 @@ cat << EOM
 EOM
 sleep 10
 
-# Check this first and allow --sync-pkg-cache to override
-if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
-    sync_pkg_cache=1
-    pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
-fi
-
-while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
-    if [ 0"$1" = 0--sync-pkg-cache ]; then
-	if [ $# -ge 2 ]; then
-	    sync_pkg_cache=1
-	    pkg_cache_host=$2
-	    if echo $pkg_cache_host | fgrep -q '@'; then
-		shift
-		shift
-	    else
-		usage
-	    fi
-	else
-	    usage
-	fi
-    fi
-    
-    if [ 0"$1" = 0--pause ]; then
-	pause=yes
-	shift
-    fi
-done
-
+# Must be root at this point
 if [ -n "$pkg_cache_host" ]; then
     case $os_type in
     FreeBSD|DragonFly)
@@ -382,21 +398,6 @@ if [ -n "$pkg_cache_host" ]; then
 	sleep 10
     done
     rsync -av --timeout=5 ${pkg_cache_host}:$pkg_cache/ $pkg_cache || true
-fi
-
-mode=interactive    # Default
-if [ $# = 1 ]; then
-    if [ "$1" = --binary ]; then
-	mode=binary
-    elif [ "$1" = --binary+reboot ]; then
-	mode=binary+reboot
-    elif [ "$1" = --defaults+reboot ] || [ "$1" = --yes ]; then
-	mode=defaults+reboot
-    elif [ "$1" = --defaults ]; then
-	mode=defaults
-    else
-	usage
-    fi
 fi
 
 ##########################################################################
