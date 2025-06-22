@@ -192,7 +192,7 @@ On Illumos:
 
     pkg update
     reboot      # To load new boot env
-    pkg install developer/gcc-10 git openjdk18 gtar
+    pkg install developer/gcc-13 git openjdk18 gnu-tar
 
 EOM
 	exit 1
