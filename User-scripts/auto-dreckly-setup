@@ -900,7 +900,7 @@ EOM
     Linux)
 	make_jobs=$(grep '^processor' /proc/cpuinfo|wc -l)
 	;;
-    Darwin|FreeBSD|NetBSD)
+    Darwin|FreeBSD|OpenBSD|NetBSD)
 	make_jobs=$(sysctl -n hw.ncpu)
 	;;
     *)
