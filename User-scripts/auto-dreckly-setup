@@ -318,6 +318,10 @@ Running as root.  Installing globally.
 EOM
     if [ $(uname) = Darwin ]; then
 	default_parent="/opt"
+    elif [ $(uname) = OpenBSD ]; then
+	# OpenBSD has a very small /usr partition by default, meant to
+	# contain only the base system.
+	default_parent="/usr/local"
     else
 	default_parent="/usr"
     fi
