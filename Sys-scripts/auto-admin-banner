@@ -55,6 +55,6 @@ cat << EOM
 	   _________________________________________________________
 		  
 		  Portable Command-line Systems Management
-		      https://acadix.biz/auto-admin.php
+		  https://github.com/outpaddling/auto-admin
 	   _________________________________________________________
 EOM

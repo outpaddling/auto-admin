@@ -53,6 +53,7 @@ if auto-using-pkgsrc; then
 	install_cmd='no-pkgin'
 	remove_cmd='pkg_delete'
 	autoremove_cmd='no-autoremove'
+	source_dir=$(auto-pkgsrc-dir)
     fi
     auto_install_packages='auto-install-packages -n -s'
     install_from_source_cmd="$auto_install_packages"
@@ -67,6 +68,8 @@ else
 	install_from_source_cmd="$auto_install_packages"
 	remove_cmd='pkg remove -y'
 	autoremove_cmd='pkg autoremove -y'
+	: ${PORTSDIR:=/usr/ports}
+	source_dir=$PORTSDIR
 	;;
     
     *)
@@ -83,8 +86,8 @@ do
     auto-admin-banner
     cat << EOM
 
-To see ports by category, run "ls /usr/ports" and e.g. "ls /usr/ports/audio"
-or browse the collection at https://www.freebsd.org/ports/index.html.
+To see ports/packages by category, run "ls $source_dir"
+and e.g. "ls $source_dir/audio".
 
 1.. List installed packages
 2.. List available packages

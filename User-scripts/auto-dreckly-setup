@@ -68,7 +68,7 @@ while echo $1 | grep '^--'; do
     fi
 done
 
-if [ $(uname) = SunOS ] && ! which gtar; then
+if [ $(uname) = SunOS ] && ! which gtar > /dev/null 2>&1; then
     printf "You need gtar on SunOS.  Run pkg install gnu-tar.\n"
     exit 1
 fi
@@ -133,7 +133,7 @@ fi
 if [ $(uname) != NetBSD ]; then
     printf "Checking for required tools...\n"
 
-    if ! which java; then
+    if ! which java > /dev/null 2>&1; then
 	cat << EOM
 
 Warning: No Java installation detected and the openjdk packages only build
@@ -161,10 +161,10 @@ EOM
 	tools="$tools git"
     fi
     for tool in $tools; do
-	if ! which $tool; then
-	    if [ $tool = cc ] && which gcc; then
+	if ! which $tool > /dev/null 2>&1; then
+	    if [ $tool = cc ] && which gcc > /dev/null 2>&1; then
 		continue;
-	    elif [ $tool = c++ ] && which g++; then
+	    elif [ $tool = c++ ] && which g++ > /dev/null 2>&1; then
 		continue;
 	    fi
 	    missing="$missing $tool"
@@ -435,14 +435,14 @@ unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
     FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
 
 printf "Compilers in your current PATH include:\n\n"
-if ! which cc; then
-    if ! which gcc; then
+if ! which cc > /dev/null 2>&1; then
+    if ! which gcc > /dev/null 2>&1; then
 	printf "No C compiler found.  Aborting...\n"
 	exit 1
     fi
 fi
-if ! which c++; then
-    if ! which g++; then
+if ! which c++ > /dev/null 2>&1; then
+    if ! which g++ > /dev/null 2>&1; then
 	printf "No C++ compiler found.  Aborting...\n"
 	exit 1
     fi
@@ -455,7 +455,7 @@ if [ 0$proceed = 0n ]; then
     exit 0
 fi
 
-if ! which gfortran; then
+if ! which gfortran > /dev/null 2>&1; then
     # Dreckly GCC packages don't currently build on FreeBSD.
     # It's better to use the ports gfortran anyway, since it's easier
     # to install and tested for compatibility with FreeBSD clang.
@@ -524,15 +524,15 @@ else
     march_native=n
 fi
 
-if which /usr/bin/fetch > /dev/null; then   # FreeBSD
+if which /usr/bin/fetch > /dev/null 2>&1; then   # FreeBSD
     fetch_cmd=fetch
 elif [ -e /usr/pkg/bin/fetch ]; then        # NetBSD
     fetch_cmd=/usr/pkg/bin/fetch
-elif which curl > /dev/null; then
+elif which curl > /dev/null 2>&1; then
     fetch_cmd='curl -O'
-elif which wget > /dev/null; then
+elif which wget > /dev/null 2>&1; then
     fetch_cmd=wget
-elif which ftp > /dev/null; then
+elif which ftp > /dev/null 2>&1; then
     fetch_cmd=ftp
 else
     printf "No fetch command found.\n"
@@ -665,7 +665,7 @@ if [ 0$bootstrap = '0y' ]; then
     unset CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS CPATH \
 	C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH \
 	FC FFLAGS GFLAGS LD LDFLAGS LD_LIBRARY_PATH LDLIBS
-    if which cc; then
+    if which cc > /dev/null 2>&1; then
 	CC=cc
 	CXX=c++
     else
@@ -811,7 +811,7 @@ if [ 0$bootstrap = '0y' ]; then
 	;;
     Linux)
 	printf "FETCH_USING=\t\tcurl\n" >> $mk_conf
-	if ! which curl; then
+	if ! which curl > /dev/null 2>&1; then
 	    cat << EOM
 
 You must install curl via your native Linux package manager, e.g.
@@ -1455,7 +1455,7 @@ else
     os=$(uname)-$(uname -r)
 fi
 
-if [ -z "GCC_VER" ]; then
+if [ -z "$GCC_VER" ]; then
     cat << EOM
 
 ============================================================================
@@ -1668,9 +1668,13 @@ EOM
 	mkdir -p $HOME/Desktop/Guides
 	cd $HOME/Desktop/Guides
 	printf "Fetching manual...\n"
-	$fetch_cmd https://www.netbsd.org/docs/pkgsrc/pkgsrc.pdf
-	printf "A copy of the dreckly guide has been placed on your desktop.\n"
+	if $fetch_cmd https://www.netbsd.org/docs/pkgsrc/pkgsrc.pdf; then
+	    printf "A copy of the dreckly guide has been placed on your desktop.\n"
+	fi
     fi
+else
+    printf "GCC_VER is set.\n"
+    pause
 fi
 
 # Generate bootstrap kit
@@ -1701,12 +1705,15 @@ if [ -n "$GCC_VER" ]; then
     export COMPILER_PATH
     $0
 else
-    (cd $dreckly_dir/sysutils/auto-admin && bmake clean install)
-    auto-software-manager
-    cat << EOM
+    auto_software=`auto-ask auto_admin "Run auto-software-manager now to install additional software? (y/n)" y`
+    if [ $auto_software = y ]; then
+	(cd $dreckly_dir/sysutils/auto-admin && bmake clean install clean)
+	auto-software-manager
+	cat << EOM
 
 Run auto-software-manager for a menu interface to dreckly.
 
 EOM
+    fi
 fi
 
