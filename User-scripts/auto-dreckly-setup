@@ -869,24 +869,6 @@ EOM
 	done
     fi
     
-    cat << EOM
-Allow installation of packages with known security vulnerabilities?
-
-Not recommended on systems with untrusted users or systems on public
-networks.
-
-If you answer NO here, you can still install individual vulnerable
-packages by running
-
-    env ALLOW_VULNERABLE_PACKAGES=yes bmake install
-
-EOM
-    #printf "Allow vulnerable packages? y/[n] "
-    #read allow_vulnerable
-    #if [ 0$allow_vulnerable = 0y ]; then
-    #    printf "ALLOW_VULNERABLE_PACKAGES=yes\n" >> $mk_conf
-    #fi
-    
     # Needed for libfetch and pkgin
     printf "PKG_OPTIONS.libfetch=\tinet6 openssl\n" >> $mk_conf
     
