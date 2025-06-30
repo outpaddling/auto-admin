@@ -796,8 +796,18 @@ if [ 0$bootstrap = '0y' ]; then
 	printf "Will you be using this installation for package development? y/[n] "
 	read developer
 	if [ 0$developer = 0y ]; then
+	    # FIXME: Override old setting if necessary
 	    if ! fgrep PKG_DEVELOPER $mk_conf; then
 		printf "PKG_DEVELOPER=\t\tyes\n" >> $mk_conf
+	    fi
+	fi
+
+	printf "Disable use of RUST to avoid long build times? y/[n] "
+	read disable_rust
+	if [ 0$disable_rust = 0y ]; then
+	    # FIXME: Override old setting if necessary
+	    if ! fgrep PLATFORM_SUPPORTS_RUST $mk_conf; then
+		printf "PLATFORM_SUPPORTS_RUST=\t\tno\n" >> $mk_conf
 	    fi
 	fi
     fi
