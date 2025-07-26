@@ -139,7 +139,7 @@ if auto-using-pkgsrc; then
 	    # FIXME: Doesn't handle dependencies
 	    elif awk '{ print $1 }' \
 		$(auto-localbase)/etc/auto-admin/install-from-source \
-		    | fgrep --line-regexp $pkg; then
+		    2> /dev/null | fgrep --line-regexp $pkg; then
 		install_from_source
 		status=$?
 	    else
@@ -273,7 +273,7 @@ else
 		# FIXME: Doesn't handle dependencies
 		elif awk '{ print $1 }' \
 		    $(auto-localbase)/etc/auto-admin/install-from-source \
-			| fgrep --line-regexp $port; then
+			2> /dev/null | fgrep --line-regexp $port; then
 		    install_from_port
 		    status=$?
 		else
