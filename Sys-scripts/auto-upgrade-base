@@ -42,12 +42,22 @@ update_on_boot()
 printf "\nRunning 1-time script $rc_dir/$update_script...\n"
 printf "to complete base upgrade.\n"
 /usr/sbin/freebsd-update install || true
-# Reboot in case kernel modules are rebuilt via install-from-source
-# when KBI incompatibilities between point releases
+
+######################################################
+# Reboot to reload kernel modules, which may differ
+# due to KBI incompatibilities between point releases
 # The binary package for x.y may not work on x.(y+1)
 # One more reboot at this point won't hurt
-/usr/local/sbin/auto-update-system --yes
+
+# Help auto-update-system find other auto-admin scripts
+export PATH=${PATH}:/usr/local/bin:/usr/local/sbin
+
+# --yes won't reboot unless a kernel update is detected
+/usr/local/sbin/auto-update-system --defaults
+
+# This script is only to be run once, after the first reboot
 rm -f $rc_dir/$update_script
+reboot
 
 EOM
     chmod 755 $rc_dir/$update_script
@@ -207,9 +217,9 @@ EOM
 	    read resp
 	done
 	if [ $resp = yes ]; then
-	    # Restart sshd immediately in case API changes broken running daemon
-	    # Otherwise we may lose access when upgrading remotely
 	    freebsd-update install
+	    # Restart sshd immediately in case API changes broke running daemon
+	    # Otherwise we may lose access when upgrading remotely
 	    service sshd restart || true
 
 	    cat << EOM
