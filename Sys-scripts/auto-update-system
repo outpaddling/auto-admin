@@ -453,6 +453,44 @@ FreeBSD|DragonFly)
     esac
     
     if [ 0$update_packages != 0n ]; then
+	if ls /usr/local/etc/pkg/repos/*.conf; then
+	    repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf)
+	else
+	    repo_conf=$(ls /etc/pkg/*.conf)
+	fi
+	if ! fgrep kmods $repo_conf; then
+	    cat << EOM
+
+FreeBSD now publishes kernel module packages for each minor release.
+However, your configuration file(s)
+
+    $repo_conf
+
+do[es] not contain the necessary repository configuration to utilize them.
+One of the configuration files must contain an entry like the following
+(with "latest" replaced by "quarterly" if you are using quarterly
+packages):
+
+FreeBSD-kmods: {
+  url: "pkg+https://pkg.FreeBSD.org/${ABI}/kmods_latest_${VERSION_MINOR}",
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: yes,
+  priority: 1
+}
+
+You should add such an entry to a .conf file in another terminal window
+before continuing with this update.  Make sure "priority" has a higher
+value than the general repository so that the kmods repository will be
+searched first.
+
+See pkg.conf(5) for more information.
+
+EOM
+	    pause
+	fi
+	
 	critical_pkg_file=$(auto-localbase)/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
 	    printf "Verifying availability of critical packages...\n"
