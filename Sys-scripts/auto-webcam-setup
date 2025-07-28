@@ -37,7 +37,7 @@ fi
 	
 case $(auto-ostype) in
 FreeBSD)
-    if ! grep -iq '^ugen.*camera' /var/run/dmesg.boot; then
+    if ! dmesg | egrep -iq '^ugen.*Webcam|^ugen.*camera'; then
 	printf "No webcam detected.  Install a webcam and run $0 again.\n"
 	exit 1
     fi
@@ -50,7 +50,7 @@ FreeBSD)
     auto-set-conf-var cuse_load '"YES"' $LOADER_CONF $0
     auto-enable-service webcamd $0
     sleep 2
-    dmesg | grep ^ugen | fgrep -i camera | uniq
+    dmesg | grep ^ugen | grep -E -i 'Webcam|camera' | sort | uniq
     while [ -z "$ugen" ]; do
 	printf "ugen device? (e.g. 1.5) "
 	read ugen
