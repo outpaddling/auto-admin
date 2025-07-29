@@ -458,7 +458,7 @@ FreeBSD|DragonFly)
 	else
 	    repo_conf=$(ls /etc/pkg/*.conf)
 	fi
-	if ! fgrep kmods $repo_conf; then
+	while ! fgrep kmods $repo_conf; do
 	    cat << EOM
 
 FreeBSD now publishes kernel module packages for each minor release.
@@ -472,7 +472,7 @@ One of the configuration files must contain an entry like the following
 packages):
 
 FreeBSD-kmods: {
-  url: "pkg+https://pkg.FreeBSD.org/${ABI}/kmods_latest_${VERSION_MINOR}",
+  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest_\${VERSION_MINOR}",
   mirror_type: "srv",
   signature_type: "fingerprints",
   fingerprints: "/usr/share/keys/pkg",
@@ -489,7 +489,7 @@ See pkg.conf(5) for more information.
 
 EOM
 	    pause
-	fi
+	done
 	
 	critical_pkg_file=$(auto-localbase)/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
