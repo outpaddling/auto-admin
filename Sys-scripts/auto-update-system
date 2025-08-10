@@ -2,8 +2,7 @@
 
 ##########################################################################
 #   Synopsis:
-#       auto-update-system [ --sync-pkg-cache user@host ] \\
-#       [ --pause ] \\
+#       auto-update-system [ --sync-pkg-cache user@host ] [ --pause ] \\
 #       [ --binary | --binary+reboot | --defaults | --defaults+reboot | --yes ]
 #       
 #   Description:
@@ -19,8 +18,8 @@
 #       --sync-pkg-cache for all but the first system, or configure a
 #       package mirror or proxy server.
 #
-#       On BSD systems, auto-pkgsrc-setup ensures that the binary package
-#       repository and ports/pkgsrc tree are on the same branch.  If they
+#       On BSD systems, the binary package repository and ports/pkgsrc
+#       tree must be on the same branch (current or quarterly).  If they
 #       are not, auto-update-system offers to update the ports/pkgsrc
 #       tree accordingly.
 #
@@ -29,7 +28,8 @@
 #       inconsistent state due to a previous failed update.
 #
 #       If no flags are provided, auto-update-system prompts the user
-#       before updating each component.
+#       before updating each component (binary packages, ports/pkgsrc tree,
+#       base system).
 #
 #       Binary packages can be pulled from another local system using the
 #       --sync-pkg-cache user@host option to reduce downloads from primary
@@ -296,14 +296,13 @@ fi
 
 # Check this first and allow --sync-pkg-cache to override
 if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
-    sync_pkg_cache=1
     pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
 fi
 
-while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
+mode=interactive    # Default
+while [ $# -ge 1 ]; do
     if [ 0"$1" = 0--sync-pkg-cache ]; then
 	if [ $# -ge 2 ]; then
-	    sync_pkg_cache=1
 	    pkg_cache_host=$2
 	    if echo $pkg_cache_host | fgrep -q '@'; then
 		shift
@@ -314,28 +313,25 @@ while [ 0"$1" = 0--sync-pkg-cache ] || [ 0"$1" = 0--pause ]; do
 	else
 	    usage
 	fi
-    fi
-    
-    if [ 0"$1" = 0--pause ]; then
+    elif [ 0"$1" = 0--pause ]; then
 	pause=yes
 	shift
-    fi
-done
-
-mode=interactive    # Default
-if [ $# = 1 ]; then
-    if [ "$1" = --binary ]; then
+    elif [ "$1" = --binary ]; then
 	mode=binary
+	shift
     elif [ "$1" = --binary+reboot ]; then
 	mode=binary+reboot
+	shift
     elif [ "$1" = --defaults+reboot ] || [ "$1" = --yes ]; then
 	mode=defaults+reboot
+	shift
     elif [ "$1" = --defaults ]; then
 	mode=defaults
+	shift
     else
 	usage
     fi
-fi
+done
 
 if ! auto-root-check $0; then
     printf "Root "
