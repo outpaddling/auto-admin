@@ -46,8 +46,14 @@ FreeBSD)
 	# Determine latest branch that *should* exist based on today's date
 	year=$(date +%Y)                # E.g. 2024
 	month=$(date +%-m)              # E.g. 11
-	quarter=$(($month / 3 + 1))     # 11 / 3 + 1 = 4
-	branch=${year}Q$quarter         # 2024Q4
+	if [ $(($month-($month / 3) * 3)) == 0 ];
+	then
+		roundup=0
+	else
+		roundup=1
+	fi
+	quarter=$(($month / 3 + $roundup))     # 11 / 3 + 1 = 4
+	branch=${year}Q$quarter                # 2024Q4
 	
 	# Branch may not happen immediately at midnight of Jan, April,
 	# Jul, Oct 1, so check for existence of the ports branch and
