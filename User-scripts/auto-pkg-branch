@@ -45,7 +45,8 @@ FreeBSD)
 	
 	# Determine latest branch that *should* exist based on today's date
 	year=$(date +%Y)                # E.g. 2024
-	month=$(date +%m)               # E.g. 11
+	month=$(date +%-m)              # E.g. 11
+	month=$((month - 1))            # Use 0-based month for division
 	quarter=$(($month / 3 + 1))     # 11 / 3 + 1 = 4
 	branch=${year}Q$quarter         # 2024Q4
 	
