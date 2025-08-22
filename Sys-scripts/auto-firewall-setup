@@ -176,8 +176,8 @@ EOM
     pause
     : ${EDITOR:=vi}
     $EDITOR $firewall_script
-    service ipfw restart
     auto-set-sysctl net.inet.ip.fw.verbose_limit 5 $0
+    service ipfw restart
     ;;
 
 *)

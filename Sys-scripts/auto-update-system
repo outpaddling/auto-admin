@@ -299,6 +299,7 @@ if [ -e $(auto-localbase)/etc/auto-admin/pkg-cache-host ]; then
     pkg_cache_host=$(cat $(auto-localbase)/etc/auto-admin/pkg-cache-host)
 fi
 
+save_args="$@"      # Save before shifting below
 mode=interactive    # Default
 while [ $# -ge 1 ]; do
     if [ 0"$1" = 0--sync-pkg-cache ]; then
@@ -313,7 +314,7 @@ while [ $# -ge 1 ]; do
 	else
 	    usage
 	fi
-    elif [ 0"$1" = 0--pause ]; then
+    elif [ "$1" = --pause ]; then
 	pause=yes
 	shift
     elif [ "$1" = --binary ]; then
@@ -337,7 +338,7 @@ if ! auto-root-check $0; then
     printf "Root "
     # exec quotes '$absolute --flag', causing usage error
     # Assigning to cmd works around the problem
-    cmd="$absolute $@"
+    cmd="$absolute $save_args"
     while ! su -m root -c "$cmd"; do
 	printf "Command failed, possibly due to an incorrect password.  Try again? [y]/n "
 	read again
