@@ -455,7 +455,7 @@ FreeBSD|DragonFly)
 	else
 	    repo_conf=$(ls /etc/pkg/*.conf)
 	fi
-	while [ $(uname -K) -ge 1400000 ] && ! grep -i 'pkg.FreeBSD.org.*kmods' $repo_conf; do
+	while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
 	    cat << EOM
 
 FreeBSD now publishes kernel module packages for each minor release.
