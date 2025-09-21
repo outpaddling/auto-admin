@@ -264,6 +264,17 @@ ifs_update()
 }
 
 
+using_pkgbase()
+
+{
+    if grep -q 'url:.*base_' /usr/local/etc/pkg/repos/* 2> /dev/null; then
+	return 0
+    else
+	return 1
+    fi
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -450,11 +461,7 @@ FreeBSD|DragonFly)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	if ls /usr/local/etc/pkg/repos/*.conf; then
-	    repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf)
-	else
-	    repo_conf=$(ls /etc/pkg/*.conf)
-	fi
+	repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf /etc/pkg/*.conf)
 	while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
 	    cat << EOM
 
@@ -648,12 +655,16 @@ EOM
     # following commits, but until then...
     # PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
     # by pkg -v, so use pkg query '%v' for comparison.
-    if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
-	printf "pkg version does not match ports.  Rebuilding from source...\n"
-	(cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
-	    && make -DBATCH deinstall reinstall)
+    if ! using_pkgbase; then
+	if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
+	    printf "pkg version does not match ports.  Rebuilding from source...\n"
+	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
+		&& make -DBATCH deinstall reinstall)
+	else
+	    printf "Binary pkg is up-to-date.\n"
+	fi
     else
-	printf "Binary pkg is up-to-date.\n"
+	printf "Using pkgbase: Skipping pkg version check.\n"
     fi
     
     # If binary packages were updated, also update ports listed in
@@ -762,46 +773,62 @@ EOM
     
     if [ 0$update_base != 0n ]; then
 	if [ $(auto-ostype) = FreeBSD ]; then
-	    printf "\n**** Updating base system...\n"
-	    if [ ! -e /boot.save ]; then
-		cp -Rp /boot /boot.save
-	    fi
-	    fetch_output=/tmp/auto-update-system-fetch.out
-	    install_output=/tmp/auto-update-system-install.out
-	    freebsd-update $freebsd_update_flags fetch 2>&1 | tee $fetch_output
-	    
-	    if ! fgrep -q 'No updates' $fetch_output; then
-		freebsd-update $freebsd_update_flags install 2>&1 | tee $install_output
-		# FIXME: Is this still necessary?  IB may be part of base now.
-		if [ -e /boot/modules/ibcore.ko ]; then
+	    if using_pkgbase; then
+		# FIXME: Check pkg upgrade output for kernel updates
+		# and reboot only if kernel or modules updated
+		if [ 0$reboot_requested = 0y ]; then
+		    auto_reboot=y
+		else
+		    auto_reboot=n
 		    cat << EOM
 
+Using pkgbase: Skipping freebsd-update...
+Be sure to reboot if kernel components were upgraded by pkg.
+
+EOM
+		fi
+	    else
+		printf "\n**** Updating base system...\n"
+		if [ ! -e /boot.save ]; then
+		    cp -Rp /boot /boot.save
+		fi
+		fetch_output=/tmp/auto-update-system-fetch.out
+		install_output=/tmp/auto-update-system-install.out
+		freebsd-update $freebsd_update_flags fetch 2>&1 | tee $fetch_output
+		
+		if ! fgrep -q 'No updates' $fetch_output; then
+		    freebsd-update $freebsd_update_flags install 2>&1 | tee $install_output
+		    # FIXME: Is this still necessary?  IB may be part of base now.
+		    if [ -e /boot/modules/ibcore.ko ]; then
+			cat << EOM
+    
 Infiniband kernal modules detected.  Run auto-update-infiniband-modules, after
 rebooting if a reboot is needed.
 
 EOM
+		    fi
 		fi
-	    fi
-	    
-	    # Reboot only if kernel or modules updated
-	    if [ 0$reboot_requested = 0y ]; then
-		if grep -q '^/boot' $fetch_output; then
-		    printf "Kernel componented updated.  System will reboot.\n"
-		    auto_reboot=y
+		
+		# Reboot only if kernel or modules updated
+		if [ 0$reboot_requested = 0y ]; then
+		    if grep -q '^/boot' $fetch_output; then
+			printf "Kernel componented updated.  System will reboot.\n"
+			auto_reboot=y
+		    else
+			reboot_advice
+			auto_reboot=n
+		    fi
 		else
-		    reboot_advice
-		    auto_reboot=n
+		    if grep -q '^/boot' $fetch_output; then
+			printf "Kernel componented updated.  Reboot manually as soon as possible.\n"
+			auto_reboot=n
+		    else
+			reboot_advice
+			auto_reboot=n
+		    fi
 		fi
-	    else
-		if grep -q '^/boot' $fetch_output; then
-		    printf "Kernel componented updated.  Reboot manually as soon as possible.\n"
-		    auto_reboot=n
-		else
-		    reboot_advice
-		    auto_reboot=n
-		fi
+		rm -f $fetch_output $install_output
 	    fi
-	    rm -f $fetch_output $install_output
     
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
