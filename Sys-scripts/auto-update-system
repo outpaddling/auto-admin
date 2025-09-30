@@ -586,7 +586,7 @@ EOM
 	
 	if [ $auto_admin_new_version != $auto_admin_old_version ]; then
 	    printf "Restarting with newer version of auto-update-system...\n"
-	    exec auto-update-system "$@"
+	    exec auto-update-system "$save_args"
 	fi
     fi
     
