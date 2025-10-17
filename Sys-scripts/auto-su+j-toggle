@@ -64,7 +64,7 @@ FreeBSD)
 	# If old .sujournal exists, tunefs will refuse to enable su+j
 	if [ $state = enable ] && [ -n "$mount_opts" ] && ! echo $mount_opts | fgrep journal; then
 	    if echo $fs | grep -q '/dev'; then
-		mount_point=$(awk -v dev=\$fs '\$1 == dev { print \$2 }' /etc/fstab)
+		mount_point=$(awk -v dev=\$fs '$1 == dev { print $2 }' /etc/fstab)
 	    else
 		mount_point=$fs
 	    fi
