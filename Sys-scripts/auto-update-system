@@ -461,7 +461,12 @@ FreeBSD|DragonFly)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf /etc/pkg/*.conf)
+	# Avoid command failure if nothing under /usr/local
+	if ls /usr/local/etc/pkg/repos/*.conf; then
+	    repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf /etc/pkg/*.conf)
+	else
+	    repo_conf=$(ls /etc/pkg/*.conf)
+	fi
 	while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
 	    cat << EOM
 
