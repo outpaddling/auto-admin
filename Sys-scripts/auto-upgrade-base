@@ -91,6 +91,17 @@ pause()
 }
 
 
+using_pkgbase()
+
+{
+    if grep -q 'url:.*base_' /usr/local/etc/pkg/repos/* 2> /dev/null; then
+	return 0
+    else
+	return 1
+    fi
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -108,6 +119,11 @@ pause
 
 case $(auto-ostype) in
 FreeBSD)
+    if using_pkgbase; then
+	printf "$0: pkgbase is not yet supported.\n"
+	printf "You will need to perform major upgrades manually for now.\n"
+	exit 1
+    fi
     case $# in
     0)
 	current_release=$(uname -r)
