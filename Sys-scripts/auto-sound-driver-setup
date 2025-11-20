@@ -35,7 +35,7 @@ case $(auto-ostype) in
 FreeBSD)
     devnum=0
     while dmesg | fgrep -q pcm$devnum; do
-	printf "Found pcm$devnum.\n"
+	printf "Found $(dmesg | fgrep pcm$devnum | uniq).\n"
 	devnum=$(($devnum + 1))
     done
     
@@ -60,33 +60,40 @@ then it might make sense to scan now.
 EOM
 	printf "Scan for additional sound devices? (y/[n]) "
 	read continue
-	if [ 0$continue != 'y' ]; then
-	    exit 0
+	if [ 0$continue = 'y' ]; then
+	    for module in /boot/kernel/snd_*.ko; do
+		driver=`basename ${module%%.ko}`
+		case $driver in
+		snd_driver)
+		    ;;
+		*)
+		    printf "Testing $driver...\n"
+		    if kldload ${driver} > /dev/null 2>&1; then
+			if dmesg | fgrep -q pcm$devnum; then
+			    printf "Device found for $driver.  Updating loader.conf...\n"
+			    auto-append-line "${driver}_load" "${driver}_load=\"YES\"" \
+				/boot/loader.conf $0
+			    exit 0
+			else
+			    kldunload $driver
+			fi
+		    fi
+		esac
+	    done
 	fi
     fi
     
-    for module in /boot/kernel/snd_*.ko; do
-	driver=`basename ${module%%.ko}`
-	case $driver in
-	snd_driver)
-	    ;;
-	*)
-	    printf "Testing $driver...\n"
-	    if kldload ${driver} > /dev/null 2>&1; then
-		if dmesg | fgrep -q pcm$devnum; then
-		    printf "Device found for $driver.  Updating loader.conf...\n"
-		    auto-append-line "${driver}_load" "${driver}_load=\"YES\"" \
-			/boot/loader.conf $0
-		    exit 0
-		else
-		    kldunload $driver
-		fi
-	    fi
-	esac
-    done
+    if [ $devnum -gt 1 ]; then
+	printf "\nMultiple sound devices found.  Please select a default:\n\n"
+	auto-select-sound-device
+    fi
     
     # No supported sound device found
-    exit 1
+    if [ $devnum -gt 0 ]; then
+	exit 0
+    else
+	exit 1
+    fi
     ;;
     
 *)

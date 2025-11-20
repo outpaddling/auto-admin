@@ -1,0 +1,28 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    valid=no
+    while [ $valid != yes ]; do
+	cat /dev/sndstat | grep ^pcm
+	printf "\nEnter the number of the pcm device to make the default [no change]: "
+	read default_dev
+	if [ -z "$default_dev" ] || cat /dev/sndstat | grep ^pcm | cut -c 4 | fgrep $default_dev; then
+	    valid=yes
+	else
+	    printf "$default_dev is not a valid pcm device number.\n" >> /dev/stderr
+	fi
+    done
+    if [ -n "$default_dev" ]; then
+	auto-set-sysctl hw.snd.default_unit $default_dev $0
+    else
+	printf "Default sound device unchanged.\n"
+    fi
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
