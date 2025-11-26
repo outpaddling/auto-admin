@@ -45,6 +45,7 @@ FreeBSD)
     for var in $(grep -v '^#' /etc/rc.conf | grep -i '^.*_enable=.*yes' | cut -d = -f 1); do
 	service=${var%_enable}
 	if [ $service = nfs_server ]; then
+	    # NFS restarts are more complicated than just service x restart
 	    auto-nfs-restart
 	elif [ $service = nfsuserd ]; then
 	    # Already handled by auto-nfs-restart
@@ -52,20 +53,14 @@ FreeBSD)
 	    ls > /dev/null
 	elif [ $service = ntpdate ]; then
 	    auto-fix-date
-	elif [ $service = ntpd ]; then
-	    printf "Skipping ntpd, done by auto-fix-date...\n"
-	elif [ $service = sddm ]; then
-	    printf "Skipping sddm to avoid terminating login sessions...\n"
-	    printf "Restart sddm manually when ready.\n"
-	elif [ $service = gdm ]; then
-	    printf "Skipping gdm to avoid terminating login sessions...\n"
-	    printf "Restart gdm manually when ready.\n"
 	elif [ -x $localbin/auto-$service-restart ]; then
 	    # If a service requires special handling to restart, simply
 	    # create an auto-$service-restart script
 	    printf "Using auto-$service-restart...\n"
 	    auto-$service-restart
 	elif [ -e $localrc/$service ] || [ -e $rc/$service ]; then
+	    # Ordinary services enabled in rc.conf, not covered by
+	    # special cases above
 	    service $service restart
 	fi
     done
