@@ -617,8 +617,11 @@ EOM
 	    if [ -e $PORTSDIR/.git ]; then
 		save_cwd=$(pwd)
 		cd $PORTSDIR
+		# bsd.local.mk has been moved to bsd.local.mk.sample.
+		# If ports tree is out of date, it may still be tracked.
 		stash_file=Mk/bsd.local.mk
-		if ! git diff --quiet $stash_file; then
+		if git ls-files --error-unmatch $stash_file > /dev/null 2>&1 \
+		    && ! git diff --quiet $stash_file; then
 		    stash=1
 		fi
 		if [ 0$stash = 01 ]; then
