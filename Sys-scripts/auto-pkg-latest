@@ -39,12 +39,14 @@ FreeBSD)
 	fi
     done
 
-    dir=/usr/local/etc/pkg/repos
-    file=$dir/bleeding-edge.conf
-    if [ -e $file ]; then
+    if pkg repositories -e | grep -q 'url.*: .*/latest' \
+	&& pkg repositories -e | grep -q 'url.*: .*/kmods_latest'; then
 	printf "$0: You are already using latest packages.\n"
 	exit 0
     fi
+
+    dir=/usr/local/etc/pkg/repos
+    file=$dir/bleeding-edge.conf
     if [ 0$proceed != 01 ]; then
 	cat << EOM
 
@@ -96,10 +98,10 @@ EOM
     auto-check-ports-branch
     
     if [ 0$no_reboot != 01 ]; then
-	printf "Reboot to reload services? (y/n) [y] "
-	read reboot
+	printf "Restart services? (y/n) [y] "
+	read restart
 	if [ 0$reboot != 0n ]; then
-	    shutdown -r now
+	    auto-restart-services
 	fi
     fi
     ;;
