@@ -160,6 +160,11 @@ FreeBSD)
     if [ $new_minor -gt 0 ]; then
 	new_major=${new_version%.*}
 	previous_release=$new_major.$(($new_minor - 1))
+	if [ $(uname -K) -ge 1500000 ]; then
+	    ports_repo_insert="-ports"
+	else
+	    ports_repo_insert=""
+	fi
 	more << EOM
 
 			    ======== Caution ========
@@ -175,11 +180,11 @@ releases.  However, you must ensure that your pkg configuration specifies
 both the FreeBSD-kmods and FreeBSD pkg repositories, with FreeBSD-kmods
 having a higher priority.  For example:
 
-FreeBSD-kmods: {
+FreeBSD$ports_repo_insert-kmods: {
   url: "pkg+https://pkg.FreeBSD.org/${ABI}/kmods_latest_${VERSION_MINOR}",
   priority: 1
 }
-FreeBSD: {
+FreeBSD$ports_repo_insert: {
   url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"
 }
 

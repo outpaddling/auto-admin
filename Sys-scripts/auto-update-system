@@ -468,6 +468,11 @@ FreeBSD|DragonFly)
 	    repo_conf=$(ls /etc/pkg/*.conf)
 	fi
 	while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
+	    if [ $(uname -K) -ge 1500000 ]; then
+		ports_repo_insert="-ports"
+	    else
+		ports_repo_insert=""
+	    fi
 	    cat << EOM
 
 FreeBSD now publishes kernel module packages for each minor release.
@@ -480,7 +485,7 @@ One of the configuration files must contain an entry like the following
 (with "latest" replaced by "quarterly" if you are using quarterly
 packages):
 
-FreeBSD-kmods: {
+FreeBSD$ports_repo_insert-kmods: {
   url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest_\${VERSION_MINOR}",
   mirror_type: "srv",
   signature_type: "fingerprints",

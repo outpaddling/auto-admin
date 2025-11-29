@@ -70,9 +70,13 @@ EOM
     fi
     
     mkdir -p $dir
-    # auto-backup-file $file
+    if [ $(uname -K) -ge 1500000 ]; then
+	ports_repo_insert="-ports"
+    else
+	ports_repo_insert=""
+    fi
     cat << EOM > $file
-FreeBSD-kmods: {
+FreeBSD$ports_repo_insert-kmods: {
   url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest_\${VERSION_MINOR}",
   mirror_type: "srv",
   signature_type: "fingerprints",
@@ -80,7 +84,7 @@ FreeBSD-kmods: {
   enabled: yes,
   priority: 1
 }
-FreeBSD: {
+FreeBSD$ports_repo_insert: {
   url: "pkg+https://pkg.FreeBSD.org/\${ABI}/latest",
   mirror_type: "srv",
   signature_type: "fingerprints",
