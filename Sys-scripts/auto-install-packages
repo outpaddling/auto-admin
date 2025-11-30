@@ -130,7 +130,7 @@ if auto-using-pkgsrc; then
 	# FIXME: Is --base-dir really needed?
 	pkg_name=`auto-print-make-variable --base-dir $(auto-pkgsrc-dir) $pkg PKGNAME`
 	if [ $latest_package_name = 1 ]; then
-	    pkg_name=${pkg_name%%-[0-9]*}
+	    pkg_name=${pkg_name%-[0-9]*}
 	fi
 	if ! auto-package-installed -p $(auto-pkgsrc-dir) $pkg; then
 	    if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
@@ -264,7 +264,7 @@ else
 	    # FIXME: Is --base-dir really needed?
 	    pkg_name=`auto-print-make-variable --base-dir $PORTSDIR $port PKGNAME`
 	    if [ $latest_package_name = 1 ]; then
-		pkg_name=${pkg_name%%-[0-9]*}
+		pkg_name=${pkg_name%-[0-9]*}
 	    fi
 	    if ! auto-package-installed -p $PORTSDIR $port; then
 		if [ 0$AUTO_BUILD_FROM_SOURCE = 0yes ]; then
