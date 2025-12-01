@@ -100,7 +100,7 @@ EOM
     if [ 0$no_reboot != 01 ]; then
 	printf "Restart services? (y/n) [y] "
 	read restart
-	if [ 0$reboot != 0n ]; then
+	if [ 0$restart != 0n ]; then
 	    auto-restart-services
 	fi
     fi
