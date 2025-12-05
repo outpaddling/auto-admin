@@ -368,9 +368,9 @@ cat << EOM
 * until this update is complete.  It is best to log out of graphical  *
 * desktop sessions and run the update from a text console.            *
 *                                                                     *
-* After the update, auto-update-system will attempt to restart all    *
-* running services.  However, it's best to double check any critical  *
-* services to make sure they will continue to function properly.      *
+* Restart all running services after the update by running            *
+*                                                                     *
+*   auto-restart-services                                             *
 *                                                                     *
 * Reboot if the kernel or kernel modules have been updated.           *
 ***********************************************************************
