@@ -630,8 +630,8 @@ EOM
 		    stash=1
 		fi
 		if [ 0$stash = 01 ]; then
-		    printf "Stashing bsd.local.mk...\n"
-		    git stash push Mk/bsd.local.mk || true
+		    printf "Stashing $stash_file...\n"
+		    git stash push Mk/$stash_file || true
 		fi
 		
 		printf "Pulling...\n"
