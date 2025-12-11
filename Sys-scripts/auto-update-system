@@ -1139,11 +1139,6 @@ EOM
 	fi
     fi
 else
-    # Restart services in case daemons were updated
-    # FIXME: Not ideal to tolerate failures in service restarts, but there
-    # are too many things that can result in a non-zero exit status
-    auto-restart-services || true
-
     cat << EOM
 
 Be sure to reboot if you've updated the kernel, or restart any services
