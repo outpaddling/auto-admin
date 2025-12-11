@@ -188,7 +188,7 @@ EOM
 reboot_advice()
 {
     printf "No kernel componented updated.  Reboot probably not necessary.\n"
-    printf "It may be wise to reboot anyway, or at least restart X11\Wayland.\n"
+    printf "It may be wise to reboot anyway, or at least restart X11/Wayland.\n"
     printf "Updates to Xorg/Wayland may require them to be restarted to avoid problems.\n"
     return 0
 }
@@ -1121,8 +1121,28 @@ if [ 0$reboot_requested = 0y ]; then
     A reboot was requested, but no kernel updates were installed.
     Reboot manually if you want to be sure the system boots normally
     with the latest updates.
+****************************************************************************
+EOM
+	if [ 0$pause = 0yes ]; then
+	    pause
+	fi
+    fi
+else
+    cat << EOM
 
-    If you do not reboot, services should at least be restarted as the
+****************************************************************************
+    Be sure to reboot if you've updated the kernel.
+****************************************************************************
+EOM
+    if [ 0$pause = 0yes ]; then
+	pause
+    fi
+fi
+
+cat << EOM
+
+****************************************************************************
+    If you do not reboot, services should at least be restarted as
     daemons may have been updated.  To restart all services enabled
     via /etc/rc.conf, run the following after all users have logged out:
     
@@ -1134,18 +1154,3 @@ if [ 0$reboot_requested = 0y ]; then
 ****************************************************************************
 
 EOM
-	if [ 0$pause = 0yes ]; then
-	    pause
-	fi
-    fi
-else
-    cat << EOM
-
-Be sure to reboot if you've updated the kernel, or restart any services
-affected by package upgrades.
-
-EOM
-    if [ 0$pause = 0yes ]; then
-	pause
-    fi
-fi
