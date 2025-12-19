@@ -40,7 +40,7 @@ replace_ports()
     find $PORTSDIR -mindepth 0 -maxdepth 0 -exec rm -rf '{}' \;
     auto-ports-checkout
     if [ -n "$have_wip" ]; then
-	auto-freebsd-wip-checkout
+	auto-ports-wip-checkout
     fi
     cd $save_cwd
 }
