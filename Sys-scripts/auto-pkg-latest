@@ -77,9 +77,15 @@ EOM
     else
 	ports_repo_insert=""
     fi
+    # FIXME: Verify suffix for all branch types
+    if $(uname -r) | grep -E 'BETA|RC|RELEASE'; then
+	kmods_suffix="_\${VERSION_MINOR}"
+    else
+	kmods_suffix=""
+    fi
     cat << EOM > $file
 FreeBSD$ports_repo_insert-kmods: {
-  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest_\${VERSION_MINOR}",
+  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest$kmods_suffix",
   mirror_type: "srv",
   signature_type: "fingerprints",
   fingerprints: "/usr/share/keys/pkg",
