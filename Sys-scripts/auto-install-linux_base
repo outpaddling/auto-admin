@@ -47,8 +47,25 @@ usage()
 : ${PORTSDIR:=/usr/ports}
 
 case $# in
+0)
+    while [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; do
+	# export AUTO_ASK_TAG_PREFIX=auto-install-linux_base
+	printf "\nPlease enter one of the following linux_base versions:\n\n"
+	for base in $(ls -d $PORTSDIR/emulators/linux_base*); do
+	    printf "${base##*-}\n" >> /dev/stderr
+	done
+	# linux_base=$(auto-ask auto-install-linux_base )
+	printf "\nWhich linux_base would you like to install? "
+	read linux_base
+    done
+    ;;
+
 1)
     linux_base=$1
+    if [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; then
+	printf "No such linux_base: linux_base-$linux_base\n" >> /dev/stderr
+	exit 1
+    fi
     ;;
 
 *)
@@ -56,13 +73,7 @@ case $# in
     ;;
 
 esac
-if [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; then
-    printf "No such linux_base: linux_base-$linux_base\n" >> /dev/stderr
-    exit 1
-fi
 
-export AUTO_ASK_TAG_PREFIX=auto-install-linux_base
-    
 case $(auto-ostype) in
 FreeBSD)
     # FIXME: Support $PORTSDIR

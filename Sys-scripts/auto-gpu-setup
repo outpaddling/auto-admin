@@ -180,6 +180,7 @@ such as vesa or scfb is often a good temporary workaround.
 
 EOM
     pause
+    xorg_dir='/etc/X11/xorg.conf.d'
     if [ -z "$(pciconf -lv)" ]; then
 	printf "No PCI hardware detected.\n"
 	exit 0
@@ -187,8 +188,8 @@ EOM
     
     if sysctl -n kern.vm_guest | fgrep -iq parallels; then
 	printf "Parallels VM detected.  Forcing SCBF...\n"
-	mkdir -p /etc/X11/xorg.conf.d
-	cat << EOM > /etc/X11/xorg.conf.d/10-parallels-scfb.conf
+	mkdir -p $xorg_dir
+	cat << EOM > $xorg_dir/10-parallels-scfb.conf
 Section "Device"
 	### Force SCFB driver for Parallels 15+
 	Identifier  "Card0"
@@ -203,7 +204,7 @@ EOM
     
     if sysctl -n kern.vm_guest | fgrep -iq vmware; then
 	printf "VMWare VM detected.  Installing XF86-video-vmware...\n"
-	mkdir -p /etc/X11/xorg.conf.d
+	mkdir -p $xorg_dir
 	pkg install -y xf86-video-vmware
 	pause
 	exit 0
@@ -416,7 +417,7 @@ EOM
 		sysrc "kld_list+=$kld"
 		kldload $kld || true
 		
-		dir=/usr/local/etc/X11/xorg.conf.d
+		dir=$xorg_dir
 		fragment=$dir/nvidia.conf
 		if [ ! -e $fragment ]; then
 		    mkdir -p $dir
