@@ -217,7 +217,7 @@ EOM
     
     if pciconf -lv | grep -B 2 display | grep vendor | grep -iq intel; then
 	printf "Intel GPU detected.\n"
-	pciconf -lv | grep -B 2 display
+	pciconf -lv | grep -B 3 display
 	pause
 	cat << EOM
 
@@ -272,7 +272,7 @@ EOM
     
     if pciconf -lv | grep -B 2 display | grep vendor | grep -iq amd; then
 	printf "AMD GPU detected.\n"
-	pciconf -lv | grep -B 2 display
+	pciconf -lv | grep -B 3 display
 	pause
 	cat << EOM
 
@@ -375,7 +375,7 @@ EOM
 		scrub_packages
 		scrub_drm
 		
-		pciconf -lv | grep -B 2 display
+		pciconf -lv | grep -B 3 display
 		ls -d /usr/ports/x11/nvidia-driver*
 		pause
 		cat << EOM

@@ -18,6 +18,8 @@ FreeBSD)
     else
 	printf "Default sound device unchanged.\n"
     fi
+    
+    printf "Run $0 to change the default in the future.\n"
     ;;
 
 *)
