@@ -1,4 +1,7 @@
 
+auto-install-base-components
+    Support pkgbase
+
 auto-upgrade-base
     Run pkg bootstrap -f for major upgrades
     Correct repos in /usr/local/etc/pkg/repos for 14 -> 15 upgrades?
