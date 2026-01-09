@@ -46,13 +46,13 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     printf "Configuring cups...\n"
-    auto-install-packages \
-	print/brlaser \
-	print/cups \
-	print/hplip \
-	print/foomatic-db-engine \
-	print/gutenprint
-    auto-mark-package-critical cups hplip foomatic-db-engine gutenprint
+    auto-install-packages print/cups
+    # Tolerate failures here, as print drivers will go away eventually.
+    auto-install-packages print/brlaser print/hplip print/foomatic-db-engine \
+	print/gutenprint || true
+    # All this does is trigger a warning in auto-update-system if a
+    # package is missing, list list everything.
+    auto-mark-package-critical cups brlaser hplip foomatic-db-engine gutenprint
     
     # FIXME
     # foomatic-db-hpijs and hpijs appear to be redundant.
