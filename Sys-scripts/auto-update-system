@@ -267,7 +267,7 @@ ifs_update()
 using_pkgbase()
 
 {
-    if grep -q 'url:.*base_' /usr/local/etc/pkg/repos/* 2> /dev/null; then
+    if grep -q 'url:.*base_' /etc/pkg/*.conf /usr/local/etc/pkg/repos/*.conf 2> /dev/null; then
 	return 0
     else
 	return 1

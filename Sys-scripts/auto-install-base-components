@@ -44,9 +44,30 @@ EOM
 }
 
 
+using_pkgbase()
+
+{
+    if grep -q 'url:.*base_' /etc/pkg/*.conf /usr/local/etc/pkg/repos/*.conf 2> /dev/null; then
+	return 0
+    else
+	return 1
+    fi
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
+
+if [ $(uname) = FreeBSD ] && using_pkgbase; then
+    cat << EOM
+
+This system is using pkgbase.  $0 does not apply.
+Run "pkg search -r FreeBSD-base '.*'" to list current base packages.
+
+EOM
+    exit 0
+fi
 
 if [ $# -lt 1 ]; then
     usage
