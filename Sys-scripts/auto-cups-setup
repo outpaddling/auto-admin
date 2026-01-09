@@ -47,6 +47,7 @@ case $(auto-ostype) in
 FreeBSD)
     printf "Configuring cups...\n"
     auto-install-packages \
+	print/brlaser \
 	print/cups \
 	print/hplip \
 	print/foomatic-db-engine \
