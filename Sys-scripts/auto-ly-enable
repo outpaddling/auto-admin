@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    if ! fgrep -q 'Ly:' /etc/gettytab; then
+	cat << EOM >> /etc/gettytab
+
+# Added by $0
+Ly:\\
+    :lo=/usr/local/bin/ly:\\
+    :al=root:
+# End $0 addition
+EOM
+    fi
+    
+    # FIXME: This will break of "Pc" default is changed
+    sed -i '' -e '/^ttyv1/s|Pc|Ly|' /etc/ttys
+    kill -HUP 1
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac

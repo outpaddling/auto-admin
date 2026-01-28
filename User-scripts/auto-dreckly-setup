@@ -481,7 +481,11 @@ EOM
 ============================================================================
 No Fortran compiler was found in your PATH.
 
-On RHEL compatible systems, it's best to install gfortran with
+On Debian compatible systems, run:
+
+    apt install gfortran
+
+On RHEL compatible systems, run:
 
     yum install gcc-gfortran
 
@@ -1431,9 +1435,9 @@ EOM
 	printf "pkgsrc-wip username? [none] "
 	read username
 	if [ 0$username = 0 ]; then
-	    $GIT clone git://wip.dreckly.org/pkgsrc-wip.git wip
+	    $GIT clone git://wip.pkgsrc.org/pkgsrc-wip.git wip
 	else
-	    $GIT clone $username@wip.dreckly.org:/pkgsrc-wip wip
+	    $GIT clone $username@wip.pkgsrc.org:/pkgsrc-wip wip
 	fi
     fi
     set -e
