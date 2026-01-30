@@ -78,8 +78,8 @@ EOM
 	ports_repo_insert=""
     fi
     # FIXME: Verify suffix for all branch types
-    if $(uname -r) | grep -E 'BETA|RC|RELEASE'; then
-	kmods_suffix="_\${VERSION_MINOR}"
+    if uname -r | grep -E 'BETA|RC|RELEASE'; then
+	kmods_suffix='_${VERSION_MINOR}'
     else
 	kmods_suffix=""
     fi
