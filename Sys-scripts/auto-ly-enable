@@ -2,6 +2,7 @@
 
 case $(auto-ostype) in
 FreeBSD)
+    pkg install -y ly
     if ! fgrep -q 'Ly:' /etc/gettytab; then
 	cat << EOM >> /etc/gettytab
 
