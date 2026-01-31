@@ -52,6 +52,9 @@ printf "to complete base upgrade.\n"
 # Help auto-update-system find other auto-admin scripts
 export PATH=${PATH}:/usr/local/bin:/usr/local/sbin
 
+# Recommended by pkg(1) in case of major upgrade
+pkg boostrap -fy
+
 # --yes won't reboot unless a kernel update is detected
 /usr/local/sbin/auto-update-system --defaults
 
