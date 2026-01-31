@@ -132,6 +132,7 @@ FreeBSD)
 	branch=${branch%%-*}    # Remove -p*
 	major=${version%.*}
 	minor=${version#*.}
+	minor=${minor%-*}
 	if [ $branch = RELEASE ]; then
 	    next_release=$major.$(($minor + 1))-$branch
 	elif echo $branch | grep -q BETA; then
@@ -180,12 +181,12 @@ releases.  However, you must ensure that your pkg configuration specifies
 both the FreeBSD-kmods and FreeBSD pkg repositories, with FreeBSD-kmods
 having a higher priority.  For example:
 
-FreeBSD$ports_repo_insert-kmods: {
-  url: "pkg+https://pkg.FreeBSD.org/${ABI}/kmods_latest_${VERSION_MINOR}",
-  priority: 1
+FreeBSD-ports$ports_repo_insert: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
 }
-FreeBSD$ports_repo_insert: {
-  url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"
+FreeBSD-ports$ports_repo_insert-kmods: {
+  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest_\${VERSION_MINOR}",
+  priority: 1
 }
 
 The default configuration is in /etc/pkg/FreeBSD.conf.  Custom configurations
@@ -217,8 +218,8 @@ documents, source code, configuration files under /etc and /usr/local/etc)
 and doing a fresh install to ensure that you end up with a pristine system.
 This process also helps eliminate junk files and free up disk space.
 
-Minor upgrades (e.g. from 13.0 to 13.1) are generally safer than major
-upgrades (12.3 to 13.1), but a fresh install always results in the cleanest
+Minor upgrades (e.g. from $major.$minor to $major.$(($minor +1))) are generally safer than major
+upgrades ($major.$minor to $(($major + 1)).0), but a fresh install always results in the cleanest
 system.  Doing fresh installs frequently is also good practice to prepare
 you for times when you have no choice (new systems, disk failures).
 
@@ -227,7 +228,7 @@ before proceeding with the upgrade.
 
 EOM
     while [ 0"$resp" != 0"yes" ] && [ 0"$resp" != 0"no" ]; do
-	printf "Proceed? yes/no "
+	printf "Upgrade to $release? yes/no "
 	read resp
     done
     if [ $resp = yes ]; then
