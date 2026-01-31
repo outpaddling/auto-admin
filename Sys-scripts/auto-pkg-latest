@@ -39,14 +39,18 @@ FreeBSD)
 	fi
     done
 
+    dir=/usr/local/etc/pkg/repos
+    file=$dir/bleeding-edge.conf
+
     if pkg repositories -e | grep -q 'url.*: .*/latest' \
 	&& pkg repositories -e | grep -q 'url.*: .*/kmods_latest'; then
 	printf "$0: You are already using latest packages.\n"
-	exit 0
+	printf "Overwrite $file? y/[n] "
+	read overwrite
+	if [ 0"$overwrite" != 0y ]; then
+	    exit 0
+	fi
     fi
-
-    dir=/usr/local/etc/pkg/repos
-    file=$dir/bleeding-edge.conf
     if [ 0$proceed != 01 ]; then
 	cat << EOM
 
@@ -84,6 +88,13 @@ EOM
 	kmods_suffix=""
     fi
     cat << EOM > $file
+FreeBSD$ports_repo_insert: {
+  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/latest",
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: yes
+}
 FreeBSD$ports_repo_insert-kmods: {
   url: "pkg+https://pkg.FreeBSD.org/\${ABI}/kmods_latest$kmods_suffix",
   mirror_type: "srv",
@@ -91,13 +102,6 @@ FreeBSD$ports_repo_insert-kmods: {
   fingerprints: "/usr/share/keys/pkg",
   enabled: yes,
   priority: 1
-}
-FreeBSD$ports_repo_insert: {
-  url: "pkg+https://pkg.FreeBSD.org/\${ABI}/latest",
-  mirror_type: "srv",
-  signature_type: "fingerprints",
-  fingerprints: "/usr/share/keys/pkg",
-  enabled: yes,
 }
 EOM
     pkg upgrade -y
