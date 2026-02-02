@@ -1,0 +1,120 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       auto-chromium+widevine-install
+#       
+#   Description:
+#       .B auto-chromium+widevine-install
+#       automatically configures the system for widevine DRM
+#       compatibility and installs the widevine plugin and chromium
+#       browser with widevine enabled.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise
+#
+#   See also:
+#       auto-install-linux_base
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 64     # sysexits(3) EX_USAGE
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+case $(auto-ostype) in
+FreeBSD)
+    linux_base=rl9
+    cat << EOM
+
+				*** Note ***
+
+This build takes 12 hours on a 4-core Ryzen machine, and may take
+significantly longer on older or lower-end machines.
+
+You may want to start it at a time when you won't need to use the
+machine for a while.
+
+Note also that updates using auto-update-system may require a rebuild
+that takes the same amount of time.
+
+The Linux compatibility kernel module and linux_base-$linux_base are required.
+
+EOM
+    printf "Continue? y/[n] "
+    read continue
+    if [ 0"$continue" != 0y ]; then
+	exit
+    fi
+    
+    # FIXME: Determine default python version automatically
+    : ${PORTSDIR:=/usr/ports}
+    py_default=$(awk '$1 ~ "PYTHON_DEFAULT" { print $2 }' $PORTSDIR/Mk/bsd.default-versions.mk)
+    py_default=py$(echo $py_default | tr -d '.')
+    printf "Python package prefix? [$py_default] "
+    read py
+    if [ -z "$py" ]; then
+	py=$py_default
+    fi
+    
+    if ! df | grep /compat/linux/dev; then
+	auto-install-linux_base $linux_base
+    fi
+    
+    # Install deps via prebuilt packages to speed things along
+    pkg install -Ay speech-dispatcher $py-ply rust-bindgen-cli speex \
+	libexif sndio dconf gperf flock node xcb-proto v4l_compat usbids \
+	$py-html5lib mesa-dri bison llvm21 nasm noto-basic foreign-cdm \
+	at-spi2-core libpci re2-20251105 openh264 harfbuzz-icu libsecret \
+	libxkbcommon pipewire libglvnd gtk3 rust alsa-plugins \
+	desktop-file-utils xdg-utils xprop xset libva qt5-core qt5-widgets \
+	ninja qt5-buildtools
+    
+    if ! pkg info --exists linux-widevine-cdm; then
+	cd /usr/ports/www/linux-widevine-cdm
+	make clean install
+    fi
+    
+    printf "Make sure WIDEVINE is enabled in the config menu...\n"
+    pause
+    cd /usr/ports/www/chromium
+    make config
+    mkdir /usr/ports/packages
+    make package
+    make install
+    auto-mark-install-from-source www/linux-widevine-cdm license newer
+    auto-mark-install-from-source www/chromium widevine-license newer
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac    
