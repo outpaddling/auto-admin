@@ -1,28 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
 #   Section:
 #       8
 #
 #   Synopsis:
+#       auto-install-linux_base [version]
 #       
 #   Description:
-#       Set up linux_base on a FreeBSD system
+#       .B auto-install-linux_base
+#       installs the selected linux_base port on a FreeBSD system,
+#       enables Linux kernel compatibility, and configures commonly needed
+#       special filesystems such tmpfs, linprocfs, and linsysfs.
+#       It simplifies and expedites the setup of a FreeBSD system for
+#       directly running Linux binaries.
+#
+#       Note that FreeBSD's Linux compatibility is not an emulation
+#       layer, but a kernel module that provides direct support for Linux
+#       system calls where the Linux KBI differs from that of FreeBSD.
+#       As a result, there is no performance penalty when running Linux
+#       binaries on FreeBSD.  In fact, they may sometimes run faster on
+#       FreeBSD than they do on Linux.
 #       
 #   Arguments:
+#       version     Suffix on an existing linux_base port
 #       
 #   Returns:
+#       0 on success, non-zero error codes otherwise
 #
 #   Examples:
+#       auto-install-linux_base rl9
 #
 #   Files:
+#       /etc/fstab
 #
 #   Environment:
+#       PORTSDIR
 #
 #   See also:
+#       linux(4)
 #       
 #   History:
 #   Date        Name        Modification
@@ -44,40 +60,38 @@ usage()
 #   Main
 ##########################################################################
 
-: ${PORTSDIR:=/usr/ports}
-
-case $# in
-0)
-    while [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; do
-	# export AUTO_ASK_TAG_PREFIX=auto-install-linux_base
-	printf "\nPlease enter one of the following linux_base versions:\n\n"
-	for base in $(ls -d $PORTSDIR/emulators/linux_base*); do
-	    printf "${base##*-}\n" >> /dev/stderr
-	done
-	# linux_base=$(auto-ask auto-install-linux_base )
-	printf "\nWhich linux_base would you like to install? "
-	read linux_base
-    done
-    ;;
-
-1)
-    linux_base=$1
-    if [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; then
-	printf "No such linux_base: linux_base-$linux_base\n" >> /dev/stderr
-	exit 1
-    fi
-    ;;
-
-*)
-    usage
-    ;;
-
-esac
-
 case $(auto-ostype) in
 FreeBSD)
-    # FIXME: Support $PORTSDIR
-    MAKE_CONF=/etc/make.conf
+    : ${PORTSDIR:=/usr/ports}
+    
+    case $# in
+    0)
+	while [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; do
+	    # export AUTO_ASK_TAG_PREFIX=auto-install-linux_base
+	    printf "\nPlease enter one of the following linux_base versions:\n\n"
+	    for base in $(ls -d $PORTSDIR/emulators/linux_base*); do
+		printf "${base##*-}\n" >> /dev/stderr
+	    done
+	    # linux_base=$(auto-ask auto-install-linux_base )
+	    printf "\nWhich linux_base would you like to install? "
+	    read linux_base
+	done
+	;;
+    
+    1)
+	linux_base=$1
+	if [ ! -e /usr/ports/emulators/linux_base-$linux_base ]; then
+	    printf "No such linux_base: linux_base-$linux_base\n" >> /dev/stderr
+	    exit 1
+	fi
+	;;
+    
+    *)
+	usage
+	;;
+    
+    esac
+    
     major=`uname -r | cut -d '.' -f 1`
     
     # Install linux_base.  Can use 64-bit for 10.3 and later.
@@ -90,16 +104,9 @@ FreeBSD)
     fi
     pkg delete -f -y linux_base\* || true
     if [ $linux64 = y ]; then
-	#auto-append-line OVERRIDE_LINUX_BASE_PORT=$linux_base_64 $MAKE_CONF $0
-	#auto-append-line OVERRIDE_LINUX_NONBASE_PORTS=$linux_base_64 $MAKE_CONF $0
-	#auto-append-line DEFAULT_VERSIONS+=linux=$linux_base_64 $MAKE_CONF $0
 	kldload linux || true
 	kldload linux64 || true
     else
-	touch $MAKE_CONF    # Prevent no such file error below
-	#sed -i '.bak' -e 's|OVERRIDE_LINUX_BASE_PORT=$linux_base_64||' $MAKE_CONF
-	#sed -i '.bak' -e 's|OVERRIDE_LINUX_NONBASE_PORTS=$linux_base_64||' $MAKE_CONF
-	#sed -i '.bak' -e '/DEFAULT_VERSIONS+=linux=$linux_base_64/d' $MAKE_CONF
 	kldload linux || true
     fi
     pkg install -y linux_base-$linux_base
