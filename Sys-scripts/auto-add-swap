@@ -4,6 +4,12 @@
 #   Synopsis:
 #       auto-add-swap path-to-swapfile size (mibibytes)
 #
+#   Section:
+#       8
+#
+#   Name:
+#       script - short scription
+#
 #   Description:
 #       The auto-add-swap script creates a swap file, activates it, and
 #       configures the system to automatically activate it at boot time.

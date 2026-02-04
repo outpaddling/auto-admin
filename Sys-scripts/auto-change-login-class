@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-change-login-class - Change the login class for a user
+#
 #   Section:
 #       8
 #
