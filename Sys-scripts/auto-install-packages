@@ -124,7 +124,7 @@ if auto-using-pkgsrc; then
 	
 	if [ ! -d $(auto-pkgsrc-dir)/$pkg ]; then
 	    printf "$pkg does not exist.\n"
-	    break
+	    exit 1
 	fi
 	
 	# FIXME: Is --base-dir really needed?
@@ -258,7 +258,7 @@ else
 	    
 	    if [ ! -d ${PORTSDIR}/$port ]; then
 		printf "$port does not exist.\n"
-		break
+		exit 1
 	    fi
 	    
 	    # FIXME: Is --base-dir really needed?
