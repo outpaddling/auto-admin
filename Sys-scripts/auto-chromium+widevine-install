@@ -58,6 +58,8 @@ FreeBSD)
     if ! pkg info --exists linux-widevine-cdm; then
 	cd /usr/ports/www/linux-widevine-cdm
 	make clean install
+	# Make sure auto-update-system upgrades it when possible
+	auto-mark-install-from-source www/linux-widevine-cdm license newer
     fi
     
     pkg install -y foreign-cdm chromium
