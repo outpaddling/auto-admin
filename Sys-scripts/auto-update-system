@@ -718,10 +718,14 @@ EOM
 			pkg remove -fy $pkgbase || true
 			save_cwd=$(pwd)
 			cd $PORTSDIR/$port
+			# Don't use -DBATCH, since some packages require
+			# the user to accept a license.
+			# FIXME: Can we avoid config menus and still
+			# prompt for license acceptance?
 			if [ -n "$flavor" ]; then
-			    make -DBATCH clean reinstall clean FLAVOR=$flavor
+			    make clean reinstall clean FLAVOR=$flavor
 			else
-			    make -DBATCH clean reinstall clean
+			    make clean reinstall clean
 			fi
 			cd $save_cwd
 		    else
