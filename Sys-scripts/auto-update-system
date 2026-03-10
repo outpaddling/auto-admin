@@ -329,10 +329,22 @@ while [ $# -ge 1 ]; do
 	pause=yes
 	shift
     elif [ "$1" = --binary ]; then
-	mode=binary
+	cat << EOM
+
+INFO: --binary is deprecated.  Using --defaults instead. If you really
+want your packages and ports tree out-of-sync, use pkg upgrade directly.
+
+EOM
+	mode=defaults
 	shift
     elif [ "$1" = --binary+reboot ]; then
-	mode=binary+reboot
+	cat << EOM
+
+INFO: --binary+reboot is deprecated.  Using --defaults+reboot instead. If you
+really want your packages and ports tree out-of-sync, use pkg upgrade directly.
+
+EOM
+	mode=defaults+reboot
 	shift
     elif [ "$1" = --defaults+reboot ] || [ "$1" = --yes ]; then
 	mode=defaults+reboot
