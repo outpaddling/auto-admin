@@ -3,7 +3,7 @@
 ##########################################################################
 #   Synopsis:
 #       auto-update-system [ --sync-pkg-cache user@host ] [ --pause ] \\
-#       [ --binary | --binary+reboot | --defaults | --defaults+reboot | --yes ]
+#       [ --defaults | --defaults+reboot | --yes ]
 #       
 #   Description:
 #       auto-update-system performs a comprehensive system update
@@ -100,8 +100,6 @@
 #   Arguments:
 #       --sync-pkg-cache user@host  Sync package cache from host
 #       --pause                     Prompt user before exit
-#       --binary                    Binary packages and base only
-#       --binary+reboot             Same as above + auto reboot
 #       --defaults                  All components that can be easily updated
 #       --defaults+reboot           Same as above + auto reboot
 #       --yes                       Synonymous with --defaults+reboot
@@ -134,7 +132,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 [--sync-pkg-cache user@host] [--pause] [--binary | --binary+reboot | --defaults | --defaults+reboot | --yes]
+Usage: $0 [--sync-pkg-cache user@host] [--pause] | --defaults | --defaults+reboot | --yes]
 
 user@host is used to rsync packages from another host that has been updated
 more recently than this one.  This reduces load on the primary package servers
@@ -332,7 +330,8 @@ while [ $# -ge 1 ]; do
 	cat << EOM
 
 INFO: --binary is deprecated.  Using --defaults instead. If you really
-want your packages and ports tree out-of-sync, use pkg upgrade directly.
+want your packages and ports/pkgsrc tree out-of-sync, use
+pkg[in] upgrade directly.
 
 EOM
 	mode=defaults
@@ -341,7 +340,8 @@ EOM
 	cat << EOM
 
 INFO: --binary+reboot is deprecated.  Using --defaults+reboot instead. If you
-really want your packages and ports tree out-of-sync, use pkg upgrade directly.
+really want your packages and ports/pkgsrc tree out-of-sync, use
+pkg[in] upgrade directly.
 
 EOM
 	mode=defaults+reboot
@@ -427,10 +427,10 @@ fi
 ##########################################################################
 
 case $mode in
-binary|defaults)
+defaults)
     reboot_requested=n
     ;;
-binary+reboot|defaults+reboot)
+defaults+reboot)
     reboot_requested=y
     ;;
 interactive)
@@ -443,7 +443,6 @@ case $os_type in
 FreeBSD|DragonFly)
     if [ ! -t 0 ]; then
 	# Input redirected.  Being fed y/n responses.
-	portsnap_flags=--interactive
 	freebsd_update_flags=--not-running-from-cron
 	abuse_warning
     fi
@@ -462,12 +461,12 @@ FreeBSD|DragonFly)
     
     # Don't group questions: Need to pause after each step to view output
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot)
+    defaults|defaults+reboot)
 	update_packages=y
 	abuse_warning
 	;;
     interactive)
-	printf "Update installed packages? [y]/n "
+	printf "Update installed packages and ports tree? [y]/n "
 	read update_packages
 	;;
     esac
@@ -615,14 +614,9 @@ EOM
     case $mode in
     defaults|defaults+reboot)
 	update_ports=y
-	portsnap_flags=--interactive
-	;;
-    binary|binary+reboot)
-	update_ports=n
 	;;
     interactive)
-	printf "Update ports tree? [y]/n "
-	read update_ports
+	update_ports=$update_packages
 	;;
     esac
     
@@ -789,7 +783,7 @@ EOM
 	update_base=n
     else
 	case $mode in
-	binary|binary+reboot|defaults|defaults+reboot)
+	defaults|defaults+reboot)
 	    update_base=y
 	    freebsd_update_flags=--not-running-from-cron
 	    ;;
@@ -878,7 +872,7 @@ OpenBSD)
     
     # Don't group questions: Need to pause after each step to view output
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot)
+    defaults|defaults+reboot)
 	update_packages=y
 	abuse_warning
 	;;
@@ -896,10 +890,6 @@ OpenBSD)
     case $mode in
     defaults|defaults+reboot)
 	update_ports=y
-	portsnap_flags=--interactive
-	;;
-    binary|binary+reboot)
-	update_ports=n
 	;;
     interactive)
 	printf "Update ports tree? [y]/n "
@@ -946,7 +936,7 @@ EOM
     
     # Base system
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot)
+    defaults|defaults+reboot)
 	update_base=y
 	;;
     interactive)
@@ -979,12 +969,12 @@ RHEL)
 	    fi
 	fi
 	;;
-    binary|defaults)
+    defaults)
 	yum-complete-transaction || true
 	yum update -y
 	yum autoremove -y
 	;;
-    binary+reboot|defaults+reboot)
+    defaults+reboot)
 	yes | yum-complete-transaction || true
 	yes | yum update -y
 	yum autoremove -y
@@ -1082,7 +1072,7 @@ Darwin)
     
     # FIXME: Add softwareupdate logic for base updates
     case $mode in
-    binary|binary+reboot|defaults|defaults+reboot)
+    defaults|defaults+reboot)
 	update_base=y
 	;;
     interactive)
