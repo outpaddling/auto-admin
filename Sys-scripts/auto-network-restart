@@ -10,7 +10,7 @@ fi
 # to prevent running malicious programs as root.
 case $(auto-ostype) in
 FreeBSD)
-    su -m root -c '/usr/sbin/service netif restart && service routing restart'
+    su -m root -c 'service routing restart && /usr/sbin/service netif restart'
     ;;
 
 NetBSD)
