@@ -1,4 +1,7 @@
 
+Add auto-locale-config?
+    https://github.com/outpaddling/desktop-installer/discussions/63
+    
 grep pkg upgrade output for FreeBSD-kernel
     e.g. FreeBSD-kernel-generic: 15.0p4 -> 15.0p5 [FreeBSD-base]
 
