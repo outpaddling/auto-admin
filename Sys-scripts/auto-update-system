@@ -606,11 +606,11 @@ EOM
 	    fi
 	fi
 	printf "Checking for kernel module updates...\n"
-	kmods=$(pkg upgrade --dry-run -y 2>&1 | grep 'kmod' | grep -v '^FreeBSD' | grep -v '^Updating')
+	kmods=$(pkg upgrade --dry-run -y 2>&1 | grep 'kmod' | grep -v '^FreeBSD' | grep -v '^Updating' || true)
 	if [ -n "$kmods" ]; then
 	    printf "Kernel modules will be updated and should be reloaded.\n"
 	else
-	    printf "No kernel will not updated.\n"
+	    printf "No kernel modules will not updated.\n"
 	fi
 	pkg upgrade -y
 	freebsd_autoremove
