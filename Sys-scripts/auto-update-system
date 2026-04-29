@@ -595,6 +595,23 @@ EOM
 	auto_admin_old_version=$(pkg query '%v' auto-admin)
 	printf "\n**** Updating installed packages...\n"
 	pkg update
+	if using_pkgbase; then
+	    printf "Checking for pkgbase kernel updates...\n"
+	    if pkg upgrade --dry-run -y 2>&1 | grep -E 'kernel'; then
+		kernel_updated=yes
+		printf "Kernel will be updated.\n"
+	    else
+		kernel_updated=no
+		printf "Kernel will not updated.\n"
+	    fi
+	fi
+	printf "Checking for kernel module updates...\n"
+	kmods=$(pkg upgrade --dry-run -y 2>&1 | grep 'kmod' | grep -v '^FreeBSD' | grep -v '^Updating')
+	if [ -n "$kmods" ]; then
+	    printf "Kernel modules will be updated and should be reloaded.\n"
+	else
+	    printf "No kernel will not updated.\n"
+	fi
 	pkg upgrade -y
 	freebsd_autoremove
 	pkg clean -y
@@ -802,13 +819,12 @@ EOM
 		if [ 0$reboot_requested = 0y ]; then
 		    auto_reboot=y
 		else
-		    auto_reboot=n
-		    cat << EOM
-
-Using pkgbase: Skipping freebsd-update...
-Be sure to reboot if kernel components were upgraded by pkg.
-
-EOM
+		    # Set by pkg upgrade
+		    if [ $kernel_updated = yes ]; then
+			auto_reboot=y
+		    else
+			auto_reboot=n
+		    fi
 		fi
 	    else
 		printf "\n**** Updating base system...\n"
@@ -853,6 +869,12 @@ EOM
 		rm -f $fetch_output $install_output
 	    fi
     
+	    if [ -n "$kmods" ]; then
+		printf "The following kernel modules were updated and should be reloaded\n"
+		prinff "using kldunload and kldload while they are not in use.\n"
+		printf "$kmods\n"
+	    fi
+	    
 	    # FIXME: Temporary hack: Perms should be set by base
 	    # mandoc.db is automatically generated
 	    # Ensure it's readable on systems with restrictive root umask
