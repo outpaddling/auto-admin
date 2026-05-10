@@ -1,0 +1,65 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Section:
+#       8
+#
+#   Synopsis:
+#       if auto-using-pkgbase; then
+#           command
+#       fi
+#       
+#   Description:
+#       The
+#       .B auto-using-pkgbase
+#       script exits with 0 status (success) if the FreeBSD system on which
+#       it is run is using pkgbase to maintain the base system, rather
+#       than the traditional base sets maintained by freebsd-update(8).
+#       This is checked using `pkg repositories --enabled | grep FreeBSD-base`.
+#       This script does not apply to other operating systems, as pkgbase
+#       is unique to FreeBSD.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 if pkgbase is in use, non-zero otherwise
+#
+#   Examples:
+#       if ! auto-using-pkgbase; then
+#           freebsd-update fetch install
+#       fi
+#
+#   Files:
+#       /etc/pkg/FreeBSD.conf, /usr/local/etc/pkg/repos
+#
+#   See also:
+#       pkg-repositories(8), freebsd-update(8)
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 64     # sysexits(3) EX_USAGE
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    pkg repositories --enabled | fgrep -q FreeBSD-base
+    ;;
+
+*)
+    auto-unsupported-os $0
+    exit 1
+    ;;
+
+esac
+
