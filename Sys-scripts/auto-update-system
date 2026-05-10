@@ -871,7 +871,7 @@ EOM
     
 	    if [ -n "$kmods" ]; then
 		printf "The following kernel modules were updated and should be reloaded\n"
-		prinff "using kldunload and kldload while they are not in use.\n"
+		printf "using kldunload and kldload while they are not in use.\n"
 		printf "$kmods\n"
 	    fi
 	    
