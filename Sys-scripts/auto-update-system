@@ -814,8 +814,6 @@ EOM
     if [ 0$update_base != 0n ]; then
 	if [ $(auto-ostype) = FreeBSD ]; then
 	    if using_pkgbase; then
-		# FIXME: Check pkg upgrade output for kernel updates
-		# and reboot only if kernel or modules updated
 		if [ 0$reboot_requested = 0y ]; then
 		    auto_reboot=y
 		else
@@ -1092,7 +1090,6 @@ Darwin)
 	auto-pkgsrc-update "$@"
     fi
     
-    # FIXME: Add softwareupdate logic for base updates
     case $mode in
     defaults|defaults+reboot)
 	update_base=y
@@ -1119,14 +1116,6 @@ esac
 # Show completion date and time, mainly for cron job logs
 printf "System update completed.\n"
 date
-
-# FIXME: Find a secure way to give back to the central cache host
-# Requires root access
-# Push newly downloaded packages back to central host
-#if [ -n "$pkg_cache_host" ]; then
-#    printf "Syncing to $pkg_cache_host...\n"
-#    rsync -av $pkg_cache/ ${pkg_cache_host}:$pkg_cache
-#fi
 
 if [ 0$reboot_requested = 0y ]; then
     if [ $auto_reboot = y ]; then
