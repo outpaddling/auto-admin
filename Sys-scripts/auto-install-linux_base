@@ -91,8 +91,6 @@ FreeBSD)
     
     esac
     
-    major=`uname -r | cut -d '.' -f 1`
-    
     # Install linux_base.  Can use 64-bit for 10.3 and later.
     major=`uname -r | cut -d . -f 1`
     minor=`uname -r | cut -d . -f 2 | cut -d - -f 1`
@@ -109,26 +107,8 @@ FreeBSD)
 	kldload linux || true
     fi
     pkg install -y linux_base-$linux_base
-    
-    # FIXME: Use auto-set-conf-var
-    auto-append-line 'linux_enable="YES"' /etc/rc.conf $0
-    
-    # Manually mounting Linux special filesystems is no longer needed and
-    # will cause problems since:
-    # https://github.com/freebsd/freebsd-src/commit/c13f19c0cfa8fe101cf1e7946474a7793c961d9a
-    #auto-append-line linprocfs "linprocfs\t/compat/linux/proc\tlinprocfs\trw\t0\t0" /etc/fstab $0
-    #if ! df | fgrep -q /compat/linux/proc; then
-    #    mount /compat/linux/proc
-    #fi
-    #auto-append-line /compat/linux/dev/shm "tmpfs\t\t/compat/linux/dev/shm\ttmpfs\trw,mode=1777\t0\t0" /etc/fstab $0
-    #if ! df | fgrep /compat/linux/dev/shm; then
-    #    mount /compat/linux/dev/shm
-    #fi
-    #auto-append-line linsysfs "linsysfs\t/compat/linux/sys\tlinsysfs\trw\t0\t0" /etc/fstab $0
-    #if ! df | fgrep -q /compat/linux/sys; then
-    #    mount /compat/linux/sys
-    #fi
-    
+
+    auto-set-conf-var linux_enable YES /etc/rc.conf $0
     ;;
     
 *)

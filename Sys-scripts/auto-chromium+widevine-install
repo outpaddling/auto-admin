@@ -50,8 +50,16 @@ pause()
 
 case $(auto-ostype) in
 FreeBSD)
-    linux_base=rl9
-    if ! df | grep /compat/linux/dev; then
+    installed_linux_base=$(pkg info | awk -F '-' '$1 == "linux_base" { print $2 }')
+    if [ -z "$installed_linux_base" ]; then
+	# No linux_base installed.
+	# Interactively install user's choice of linux_base.
+	auto-install-linux_base
+    else
+	# A linux_base package is already installed, but may have been
+	# installed manually via pkg and not configured.
+	# Run auto-install-linux_base to make sure it's properly configured.
+	linux_base=$(pkg info | awk -F '-' '$1 == "linux_base" { print $2 }')
 	auto-install-linux_base $linux_base
     fi
     
