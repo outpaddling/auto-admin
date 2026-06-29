@@ -602,7 +602,7 @@ EOM
 		printf "Kernel will be updated.\n"
 	    else
 		kernel_updated=no
-		printf "Kernel will not updated.\n"
+		printf "Kernel will not be updated.\n"
 	    fi
 	fi
 	printf "Checking for kernel module updates...\n"
@@ -610,7 +610,7 @@ EOM
 	if [ -n "$kmods" ]; then
 	    printf "Kernel modules will be updated and should be reloaded.\n"
 	else
-	    printf "No kernel modules will not updated.\n"
+	    printf "No kernel modules will be updated.\n"
 	fi
 	pkg upgrade -y
 	freebsd_autoremove
