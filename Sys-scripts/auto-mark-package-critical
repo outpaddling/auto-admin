@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 package [package ...]\n"
+    printf "Usage: $0 --list | package [package ...]\n"
     exit 1
 }
 
@@ -26,6 +26,10 @@ fi
 
 case $(auto-ostype) in
 DragonFly|FreeBSD)
+    if [ $1 == --list ]; then
+	cat $(auto-localbase)/etc/auto-admin/critical-packages
+	exit 0
+    fi
     mkdir -p $(auto-localbase)/etc/auto-admin
     for pkg in "$@"; do
 	auto-append-line $pkg $(auto-localbase)/etc/auto-admin/critical-packages nocomment
