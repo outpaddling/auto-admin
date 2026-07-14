@@ -380,11 +380,15 @@ cat << EOM
 * until this update is complete.  It is best to log out of graphical  *
 * desktop sessions and run the update from a text console.            *
 *                                                                     *
-* Restart all running services after the update by running            *
+* After the updates complete:                                         *
 *                                                                     *
-*   auto-restart-services                                             *
+*   - Reload any kernel modules that have been updated.               *
 *                                                                     *
-* Reboot if the kernel or kernel modules have been updated.           *
+*   - Restart all running services by running                         *
+*                                                                     *
+*     auto-restart-services                                           *
+*                                                                     *
+*   - Reboot if the kernel or kernel modules have been updated.       *
 ***********************************************************************
 
 EOM
