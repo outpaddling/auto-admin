@@ -254,6 +254,34 @@ EOM
 }
 
 
+##########################################################################
+#   Restart auto-update-system if auto-admin has been upgraded.
+#   Otherwise, terrible things could happen if yet unread parts of
+#   the new script are displaced relative to the old.
+##########################################################################
+
+restart_if_upgraded()
+
+{
+    if [ $# != 1 ]; then
+	printf 'Usage: restart_if_upgraded $auto_admin_old_version\n'
+	exit 1
+    fi
+    
+    auto_admin_new_version=$(pkg query '%v' auto-admin)
+    
+    ##########################################################################
+    #   If auto-admin has been upgraded, restart auto-update-system
+    #   to ensure use of the latest fixes
+    ##########################################################################
+    
+    if [ $auto_admin_new_version != $auto_admin_old_version ]; then
+	printf "Restarting with newer version of auto-update-system...\n"
+	exec auto-update-system "$save_args"
+    fi
+}
+
+
 ifs_update()
 {
     awk '{ if ( NF == 2 ) print $0 " newer"; else print $0; }' \
@@ -619,17 +647,7 @@ EOM
 	pkg upgrade -y
 	freebsd_autoremove
 	pkg clean -y
-	auto_admin_new_version=$(pkg query '%v' auto-admin)
-	
-	##########################################################################
-	#   If auto-admin has been upgraded, restart auto-update-system
-	#   to ensure use of the latest fixes
-	##########################################################################
-	
-	if [ $auto_admin_new_version != $auto_admin_old_version ]; then
-	    printf "Restarting with newer version of auto-update-system...\n"
-	    exec auto-update-system "$save_args"
-	fi
+	restart_if_upgraded $auto_admin_old_version
     fi
     
     case $mode in
@@ -734,6 +752,10 @@ EOM
 		    when=$(echo $line | awk '{ print $3 }')
 		    if [ 0"$ports_version" != 0"$installed_version" ] || \
 		       [ 0"$when" = 0always ]; then
+			
+			if echo $port | grep "/auto-admin$"; then
+			    auto_admin_old_version=$(pkg query '%v' auto-admin)
+			fi
 			reason=$(echo $line | awk '{ print $2 }')
 			printf "Reinstalling $port from source, reason = $reason\n"
 			printf "Installed: $installed_version\n"
@@ -755,6 +777,10 @@ EOM
 			    make clean reinstall clean
 			fi
 			cd $save_cwd
+			
+			if echo $port | grep "/auto-admin$"; then
+			    restart_if_upgraded $auto_admin_old_version
+			fi
 		    else
 			printf "$pkgbase is up-to-date.\n"
 		    fi
