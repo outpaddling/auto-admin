@@ -44,22 +44,11 @@ EOM
 }
 
 
-using_pkgbase()
-
-{
-    if grep -q 'url:.*base_' /etc/pkg/*.conf /usr/local/etc/pkg/repos/*.conf 2> /dev/null; then
-	return 0
-    else
-	return 1
-    fi
-}
-
-
 ##########################################################################
 #   Main
 ##########################################################################
 
-if [ $(uname) = FreeBSD ] && using_pkgbase; then
+if [ $(uname) = FreeBSD ] && auto-using-pkgbase; then
     cat << EOM
 
 This system is using pkgbase.  $0 does not apply.

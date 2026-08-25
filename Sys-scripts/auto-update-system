@@ -290,17 +290,6 @@ ifs_update()
 }
 
 
-using_pkgbase()
-
-{
-    if grep -q 'url:.*base_' /etc/pkg/*.conf /usr/local/etc/pkg/repos/*.conf 2> /dev/null; then
-	return 0
-    else
-	return 1
-    fi
-}
-
-
 ##########################################################################
 #   Main
 ##########################################################################
@@ -627,7 +616,7 @@ EOM
 	auto_admin_old_version=$(pkg query '%v' auto-admin)
 	printf "\n**** Updating installed packages...\n"
 	pkg update
-	if using_pkgbase; then
+	if auto-using-pkgbase; then
 	    printf "Checking for pkgbase kernel updates...\n"
 	    if pkg upgrade --dry-run -y 2>&1 | grep -E 'kernel'; then
 		kernel_updated=yes
@@ -713,7 +702,7 @@ EOM
     # following commits, but until then...
     # PKGVERSION variable includes PORTREVISION (e.g. _1), not reported
     # by pkg -v, so use pkg query '%v' for comparison.
-    if ! using_pkgbase; then
+    if ! auto-using-pkgbase; then
 	if [ $(pkg query '%v' pkg) != $(auto-print-make-variable ports-mgmt/pkg PKGVERSION) ]; then
 	    printf "pkg version does not match ports.  Rebuilding from source...\n"
 	    (cd $PORTSDIR/ports-mgmt/pkg && make -DBATCH clean stage \
@@ -843,7 +832,7 @@ EOM
     
     if [ 0$update_base != 0n ]; then
 	if [ $(auto-ostype) = FreeBSD ]; then
-	    if using_pkgbase; then
+	    if auto-using-pkgbase; then
 		if [ 0$reboot_requested = 0y ]; then
 		    auto_reboot=y
 		else

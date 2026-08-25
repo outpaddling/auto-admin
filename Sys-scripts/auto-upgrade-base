@@ -94,17 +94,6 @@ pause()
 }
 
 
-using_pkgbase()
-
-{
-    if grep -q 'url:.*base_' /etc/pkg/*.conf /usr/local/etc/pkg/repos/*.conf 2> /dev/null; then
-	return 0
-    else
-	return 1
-    fi
-}
-
-
 ##########################################################################
 #   Main
 ##########################################################################
@@ -122,7 +111,7 @@ pause
 
 case $(auto-ostype) in
 FreeBSD)
-    if using_pkgbase; then
+    if auto-using-pkgbase; then
 	printf "$0: pkgbase is not yet supported.\n"
 	printf "You will need to perform major upgrades manually for now.\n"
 	exit 1
