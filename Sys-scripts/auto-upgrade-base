@@ -112,8 +112,17 @@ pause
 case $(auto-ostype) in
 FreeBSD)
     if auto-using-pkgbase; then
-	printf "$0: pkgbase is not yet supported.\n"
-	printf "You will need to perform major upgrades manually for now.\n"
+	cat << EOM
+
+$0: pkgbase is not yet supported.
+You will need to perform major upgrades manually for now.
+See https://wiki.freebsd.org/pkgbase.
+
+Pkgbase support will be added when there is an official base
+tool for performing upgrades, either a pkgbase-aware freebsd-update
+or a new tool.
+
+EOM
 	exit 1
     fi
     case $# in
