@@ -8,7 +8,7 @@
 #       8
 #
 #   Name:
-#       script - short scription
+#       auto-add-swap - Create and enable a swap file
 #
 #   Description:
 #       The auto-add-swap script creates a swap file, activates it, and

@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-install-linux_base - Install and enable Linux kernal compat
+#
 #   Section:
 #       8
 #

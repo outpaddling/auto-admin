@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-chromium+widevine-install - Install chromium and widevine plugin
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-chromium+widevine-install
 #       

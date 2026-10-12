@@ -1,8 +1,11 @@
-.TH AUTO-ADMIN 8
+.TH auto-admin 8
 
 .SH NAME
-auto-admin - Portable, command-line systems management scripts
+.PP
+auto-admin - Portable scripts for Unix systems management
 
+\" Convention:
+\" Underline anything that is typed verbatim - commands, etc.
 .SH SYNOPSIS
 .PP
 .nf 
@@ -20,17 +23,51 @@ None
 
 .SH DESCRIPTION
 
-auto-admin provides the main menu for common auto-admin tasks such as
-updating the system, managing users, services, etc.
+While POSIX and other Unix standards provide fairly uniform
+APIs and user interfaces, systems management tools tend to
+be very system-specific.  E.g., to manage user accounts, many
+Unix systems use "useradd", a few BSDs use "pw", and macOS
+uses "dsctl".  BSD systems report RAM size via "sysctl", while
+Linux systems rely on /proc/meminfo.
 
-auto-admin - Portable, command-line systems management scripts
+.B Auto-admin
+is a project providing easy-to-use, portable scripts for common
+systems management tasks from the command line.  It simplifies
+what are often complex commands, and makes them uniform across
+Unix-like systems.
+
+The project also provides a menu, invoked as "auto-admin", for
+the most common tasks.
+
+.B Auto-admin
+thus allows sysadmins to easily manage multiple different
+POSIX systems with vastly less esoteric knowledge and effort.
+The scripts can serve as a compatibility layer for higher-level
+tools such as SPVM (Simple, Portable Cluster Manager).
+
+.SH RETURN VALUES
+
+0 upon successful exit, non-zero if certain commands failed
+
+.SH SEE ALSO
+
+auto-update-system(1), auto-user-admin(1),
+
+.SH SCRIPTS
+.nf
+.na
+auto-add-swap - Create and enable a swap file
+auto-admin - Portable scripts for Unix systems management
+auto-chromium+widevine-install - Install chromium and widevine plugin
+auto-image2dev - Write a disk image to a storage device
+auto-install-linux_base - Install and enable Linux kernal compat
+auto-physmem - Report physical memory size
+auto-pkgsrc-non-removable - List all non-removable packages
+auto-update-system - Update OS, packages, and ports/pkgsrc tree
+auto-user-admin - Menu for user management
+auto-using-pkgbase - Return success if pkgbase is enabled
 .ad
 .fi
 
 .SH "SEE ALSO"
 stdio(3)
-
-.SH AUTHOR
-.nf
-.na
-J Bacon

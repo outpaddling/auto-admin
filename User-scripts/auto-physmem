@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-physmem - Report physical memory size
+#
 #   Synopsis:
 #       auto-physmem
 #

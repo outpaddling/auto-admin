@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-update-system - Update OS, packages, and ports/pkgsrc tree
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-update-system [ --sync-pkg-cache user@host ] [ --pause ] \\
 #       [ --defaults | --defaults+reboot | --yes ]

@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-pkgsrc-non-removable - List all non-removable packages
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-pkgsrc-non-removable
 #

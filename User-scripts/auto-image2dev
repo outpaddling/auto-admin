@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-image2dev - Write a disk image to a storage device
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-image2dev [--success-file file] file.img|file.iso device
 #

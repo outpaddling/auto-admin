@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-user-admin - Menu for user management
+#
 #   Section:
 #       8
 #

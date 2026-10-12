@@ -1,11 +1,8 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
 #   Name:
-#       script - short scription
+#       auto-admin - Portable scripts for Unix systems management
 #
 #   Section:
 #       8
@@ -14,8 +11,27 @@
 #       auto-admin
 #       
 #   Description:
-#       Main menu for common auto-admin tasks.
+#       While POSIX and other Unix standards provide fairly uniform
+#       APIs and user interfaces, systems management tools tend to
+#       be very system-specific.  E.g., to manage user accounts, many
+#       Unix systems use "useradd", a few BSDs use "pw", and macOS
+#       uses "dsctl".
 #       
+#       .B Auto-admin
+#       is a project providing easy-to-use, portable scripts for common
+#       systems management tasks from the command line.  It simplifies
+#       what are often complex commands, and makes them uniform across
+#       Unix-like systems.
+#
+#       The project also provides a menu, invoked as "auto-admin", for
+#       the most common tasks.
+#
+#       .B Auto-admin
+#       thus allows sysadmins to easily manage multiple different
+#       POSIX systems with vastly less esoteric knowledge and effort.
+#       The scripts can serve as a compatibility layer for higher-level
+#       tools such as SPVM (Simple, Portable Cluster Manager).
+#
 #   Arguments:
 #       None
 #       

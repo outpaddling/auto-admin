@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-using-pkgbase - Return success if pkgbase is enabled
+#
 #   Section:
 #       8
 #
