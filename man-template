@@ -1,32 +1,35 @@
 
 ##########################################################################
 #   Title:
-#       Optional, defaults to the name of the script sans extention
+#       Optional, defaults to the name of the script sans extension
 #
 #   Name:
-#       script - short description
+#       auto- - 
 #
 #   Section:
 #       8
 #
 #   Synopsis:
+#       auto-
 #       
 #   Description:
+#       The
+#       .B auto-
+#       command
 #       
 #   Arguments:
 #       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
+#       auto-
 #
 #   Files:
 #
 #   Environment:
 #
 #   See also:
-#       
-#   History:
-#   Date        Name        Modification
-#   yyyy-mm-dd  Jason Bacon Add man page template and usage
+#       (8)
 ##########################################################################
 
