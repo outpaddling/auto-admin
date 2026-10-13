@@ -1,12 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Configure this system to authenticate users via LDAP
+#   Name:
+#       auto-ldap-client-setup - Configure authentication via LDAP
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-ldap-client-setup URI OU O cacert
 #       
+#   Description:
+#       The
+#       .B auto-ldap-client-setup
+#       command configures the system to authenticate users via a
+#       remote LDAP server.  It installs ldap software if necessary,
+#       and modifies the necessary configuration files to work with
+#       the LDAP server information provided on the command-line.
+#       
+#   Arguments:
+#       URI     - URI of the LDAP server
+#       OU      - Organizational unit (e.g. people)
+#       O       - Organization
+#       cacert  - cert file
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-ldap-client-setup ldap://ldap.my.domain people my.domain ./cacert.crt
+#
+#   See also:
+#       ldap(3), ldap.conf(5)
+#
 #   History:
 #   Date        Name        Modification
 #   2012-01-09  Jason Bacon Begin
+#   2026-10-13  Jason Bacon Add man page template and usage
 ##########################################################################
 
 pause()
@@ -47,7 +77,7 @@ FreeBSD)
     # Set up ldap.conf files for openldap and PAM
     for ldap_conf in /usr/local/etc/openldap/ldap.conf /usr/local/etc/ldap.conf; do
 	touch $ldap_conf
-	if ! fgrep -q uwm.edu $ldap_conf; then
+	if ! fgrep -q $uri $ldap_conf; then
 	    cat << EOM >> $ldap_conf
 base ou=$ou,o=$o
 uri $uri
