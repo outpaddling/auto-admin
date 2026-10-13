@@ -24,6 +24,10 @@
 #
 #   See also:
 #       auto-install-linux_base
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-13  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

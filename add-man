@@ -7,7 +7,7 @@ sed -e "s|yyyy-mm-dd|$today|g" man-template > man-template.today
 for script in Sys-scripts/* User-script/*; do
     if ! fgrep -q 'Add man page template and usage' $script; then
 	ape $script man-template.today
-	printf "Again? [y]/n "
+	printf "Edit another script? [y]/n "
 	read again
     fi
     if [ 0$again = 0n ]; then

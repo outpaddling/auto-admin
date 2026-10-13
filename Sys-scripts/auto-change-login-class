@@ -36,6 +36,7 @@
 #   History:
 #   Date        Name        Modification
 #   2024-11-29  Jason Bacon Begin
+#   2026-10-13  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
