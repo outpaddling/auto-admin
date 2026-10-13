@@ -1,5 +1,39 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-ldap-lookup - Look up users on a remote LDAP or AD server
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-ldap-lookup [username]
+#       
+#   Description:
+#       The
+#       .B auto-ldap-lookup
+#       command attempts to look up a user by username on the configured
+#       LDAP or AD server.  The system must already be configured as an
+#       LDAP or AD client, e.g. using auto-ldap-client-setup(8).
+#       
+#   Arguments:
+#       username    Username of an existing user
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-ldap-lookup jsmith
+#
+#   See also:
+#       auto-ldap-client-setup(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-13  Jason Bacon Add man page template and usage
+##########################################################################
+
 pause()
 {
     printf "Press return to continue...\n"
