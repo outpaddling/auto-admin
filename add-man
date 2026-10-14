@@ -9,9 +9,11 @@ for script in Sys-scripts/* User-script/*; do
 	sed -e "s|yyyy-mm-dd|$today|g" \
 	    -e "s|%%scriptname%%|$base|g" \
 	    man-template > man-template.today
+	sed -e '1r man-template.today' $script > temp
+	mv temp $script
 	action=e
 	while [ $action = e ]; do
-	    ape $script man-template.today
+	    ape $script
 	    auto-script2man $script
 	    action=x
 	    while [ 0"$action" != 0e ] && [ 0"$action" != 0i ] && [ 0"$action" != 0q ]; do

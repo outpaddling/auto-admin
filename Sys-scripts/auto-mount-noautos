@@ -1,6 +1,45 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extension
+#
+#   Name:
+#       auto-mount-noautos - 
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-mount-noautos
+#       
+#   Description:
+#       The
+#       .B auto-mount-noautos
+#       command
+#       
+#   Arguments:
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-mount-noautos
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-14  Jason Bacon Add man page template and usage
+##########################################################################
+
+
+##########################################################################
 #   Script description:
 #       NFS mounts may be set to noauto since RHEL 7 "bg" option does
 #       not work, or to reduce boot time on FreeBSD, where each bg mount
