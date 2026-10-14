@@ -1,0 +1,24 @@
+# auto-admin script list
+
+Each script below is documented by a man page.  To view the documentation,
+install auto-admin using your chosen package manager and run `man script`
+(e.g. `man auto-update-system`).
+
+| Script | Purpose |
+|--------|---------|
+| auto-add-swap | Create and enable a swap file |
+| auto-chromium+widevine-install | Install chromium and widevine plugin |
+| auto-image2dev | Write a disk image to a storage device |
+| auto-install-linux_base | Install and enable Linux kernal compat |
+| auto-ldap-client-setup | Configure authentication via LDAP |
+| auto-ldap-lookup | Look up users on a remote LDAP or AD server |
+| auto-lock-local-pw | Lock local password for a user |
+| auto-lock-user | Lock out a user |
+| auto-ly-enable | Enable the "ly" display manager |
+| auto-mark-install-from-source | Mark a port for install/update |
+| auto-mark-package-critical | Mark a package as critical for updates |
+| auto-physmem | Report physical memory size |
+| auto-pkgsrc-non-removable | List all non-removable packages |
+| auto-update-system | Update OS, packages, and ports/pkgsrc tree |
+| auto-user-admin | Menu for user management |
+| auto-using-pkgbase | Return success if pkgbase is enabled |

@@ -1,15 +1,36 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Lock a user account to prevent future logins
+#   Name:
+#       auto-lock-user - Lock out a user
 #
-#   Arguments:
-#       Username
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-lock-user username
 #       
+#   Description:
+#       The
+#       .B auto-lock-user
+#       command locks a user account to prevent future logins.
+#       
+#   Arguments:
+#       username    The user to lock out of the system
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-lock-user jsmith
+#
+#   See also:
+#       auto-admin(8), auto-lock-local-pw(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-11-06  J Bacon     Begin
+#   2026-10-14  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

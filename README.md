@@ -42,3 +42,12 @@ tasks as well as a simple menu system for the most common ones, such as
 installing software, adding users, etc.
 
 To get started, simple open a terminal and run auto-admin.
+
+## Scripts
+
+This (currently incomplete)
+[script summary](./scripts.md) lists currently available scripts.
+It is also available via "man auto-admin" when auto-admin is properly installed
+via a package manager.  Each script listed has its own man page with
+a more detailed description.
+

@@ -1,5 +1,37 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-ly-enable - Enable the "ly" display manager
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-ly-enable
+#       
+#   Description:
+#       The
+#       .B auto-ly-enable
+#       command
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-ly-enable
+#
+#   See also:
+#       auto-admin(8), auto-xdm-toggle(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-14  Jason Bacon Add man page template and usage
+##########################################################################
+
 case $(auto-ostype) in
 FreeBSD)
     pkg install -y ly

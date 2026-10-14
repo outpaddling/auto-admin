@@ -1,12 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Mark a package to be rebuilt from source by auto-update-system
+#   Name:
+#       auto-mark-install-from-source - Mark a port for install/update
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-mark-install-from-source --list|category/port[@flavor] reason when
 #       
+#   Description:
+#       The
+#       .B auto-mark-install-from-source
+#       command marks a port to be rebuilt from source by auto-update-system.
+#       This causes auto-update-system(8) to rebuild and reinstall the port
+#       from source following the ports tree update.  This may be done
+#       every time auto-update-system is run, or only when a newer version
+#       of the port is available.
+#       
+#   Arguments:
+#       --list          Don't mark a port, but list those already marked
+#       category/port   Port to be installed from source
+#       reason          Comment stating why source build is being used
+#       when            "newer" or "always"
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-mark-install-from-source --list
+#       auto-mark-install-from-source wip/auto-admin WIP newer
+#
+#   See also:
+#       auto-admin(8), auto-mark-package-critical(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2021-01-13  Jason Bacon Begin
+#   2026-10-14  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

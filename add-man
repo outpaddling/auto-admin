@@ -2,14 +2,38 @@
 
 today=$(date +%Y-%m-%d)
 echo $today
-sed -e "s|yyyy-mm-dd|$today|g" man-template > man-template.today
 
 for script in Sys-scripts/* User-script/*; do
     if ! fgrep -q 'Add man page template and usage' $script; then
-	ape $script man-template.today
+	base=$(basename $script)
+	sed -e "s|yyyy-mm-dd|$today|g" \
+	    -e "s|%%scriptname%%|$base|g" \
+	    man-template > man-template.today
+	action=e
+	while [ $action = e ]; do
+	    ape $script man-template.today
+	    auto-script2man $script
+	    action=x
+	    while [ 0"$action" != 0e ] && [ 0"$action" != 0i ] && [ 0"$action" != 0q ]; do
+		printf "E)dit again  I)nstall  Q)uit\n"
+		read action
+	    done
+	    case $action in
+	    i)
+		mv Temp-man/$base.8 Man
+		git add Man/$base.8
+		git status
+		;;
+	    
+	    q)
+		exit
+		;;
+	    esac
+	done
 	printf "Edit another script? [y]/n "
 	read again
     fi
+    rm -f man-template.today
     if [ 0$again = 0n ]; then
 	exit
     fi

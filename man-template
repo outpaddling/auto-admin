@@ -4,17 +4,17 @@
 #       Optional, defaults to the name of the script sans extension
 #
 #   Name:
-#       auto- - 
+#       %%scriptname%% - 
 #
 #   Section:
 #       8
 #
 #   Synopsis:
-#       auto-
+#       %%scriptname%%
 #       
 #   Description:
 #       The
-#       .B auto-
+#       .B %%scriptname%%
 #       command
 #       
 #   Arguments:
@@ -23,14 +23,14 @@
 #       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
-#       auto-
+#       %%scriptname%%
 #
 #   Files:
 #
 #   Environment:
 #
 #   See also:
-#       (8)
+#       auto-admin(8)
 #
 #   History:
 #   Date        Name        Modification
