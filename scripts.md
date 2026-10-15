@@ -17,6 +17,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-ly-enable | Enable the "ly" display manager |
 | auto-mark-install-from-source | Mark a port for install/update |
 | auto-mark-package-critical | Mark a package as critical for updates |
+| auto-mount-any | Mount a filesystem of unknown type |
 | auto-physmem | Report physical memory size |
 | auto-pkgsrc-non-removable | List all non-removable packages |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
