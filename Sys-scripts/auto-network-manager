@@ -1,12 +1,38 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Name:
+#       auto-network-manager - Menu for network management
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-network-manager
 #       
+#   Description:
+#       The
+#       .B auto-network-manager
+#       command presents a terminal-based menu for common network
+#       configuration tasks.  It is most often run from the auto-admin
+#       main menu, but can also be invoked directly.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-network-manager
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2026-10-15  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

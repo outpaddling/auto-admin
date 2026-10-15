@@ -1,5 +1,41 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-network-restart - Restart network services
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-network-restart
+#       
+#   Description:
+#       The
+#       .B auto-network-restart
+#       command restarts network services.  It provides a unoform user
+#       interface across platforms, since the native commands are very
+#       different for each OS.  It also attempts to make it safe to
+#       restart networking remotely, without losing remote access.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-network-restart
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-15  Jason Bacon Add man page template and usage
+##########################################################################
+
+
 # Prompt for root password if needed
 # su won't ask for pw if run as root
 if [ $(id -un) != root ]; then

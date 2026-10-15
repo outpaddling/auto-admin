@@ -1,6 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-nfs-add-share - Add a directory to NFS exports
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-nfs-add-share directory clients [optional flags]
+#       
+#   Description:
+#       The
+#       .B auto-nfs-add-share
+#       command exports "directory" as an NFS share and reloads the NFS
+#       configuration.
+#       
+#   Arguments:
+#       directory   Directory to export
+#       clients     Network spec for allowed clients
+#       flags       Additional NFS flags to add to the export entry
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-nfs-add-share /usr/home -network=192.168.0.0/24 -maproot=root
+#       auto-nfs-add-share /usr/home '-network=192.168.0.0 255.255.255.0'
+#       auto-nfs-add-share /share1 'bobspc.local julie.laptop.local'
+#
+#   See also:
+#       auto-admin(8), auto-nfs-restart(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-15  Jason Bacon Add man page template and usage
+##########################################################################
+
+
+##########################################################################
 #   Script description:
 #       Add a share to the local NFS setup
 #       
