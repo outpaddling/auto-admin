@@ -1,15 +1,41 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Name:
+#       auto-passwd-user-expiration - Set password expiration for a user
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-passwd-user-expiration username expire-days [warning-days]
+#       
+#   Description:
+#       The
+#       .B auto-passwd-user-expiration
+#       command sets an individual user's password expiration to
+#       the number of days specified.  If a third argument is
+#       provided, the user will receive a warning that many days
+#       before password expiration.
 #       
 #   Arguments:
+#       username        The user whose password should expire
+#       expire-days     Number of days before the password expires
+#       warning-days    Number of days before expiration to warn the user
 #       
 #   Returns:
-#       
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-passwd-user-expiration
+#
+#   See also:
+#       auto-admin(8), pw(8) [FreeBSD], chage(8) [Linux]
+#
 #   History:
 #   Date        Name        Modification
-#   2017-04-01  root        Begin
+#   2017-04-01  J Bacon     Begin
+#   2026-10-16  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
