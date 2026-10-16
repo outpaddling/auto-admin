@@ -75,7 +75,8 @@ what are often complex commands, and makes them uniform across
 Unix-like systems.
 
 The project also provides a menu, invoked as "auto-admin", for
-the most common tasks.
+the most common tasks, along with submenus for networking, user management,
+etc.
 
 .B Auto-admin
 thus allows sysadmins to easily manage multiple different
