@@ -24,6 +24,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-nfs-client-setup | Configure host as an NFS client |
 | auto-nfs-restart | Restart NFS and associated services |
 | auto-nfs-server-setup | Configure a host as an NFS server |
+| auto-passwd-user-expiration | Set password expiration for a user |
 | auto-physmem | Report physical memory size |
 | auto-pkgsrc-non-removable | List all non-removable packages |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
