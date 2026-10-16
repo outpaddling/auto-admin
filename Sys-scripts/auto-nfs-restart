@@ -1,5 +1,39 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-nfs-restart - Restart NFS and associated services
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-nfs-restart
+#       
+#   Description:
+#       The
+#       .B auto-nfs-restart
+#       command restarts nfsd and other services in the correct order
+#       to ensure proper reloading and continued access.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-nfs-restart
+#
+#   See also:
+#       auto-admin(8), nfsd(8), rpc.lockd(8), rpc.statd(8), nfsuserd(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-16  Jason Bacon Add man page template and usage
+##########################################################################
+
+
 if ! auto-root-check $0; then
     exit 1
 fi

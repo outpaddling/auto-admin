@@ -1,12 +1,49 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Enable NFS server
+#   Name:
+#       auto-nfs-server-setup - Configure a host as an NFS server
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-nfs-server-setup 'allowed-clients' sysctl|daemon domain
+#       
+#   Description:
+#       The
+#       .B auto-nfs-server-setup
+#       command configures a host as an NFS server.
+#
+#       The 'allowed-clients' argument is a list of IPs,  hostnames, and/or
+#       ranges that may include CIDR or separate network and mask notations.
+#       Enclose it in single quotes if it contains any whitespace, so
+#       that it is seen as a single argument.
+#       
+#   Arguments:
+#       'allowed-clients'   Network spec for clients allowed to connect
+#       sysctl|daemon       Select a method to map usernames across client/server
+#       domain              Domain for nfsuserd if using daemon for mapping
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-nfs-server-setup -network=192.168.0.0/24 sysctl
+#       auto-nfs-server-setup '-network=192.168.0.0 -mask=255.255.255.0' sysctl
+#       auto-nfs-server-setup 'bobspc.local julie.laptop.local' daemon our.domain
+#
+#   Files:
+#       /etc/exports
+#       /etc/zfs/exports
+#
+#   See also:
+#       auto-admin(8), nfsd(8), nfsuserd(8), rpc.statd(8), rpc.lockd(8)
 #
 #   History:
 #   Date        Name        Modification
 #   2019-12-29  J Bacon     Begin
+#   2026-10-16  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

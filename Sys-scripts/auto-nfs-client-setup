@@ -1,12 +1,49 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Configure a system as an NFS client.
+#   Name:
+#       auto-nfs-client-setup - Configure host as an NFS client
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-nfs-client-setup sysctl|daemon domain
 #       
+#   Description:
+#       The
+#       .B auto-nfs-client-setup
+#       command enables the necessary services (e.g. statd, lockd, nfsuserd)
+#       for accessing remote NFS servers, and performs any other essential
+#       configuration.
+#
+#       NFSv4 user mapping is enabled, to allow access to servers where
+#       usernames match, but user IDs and group IDs may differ.  On FreeBSD,
+#       this can be accomplished using sysctls without the need for daemons.
+#       On other systems, the nfsuserd daemon must be running on server
+#       and client.
+#       
+#   Arguments:
+#       sysctl|daemon   Select a method to map usernames across client/server
+#       domain          Domain for nfsuserd if using daemon for mapping
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-nfs-client-setup sysctl
+#       auto-nfs-client-setup daemon our.domain
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       auto-admin(8), nfsd(8), nfsuserd(8), rpc.statd(8), rpc.lockd(8)
+#
 #   History:
 #   Date        Name        Modification
-#   2020?       Jason Bacon Begin
+#   2026-10-16  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
