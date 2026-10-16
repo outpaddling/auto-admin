@@ -68,7 +68,7 @@ EOM
     # https://www.davidschlachter.com/misc/freebsd-webcam-browser
     LOADER_CONF=/boot/loader.conf
     RC_COND=/etc/rc.conf
-    pkg install -y webcamd libwacom ${X11_PREFIX}xf86-input-wacom xorg-server
+    pkg install -y webcamd libwacom ${X11_PREFIX}xf86-input-wacom
     
     # Load cuse now and at reboot
     kldload cuse || true
