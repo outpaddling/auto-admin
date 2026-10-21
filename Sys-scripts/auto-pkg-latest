@@ -1,20 +1,48 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Switch system to use latest packages rather than quarterly
+#   Name:
+#       auto-pkg-latest - Switch from snapshot to latest packages
 #
-#   Arguments:
-#       Any arguments to pass to auto-update-system
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-pkg-latest [--no-restart] [--yes]
 #       
+#   Description:
+#       The
+#       .B auto-pkg-latest
+#       command switches the binary package repository and ports tree to
+#       use the latest packages.  All currently installed packages are
+#       upgraded and all future port/package installations will be from
+#       the latest collection.
+#
+#       This should be done with caution, since switching back to snapshots
+#       can be problematic.  E.g., if the latest version of a package
+#       uses a newer configuration file format than the one in the
+#       most recent ports snapshot, the software may see the configuration
+#       file as corrupt.
+#       
+#   Arguments:
+#       --no-restart    Don't prompt to restart services after upgrades
+#       --yes           Don't warn about consequences of upgrading
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-06-16  Jason Bacon Begin
+#   2026-10-21  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 [--no-reboot] [--yes] [arguments to pass to auto-update-system]\n"
+    printf "Usage: $0 [--no-restart] [--yes]\n"
     exit 1
 }
 
@@ -28,8 +56,8 @@ FreeBSD)
     while [ 0$(echo $1 | cut -c 1,2) = 0'--' ]; do
 	if [ 0$1 = 0'--help' ]; then
 	    usage
-	elif [ 0$1 = 0'--no-reboot' ]; then
-	    no_reboot=1
+	elif [ 0$1 = 0'--no-restart' ]; then
+	    no_restart=1
 	    shift
 	elif [ 0$1 = 0'--yes' ]; then
 	    proceed=1
@@ -107,7 +135,7 @@ EOM
     pkg upgrade -y
     auto-check-ports-branch
     
-    if [ 0$no_reboot != 01 ]; then
+    if [ 0$no_restart != 01 ]; then
 	printf "Restart services? (y/n) [y] "
 	read restart
 	if [ 0$restart != 0n ]; then
