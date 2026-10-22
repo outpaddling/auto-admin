@@ -1,16 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Check out a new instance of FreeBSD-ports-wip
+#   Name:
+#       auto-ports-wip-checkout - Install work-in-progress ports and tools
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-ports-wip-checkout
+#       
+#   Description:
+#       The
+#       .B auto-ports-wip-checkout
+#       command clones a work-in-progress (WIP) ports clone under
+#       $PORTSDIR/wip, and installs the wip/wip-tools port to aid
+#       managing the wip ports repository, and creating, [re]installing,
+#       testing, and committing WIP ports.
+#
+#       The WIP ports collection contains ports that are not yet in the
+#       main ports tree, as well as updates and modifications undergoing
+#       testing.  
+#       
 #   Arguments:
 #       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), wip-tools(1)
 #
 #   History:
 #   Date        Name        Modification
 #   2019-11-17  Jason Bacon Begin
+#   2026-10-22  Jason Bacon Add man page template and usage
 ##########################################################################
+
 
 usage()
 {

@@ -1,13 +1,39 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Check out a free ports tree
+#   Name:
+#       auto-ports-checkout - Check out or clone a ports tree
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-ports-checkout
 #       
+#   Description:
+#       The
+#       .B auto-ports-checkout
+#       command checks out or clones a ports tree matching the current
+#       package branch, i.e. a quarterly snapshot or latest (HEAD).
+#       Shallow clones are used where available to save time and disk space.
+#       For a full clone, follow the instructions provided by your operating
+#       system.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), auto-package-branch(8), auto-ports-branch(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2017-02-15  Jason Bacon Begin
+#   2026-10-22  Jason Bacon Add man page template and usage
 ##########################################################################
+
 
 usage()
 {
@@ -27,6 +53,7 @@ case $(auto-ostype) in
 FreeBSD)
     if [ -e $PORTSDIR/CHANGES ]; then
 	printf "Ports tree already installed in $PORTSDIR.\n"
+	printf "Run auto-update-system(1) to update it.\n"
 	exit 1
     fi
 
@@ -51,8 +78,8 @@ FreeBSD)
 
     # FIXME: Factor out to something like $(auto-os-variant)
     if [ $(auto-os-variant) = GhostBSD ]; then
-        # Install system headers, etc.
-        pkg install -gy GhostBSD\*-dev
+	# Install system headers, etc.
+	pkg install -gy GhostBSD\*-dev
 	printf "Cloning GhostBSD ports...\n"
 	git clone --depth 1 \
 	    https://github.com/ghostbsd/ghostbsd-ports $PORTSDIR
