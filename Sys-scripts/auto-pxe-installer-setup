@@ -1,22 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Set up a PXE install server including dhcpd, tftpf, and nfsd.
+#   Name:
+#       auto-pxe-installer-setup - Configure PXE install server
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-pxe-installer-setup file.iso
+#       
+#   Description:
+#       The
+#       .B auto-pxe-installer-setup
+#       command configures a PXE installer server, utilizing dhcpd, tftpf,
+#       and nfsd.  This server automates operating system installation
+#       on other computers on the same network when they are booted in PXE
+#       mode.
+#
 #       Primary references:
-#       http://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
+#       https://www.ixsystems.com/whats-new/freebsd-unattended-installation-of-servers/
 #       man bsdinstall
-#       http://www.wonkity.com/~wblock/docs/html/pxe.html
-#
+#       https://www.wonkity.com/~wblock/docs/html/pxe.html
+#       
 #   Arguments:
-#       Name of ISO image to install.
-#
+#       file.iso    Name of ISO image to install
+#       
 #   Returns:
-#       NA
+#       0 on success, non-zero error codes otherwise
+#
+#   Examples:
+#       auto-pxe-installer-setup FreeBSD-14.5-RELEASE-amd64-disc1.iso
+#
+#   See also:
+#       auto-admin(8), auto-pxe-boot(8), auto-pxe-node-discover(8)
 #
 #   History:
 #   Date        Name        Modification
 #   2014-11-15  Jason Bacon Begin
+#   2026-10-24  Jason Bacon Add man page template and usage
 ##########################################################################
 
 # FIXME: Add option to change all config files and restart services instead
@@ -67,18 +89,6 @@ line()
     
 case $(auto-ostype) in
 FreeBSD)
-    ##########################################################################
-    #   Function description:
-    #       
-    #   Arguments:
-    #       
-    #   Returns:
-    #       
-    #   History:
-    #   Date        Name        Modification
-    #   2014-11-18  Jason Bacon Begin
-    ##########################################################################
-    
     tftp_inetd()
     {
 	conf='/etc/inetd.conf'

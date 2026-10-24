@@ -1,12 +1,34 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Name:
+#       auto-power-manager - Simple menu for reboot, shutdown, sleep
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-power-manager
 #       
+#   Description:
+#       The
+#       .B auto-power-manager
+#       command presents a simple menu to trigger power states such as
+#       reboot, shutdown, and sleep.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2026-10-24  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
