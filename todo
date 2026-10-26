@@ -1,4 +1,6 @@
 
+Add flavors support to auto-install-packages
+
 Support pkgbase
     auto-install-base-components
     auto-update-system
