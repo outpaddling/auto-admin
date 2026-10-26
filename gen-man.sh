@@ -90,9 +90,6 @@ tools such as SPVM (Simple, Portable Cluster Manager).
 
 .SH SEE ALSO
 
-auto-update-system(1), auto-user-admin(1),
-
-.SH SCRIPTS
 .nf
 .na
 EOM
@@ -103,9 +100,6 @@ auto-man2man Man/auto-* >> Man/auto-admin.8
 cat << EOM >> Man/auto-admin.8
 .ad
 .fi
-
-.SH "SEE ALSO"
-stdio(3)
 EOM
 
 # Debug

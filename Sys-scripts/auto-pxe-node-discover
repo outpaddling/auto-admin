@@ -1,14 +1,70 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Discover new DHCP leases and add to /etc/hosts and dhcp.conf.
+#   Name:
+#       auto-pxe-node-discover - Watch for and configure new nodes
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-pxe-node-discover basename digits domain
 #       
+#   Description:
+#       The
+#       .B auto-pxe-node-discover
+#       is used to configure new nodes on a local network, on a server
+#       which is running dhcpd.
+#       When a new node appears,
+#       .B auto-pxe-node-discover
+#       assigns it a hostname based on the command-line arguments as follows:
+#
+#       ${basename}${serial_number}.${domain}
+#
+#       The serial_number is an integer containing exactly the number
+#       of digits indicated on the command-line, so zero-prefixed, e.g.
+#
+#       compute-012.mycluster.edu, raid-04.mycluster.edu
+#
+#       .B auto-pxe-node-discover
+#       then adds an entry to /etc/hosts, and disables the warning about
+#       an unknown host key upon the first connection in /etc/ssh_config.
+#
+#       Finally, an entry is added to dhcp.conf to reserve the IP address.
+#       This step is critical to maintain access to the server.
+#
+#       This tool is intended for configuring new cluster nodes, and
+#       is used by higher-level tools such as SPCM (Simple Portable
+#       Cluster Manager).
+#       
+#   Arguments:
+#       basename    Base name for new nodes, e.g. "compute-", or "raid-"
+#       digits      Number of digits in the serial # following basename
+#       domain      Domain name to complete the FQDN
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       # To configure new compute nodes, maximum 999 nodes:
+#       auto-pxe-node-discover compute- 3 mycluster.edu
+#
+#       # To configure new RAID servers, maximum 99 servers:
+#       auto-pxe-node-discover raid- 2 mycluster.edu
+#
+#   Files:
+#       /etc/hosts, /etc/ssh/ssh_config, dhcpd.conf
+#
+#   See also:
+#       auto-admin(8), auto-pxe-installer-setup(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2014-11-18  Jason Bacon Begin
 #                           Based on Jim Wagner's node-discover
+#   2026-10-26  Jason Bacon Add man page template and usage
 ##########################################################################
+
 
 pause()
 {
@@ -22,7 +78,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 base-name digits domain
+Usage: $0 basename digits domain
 
 Example:
 

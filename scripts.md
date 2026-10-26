@@ -32,6 +32,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-ports-wip-checkout | Install work-in-progress ports and tools |
 | auto-power-manager | Simple menu for reboot, shutdown, sleep |
 | auto-pxe-installer-setup | Configure PXE install server |
+| auto-pxe-node-discover | Watch for and configure new nodes |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin | Menu for user management |
 | auto-using-pkgbase | Return success if pkgbase is enabled |
