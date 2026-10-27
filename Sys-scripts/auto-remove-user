@@ -1,22 +1,47 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Remove a user account
+#   Name:
+#       auto-remove-user - Remove a user
 #
-#   Arguments:
-#       User-name
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-remove-user [-r|--remove-home] [-y|--yes]
 #       
+#   Description:
+#       The
+#       .B auto-remove-user
+#       command removes a user account and possibly their home directory.
+#       It presents prompts before removing the user and before removing
+#       the directory, unless -r|--remove-home or -y|--yes are provided
+#       on the command-line.
+#       
+#   Arguments:
+#       -r|--remove-home    Remove home directory without asking
+#       -y|--yes            Remove user without asking
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-remove-user -ry joeuser
+#
+#   See also:
+#       auto-admin(8), auto-adduser(8), auto-useradd(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-11-06  J Bacon     Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 [-r] [-y] user-name\n"
-    printf "-r = remove home directory\n"
-    printf "-y = do not prompt before removal\n"
+    printf "Usage: $0 [-r|--remove-home] [-y|--yes] user-name\n"
+    printf "-r|--remove-home = remove home directory\n"
+    printf "-y|--yes = do not prompt before removal\n"
     exit 1
 }
 
@@ -31,11 +56,16 @@ fi
 
 while [ $# -gt 1 ]; do
     case $1 in
-    '-r')
+    '-r'|'--remove-home')
 	remove_home=1
 	shift
 	;;
-    '-y')
+    '-y'|'--yes')
+	no_prompt=1
+	shift
+	;;
+    '-ry'|'-yr')
+	remove_home=1
 	no_prompt=1
 	shift
 	;;

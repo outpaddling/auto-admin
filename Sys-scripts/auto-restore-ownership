@@ -1,18 +1,47 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Update ownership of files following UID/GID change
+#   Name:
+#       auto-restore-ownership - Restore ownership of files
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-restore-ownership user old-passwword-file old-group-file directory
+#       
+#   Description:
+#       The
+#       .B auto-restore-ownership
+#       command restores ownership of files in "directory" for "user"
+#       using information provided in "old-password-file" and "old-group-file".
+#       I.e., files owned by the userid and groupid in the old password
+#       and group files are chown'd to the new userid and groupid of the
+#       user.  This is useful after an account has been removed and
+#       recreated without preserving userid and groupid.
+#       
 #   Arguments:
-#       username
-#       old password file
-#       old group file
-#       directory
+#       user                The username of the recreated user
+#       old-password-file   The password file containing the old user account
+#       old-group-file      The group file containing the old groups
+#       directory           The directory in which to update ownership
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-restore-ownership joeuser passwd.old group.old /home/joeuser
+#
+#   Files:
+#       /etc/passwd, /etc/group
+#
+#   See also:
+#       auto-admin(8), auto-restore-user(8), auto-restore-pw(8)
 #
 #   History:
 #   Date        Name        Modification
 #   2018-11-22  J Bacon     Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

@@ -1,22 +1,37 @@
 #!/bin/sh
 
 ##########################################################################
+#   Name:
+#       auto-restart-services - Restart all enabled services
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-restart-services
-#
+#       
 #   Description:
-#       Restart all services currently enabled.
+#       The
+#       .B auto-restart-services
+#       command restarts all currently enabled services.  This is normally
+#       done following system and package upgrades.
 #
+#       Caution: Restarting a display manager such as gdm or sddm will
+#       terminal graphical user sessions.
+#       
 #   Arguments:
-#       None.
-#
+#       None
+#       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   See also:
-#       
+#       auto-admin(8), auto-enable-service(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2022-12-28  J Bacon     Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
