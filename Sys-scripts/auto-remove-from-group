@@ -1,21 +1,43 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Remove a user from a group
+#   Name:
+#       auto-remove-from-group - Remove a user from a supplemental group
 #
-#   Arguments:
-#       user-name
-#       group-name
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-remove-from-group user group
 #       
+#   Description:
+#       The
+#       .B auto-remove-from-group
+#       command removes a user from a supplemental group.  It cannot,
+#       of course, remove a user from their primary group.
+#
+#       Note that the user may lose permissions on any files/directories
+#       owned by that group. 
+#       
+#   Arguments:
+#       user    The user to remove from a group
+#       group   The group from which the user is removed
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), auto-add-to-group(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-10-09  J Bacon     Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 user-name group-name\n"
+    printf "Usage: $0 user group\n"
     exit 1
 }
 
