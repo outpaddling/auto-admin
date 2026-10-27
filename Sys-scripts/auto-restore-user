@@ -1,15 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Name:
+#       auto-restore-user - Restore a user account from old system files
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-restore-user user passwd-file shadow-file group-file
+#       
+#   Description:
+#       The
+#       .B auto-restore-user
+#       command restores a user account from old password and group files.
+#       This is useful after an operating system reinstallation to selectively
+#       reactivate users with the same passwords they had before.
 #       
 #   Arguments:
+#       user        The username of the account to restore
+#       passwd-file The old /etc/passwd file from before the reinstall
+#       shadow-file The old encrypted passwd file from before the reinstall
+#       group-file  The old group file from before the reinstall
 #       
 #   Returns:
-#       
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-restore-user joeuser passwd.old master.passwd.old group.old
+#
+#   Files:
+#       /etc/passwd, /etc/master.passwd, /etc/shadow, /etc/group
+#
+#   See also:
+#       auto-admin(8), auto-restore-pw(8), auto-restore-ownership(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2014-03-26  root        Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

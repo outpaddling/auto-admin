@@ -1,15 +1,38 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Check a directory for security problems.
+#   Name:
+#       auto-secure-directory - Traverse a directory tree for security issues
 #
-#   Arguments:
-#       dir
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-secure-directory directory
 #       
+#   Description:
+#       The
+#       .B auto-secure-directory
+#       command traverses the filesystem tree at and below directory,
+#       looking for common security issues such as world-writable files.
+#       Any files with security issues are printed to the standard output.
+#       
+#   Arguments:
+#       directory   Top-level directory under which the tree is traversed
+#       
+#   Returns:
+#       Currently always exits with 0 status.  Check output for results.
+#
+#   Examples:
+#       auto-secure-directory
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-10-15  Jason Bacon Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

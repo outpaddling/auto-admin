@@ -1,15 +1,52 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Name:
+#       auto-restore-pw - Restore a password from encrypted password file
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-restore-pw user 'encrypted-entry'
+#       
+#   Description:
+#       The
+#       .B auto-restore-pw
+#       command restores user's password directly from an encrypted
+#       passwd file entry.  This is useful following an operating
+#       system reinstallation to selectively reactivate users with
+#       the same passwords they had before.
+#
+#       Encrypted-entry should be an entire line from the file containing
+#       encrypted passwords, such as /etc/master.passwd or /etc/shadow.
+#       The entire line is inserted into the encrypted password file
+#       without modification.
+#
+#       Single quotes are strongly recommended as encrypted passwords
+#       may contain $ characters or other symbols that are interpreted by your
+#       shell.
 #       
 #   Arguments:
+#       user            Username whose password is to be restored
+#       encrypted-entry Entire line from encrypted password file
 #       
 #   Returns:
-#       
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-restore-pw joeuser 'joeuser:$6$<snip>b1:2000:2000::0:0:Joe User:/home/joeuser:/bin/tcsh'
+#
+#   Files:
+#       /etc/master.passwd, /etc/shadow, etc.
+#
+#   See also:
+#       auto-admin(8), auto-restore-user(8), auto-restore-ownership(8)
+#
 #   History:
 #   Date        Name        Modification
-#   2015-01-31  Charlie &   Begin
+#   2015-01-31  J Bacon     Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -95,4 +132,3 @@ else
 	;;
     esac
 fi
-

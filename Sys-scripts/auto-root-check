@@ -1,12 +1,49 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Verify that we're running as root.
+#   Name:
+#       auto-root-check - Check whether running as root user
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-root-check calling-script-name ['reason']
 #       
+#   Description:
+#       The
+#       .B auto-root-check
+#       command checks whether it is being run by the root user.  This
+#       is normally run from a script that requires root privileges, so
+#       that the script can emit a meaningful error message and gracefully
+#       exit rather than continue and allow commands to fail.
+#
+#       If the optional 'reason' is provided, it should be enclosed in
+#       quotes, so that it is one argument.
+#
+#       If the using running auto-root-check is not root, it prints
+#       an error message stating that root privileges are necessary,
+#       followed by "reason" if provided.
+#       
+#   Arguments:
+#       calling-script  The calling script name, often just "$0"
+#       reason          Option reason to explain why root privileges are needed
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-root-check $0 'Modifies system files'
+#       if ! auto-root-check $0; then
+#       fi
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-07-16  Jason Bacon Begin
+#   2026-10-27  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
