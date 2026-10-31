@@ -1,12 +1,39 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Name:
+#       auto-services-manager - Menu for managing popular services
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-services-manager
 #       
+#   Description:
+#       The
+#       .B auto-services-manager
+#       command presents a simple text menu for managing some of the
+#       most popular services.  It handles installation of necessary
+#       software, configuration changes, and enabling/disabling the service.
+#       
+#   Arguments:
+#       None
+#
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-services-manager
+#
+#   See also:
+#       auto-admin(8), auto-enable-service(8), auto-disable-service(8),
+#       auto-cups-setup(8), auto-web-setup(8), auto-web-self-sign(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2026-10-31  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -125,6 +152,7 @@ EOM
 	    
 	    03)
 		# Install python for cron
+		# FIXME: Switch to a different tool
 		pkg install -y python py38-certbot-apache
 		cat << EOM
 

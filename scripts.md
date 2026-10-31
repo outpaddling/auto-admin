@@ -37,6 +37,15 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-remove-user | Remove a user |
 | auto-restart-services | Restart all enabled services |
 | auto-restore-ownership | Restore ownership of files |
+| auto-restore-pw | Restore a password from encrypted password file |
+| auto-restore-user | Restore a user account from old system files |
+| auto-root-check | Check whether running as root user |
+| auto-secure-directory | Traverse a directory tree for security issues |
+| auto-security-manager | Menu for common security operations |
+| auto-select-sound-device | Select a default sound device |
+| auto-service-enabled | Exit 0 if the indicated service is enables |
+| auto-services-manager | Menu for managing popular services |
+| auto-set-conf-var | Set a variable in a configuration file |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin | Menu for user management |
 | auto-using-pkgbase | Return success if pkgbase is enabled |

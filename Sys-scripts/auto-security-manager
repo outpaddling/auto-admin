@@ -1,12 +1,35 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Name:
+#       auto-security-manager - Menu for common security operations
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-security-manager
 #       
+#   Description:
+#       The
+#       .B auto-security-manager
+#       command presents a text menu offering common security configurations,
+#       such as enabling auto-logout, password quality checks, etc.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), auto-enable-autologout(8), auto-enable-passwdqc(8),
+#       auto-passwd-user-expiration(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2026-10-31  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

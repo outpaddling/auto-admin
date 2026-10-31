@@ -1,5 +1,37 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-select-sound-device - Select a default sound device
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-select-sound-device
+#       
+#   Description:
+#       The
+#       .B auto-select-sound-device
+#       command lists available sounds devices and prompts the user to
+#       select a default.  The current default is indicated in the listing.
+#       Pressing return without indicating a device results in no change.
+#       
+#   Arguments:
+#       None
+#
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), auto-set-sysctl(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-10-31  Jason Bacon Add man page template and usage
+##########################################################################
+
+
 case $(auto-ostype) in
 FreeBSD)
     valid=no

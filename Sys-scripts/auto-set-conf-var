@@ -1,13 +1,59 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Add or update a variable=value pair in a configuration file.
-#       Like sysrc, but allows for sysctl-style variable names
+#   Name:
+#       auto-set-conf-var - Set a variable in a configuration file
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-set-conf-var variable value file caller
 #       
+#   Description:
+#       The
+#       .B auto-set-conf-var
+#       command adds or changes the value of a variable in a configuration
+#       file such as /etc/sysctl.conf, /boot/loader.conf, or any other file
+#       containing entries of the form "variable=value".
+#
+#       It provides a controlled and non-interactive alternative to manually
+#       editing files, and a portable, file-agnostic alternative to
+#       system-specific interfaces such as FreeBSD's sysrc(8).
+#
+#       If the variable was not previously present in the configuration file,
+#       the added entry is wrapped in a comment as follows:
+#
+#       .nf
+#       .na
+#       # Added by auto-admin from $caller
+#       var=value
+#       # End $caller addition
+#       .ad
+#       .fi
+#
+#   Arguments:
+#       variable    Variable to add or change
+#       value       New value of variable
+#       file        Absolute path of the configuration file
+#       caller      Name of calling script, often "$0"
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-set-conf-var acpi_video_load '"YES"' /boot/loader.conf $0
+#
+#   Files:
+#       /etc/sysctl.conf, /boot/loader.conf
+#
+#   See also:
+#       auto-admin(8), auto-append-line(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2020-05-14  Jason Bacon Begin
+#   2026-10-31  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

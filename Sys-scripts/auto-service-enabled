@@ -1,15 +1,46 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
+#   Name:
+#       auto-service-enabled - Exit 0 if the indicated service is enables
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-service-enabled service-name
+#       
+#   Description:
+#       The
+#       .B auto-service-enabled
+#       command exits with 0 (success) status if "service-name" is
+#       currently enabled.  This is meant to be run in conditionals
+#       in scripts.
+#
+#       Note: The service name used here is the name of the service
+#       indicated in /etc/rc.conf, which may differ from the filename
+#       of the service script in /etc/rc.conf.
+#       For example, on FreeBSD, the service name for /etc/rc.d/lockd
+#       is "rpc_lockd".  
 #       
 #   Arguments:
+#       service-name    Name of the service (as spelled in rc.conf, etc.)
 #       
 #   Returns:
-#       
+#       0 if the service is enabled, non-zero otherwise
+#
+#   Examples:
+#       if auto-service-enabled sshd; then
+#           ...
+#       fi
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
-#   2024-10-21  izzy Meyer  Start OpenBSD support
+#   2024-10-21  Izzy Meyer  Add OpenBSD support
+#   2026-10-31  Jason Bacon Add man page template and usage
 ##########################################################################
 
 if [ $# != 1 ]; then
@@ -19,6 +50,9 @@ fi
     
 case $(auto-ostype) in
 FreeBSD)
+    # FIXME: Is there a way to use the rc.d filename?
+    # As of 2026-10-31, "service name status" does not distinguish
+    # between stopped and running services.  Both are reported as "not running".
     service=$1
     grep -q "^${service}_enable=.*YES.*" /etc/rc.conf
     exit $?
