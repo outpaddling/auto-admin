@@ -46,6 +46,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-service-enabled | Exit 0 if the indicated service is enables |
 | auto-services-manager | Menu for managing popular services |
 | auto-set-conf-var | Set a variable in a configuration file |
+| auto-set-hostname | Permanently set a new hostname |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin | Menu for user management |
 | auto-using-pkgbase | Return success if pkgbase is enabled |

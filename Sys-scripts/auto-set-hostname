@@ -1,15 +1,40 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Permanently set hostname
+#   Name:
+#       auto-set-hostname - Permanently set a new hostname
 #
-#   Arguments:
-#       New hostname
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-set-hostname new-hostname
 #       
+#   Description:
+#       The
+#       .B auto-set-hostname
+#       command provides a platform-independent interface for permanently
+#       changing the hostname of the system.  Native interfaces for changing
+#       the hostname vary widely across operating systems, creating
+#       hurdles for those who want to automate management of
+#       multiple different systems.
+#       
+#   Arguments:
+#       new-hostname    The new hostname for the system
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-set-hostname myhost.mydomain
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-01-03  root        Begin
+#   2026-11-01  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
