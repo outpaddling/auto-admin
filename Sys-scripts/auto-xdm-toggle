@@ -15,26 +15,15 @@ usage()
     exit 1
 }
 
-
 ##########################################################################
-#   Main
+#   Function description:
+#       Toggle xdm in /etc/ttys
 ##########################################################################
 
-if [ $# != 1 ]; then
-    usage
-fi
-
-new_state=$1
-case $new_state in
-off|on)
-    ;;
-*)
-    usage
-    ;;
-esac
+tty_toggle()
+{
+    new_state=$1
     
-case $(auto-ostype) in
-FreeBSD)
     # In case something is left over from a crashed run
     rm -f /tmp/ttys.auto-xdm-toggle
     awk -v new_state=$new_state \
@@ -52,6 +41,44 @@ FreeBSD)
     kill -HUP 1
     if [ $new_state = off ]; then
 	pkill xdm || true
+    fi
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+New_state=$1
+case $New_state in
+off|on)
+    ;;
+*)
+    usage
+    ;;
+esac
+    
+case $(auto-ostype) in
+FreeBSD)
+    # xdm may be enabled as a service via rc.conf or via /etc/ttys.
+    # Arbitrarily prefer the service since we have to choose one.
+    # Clean up if it's enabled in both places.
+    if grep -q '^xdm_enable' /etc/rc.conf; then
+	# Make sure xdm is not enabled in two places.
+	tty_toggle off
+	if [ $New_state = off ]; then
+	    service xdm stop
+	else
+	    service xdm start
+	fi
+    else
+	# In case xdm_enable=YES was removed from /etc/rc.conf
+	# but the service is still running.
+	service xdm onestop || true
+	tty_toggle $New_state
     fi
     ;;
     
