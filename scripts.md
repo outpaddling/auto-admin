@@ -47,6 +47,10 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-services-manager | Menu for managing popular services |
 | auto-set-conf-var | Set a variable in a configuration file |
 | auto-set-hostname | Permanently set a new hostname |
+| auto-set-lid-switch-mode | Control response to laptop close |
+| auto-set-memory-limits | Set per-process virtual memory limits |
+| auto-set-sysctl | Immediately and permanently set a sysctl variable |
+| auto-set-umask | Change default umask for all users |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin | Menu for user management |
 | auto-using-pkgbase | Return success if pkgbase is enabled |

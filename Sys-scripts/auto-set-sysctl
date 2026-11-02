@@ -1,17 +1,60 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Set a sysctl variable in /etc/sysctl and update in running kern
+#   Name:
+#       auto-set-sysctl - Immediately and permanently set a sysctl variable
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-set-sysctl variable value caller
 #       
+#   Description:
+#       The
+#       .B auto-set-sysctl
+#       command immediately sets sysctl "variable" to "value" and also
+#       updates /etc/sysctl.conf, so that the change will persist across
+#       reboots.
+#
+#       If "variable" was not already in /etc/sysctl.conf, an entry is added.
+#       If caller is not "nocomment", the new entry is wrapped in a
+#       comment as follows:
+#
+#       .nf
+#       .na
+#       # Added by auto-admin from $caller
+#       var=value
+#       # End $caller addition
+#       .ad
+#       .fi
+#       
+#   Arguments:
+#       variable    Sysctl variable to change
+#       value       New value for "variable"
+#       caller      Name of calling program, often $0, or "nocomment"
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-set-sysctl hw.acpi.lid_switch_state suspend $0
+#
+#   Files:
+#       /etc/sysctl.conf
+#
+#   See also:
+#       auto-admin(8), auto-set-conf-var(8), sysctl(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-03-10  Jason Bacon Begin
+#   2026-11-02  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 variable value calling-program\n"
+    printf "Usage: $0 variable value caller\n"
     exit 1
 }
 

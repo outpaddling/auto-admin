@@ -21,8 +21,10 @@
 #       editing files, and a portable, file-agnostic alternative to
 #       system-specific interfaces such as FreeBSD's sysrc(8).
 #
-#       If the variable was not previously present in the configuration file,
-#       the added entry is wrapped in a comment as follows:
+#       If "variable" was not already in the configuration file, an entry is
+#       added.
+#       If caller is not "nocomment", the new entry is wrapped in a
+#       comment as follows:
 #
 #       .nf
 #       .na

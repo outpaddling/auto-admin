@@ -1,6 +1,53 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-set-memory-limits - Set per-process virtual memory limits
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-set-memory-limits [kilobytes]
+#       
+#   Description:
+#       The
+#       .B auto-set-memory-limits
+#       command sets pre-process memory limits, causing processes that
+#       oversubscribe memory to be terminated.  If a command-line argument
+#       is provided, it indicates the maximum kilobytes of virtual memory a
+#       process can use.  Otherwise, the limit is set to twice the
+#       amount of physical RAM.
+#
+#       Some people argue that virtual address space is "free" on modern
+#       systems because theoretical capacity is far beyond practical physical
+#       memory limits, and memory isn't paged in until it
+#       it is actually accessed.  However, allowing unlimited memory allocation
+#       is a bad policy, as there are many buggy programs in existence that
+#       will touch most of the memory they allocate, leading to system
+#       thrashing or crashes.  This policy can also be deliberately exploited
+#       by running "malloc() bombs" for denial-of-service attacks.
+#       
+#   Arguments:
+#       kilobytes   Optional limit, otherwise 2 * physical memory
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-set-memory-limits              # 2*physmem
+#       auto-set-memory-limits 1048576      # 1 GiB
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-02  Jason Bacon Add man page template and usage
+##########################################################################
+
+
+##########################################################################
 #   Function description:
 #       Pause until user presses return
 ##########################################################################
@@ -12,6 +59,11 @@ pause()
     printf "Press return to continue..."
     read junk
 }
+
+if [ $# -gt 1 ]; then
+    printf "Usage: $0 [kilobytes]\n"
+    exit 1
+fi
 
 ##########################################################################
 #   Description:
@@ -29,6 +81,12 @@ pause()
     
 case $(auto-ostype) in
 RHEL)
+    # FIXME: Code below clobbers existing limits.  Find a way to
+    # respect limits that should not be altered.  This implementation
+    # was done to resolve an emergency and is not suitable for
+    # general use.
+    # Also make argument optional for all platforms.
+    auto-unsupported-os $0
     
     case $(auto-os-release) in
     RHEL6)
@@ -43,12 +101,11 @@ RHEL)
 	;;
 
     esac
-    
+
     if [ $# != 1 ]; then
 	printf "Usage: $0 kilobytes\n"
 	exit 1
     fi
-    
     mem_limit=$1
     
     # On controller nodes, set limits fairly high due to recent Linux kernel's
@@ -91,14 +148,18 @@ EOM
 
 FreeBSD)
     : ${EDITOR:=vi}
-    realmem=$(sysctl -n hw.realmem)
-    echo $realmem
-    maxdsiz=$(($realmem * 2))
+    if [ $# = 1 ]; then
+	maxdsiz=$(($1 * 1024))
+    else
+	realmem=$(sysctl -n hw.realmem)
+	echo $realmem
+	maxdsiz=$(($realmem * 2))
+    fi
     echo $maxdsiz
     auto-set-conf-var kern.maxdsiz $maxdsiz /boot/loader.conf $0
     cat << EOM
 
-Editing /etc/login.conf.  Change vmemoryuse under the appropriate user class.
+Editing /etc/login.conf.  Change vmemoryuse under the appropriate user class(es).
 New limits will take effect upon the next login.
 
 EOM

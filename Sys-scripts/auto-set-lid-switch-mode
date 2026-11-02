@@ -1,5 +1,41 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-set-lid-switch-mode - Control response to laptop close
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-set-lid-switch-mode sleep-state
+#       
+#   Description:
+#       The
+#       .B auto-set-lid-switch-mode
+#       command controls the system response to the lid switch, i.e.
+#       a laptop being closed.  The sleep-state argument may be any of
+#       the standard ACPI states S1|S2|S3|S4|S5|NONE, or for convenience,
+#       mnemonic states suspend|shutdown|none.
+#
+#   Arguments:
+#       sleep-state ACPI S1|S2|S3|S4|S5|NONE|suspend|shutdown|none
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-set-lid-switch-mode suspend
+#
+#   See also:
+#       auto-admin(8), acpi(4)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-02  Jason Bacon Add man page template and usage
+##########################################################################
+
+
 case $(auto-ostype) in
 FreeBSD)
     if ! sysctl hw.acpi > /dev/null 2>&1; then
@@ -13,8 +49,8 @@ FreeBSD)
     Usage:
     
     $0 suspend|shutdown|none
-    
     $0 S1|S2|S3|S4|S5|NONE
+    
     Run "man acpi" for more information.
     
 EOM
