@@ -75,14 +75,9 @@
 #       in typical use cases.
 #
 #       This command is specific to FreeBSD + UFS2.
-#       For similar control of ZFS filesystems, check the documentation
+#       For similar control of ZFS filesystems, see
+#       https://wiki.freebsd.org/ZFSTuningGuide for information
 #       on the ZFS intent log (ZIL), which is comparable to a journal.
-#       The ZIL can be disabled via a sysctl in /boot/loader.conf:
-#
-#       vfs.zfs.zil_disable="1"
-#
-#       Disabling the ZIL has the same drawbacks as disabling the UFS2
-#       journal, so use with caution.
 #       
 #   Arguments:
 #       new-state   on|off
