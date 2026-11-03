@@ -1,28 +1,41 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-sync-pxe-root-pw - Copy the root password from PXE install image
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-sync-pxe-root-pw
-#
+#       
 #   Description:
-#       Sync the default root password in a PXE install image to the
-#       current root password.
-#
+#       The
+#       .B auto-sync-pxe-root-pw
+#       command
+#       syncs the root password in a PXE install image to the
+#       current root account.  This is used to automatically set the
+#       root password following a PXE operating system installation.
+#       The PXE installer image must be in a standard location, as
+#       when created by auto-pxe-installer-setup(8).
+#       
 #   Arguments:
 #       None
-#
+#       
 #   Returns:
-#       0 on success, non-zero otherwise
+#       0 on success, non-zero error codes otherwise.
 #
 #   Files:
 #       LOCALBASE/etc/auto-admin/pxe, /etc/master.passwd
 #
 #   See also:
-#       auto-pxe-installer-setup(1), passwd(1)
-#       
+#       auto-admin(8), auto-pxe-installer-setup(8), passwd(1)
+#
 #   History:
 #   Date        Name        Modification
 #   2021-12-23  J Bacon     Begin
+#   2026-11-03  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

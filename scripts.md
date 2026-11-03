@@ -51,6 +51,9 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-set-memory-limits | Set per-process virtual memory limits |
 | auto-set-sysctl | Immediately and permanently set a sysctl variable |
 | auto-set-umask | Change default umask for all users |
+| auto-sound-driver-setup | Detect and enable sound devices |
+| auto-su+j-toggle | Enable or disable the UFS2 journal |
+| auto-sync-pxe-root-pw | Copy the root password from PXE install image |
 | auto-update-system | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin | Menu for user management |
 | auto-using-pkgbase | Return success if pkgbase is enabled |
