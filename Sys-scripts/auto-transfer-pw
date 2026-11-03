@@ -1,14 +1,51 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Transfer an encrypted password from another file
-#       Systems must use the same hash method.
-#       Works between FreeBSD and RHEL using sha512 as of this writing
+#   Name:
+#       auto-transfer-pw - Transfer an encrypted password
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-transfer-pw username 'encrypted-password'
 #       
+#   Description:
+#       The
+#       .B auto-transfer-pw
+#       command transfers an encrypted password (usually from an old
+#       master.passwd/shadow file) to a new user account.  The password
+#       should be enclosed in single quotes, as encrypted passwords are
+#       likely to contain special characters that the shell will modify
+#       before even starting the script.
+#
+#       This should only be expected to work if the source of the password
+#       is the same operating system as the target.  However, it may work
+#       otherwise as long as the systems use the same hash method.
+#       It was known to work between FreeBSD and RHEL systems both using
+#       sha512 as of this writing.
+#       
+#   Arguments:
+#       username            The user to receive the transferred password
+#       encrypted-password  The encrypted password field from the old file
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       # Password abbreviated
+#       auto-transfer-pw joeuser '$6...2M.'
+#
+#   Files:
+#       /etc/master.passwd, /etc/shadow
+#
+#   See also:
+#       auto-admin(8), auto-sync-pxe-root-pw(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-12-12  J Bacon     Begin
+#   2026-11-03  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -17,7 +54,7 @@ usage()
 
 Usage: $0 username 'encrypted-password'
 
-Encrypted-password should be the password field the file containing
+Encrypted-password should be the password field from the file containing
 encrypted passwords, such as /etc/master.passwd or /etc/shadow.
 
 Single quotes are strongly recommended as encrypted passwords

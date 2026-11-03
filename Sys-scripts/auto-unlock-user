@@ -1,15 +1,41 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Lock a user account to prevent future logins
+#   Name:
+#       auto-unlock-user - Allow a user to log into the system
 #
-#   Arguments:
-#       Username
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-unlock-user username
 #       
+#   Description:
+#       The
+#       .B auto-unlock-user
+#       command unlocks a user account to allow a user to log in again.
+#       Unlike auto-unlock-local-pw(8), this command applies to the user
+#       in general and not to any specific authentication method.
+#       Specific authntication methods such as local passwords or ldap(3)
+#       may remain locked.
+#       
+#   Arguments:
+#       username    The user to unlock
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-unlock-user joeuser
+#
+#   See also:
+#       auto-admin(8), auto-lock-user(8), auto-lock-local-pw(8),
+#       auto-unlock-local-pw(8), pw(8), passwd(1)
+#
 #   History:
 #   Date        Name        Modification
 #   2018-11-06  J Bacon     Begin
+#   2026-11-03  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

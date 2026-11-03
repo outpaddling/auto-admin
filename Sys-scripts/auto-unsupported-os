@@ -1,27 +1,40 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-unsupported-os - Display a user-friendly message for unsupported systems
+#
+#   Section:
+#       8
+#
 #   Synopsis:
-#
+#       auto-unsupported-os command
+#       
 #   Description:
-#       Notify user of an unsupported OS for the tool named by $1.
-#
+#       The
+#       .B auto-unsupported-os
+#       command displays a user-friendly message stating the the
+#       calling script does not support the operating system running it.
+#       This is used by many auto-admin scripts where support for a particular
+#       operating system has not yet been implemented, or where it simply
+#       does not apply.
+#       
 #   Arguments:
-#       $1  Calling program name, i.e. program not supported on this OS
-#
+#       command     Name of the calling command, usually $0
+#       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
-#
-#   Files:
-#
-#   Environment:
+#       auto-unsupported-os $0
 #
 #   See also:
-#       
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2021-10-26  Jason Bacon Begin
+#   2026-11-03  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

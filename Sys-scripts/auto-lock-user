@@ -25,7 +25,8 @@
 #       auto-lock-user jsmith
 #
 #   See also:
-#       auto-admin(8), auto-lock-local-pw(8)
+#       auto-admin(8), auto-lock-local-pw(8), auto-unlock-user(8),
+#       auto-unlock-local-pw(8)
 #
 #   History:
 #   Date        Name        Modification

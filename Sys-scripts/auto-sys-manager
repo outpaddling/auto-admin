@@ -1,12 +1,38 @@
 #!/bin/sh
 
 ##########################################################################
-#   Script description:
-#       Common admin tasks
+#   Name:
+#       auto-sys-manager - Menu for common system settings
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-sys-manager
 #       
+#   Description:
+#       The
+#       .B auto-sys-manager
+#       command presents a simple text menu for altering common system settings,
+#       such as hostname, memory limits, SMT (simultaneous multithreading), etc.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       Always returns 0 (success)
+#
+#   Examples:
+#       auto-sys-manager
+#
+#   See also:
+#       auto-admin(8), auto-set-hostname(8), auto-set-memory-limits(8),
+#       auto-hyperthreading-toggle(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2016-01-01  J Bacon     Begin
+#   2026-11-03  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
@@ -62,8 +88,8 @@ do
 
 1.. Set host name
 2.. Set memory limits
-3.. Enable hyperthreading
-4.. Disable hyperthreading
+3.. Enable hyperthreading (Intel only)
+4.. Disable hyperthreading (Intel only)
 Q.. Quit
 
 EOM

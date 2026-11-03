@@ -54,6 +54,11 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-sound-driver-setup(8) | Detect and enable sound devices |
 | auto-su+j-toggle(8) | Enable or disable the UFS2 journal |
 | auto-sync-pxe-root-pw(8) | Copy the root password from PXE install image |
+| auto-sys-manager(8) | Menu for common system settings |
+| auto-transfer-pw(8) | Transfer an encrypted password |
+| auto-unlock-local-pw(8) | Allow a user to log in via a local password |
+| auto-unlock-user(8) | Allow a user to log into the system |
+| auto-unsupported-os(8) | Display a user-friendly message for unsupported systems |
 | auto-update-system(8) | Update OS, packages, and ports/pkgsrc tree |
 | auto-user-admin(8) | Menu for user management |
 | auto-using-pkgbase(8) | Return success if pkgbase is enabled |
