@@ -6,54 +6,54 @@ install auto-admin using your chosen package manager and run `man script`
 
 | Script | Purpose |
 |--------|---------|
-| auto-add-swap | Create and enable a swap file |
-| auto-chromium+widevine-install | Install chromium and widevine plugin |
-| auto-image2dev | Write a disk image to a storage device |
-| auto-install-linux_base | Install and enable Linux kernal compat |
-| auto-ldap-client-setup | Configure authentication via LDAP |
-| auto-ldap-lookup | Look up users on a remote LDAP or AD server |
-| auto-lock-local-pw | Lock local password for a user |
-| auto-lock-user | Lock out a user |
-| auto-ly-enable | Enable the "ly" display manager |
-| auto-mark-install-from-source | Mark a port for install/update |
-| auto-mark-package-critical | Mark a package as critical for updates |
-| auto-mount-any | Mount a filesystem of unknown type |
-| auto-network-manager | Menu for network management |
-| auto-network-restart | Restart network services |
-| auto-nfs-add-share | Add a directory to NFS exports |
-| auto-nfs-client-setup | Configure host as an NFS client |
-| auto-nfs-restart | Restart NFS and associated services |
-| auto-nfs-server-setup | Configure a host as an NFS server |
-| auto-passwd-user-expiration | Set password expiration for a user |
-| auto-physmem | Report physical memory size |
-| auto-pkg-latest | Switch from snapshot to latest packages |
-| auto-pkgsrc-non-removable | List all non-removable packages |
-| auto-ports-checkout | Check out or clone a ports tree |
-| auto-ports-wip-checkout | Install work-in-progress ports and tools |
-| auto-power-manager | Simple menu for reboot, shutdown, sleep |
-| auto-pxe-installer-setup | Configure PXE install server |
-| auto-pxe-node-discover | Watch for and configure new nodes |
-| auto-remove-from-group | Remove a user from a supplemental group |
-| auto-remove-user | Remove a user |
-| auto-restart-services | Restart all enabled services |
-| auto-restore-ownership | Restore ownership of files |
-| auto-restore-pw | Restore a password from encrypted password file |
-| auto-restore-user | Restore a user account from old system files |
-| auto-root-check | Check whether running as root user |
-| auto-secure-directory | Traverse a directory tree for security issues |
-| auto-security-manager | Menu for common security operations |
-| auto-select-sound-device | Select a default sound device |
-| auto-service-enabled | Exit 0 if the indicated service is enables |
-| auto-services-manager | Menu for managing popular services |
-| auto-set-conf-var | Set a variable in a configuration file |
-| auto-set-hostname | Permanently set a new hostname |
-| auto-set-lid-switch-mode | Control response to laptop close |
-| auto-set-memory-limits | Set per-process virtual memory limits |
-| auto-set-sysctl | Immediately and permanently set a sysctl variable |
-| auto-set-umask | Change default umask for all users |
-| auto-sound-driver-setup | Detect and enable sound devices |
-| auto-su+j-toggle | Enable or disable the UFS2 journal |
-| auto-sync-pxe-root-pw | Copy the root password from PXE install image |
-| auto-update-system | Update OS, packages, and ports/pkgsrc tree |
-| auto-user-admin | Menu for user management |
-| auto-using-pkgbase | Return success if pkgbase is enabled |
+| auto-add-swap(8) | Create and enable a swap file |
+| auto-chromium+widevine-install(8) | Install chromium and widevine plugin |
+| auto-image2dev(8) | Write a disk image to a storage device |
+| auto-install-linux_base(8) | Install and enable Linux kernal compat |
+| auto-ldap-client-setup(8) | Configure authentication via LDAP |
+| auto-ldap-lookup(8) | Look up users on a remote LDAP or AD server |
+| auto-lock-local-pw(8) | Lock local password for a user |
+| auto-lock-user(8) | Lock out a user |
+| auto-ly-enable(8) | Enable the "ly" display manager |
+| auto-mark-install-from-source(8) | Mark a port for install/update |
+| auto-mark-package-critical(8) | Mark a package as critical for updates |
+| auto-mount-any(8) | Mount a filesystem of unknown type |
+| auto-network-manager(8) | Menu for network management |
+| auto-network-restart(8) | Restart network services |
+| auto-nfs-add-share(8) | Add a directory to NFS exports |
+| auto-nfs-client-setup(8) | Configure host as an NFS client |
+| auto-nfs-restart(8) | Restart NFS and associated services |
+| auto-nfs-server-setup(8) | Configure a host as an NFS server |
+| auto-passwd-user-expiration(8) | Set password expiration for a user |
+| auto-physmem(8) | Report physical memory size |
+| auto-pkg-latest(8) | Switch from snapshot to latest packages |
+| auto-pkgsrc-non-removable(8) | List all non-removable packages |
+| auto-ports-checkout(8) | Check out or clone a ports tree |
+| auto-ports-wip-checkout(8) | Install work-in-progress ports and tools |
+| auto-power-manager(8) | Simple menu for reboot, shutdown, sleep |
+| auto-pxe-installer-setup(8) | Configure PXE install server |
+| auto-pxe-node-discover(8) | Watch for and configure new nodes |
+| auto-remove-from-group(8) | Remove a user from a supplemental group |
+| auto-remove-user(8) | Remove a user |
+| auto-restart-services(8) | Restart all enabled services |
+| auto-restore-ownership(8) | Restore ownership of files |
+| auto-restore-pw(8) | Restore a password from encrypted password file |
+| auto-restore-user(8) | Restore a user account from old system files |
+| auto-root-check(8) | Check whether running as root user |
+| auto-secure-directory(8) | Traverse a directory tree for security issues |
+| auto-security-manager(8) | Menu for common security operations |
+| auto-select-sound-device(8) | Select a default sound device |
+| auto-service-enabled(8) | Exit 0 if the indicated service is enables |
+| auto-services-manager(8) | Menu for managing popular services |
+| auto-set-conf-var(8) | Set a variable in a configuration file |
+| auto-set-hostname(8) | Permanently set a new hostname |
+| auto-set-lid-switch-mode(8) | Control response to laptop close |
+| auto-set-memory-limits(8) | Set per-process virtual memory limits |
+| auto-set-sysctl(8) | Immediately and permanently set a sysctl variable |
+| auto-set-umask(8) | Change default umask for all users |
+| auto-sound-driver-setup(8) | Detect and enable sound devices |
+| auto-su+j-toggle(8) | Enable or disable the UFS2 journal |
+| auto-sync-pxe-root-pw(8) | Copy the root password from PXE install image |
+| auto-update-system(8) | Update OS, packages, and ports/pkgsrc tree |
+| auto-user-admin(8) | Menu for user management |
+| auto-using-pkgbase(8) | Return success if pkgbase is enabled |
