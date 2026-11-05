@@ -39,7 +39,7 @@
 #       0 upon successful exit, non-zero if certain commands failed
 #
 #   See also:
-#       auto-update-system(1), auto-user-admin(1),
+#       auto-update-system(1), auto-user-manager(1),
 #       
 #   FIXME:  Write a script to auto-generate this man page with a SEE ALSO
 #           for all existing man pages.
@@ -139,7 +139,7 @@ EOM
 	;;
     
     02)
-	auto-user-admin
+	auto-user-manager
 	;;
 
     03)
