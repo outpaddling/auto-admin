@@ -1,27 +1,40 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-unsupported-release - Display a user-friendly message for unsupported OS releases
+#
+#   Section:
+#       8
+#
 #   Synopsis:
-#
+#       auto-unsupported-release command
+#       
 #   Description:
-#       Notify user of an unsupported OS for the tool named by $1.
-#
+#       The
+#       .B auto-unsupported-release
+#       command displays a user-friendly message stating the the
+#       calling script does not support this release of the operating
+#       system running it.
+#       This is used by some auto-admin scripts where a particular
+#       operating system release lacks a necessary feature.
+#       
 #   Arguments:
-#       $1  Calling program name, i.e. program not supported on this OS
-#
+#       command     Name of the calling command, usually $0
+#       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
-#
-#   Files:
-#
-#   Environment:
+#       auto-unsupported-release $0
 #
 #   See also:
-#       
+#       auto-admin(8), auto-unsupported-os(8), auto-os-release(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2021-10-26  Jason Bacon Begin
+#   2026-11-04  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

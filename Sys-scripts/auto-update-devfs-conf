@@ -1,27 +1,49 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-update-devfs-conf - Add entries to devfs.conf
+#
+#   Section:
+#       8
+#
 #   Synopsis:
+#       auto-update-devfs-conf device [device ...]
 #       
 #   Description:
-#       Add entries to devfs.conf
-#       A reboot is required to fully test the changes
+#       The
+#       .B auto-update-devfs-conf
+#       command adds one or more entries to /etc/devfs.conf.
+#       It is used by tools such as desktop-installer to augment the
+#       default set of devices available to users.  The system file
+#       /etc/devfs.conf lists device files (e.g. /dev/cuau0)
+#       that should be automatically created when the system detects a
+#       device during the boot process, and indicates the
+#       ownership and permissions of each device file.
+#       It does not apply to hot-plug devices such as USB devices.
+#       For those, see auto-update-devfs-rules(8).
+#       This command is specific to FreeBSD.
+#       A reboot is required to fully test the changes.
 #       
 #   Arguments:
+#       device  Device name under /dev (not including /dev)
 #       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
+#       auto-update-devfs-conf cuad0 cuad1 cuau0 cuau1 cd0 cd1 fd0 fd1
 #
 #   Files:
-#
-#   Environment:
+#       /etc/devfs.conf
 #
 #   See also:
-#       
+#       auto-admin(8), auto-update-devfs-rules(8), devfs(8), devfs.conf(8)
+#
 #   History:
 #   Date        Name        Modification
-#   2021-11-11  Charlie &   Begin
+#   2021-11-11  Jason Bacon Begin
+#   2026-11-04  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()

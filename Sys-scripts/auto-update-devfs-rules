@@ -1,26 +1,49 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-update-devfs-rules - Add entries to devfs.rules
+#
+#   Section:
+#       8
+#
 #   Synopsis:
+#       auto-update-devfs-rules driver [driver ...]
 #       
 #   Description:
-#       Add entries to devfs.rules and restart devfs to test.
+#       The
+#       .B auto-update-devfs-rules
+#       command adds one or more entries to /etc/devfs.rules.
+#       It is used by tools such as desktop-installer to augment the
+#       default set of devices available to users.  The system file
+#       /etc/devfs.rules lists device files (e.g. /dev/ugen0.1)
+#       that should be automatically created when plugged into a
+#       running system, and indicates the
+#       ownership and permissions of each device file.
+#       This command is specific to FreeBSD.
+#       The devfs daemon is restarted in order to affect the changes.
+#       The driver name is the stem of each device name under /dev.
+#       E.g., the "cd" driver supports devices such as /dev/cd0 and /dev/cd1.
 #       
 #   Arguments:
+#       driver  Name of a pluggable device driver
 #       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
+#       auto-update-devfs-rules cd da pass xpt mmcsd
 #
 #   Files:
-#
-#   Environment:
+#       /etc/devfs.rules
 #
 #   See also:
-#       
+#       auto-admin(8), auto-update-devfs-conf(8), devfs(8), devfs.rules(8)
+#
 #   History:
 #   Date        Name        Modification
-#   2021-11-11  Charlie &   Begin
+#   2021-11-11  Jason Bacon Begin
+#   2026-11-04  Jason Bacon Add man page template and usage
 ##########################################################################
 
 usage()
