@@ -1,6 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-update-infiniband-modules - 
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-update-infiniband-modules
+#       
+#   Description:
+#       The
+#       .B auto-update-infiniband-modules
+#       command
+#       
+#   Arguments:
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-update-infiniband-modules
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-05  Jason Bacon Add man page template and usage
+##########################################################################
+
+
+##########################################################################
 #   Script description:
 #       auto-update-infiniband-modules
 #       Rebuild and reload infiniband modules after a src tree update

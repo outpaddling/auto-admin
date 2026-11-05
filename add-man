@@ -1,10 +1,10 @@
-#!/bin/sh -e
+!/bin/sh -e
 
 today=$(date +%Y-%m-%d)
 echo $today
 
 for script in Sys-scripts/* User-script/*; do
-    if ! fgrep -q 'Add man page template and usage' $script; then
+    if ! fgrep -q 'Add man page template' $script; then
 	base=$(basename $script)
 	sed -e "s|yyyy-mm-dd|$today|g" \
 	    -e "s|%%scriptname%%|$base|g" \

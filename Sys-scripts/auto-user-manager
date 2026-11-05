@@ -2,30 +2,36 @@
 
 ##########################################################################
 #   Name:
-#       auto-user-admin - Menu for user management
+#       auto-user-manager - Menu for common user management tasks
 #
 #   Section:
 #       8
 #
 #   Synopsis:
-#       auto-user-admin
+#       auto-user-manager
 #       
 #   Description:
-#       auto-user-admin is a terminal-based menu for user management
-#       tasks performed by auto-admin(8).
+#       The
+#       .B auto-user-manager
+#       command presents a simple text menu for user management tasks such
+#       as adding, removing, locking, and unlocking user accounts, and
+#       managing group membership.
 #       
 #   Arguments:
 #       None
 #       
 #   Returns:
-#       0 on success, non-zero error codes on failures
+#       Always returns 0
+#
+#   Examples:
+#       auto-user-manager
 #
 #   See also:
 #       auto-admin(8)
-#       
+#
 #   History:
 #   Date        Name        Modification
-#   2024-12-07  Jason Bacon Add man page template
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()

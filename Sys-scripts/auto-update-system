@@ -2,34 +2,76 @@
 
 ##########################################################################
 #   Name:
-#       auto-update-system - Update OS, packages, and ports/pkgsrc tree
+#       auto-update-system - Update all components of the system, ensuring compatibility
 #
 #   Section:
 #       8
 #
 #   Synopsis:
-#       auto-update-system [ --sync-pkg-cache user@host ] [ --pause ] \\
+#       auto-update-system [ --sync-pkg-cache user@host ] [ --pause ]
 #       [ --defaults | --defaults+reboot | --yes ]
 #       
 #   Description:
-#       auto-update-system performs a comprehensive system update
-#       including installed binary packages, a ports or pkgsrc tree if
-#       one is found, and the base system if such a thing exists on the
-#       platform (on RHEL, there is no base system separate from Yum
-#       packages).
+#       The
+#       .B auto-update-system
+#       command updates all components of a system, ensuring that they
+#       remain in sync with each other.
 #
-#       CAUTION: auto-update-system should not be run in parallel on
-#       many systems, as this will swamp the network and package servers
-#       with redundand downloads.  Either run updates serially, using
-#       --sync-pkg-cache for all but the first system, or configure a
-#       package mirror or proxy server.
+#       On systems that offer both
+#       build-from-source package managers and official binary packages,
+#       such as BSDs, it is possible for the components to become out of
+#       sync, leading to software compatibility problems.  For example,
+#       FreeBSD binary packages are built directly from the FreeBSD ports
+#       tree.  For most ports, the user has a choice between quickly
+#       installing a pre-built binary package, or installing from
+#       the ports tree, building the binary package on the system where
+#       it is being installed.  In some cases, however, software
+#       licenses forbid providing prebuilt packages, so users are forced
+#       to build from source.
 #
-#       On BSD systems, the binary package repository and ports/pkgsrc
-#       tree must be on the same branch (current or quarterly).  If they
-#       are not, auto-update-system offers to update the ports/pkgsrc
-#       tree accordingly.
+#       If the ports tree and currently installed
+#       packages are all up-to-date, compatibility is ensured, and
+#       building from source will produce the exact same results as
+#       installing the prebuilt package.  Mixing builds from source with
+#       prebuilt binary packages may result in compatibility issues if the
+#       ports tree is not in sync with the prebuilt binary package repositity.
+#       For example, building from source from the latest ports tree while
+#       not all installed packages are up-to-date will result in
+#       the built-from-source package using outdated dependencies.
+#       Conversely, building from source from an outdated ports tree when
+#       all installed packages are up-to-date will result in dependencies
+#       that may be too new for the package being built.
 #
-#       On RHEL/CentOS, auto-update-system runs yum-complete-transaction
+#       FreeBSD and many other platforms also have a "base" system that
+#       is separate from the ports tree and binary packages.  Modern
+#       FreeBSD uses the ports/package system to install the base system,
+#       but base packages come from a separate repository and are installed
+#       under a different prefix (/usr for base vs the default /usr/local
+#       for add-ons).  It is important to keep the base system up-to-date
+#       as well, as the latest ports/packages may not be tested with outdated
+#       base components.  Breaking changes in base are very rate, but possible.
+#
+#       Lastly, FreeBSD ports and packages may be installed from the latest
+#       (HEAD in repository lingo) or from quaterly branches (snapshots).
+#       It is important to ensure that the ports tree and selected binary
+#       package repository are on the same branch.  The ports tree and
+#       binary package repository can easily become out of sync when using
+#       quarterly ports/packages, and running "pkg update" or "pkg upgrade"
+#       after a new quarter begins.  This will switch binary packages to
+#       the new quarter, but will not affect the ports tree.
+#
+#       The
+#       .B auto-update-system
+#       command ensures that ports and binary packages are on the same
+#       branch, and that everything is up-to-date, so that you will not
+#       experience problems when mixing build-from-source and binary
+#       packages.
+#
+#       On systems that offer only binary packages (e.g. many Linux systems),
+#       using auto-update-system is not as critical for keeping components
+#       in sync, but it may perform some additional checks beyond the
+#       native update tools to help maintain system integrity.  For example,
+#       on RHEL, auto-update-system runs yum-complete-transaction
 #       before updates, as the system may frequently be left in an
 #       inconsistent state due to a previous failed update.
 #
@@ -40,11 +82,12 @@
 #       Binary packages can be pulled from another local system using the
 #       --sync-pkg-cache user@host option to reduce downloads from primary
 #       package servers.  The option uses rsync over ssh.
-#       This both reduces needless Internet load and probably
+#       This both reduces needless Internet load and likely
 #       speeds up the update process significantly for systems with similar
 #       installed packages.  Local network speeds may approach 100 MB/s
 #       for a typical gigabit LAN while downloads from primary servers
-#       probably won't exceed a few MB/s.
+#       may be as slow as a few MB/s.  The package cache host must
+#       have the same version of the OS and CPU architecture.
 #
 #       If the user@host spec is stored in
 #       $PREFIX/etc/auto-admin/pkg-cache-host, it will be automatically
@@ -60,7 +103,7 @@
 #       updates to proceed automatically.  If any package in this list is
 #       not available, the user is warned and offered the option to
 #       proceed anyway.  Packages can be added to this list using
-#       auto-mark-package-critical(1).
+#       auto-mark-package-critical(8).
 #       Package names are the same as those used in a
 #       package install command, minus any version information.  This
 #       system protects against situations where a package is temporarily
@@ -75,13 +118,13 @@
 #       $PREFIX/etc/auto-admin/install-from-source will be rebuilt and
 #       reinstalled from source following successful binary packages and
 #       port/pkgsrc tree updates.  Ports/packages can be added to the list
-#       using auto-mark-install-from-source(1).  This can be useful for updating
+#       using auto-mark-install-from-source(8).  This can be useful for updating
 #       ports/packages that cannot be redistributed in binary form
 #       for licesning reasons, work-in-progress ports/packages, and
 #       ports/packages with non-default build options such as non-portable
 #       optimizations to capitalize on AVX and the like.
 #
-#       This system should only be used if your
+#       The install-from source system should only be used if your
 #       installed packages and ports tree are well-synchronized, which is
 #       usually the case if you use auto-update-system for all your updates.
 #       If you use quarterly packages and ports/pkgsrc, there should be no
@@ -89,7 +132,7 @@
 #       quarterly branches of ports and pkgsrc, and API changes are
 #       all but forbidden.  This system is also safe to use for
 #       latest/current ports/packages as long as package builds are done
-#       regularly.  This is the case for FreeBSD ports on amd64, where
+#       regularly.  This is the case for FreeBSD ports on tier 1 architectures, where
 #       changes to the ports tree are generally reflected in the official
 #       binary packages within a few days.  However, on other architectures,
 #       official packages may not be updated frequently, so the ports tree
@@ -102,16 +145,16 @@
 #       and the ports/pkgsrc tree.  This should only be used as a last
 #       option for customizations that can't be performed by
 #       install-from-source.
-#
+#       
 #   Arguments:
 #       --sync-pkg-cache user@host  Sync package cache from host
-#       --pause                     Prompt user before exit
-#       --defaults                  All components that can be easily updated
+#       --pause                     Prompt user after completion before exiting
+#       --defaults                  Update all components
 #       --defaults+reboot           Same as above + auto reboot
 #       --yes                       Synonymous with --defaults+reboot
-#
+#       
 #   Returns:
-#       0 upon successful update, non-zero otherwise
+#       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
 #       auto-update-system --defaults
@@ -127,11 +170,14 @@
 #       PORTSDIR, PKGSRC
 #
 #   See also:
-#       auto-mark-install-from-source(1), auto-mark-package-critical(1)
+#       auto-mark-install-from-source(8), auto-mark-package-critical(8),
+#       auto-upgrade-base(8)
 #       
 #   History:
 #   Date        Name        Modification
 #   2016-03-11  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
+#   2026-11-05  Jason Bacon Revamp man page
 ##########################################################################
 
 usage()

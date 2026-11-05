@@ -62,6 +62,9 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-unsupported-release(8) | Display a user-friendly message for unsupported OS releases |
 | auto-update-devfs-conf(8) | Add entries to devfs.conf |
 | auto-update-devfs-rules(8) | Add entries to devfs.rules |
-| auto-update-system(8) | Update OS, packages, and ports/pkgsrc tree |
+| auto-update-system(8) | Update all components of the system, ensuring compatibility |
+| auto-upgrade-base(8) | Upgrade to a new release of the base system |
 | auto-user-admin(8) | Menu for user management |
+| auto-user-manager(8) | Menu for common user management tasks |
+| auto-useradd(8) | Platform-independent useradd tool |
 | auto-using-pkgbase(8) | Return success if pkgbase is enabled |

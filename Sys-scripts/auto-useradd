@@ -1,12 +1,52 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Create a new user account on all nodes
+#   Name:
+#       auto-useradd - Platform-independent useradd tool
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-useradd [--no-local-pw] user_name user_id group_name gid gecos shell
 #       
+#   Description:
+#       The
+#       .B auto-useradd
+#       command provides a standard, non-interactive interface for adding
+#       users on a variety of different operating systems.  The native tools
+#       for user management differ widely across systems.  E.g., Linux and
+#       NetBSD use similar, but not fully compatible "useradd" commands,
+#       FreeBSD uses "pw useradd", and macOS uses "dscl".
+#
+#       If the optional --no-local-pw flag is given, a local password will
+#       not be set.  This is useful where ldap(3) or AD (active directory)
+#       are used for authenticating over the network.
+#       
+#   Arguments:
+#       user_name   Username for the new user
+#       user_id     Numeric user ID
+#       group_name  Primary group name
+#       gid         Primary numeric group ID for the new user
+#       gecos       Text description (usually full name, maybe title)
+#       shell       Login shell (e.g. /bin/sh)
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-useradd joeuser 2000 joeuser 2000 "Joe User, regular guy" /bin/tcsh
+#
+#   Files:
+#       /etc/passwd
+#
+#   See also:
+#       auto-admin(8), auto-adduser(8), passwd(1)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-06-04  J Bacon     Begin (modified from cluster-useradd)
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
