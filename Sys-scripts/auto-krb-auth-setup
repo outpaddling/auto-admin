@@ -1,36 +1,13 @@
 #!/bin/sh -e
 
-##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
-#   Section:
-#       8
-#
-#   Synopsis:
-#       
 #   Description:
 #       Configure a FreeBSD or RHEL server to use KRB for sshd auth.
 #       
 #   Arguments:
 #       KRB server ( may be an AD server )
 #       
-#   Returns:
-#
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
-#
-#   See also:
-#       
-#   History:
-#   Date        Name        Modification
 #   2017?       Shawn Kwang Initial RHEL implementation
 #   2018-05-14  Jason Bacon FreeBSD support
-#   2024-11-12  Jason Bacon Add man page template and usage
-##########################################################################
 
 usage()
 {

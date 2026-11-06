@@ -1,36 +1,8 @@
 #!/bin/sh
 
-##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
-#   Name:
-#       script - short scription
-#
-#   Section:
-#       8
-#
-#   Synopsis:
-#       
-#   Description:
-#       Interactive interface for adding users
-#       
-#   Arguments:
-#       
-#   Returns:
-#
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
-#
-#   See also:
-#       
 #   History:
 #   Date        Name        Modification
 #   2019-06-04  J Bacon     Begin (modified from cluster-adduser)
-#   2024-11-11  Jason Bacon Add man page template and usage
 ##########################################################################
 
 pause()

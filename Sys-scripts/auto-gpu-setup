@@ -1,37 +1,12 @@
 #!/bin/sh -e
 
-##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
-#   Section:
-#       8
-#
-#   Synopsis:
-#       
 #   Description:
 #       FreeBSD requires a kernel module to support modern Intel
 #       GPUs.  This script automatically detects the presence of an
 #       Intel GPU and performs the necessary system configuration to
 #       enable it in Xorg.
 #       
-#   Arguments:
-#       
-#   Returns:
-#
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
-#
-#   See also:
-#       
-#   History:
-#   Date        Name        Modification
 #   2017-02-14  J Bacon     Begin
-#   2024-11-12  Jason Bacon Add man page template and usage
-##########################################################################
 
 ##########################################################################
 #   Function description:

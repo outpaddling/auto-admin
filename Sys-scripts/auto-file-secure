@@ -1,34 +1,9 @@
 #!/bin/sh -e
 
-##########################################################################
-#   Title:
-#       Optional, defaults to the name of the script sans extention
-#
-#   Section:
-#       8
-#
-#   Synopsis:
-#       
 #   Description:
 #       Check a system file for security issues
 #       
-#   Arguments:
-#       
-#   Returns:
-#
-#   Examples:
-#
-#   Files:
-#
-#   Environment:
-#
-#   See also:
-#       
-#   History:
-#   Date        Name        Modification
 #   2015-05-23  Jason Bacon Begin
-#   2024-11-11  Jason Bacon Add man page template and usage
-##########################################################################
 
 usage()
 {
