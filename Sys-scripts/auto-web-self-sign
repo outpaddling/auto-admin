@@ -1,15 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Generate and activate https with apache
+#   Name:
+#       auto-web-self-sign - Generate and activate a self-signed certificate
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-web-self-sign web-server [--server-version sv]
+#       
+#   Description:
+#       The
+#       .B auto-web-self-sign
+#       command generates and activates a self-signed certificate for
+#       use with a web server, in order to enable https.
+#
+#       Note that users will be warned about a self-signed certificate
+#       when first connecting.  For a smoother user experience without
+#       warnings, see https://letsencrypt.org/.
+#       
 #   Arguments:
-#       Apache version (e.g. 24)
+#       web-server          Server software (e.g. apache)
+#       --server-version sv Optional server version if not the default
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-web-self-sign
+#
+#   See also:
+#       auto-admin(8), auto-web-setup(8)
 #
 #   History:
 #   Date        Name        Modification
-#   2018-01-07  Charlie &   Begin
+#   2018-01-07  Jason Bacon Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()

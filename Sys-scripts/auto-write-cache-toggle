@@ -1,13 +1,59 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       {En|Dis}able hardware write cache to prevent filesystem corruption
-#       in the event of sudden power loss.
+#   Name:
+#       auto-write-cache-toggle - Enable or disable the CAM write cache
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-write-cache-toggle state caller
 #       
+#   Description:
+#       The
+#       .B auto-write-cache-toggle
+#       command enables or disables the CAM(4) storage driver.
+#
+#       Disabling the cache will seriously degrade write performance
+#       and increase wear on the storage device, but
+#       may prevent filesystem corruption and data loss in the event of
+#       a power failure.  This should be used only where data integrity
+#       far outweighs performance.
+#
+#       If the variable controlling write cache activity
+#       was not already in the configuration file, an entry is added.
+#       If caller is not "nocomment", the new entry is wrapped in a
+#       comment as follows:
+#
+#       .nf
+#       .na
+#       # Added by auto-admin from $caller
+#       var=value
+#       # End $caller addition
+#       .ad
+#       .fi
+#
+#   Arguments:
+#       state   "on" or "off"
+#       caller  Name of the calling program, usually "$0" if run from a script
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-write-cache-toggle
+#
+#   Files:
+#       /boot/loader.conf
+#
+#   See also:
+#       auto-admin(8), CAM(4), loader.conf(4)
+#
 #   History:
 #   Date        Name        Modification
 #   2020-05-14  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()

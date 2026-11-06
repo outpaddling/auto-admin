@@ -1,12 +1,44 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Switch XDM on or off
+#   Name:
+#       auto-xdm-toggle - Start or stop the XDM display manager
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-xdm-toggle state
 #       
+#   Description:
+#       The
+#       .B auto-xdm-toggle
+#       command starts or stops the XDM display manager, which may be
+#       running from /etc/ttys or as a service using an rc(8) script.
+#
+#       When disabling XDM using, any graphical login sessions will be
+#       abuptly terminated and any unsaved data will be lost.
+#       
+#   Arguments:
+#       state   "on" or "off"
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-xdm-toggle on
+#
+#   Files:
+#       /etc/ttys
+#       /etc/rc.conf
+#
+#   See also:
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()

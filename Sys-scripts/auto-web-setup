@@ -1,12 +1,40 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Set up a basic apache server with mod_php
+#   Name:
+#       auto-web-setup - Install and activate a web server
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-web-setup webserver [--server-version sv] [--php-version pv]
 #       
+#   Description:
+#       The
+#       .B auto-web-setup
+#       command installs the necessary software to run a web server and
+#       performs a minimal configuration to get it up and running.
+#       PHP is enabled automatically.
+#       
+#   Arguments:
+#       web-server          Server software (e.g. apache)
+#       --server-version sv Optional server version if not the default
+#       --php-version sv    Optional PHP version if not the default
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-web-setup apache --server-version 24 --php-version 74
+#
+#   See also:
+#       auto-admin(8), auto-web-self-sign(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2020-01-21  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 pause()

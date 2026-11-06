@@ -1,23 +1,37 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-webcam-setup - Install and configure webcam software
+#
+#   Section:
+#       8
+#
 #   Synopsis:
-#       auto-webcamd-setup
-#
+#       auto-webcam-setup
+#       
 #   Description:
-#       Install and configure software needed for webcams.  Also
-#       prompts to enable individual users.
-#
+#       The
+#       .B auto-webcam-setup
+#       command installs and configures the necessary software to enable
+#       webcam devices.
+#       
 #   Arguments:
-#       None.
-#
+#       None
+#       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-webcam-setup
 #
 #   See also:
-#       
+#       auto-admin(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2022-07-12  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
@@ -46,10 +60,18 @@ FreeBSD)
     LOADER_CONF=/boot/loader.conf
     RC_CONF=/etc/rc.conf
     pkg install -y webcamd pwcview v4l-utils v4l_compat
+    
+    # Load cuse now and at reboot
     kldload cuse || true
     auto-set-conf-var cuse_load '"YES"' $LOADER_CONF $0
+
+    # Enable and start webcamd
     auto-enable-service webcamd $0
+
+    # Restart devd
+    auto-enable-service devd $0
     sleep 2
+    
     dmesg | grep ^ugen | grep -E -i 'Webcam|camera' | sort | uniq
     while [ -z "$ugen" ]; do
 	printf "ugen device? (e.g. 1.5) "
@@ -60,6 +82,7 @@ FreeBSD)
     service devd restart
     service webcamd restart
     user_name='x'
+    printf "You must authorize users by adding them to the webcamd group.\n"
     while [ -n "$user_name" ]; do
 	printf "Username to use webcam? (Press Enter to skip) "
 	read user_name

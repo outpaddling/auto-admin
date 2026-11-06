@@ -1,23 +1,38 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Name:
+#       auto-wacom-setup - Install and enable Wacom X11 driver
+#
+#   Section:
+#       8
+#
 #   Synopsis:
 #       auto-wacom-setup
-#
+#       
 #   Description:
-#       Install and configure software needed for wacom tablets.  Also
-#       prompts to enable individual users.
+#       The
+#       .B auto-wacom-setup
+#       command installs and enables the Wacom X11 driver.  It also
+#       performs a minimal webcamd daemon setup, which is necessary to
+#       support Wacom devices.  This requires authorizing individual
+#       users by adding them to the webcamd group.
 #
+#       To enable a webcam device, see auto-webcam-setup(8).
+#       
 #   Arguments:
-#       None.
-#
+#       None
+#       
 #   Returns:
+#       0 on success, non-zero error codes otherwise.
 #
 #   See also:
-#       
+#       auto-admin(8), auto-webcamd-setup(8), wacom(4x), webcamd(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2022-07-12  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
@@ -65,6 +80,12 @@ EOM
     # To prevent that add a usb_quirk(4) then detach and attach the tablet.
     # /usr/local/etc/rc.d/wacom is an example how preserve quirks across reboot.
 
+    ##########################################################################
+    #   The code below is somewhat redundant to auto-webcamd-setup, but
+    #   does not detect and enable a webcam device.  It is the minimum
+    #   necessary to support the wacom driver.
+    ##########################################################################
+    
     # https://www.davidschlachter.com/misc/freebsd-webcam-browser
     LOADER_CONF=/boot/loader.conf
     RC_COND=/etc/rc.conf
@@ -83,6 +104,7 @@ EOM
     
     # Add users to webcamd to allow access to tablet
     user_name='x'
+    printf "You must authorize users by adding them to the webcamd group.\n"
     while [ -n "$user_name" ]; do
 	printf "Username to use webcam? (Press Enter to skip) "
 	read user_name

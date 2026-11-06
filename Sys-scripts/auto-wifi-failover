@@ -1,19 +1,56 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Configure FreeBSD WIFI interface as a failover for another
-#       interface.  This is most commonly used to facilitate plugging
-#       a laptop in for better network performance without disrupting
-#       any network connections.
+#   Name:
+#       auto-wifi-failover - Configure Ethernet to WiFi failover
 #
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-wifi-failover [wired-interface wireless-interface]
+#       
+#   Description:
+#       The
+#       .B auto-wifi-failover
+#       command configures networking to use Ethernet when available
+#       and fail over to WiFi when Ethernet is unplugged.
+#
+#       If run with no arguments, the user is prompted for wired and
+#       wireless interfaces.
+#
+#       The user can optionally indicate the wired and wireless interfaces
+#       on the command line, in which case both must be provided.
+#
+#       On FreeBSD, this is performed using the link aggregation [lagg(4)]
+#       driver, which requires the interfaces to use the same MAC address.
+#       Some common WiFi devices do not support altering the MAC address, so
+#       .B auto-wifi-failover
+#       attempts to set the wired device MAC to match the WiFi device.
+#       
 #   Arguments:
-#       None.
+#       wired-interface     The Ethernet interface to use when available
+#       wireless-interface  The WiFi interface to use when Ethernet is down
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-wifi-failover
+#       auto-wifi-failover re0 ath0
+#
+#   Files:
+#       /etc/rc.conf
+#
+#   See also:
+#       auto-admin(8), auto-network-config(8), auto-network-manager(8),
+#       auto-network-restart(8), ifconfig(8)
 #
 #   History:
 #   Date        Name        Modification
-#   2016-01-01  J Bacon     Begin
+#   2026-11-05  Jason Bacon Add man page template
 ##########################################################################
+
 
 ##########################################################################
 #   Function description:
