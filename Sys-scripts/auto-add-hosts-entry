@@ -1,5 +1,43 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-add-hosts-entry - Add an entry for hostname to /etc/hosts
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-add-hosts-entry
+#       
+#   Description:
+#       The
+#       .B auto-add-hosts-entry
+#       command adds an entry to /etc/hosts for the primary network interface.
+#       Many systems by default only have an /etc/hosts entry for
+#       "localhost", 127.0.0.1.  An entry containing the hostname and
+#       IP address is necessary for many programs, such as web servers,
+#       to function properly.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-add-hosts-entry
+#
+#   Files:
+#       /etc/hosts
+#
+#   See also:
+#       auto-admin(8), hosts(5), hostname(1)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-06  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

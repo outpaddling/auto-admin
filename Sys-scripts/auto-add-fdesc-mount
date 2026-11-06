@@ -1,5 +1,42 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-add-fdesc-mount - Enable fdescfs, required by bash, etc.
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-add-fdesc-mount
+#       
+#   Description:
+#       The
+#       .B auto-add-fdesc-mount
+#       command enables fdescfs (file-descriptor filesystem), which, among
+#       other thingsd, is
+#       required by bash(1) for redirecting to a file descriptor rather
+#       than a filename.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-add-fdesc-mount
+#
+#   Files:
+#       /dev/fd
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-06  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

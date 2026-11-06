@@ -6,6 +6,9 @@ install auto-admin using your chosen package manager and run `man script`
 
 | Script | Purpose |
 |--------|---------|
+| auto-add-fdesc-mount(8) | Enable fdescfs, required by bash, etc. |
+| auto-add-group(8) | Create a new user group |
+| auto-add-hosts-entry(8) | Add an entry for hostname to /etc/hosts |
 | auto-add-swap(8) | Create and enable a swap file |
 | auto-chromium+widevine-install(8) | Install chromium and widevine plugin |
 | auto-image2dev(8) | Write a disk image to a storage device |
