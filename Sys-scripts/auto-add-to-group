@@ -1,5 +1,51 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-add-to-group - Add a user to a group
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-add-to-group user-name group-name
+#       
+#   Description:
+#       The
+#       .B auto-add-to-group
+#       command adds the user "user-name" to the group "group-name".
+#       In other words, "group-name" is added to the list of supplementary groups
+#       for "user-name".  The primary group for "user-name" is unaffected.
+#
+#       Native tools for this vary widely across operating systems, creating
+#       hurdles for those who want to automate management of
+#       multiple different systems.
+#       Auto-admin(1) thus serves and
+#       a compatibility layer, removing platform-specific code from
+#       numerous higher-level projects.
+#       
+#   Arguments:
+#       user-name   Name of the user to add to the group
+#       group-name  Name of the group to which the user is added
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-add-to-group joeuser projectx
+#
+#   Files:
+#       /etc/group
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-07  Jason Bacon Add man page template
+##########################################################################
+
+
 #   History:
 #   Date        Name        Modification
 #   2018-11-09  J Bacon     Begin

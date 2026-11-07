@@ -28,10 +28,14 @@ new-hostname    The new hostname for the system
 The
 .B auto-set-hostname
 command provides a platform-independent interface for permanently
-changing the hostname of the system.  Native interfaces for changing
-the hostname vary widely across operating systems, creating
+changing the hostname of the system.
+
+Native tools for this vary widely across operating systems, creating
 hurdles for those who want to automate management of
 multiple different systems.
+Auto-admin(1) thus serves and
+a compatibility layer, removing platform-specific code from
+numerous higher-level projects.
 
 .SH RETURN VALUES
 

@@ -13,11 +13,16 @@
 #   Description:
 #       The
 #       .B auto-useradd
-#       command provides a standard, non-interactive interface for adding
-#       users on a variety of different operating systems.  The native tools
-#       for user management differ widely across systems.  E.g., Linux and
-#       NetBSD use similar, but not fully compatible "useradd" commands,
-#       FreeBSD uses "pw useradd", and macOS uses "dscl".
+#       command provides a platform-independend,
+#       non-interactive interface for adding
+#       users on a variety of different operating systems.
+#
+#       Native tools for this vary widely across operating systems, creating
+#       hurdles for those who want to automate management of
+#       multiple different systems.
+#       Auto-admin(1) thus serves and
+#       a compatibility layer, removing platform-specific code from
+#       numerous higher-level projects.
 #
 #       If the optional --no-local-pw flag is given, a local password will
 #       not be set.  This is useful where ldap(3) or AD (active directory)

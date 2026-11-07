@@ -1,5 +1,48 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-add-proc-mount - Configure and mount procfs under /proc
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-add-proc-mount
+#       
+#   Description:
+#       The
+#       .B auto-add-proc-mount
+#       command configures procfs in /etc/fstab and immediately mounts it
+#       at /proc.
+#
+#       Note that procfs is deprecated on FreeBSD, where process information
+#       is (more efficiently) retrieved directly using libprocstat(3)
+#       and kvm(3) system calls, or via the procstat(1) command,
+#       rather than by opening, parsing, and closing files under /proc.
+#
+#       Nevertheless, /proc may be required by some programs ported
+#       from other Unix-compatible systems.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-add-proc-mount
+#
+#   Files:
+#       /proc, /etc/fstab
+#
+#   See also:
+#       auto-admin(8), procfs(4), procstat(1), libprocstat(3), kvm(3)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-07  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
