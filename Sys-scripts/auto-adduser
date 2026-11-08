@@ -1,8 +1,63 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-adduser - Interactively add a user
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-adduser [username]
+#       
+#   Description:
+#       The
+#       .B auto-adduser
+#       command interactively adds a new user to the system, prompting for all
+#       essential user information (username, primary group name, UID, GID,
+#       etc.).
+#       In addition to collecting basic user information stored in /etc/passwd,
+#       .B auto-adduser
+#       performs the following functions:
+#
+#       o Supports retrieving user information from LDAP or AD servers.
+#
+#       o Prompts to add the new user to OS-specific special groups such as
+#       wheel, operator, video (FreeBSD), and _shutdown (OpenBSD).
+#
+#       o Prompts to add the new user to additional supplementary groups.
+#
+#       o Prompts to set the new user's login class (BSD), which determines
+#       user limits, default path, localization, umask, etc.
+#
+#       This ensures that the user account is fully configured for the user's
+#       role on the system, without requiring any additional steps.
+#       
+#   Arguments:
+#       username    Optional username for the new user
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-adduser
+#
+#   Files:
+#       /etc/passwd, /etc/group, /etc/login.conf (BSD), ldap.conf
+#
+#   See also:
+#       auto-admin(8), auto-useradd(8), auto-remove-user(8),
+#       auto-user-manager(8), auto-restore-user(8), auto-lock-user(8)
+#       auto-unlock-user(8), auto-passwd-user-expiration(8),
+#       auto-add-group(8), auto-add-to-group(8), auto-remove-from-group(8),
+#       auto-change-group-gid(8), auto-change-group-ownership(8),
+#       auto-change-primary-group(8), auto-group-check(8),
+#       pw(8) (FreeBSD), useradd(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-06-04  J Bacon     Begin (modified from cluster-adduser)
+#   2026-11-08  Jason Bacon Add man page template
 ##########################################################################
 
 pause()
@@ -108,6 +163,7 @@ fi
 
 CONF_DIR=/usr/local/share/auto-admin
 
+# FIXME: Maybe factor this out to something like auto-ldap-conf?
 case $(auto-ostype) in
 DragonFly|FreeBSD)
     ldap_conf=/usr/local/etc/ldap.conf

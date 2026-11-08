@@ -1,8 +1,43 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-amend-fstab - Add mounts from an fstab fragment to /etc/fstab
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-amend-fstab fragment-file
+#       
+#   Description:
+#       The
+#       .B auto-amend-fstab
+#       command adds mounts from an fstab-formatted file to /etc/fstab,
+#       but only if the mount point is not already present.
+#
+#       This is mainly used to distribute new NFS mounts to multiple clients
+#       in a safe and orderly fashion.
+#       
+#   Arguments:
+#       fstab-fragment  File containing mounts in fstab format.
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-amend-fstab new-mounts.fstab
+#
+#   Files:
+#       /etc/fstab
+#
+#   See also:
+#       auto-admin(8), mount(8)
+#
 #   History:
 #   Date        Name        Modification
 #   2019-01-05  Jason Bacon Begin
+#   2026-11-08  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
@@ -27,7 +62,7 @@ while read mount; do
     if awk '{ print $2 }' /etc/fstab | fgrep -qw $dir; then
 	printf "$dir is already in fstab.\n"
     elif echo $mount | fgrep -q $(hostname -s); then
-	printf "$mount is on this host, skipping...\n"
+	printf "$mount is local to this host, skipping...\n"
     else
 	# FIXME: Make sure mount dir is empty
 	

@@ -9,7 +9,12 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-add-fdesc-mount(8) | Enable fdescfs, required by bash, etc. |
 | auto-add-group(8) | Create a new user group |
 | auto-add-hosts-entry(8) | Add an entry for hostname to /etc/hosts |
+| auto-add-proc-mount(8) | Configure and mount procfs under /proc |
 | auto-add-swap(8) | Create and enable a swap file |
+| auto-add-to-group(8) | Add a user to a group |
+| auto-adduser(8) | Interactively add a user |
+| auto-admin-banner(8) | Display the auto-admin menu banner |
+| auto-amend-fstab(8) | Add mounts from an fstab fragment to /etc/fstab |
 | auto-chromium+widevine-install(8) | Install chromium and widevine plugin |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
