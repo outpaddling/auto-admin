@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-
 usage()
 {
     printf "Usage: $0\n"
@@ -19,8 +18,10 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     auto-fusefs-install
-    pkg remove -y automount || true    # Duplicates devd-mount actions
+    # devd-mount is a replacement for automount.  They cannot coexist.
+    pkg remove -y automount || true
     pkg install -y devd-mount npmount qmediamanager
+    # FIXME: Should devd-mount use devd-mount.conf instead?
     cat << EOM > /usr/local/etc/automount.conf
 FM=/usr/local/bin/qmediamanager
 MNT_GROUP=operator

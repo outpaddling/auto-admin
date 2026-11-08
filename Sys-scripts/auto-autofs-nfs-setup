@@ -1,5 +1,47 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-autofs-nfs-setup - Configure system as an autofs client
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-autofs-nfs-setup
+#       
+#   Description:
+#       The
+#       .B auto-autofs-nfs-setup
+#       command configures the system to automatically mount NFS servers
+#       discovered on the local network.
+#
+#       Default mount points will vary by operating system, and can be
+#       augmented by editing configuration files such as /etc/auto_master
+#       and /etc/autofs/*.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-autofs-nfs-setup
+#
+#   Files:
+#       /etc/auto_master, /etc/autofs/*
+#
+#   See also:
+#       auto-admin(8), auto-nfs-add-share(8), auto-nfs-restart(8), 
+#       auto-change-nfsd-count(8), auto-nfs-client-setup(8),
+#       auto-nfs-server-setup(8), mount(8), rpc.statd(8), rpc.lockd(8),
+#       nfsuserd(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-08  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

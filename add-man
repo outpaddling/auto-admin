@@ -10,6 +10,7 @@ for script in Sys-scripts/* User-script/*; do
 	    -e "s|%%scriptname%%|$base|g" \
 	    man-template > man-template.today
 	sed -e '1r man-template.today' $script > temp
+	rm -f man-template.today
 	mv temp $script
 	action=e
 	while [ $action = e ]; do
@@ -35,7 +36,6 @@ for script in Sys-scripts/* User-script/*; do
 	printf "Edit another script? [y]/n "
 	read again
     fi
-    rm -f man-template.today
     if [ 0$again = 0n ]; then
 	exit
     fi

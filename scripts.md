@@ -15,6 +15,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-adduser(8) | Interactively add a user |
 | auto-admin-banner(8) | Display the auto-admin menu banner |
 | auto-amend-fstab(8) | Add mounts from an fstab fragment to /etc/fstab |
+| auto-autofs-nfs-setup(8) | Configure system as an autofs client |
 | auto-chromium+widevine-install(8) | Install chromium and widevine plugin |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
