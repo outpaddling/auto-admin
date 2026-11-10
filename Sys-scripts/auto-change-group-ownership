@@ -1,8 +1,49 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-change-group-ownership - Change group ownership of select files
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-change-group-ownership [--silent] username|uid old-groupname|gid new-groupname|gid directory [directory ...]
+#       
 #   Description:
-#       Search directories for files owned by a particular user and
-#       group and change the group ownership.
+#       The
+#       .B auto-change-group-ownership
+#       command changes the group ownership of select files/directories under one or
+#       more top-level directories.  It searches under the specified directories using
+#       find(1) for files/direcotries owned by the given user and old group, and changes
+#       the group ownership to the new group.
+#
+#       This is a convenience script allowing users to avoid complicated
+#       and error-prone find(1) commands.
+#       
+#   Arguments:
+#       --silent            Option to suppress output of filenames processed
+#       username|uid        Username or UID of files/directories to be changed
+#       old-groupname|gid   Groupname or GID of files/directories to be changed
+#       new-groupname|gid   New groupname or GID for discovered files/directories
+#       directory           Top-level directory under which to search
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-change-group-ownership
+#
+#   Files:
+#       /etc/group
+#
+#   See also:
+#       auto-admin(8), auto-change-ownership(8), chgrp(1)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-10  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

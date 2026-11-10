@@ -16,6 +16,9 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-admin-banner(8) | Display the auto-admin menu banner |
 | auto-amend-fstab(8) | Add mounts from an fstab fragment to /etc/fstab |
 | auto-autofs-nfs-setup(8) | Configure system as an autofs client |
+| auto-change-group-gid(8) | Change numeric GID of a group |
+| auto-change-group-ownership(8) | Change group ownership of select files |
+| auto-change-nfsd-count(8) | Change the number of nfsd(8) processes/threads |
 | auto-chromium+widevine-install(8) | Install chromium and widevine plugin |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
