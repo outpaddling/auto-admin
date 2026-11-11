@@ -32,7 +32,7 @@
 #       0 on success, non-zero error codes otherwise.
 #
 #   Examples:
-#       auto-change-group-ownership
+#       auto-change-group-ownership --silent joeuser joeuser projectX /collab/projectX
 #
 #   Files:
 #       /etc/group
