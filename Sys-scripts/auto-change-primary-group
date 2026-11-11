@@ -1,12 +1,58 @@
 #!/bin/sh -e
 
-#   Description:
-#       Change the primary group for a user
+##########################################################################
+#   Name:
+#       auto-change-primary-group - Change the primary group of a user
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-change-primary-group username new-group|new-gid [directory]
 #       
+#   Description:
+#       The
+#       .B auto-change-primary-group
+#       command changes the primary group of "username" to "new-group"
+#       or to the numeric GID "new-gid".
+#
+#       If one or more "directory" arguments are provided,
+#       .B auto-change-primary-group
+#       runs auto-change-group-ownership(8) on each directory to update
+#       group ownership of relevant files under the directory.
+#
+#       Note: No group ownerships are updated unless at least one directory is
+#       explicitly indicated.  This allows ownership correction, which
+#       is time-consuming, to be done separately if desired.
+#       
+#   Arguments:
+#       username            Username of the user whose primary group is to change
+#       new-group|new-gid   New group name or numeric GID
+#       directory           Optional directory to traverse, updating files
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-change-primary-group joeuser joesgroup /home/joeuser
+#
+#   Files:
+#       /etc/passwd, /etc/group
+#
+#   See also:
+#       auto-admin(8)
+#       auto-add-group(8), auto-add-to-group(8), auto-group-check(8), 
+#       auto-change-group-gid(8), auto-remove-from-group(8), 
+#       auto-change-group-ownership(8), chgrp(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-11  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
-    printf "Usage: $0 username new_group|new-gid [directory ...]\n"
+    printf "Usage: $0 username new-group|new-gid [directory ...]\n"
     exit 1
 }
 
