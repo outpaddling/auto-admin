@@ -1,5 +1,41 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-devd-mount-setup - Install and configure devd-mount
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-devd-mount-setup
+#       
+#   Description:
+#       The
+#       .B auto-devd-mount-setup
+#       command installs and enables devd-mount and related tools npmount(1)
+#       and qmediamanager(1) on FreeBSD systems.  These three tools work
+#       together to automatically mount removable media and display a menu
+#       when they are attached to the system.  The menu provides options
+#       such as opening the media in a file manager, reformatting, copying an
+#       image to the media, and unmounting.
+#
+#       Note: The same script configures devpub-mount(1) on NetBSD.
+#
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
+
 usage()
 {
     printf "Usage: $0\n"

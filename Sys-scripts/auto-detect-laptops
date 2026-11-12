@@ -1,5 +1,39 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-detect-laptops - Automatically configure hardware-specific tools
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-detect-laptops
+#       
+#   Description:
+#       The
+#       .B auto-detect-laptops
+#       command auto-detects and configures some hardware-specific tools
+#       and drivers for popular and well-supported laptops, such as
+#       MacBooks and ThinkPads.  It is used by desktop-installer to
+#       improve the out-of-the-box experience.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-detect-laptops
+#
+#   See also:
+#       auto-admin(8), desktop-installer(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 pause()
 {

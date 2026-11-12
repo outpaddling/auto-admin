@@ -21,7 +21,7 @@ None
 .ad
 .fi
 
-.SH DESCRIPTION
+.SH BACKGROUND
 
 While POSIX and other Unix standards provide fairly uniform
 APIs and user interfaces, systems management tools tend to
@@ -30,21 +30,26 @@ Unix systems use "useradd", a few BSDs use "pw", and macOS
 uses "dsctl".  BSD systems report RAM size via "sysctl", while
 Linux systems rely on /proc/meminfo.
 
+.SH DESCRIPTION
+
 .B Auto-admin
-is a project providing easy-to-use, portable scripts for common
+provides easy-to-use, platform-independent scripts for performing common
 systems management tasks from the command line.  It simplifies
-what are often complex commands, and makes them uniform across
+what are often complex native commands, and makes the interface uniform across
 Unix-like systems.
 
-The project also provides a menu, invoked as "auto-admin", for
+The project also provides a terminal-based menu, invoked as "auto-admin", for
 the most common tasks, along with submenus for networking, user management,
 etc.
 
 .B Auto-admin
 thus allows sysadmins to easily manage multiple different
-POSIX systems with vastly less esoteric knowledge and effort.
+POSIX systems with far less system-specific knowledge and effort.
 The scripts can serve as a compatibility layer for higher-level
 tools such as SPVM (Simple, Portable Cluster Manager).
+
+They can also serve as a readily-accessible knowledge base for learning
+the system-specific interfaces for supported tasks.
 
 .SH RETURN VALUES
 
@@ -76,6 +81,8 @@ auto-clean-disk(8) - Free up disk space and zero free blocks
 auto-clean-ports(8) - Remove distfiles and builds from ports tree
 auto-clean-tmp(8) - Remove old files from tmp directories
 auto-cups-setup(8) - Install necessary software and enable CUPS service
+auto-detect-laptops(8) - Automatically configure hardware-specific tools
+auto-devd-mount-setup(8) - Install and configure devd-mount
 auto-image2dev(8) - Write a disk image to a storage device
 auto-install-linux_base(8) - Install and enable Linux kernal compat
 auto-ldap-client-setup(8) - Configure authentication via LDAP
