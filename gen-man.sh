@@ -83,8 +83,8 @@ etc.
 .B Auto-admin
 thus allows sysadmins to easily manage multiple different
 POSIX systems with far less system-specific knowledge and effort.
-The scripts can serve as a compatibility layer for higher-level
-tools such as SPVM (Simple, Portable Cluster Manager).
+The scripts serve as a compatibility layer for higher-level cross-platform
+tools such as SPCM (Simple, Portable Cluster Manager).
 
 They can also serve as a readily-accessible knowledge base for learning
 the system-specific interfaces for supported tasks.
