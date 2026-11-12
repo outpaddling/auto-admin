@@ -1,8 +1,62 @@
 #!/bin/sh -e
 
-#   Description:
-#       Change the UID for a given user
+##########################################################################
+#   Name:
+#       auto-change-uid - Change numeric UID of a user
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-change-uid [--silent] username new-uid [directory ...]
 #       
+#   Description:
+#       The
+#       .B auto-change-uid
+#       command changes the numeric UID (user ID) of user "username".
+#
+#       If additional arguments are present following the username and
+#       new UID, they are taken as directories and searched
+#       for files and directories owned by "username", updating the
+#       ownership of all that match.
+#
+#       If --silent is specified, messages indicating the progress of
+#       the change are suppressed.
+#
+#       Note: No file ownerships are updated outside the directories
+#       explicitly indicated.  This allows ownership correction, which
+#       is time-consuming, to be done separately if desired.
+#
+#       Note: Although the underlying DragonFly|FreeBSD pw(8) command
+#       accepts either user name or UID for UID changes, we currently accept
+#       only username in order to simplify the Linux usermod(8) interface.
+#       
+#   Arguments:
+#       --silent    Option to proceed without progress output
+#       username    Name of the user whose UID is to change
+#       new-uid     New numeric UID of the user
+#       directory   Optional directories in which to update user ownership
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-change-uid --silent joeuser 2001 /home/joeuser
+#
+#   Files:
+#       /etc/passwd
+#
+#   See also:
+#       auto-admin(8), auto-adduser(8), auto-useradd(8),
+#       auto-change-primary-group(8), auto-add-to-group(8), auto-group-check(8),
+#       auto-remove-from-group(8), auto-change-group-ownership(8),
+#       pw(8), usermod(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2017-04-03  J Bacon     Begin
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

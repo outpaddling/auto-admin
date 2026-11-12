@@ -1,7 +1,36 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-clean-ports - Remove distfiles and builds from ports tree
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-clean-ports
+#       
 #   Description:
-#       Clean FreeBSD or MacPorts work directories
+#       The
+#       .B auto-clean-ports
+#       command frees up disk space by
+#       removing all temporary files from a ports tree, such as
+#       DragonFly dports, FreeBSD ports, and MacPorts.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), auto-clean-disk(8), auto-pkgsrc-clean(8),
+#       auto-dreckly-clean(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

@@ -1,5 +1,40 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-clean-disk - Free up disk space and zero free blocks
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-clean-disk
+#       
+#   Description:
+#       The
+#       .B auto-clean-disk
+#       command frees up disk space by optionally removing cached package
+#       files and cleaning port/package directories in build-from-source
+#       package managers.  It then optionally zeros all free disk space,
+#       which allows virtual disks to be better compressed.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-clean-disk
+#
+#   See also:
+#       auto-admin(8), auto-clean-ports(8), auto-pkgsrc-clean(8),
+#       auto-dreckly-clean(8), apt(8), yum(8), pkg(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

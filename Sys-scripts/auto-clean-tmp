@@ -1,5 +1,41 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-clean-tmp - Remove old files from tmp directories
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-clean-tmp [days-old]
+#       
+#   Description:
+#       The
+#       .B auto-clean-tmp
+#       command removes old files from tmp directories.  The user can specify
+#       the minimum age of files to be removed, in days.  By default,
+#       files older than 180 days are removed.  
+#       
+#   Arguments:
+#       days-old    Optional minimum age of files to remove
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-clean-tmp 90
+#
+#   Files:
+#       /tmp, /var/tmp, /usr/tmp
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
