@@ -1,5 +1,43 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-cups-setup - Install necessary software and enable CUPS service
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-cups-setup
+#       
+#   Description:
+#       The
+#       .B auto-cups-setup
+#       command installs essential packages plus some common printer drivers,
+#       and enables the CUPS printing service.
+#
+#       Note: CUPS will not support drivers in the future, so the driver
+#       installations here are allowed to fail.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-cups-setup
+#
+#   Files:
+#       PREFIX/etc/cups
+#
+#   See also:
+#       auto-admin(8), cupsd(8), lpr(1)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-12  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -20,22 +58,15 @@ case $(auto-ostype) in
 FreeBSD)
     printf "Configuring cups...\n"
     auto-install-packages print/cups
+    auto-mark-package-critical cups
     # Tolerate failures here, as print drivers will go away eventually.
+    # CUPS will stop supporting drivers at some point, so don't mark
+    # these critical.
     auto-install-packages print/brlaser print/hplip print/foomatic-db-engine \
 	print/gutenprint || true
-    # All this does is trigger a warning in auto-update-system if a
-    # package is missing, list list everything.
-    auto-mark-package-critical cups brlaser hplip foomatic-db-engine gutenprint
-    
-    # FIXME
-    # foomatic-db-hpijs and hpijs appear to be redundant.
-    # 2014-11-16: The hpijs package is broken, as does the foomatic-db-hpijs
-    # *port*, so as much as I hate to work around bugs in other software,
-    # we'll install hpijs from source for now.  This print driver is just
-    # too important to leave out.
-    #cd $PORTSDIR/print/hpijs
-    #make deinstall reinstall
-    
+
+    # FIXME: Should lpt be in devfs.conf?  Forgot why I put it here.
+    # Maybe just a brain fart.
     auto-update-devfs-rules cups unlpt ulpt lpt
     
     # FIXME: Is this still necessary?
@@ -57,7 +88,7 @@ FreeBSD)
 	fi
     fi
     
-    auto-enable-service cupsd desktop-installer
+    auto-enable-service cupsd $0
     ;;
 
 *)

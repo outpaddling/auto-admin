@@ -26,6 +26,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-clean-disk(8) | Free up disk space and zero free blocks |
 | auto-clean-ports(8) | Remove distfiles and builds from ports tree |
 | auto-clean-tmp(8) | Remove old files from tmp directories |
+| auto-cups-setup(8) | Install necessary software and enable CUPS service |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |
