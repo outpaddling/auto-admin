@@ -1,14 +1,49 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-disable-host-key-prompt - Disable ssh warning for unknown host key
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-disable-host-key-prompt short-hostname long-hostname IP
+#       
 #   Description:
-#       Disable prompt for unknown host key
+#       The
+#       .B auto-disable-host-key-prompt
+#       command disables the ssh warning for an unknown host key when
+#       connecting to the given host for the first time.
+#
+#       This is useful on a local area network where certain hosts can
+#       be implicitely trusted, rather than forcing every user to authorize
+#       connections to every host, which is default ssh behavior.
+#       Clusters and grids are prime examples where the warning is
+#       undesirable.
 #       
 #   Arguments:
-#       1.  short hostname
-#       2.  long hostname
-#       3.  IP
+#       short-hostname  Short hostname of the target host
+#       long-hostname   Fully qualified domain name of the target host
+#       IP              IP address of the target host
 #       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-disable-host-key-prompt compute-001 compute-001.cluster.edu 192.168.0.10
+#
+#   Files:
+#       /etc/ssh/ssh_config
+#
+#   See also:
+#       auto-admin(8), auto-ssh-authorize(8), auto-ssh-reverse-authorize(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2018-08-16  J Bacon     Begin
+#   2026-11-13  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -21,6 +56,7 @@ usage()
 #   Main
 ##########################################################################
 
+# FIXME: Maybe allow specifying just one if the rest can be resolved?
 if [ $# != 3 ]; then
     usage
 fi
@@ -37,14 +73,14 @@ if [ $(auto-ostype) = FreeBSD ]; then
 elif [ -e /etc/redhat-release ]; then
     sed=sed
 else
-    printf 'Only FreeBSD and RHEL/CentOS are supported at this time.\n'
+    # Not certain that /etc/ssh is always the right directory
+    auto-unsupported-os $0
     exit 1
 fi
 
-if [ ! -e /etc/ssh/ssh_config.orig ]; then
-    cp /etc/ssh/ssh_config /etc/ssh/ssh_config.orig
-fi
+auto-backup-file /etc/ssh/ssh_config
 
+# FIXME: Inadequate test to avoid redundant entries
 if ! fgrep -wq $host_name /etc/ssh/ssh_config; then
     $sed -i'' "2i\ " /etc/ssh/ssh_config
     $sed -i'' "3iHost $short_name" /etc/ssh/ssh_config
