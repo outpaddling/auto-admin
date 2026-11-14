@@ -1,5 +1,46 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-disable-tcp-timestamps - Disable TCP timestamps to improve security
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-disable-tcp-timestamps
+#       
+#   Description:
+#       The
+#       .B auto-disable-tcp-timestamps
+#       command disables TCP timestamps.  This prevents remote attackers
+#       from determining uptime, from which a system's patch level might
+#       be inferred.  Knowing the system patch level helps attackers
+#       determine what kinds of attacks may be effective.
+#
+#       Use with caution: Disabling timestamps may also have negative effects
+#       like reducing network performance and/or stability.  In most cases,
+#       keeping systems up-to-date with all the latest patches is a better
+#       security strategy.  If a system is up-to-date, then knowing its
+#       uptime will only help attackers in the rare case of a known and
+#       recent security regression.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-disable-tcp-timestamps
+#
+#   See also:
+#       auto-admin(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-14  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -16,7 +57,6 @@ if [ $# != 0 ]; then
     usage
 fi
 
-# Prevent discovery of last boot time
 case $(auto-ostype) in
 FreeBSD)
     auto-set-sysctl net.inet.tcp.rfc1323 0 $0

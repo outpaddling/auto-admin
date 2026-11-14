@@ -1,5 +1,54 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-disable-service - Disable a service
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-disable-service service-name
+#       
+#   Description:
+#       The
+#       .B auto-disable-service
+#       command disables a service.  It is primarily a compatibility layer
+#       to mask the extensive differences in how services are handled
+#       between various Unix platforms such as BSD, Linux, and macOS.
+#       This makes it possible to write portable programs that manipulate
+#       services.
+#
+#       On BSD systems, the name of the
+#       service as it appears in rc.conf should be used.  This may differ
+#       from the script name in rc.d.
+#
+#       On macOS, use the plist name
+#       with or without the .plist extension.
+#
+#       On Linux systems using systemd, use the service name as it would
+#       appear in a systemctl command.
+#       
+#   Arguments:
+#       service-name    Name of the service as it appears in rc.conf (BSD)
+#                       or as it appears in a systemctl command (Linux),
+#                       or the name of a plist file with or without ".plist"
+#                       (macOS)
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-disable-service sshd
+#
+#   See also:
+#       auto-admin(8), auto-enable-service(8), auto-restart-services(8),
+#       auto-services-manager(8), auto-service-enabled(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-14  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

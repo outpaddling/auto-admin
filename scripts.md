@@ -29,6 +29,9 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-cups-setup(8) | Install necessary software and enable CUPS service |
 | auto-detect-laptops(8) | Automatically configure hardware-specific tools |
 | auto-devd-mount-setup(8) | Install and configure devd-mount |
+| auto-disable-host-key-prompt(8) | Disable ssh warning for unknown host key |
+| auto-disable-service(8) | Disable a service |
+| auto-disable-tcp-timestamps(8) | Disable TCP timestamps to improve security |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |
