@@ -61,9 +61,13 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     # Required by bash
-    auto-append-line /proc 'proc\t\t/proc\t\t\tprocfs\trw\t\t0\t0' /etc/fstab $0
+    FSTAB=/etc/fstab
+    auto-append-line /proc 'proc\t\t/proc\t\t\tprocfs\trw\t\t0\t0' $FSTAB $0
     if ! mount | fgrep -qw procfs; then
+	mkdir -p /proc
 	mount proc
+    else
+	printf "/proc is already mounted.\n"
     fi
     ;;
     

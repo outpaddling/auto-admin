@@ -1,5 +1,43 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-enable-passwdqc - Enable password quality enforcement
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-enable-passwdqc
+#       
+#   Description:
+#       The
+#       .B auto-enable-passwdqc
+#       command enables password quality checks on systems that support
+#       them, usually through a pam(3) module.
+#
+#       This prevents users from setting weak passwords that are easily
+#       cracked by brute force searches and other common approaches.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-enable-passwdqc
+#
+#   Files:
+#       /etc/pam.d
+#
+#   See also:
+#       auto-admin(8), pam(3), passwd(1)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-15  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -46,6 +84,9 @@ ocredit = 2
 # End auto-enable-passwdqc
 
 EOM
+    else
+	auto-unsupported-release $0
+	exit 1
     fi
     ;;
 

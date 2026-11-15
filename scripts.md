@@ -32,6 +32,8 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-disable-host-key-prompt(8) | Disable ssh warning for unknown host key |
 | auto-disable-service(8) | Disable a service |
 | auto-disable-tcp-timestamps(8) | Disable TCP timestamps to improve security |
+| auto-enable-autologout(8) | Set idle time limit for known shells |
+| auto-enable-passwdqc(8) | Enable password quality enforcement |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |
