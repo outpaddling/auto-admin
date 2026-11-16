@@ -1,4 +1,11 @@
 
+*service*: Support using rc script filename
+    FreeBSD: Extract rcvar from within the file
+    Darwin, Linux: Extract service name from filename.{plist|service}
+	Maybe:
+	base=$(basename script)
+	service=${base%.*}
+
 Add flavors support to auto-install-packages
 
 Support pkgbase
