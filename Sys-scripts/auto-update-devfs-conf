@@ -62,7 +62,7 @@ if [ $# -lt 1 ]; then
 fi
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     : ${DEVFS_CONF:=/etc/devfs.conf}
     
     for dev in $*; do

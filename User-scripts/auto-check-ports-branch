@@ -138,6 +138,11 @@ EOM
     fi
     ;;
 
+DragonFly)
+    # FIXME: Are there snapshots?
+    # Do nothing for now, assume latest.
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1

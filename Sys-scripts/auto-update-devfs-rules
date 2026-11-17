@@ -62,7 +62,7 @@ if [ $# -lt 2 ]; then
 fi
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     : ${DEVFS_RULES:=/etc/devfs.rules}
     : ${RC_CONF:=/etc/rc.conf}
     

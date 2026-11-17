@@ -98,7 +98,10 @@ NetBSD)
 	
 	printf "$branch\n"
     fi
-    
+    ;;
+
+DragonFly)
+    printf "latest\n"
     ;;
 
 *)

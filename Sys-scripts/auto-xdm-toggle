@@ -103,7 +103,7 @@ off|on)
 esac
     
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     # xdm may be enabled as a service via rc.conf or via /etc/ttys.
     # Use rc.conf if someone has enabled xdm there, otherwise use ttys.
     # Clean up if it's enabled in both places.

@@ -90,7 +90,7 @@ EOM
     fi
     ;;
 
-FreeBSD)
+DragonFly|FreeBSD)
     cd /etc/pam.d
     awk ' { if ($3 == "pam_passwdqc.so")
 	    {

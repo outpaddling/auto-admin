@@ -59,7 +59,7 @@ if [ $# != 0 ]; then
 fi
     
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     # Required by bash
     FSTAB=/etc/fstab
     auto-append-line /proc 'proc\t\t/proc\t\t\tprocfs\trw\t\t0\t0' $FSTAB $0

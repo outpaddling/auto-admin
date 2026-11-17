@@ -70,7 +70,7 @@ if [ $# != 1 ]; then
 fi
     
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     service=$1
     service $service stop || true
     if auto-service-enabled $service; then

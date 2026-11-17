@@ -72,6 +72,11 @@ FreeBSD)
     fi
     ;;
 
+DragonFly)
+    # FIXME: Are there branches?
+    printf "latest\n"
+    ;;
+
 *)
     auto-unsupported-os $0
     exit 1

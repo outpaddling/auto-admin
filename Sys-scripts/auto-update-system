@@ -467,7 +467,7 @@ sleep 10
 # Must be root at this point
 if [ -n "$pkg_cache_host" ]; then
     case $os_type in
-    FreeBSD|DragonFly)
+    DragonFly|FreeBSD)
 	pkg_cache=/var/cache/pkg
 	;;
     Darwin|NetBSD)
@@ -514,7 +514,7 @@ interactive)
 esac
 
 case $os_type in
-FreeBSD|DragonFly)
+DragonFly|FreeBSD)
     if [ ! -t 0 ]; then
 	# Input redirected.  Being fed y/n responses.
 	freebsd_update_flags=--not-running-from-cron
@@ -546,19 +546,20 @@ FreeBSD|DragonFly)
     esac
     
     if [ 0$update_packages != 0n ]; then
-	# Avoid command failure if nothing under /usr/local
-	if ls /usr/local/etc/pkg/repos/*.conf; then
-	    repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf /etc/pkg/*.conf)
-	else
-	    repo_conf=$(ls /etc/pkg/*.conf)
-	fi
-	while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
-	    if [ $(uname -K) -ge 1500000 ]; then
-		ports_repo_insert="-ports"
+	if [ $(uname) = FreeBSD ]; then
+	    # Avoid command failure if nothing under /usr/local
+	    if ls /usr/local/etc/pkg/repos/*.conf; then
+		repo_conf=$(ls /usr/local/etc/pkg/repos/*.conf /etc/pkg/*.conf)
 	    else
-		ports_repo_insert=""
+		repo_conf=$(ls /etc/pkg/*.conf)
 	    fi
-	    cat << EOM
+	    while [ $(uname -K) -ge 1400000 ] && ! grep -iq 'pkg.FreeBSD.org.*kmods' $repo_conf; do
+		if [ $(uname -K) -ge 1500000 ]; then
+		    ports_repo_insert="-ports"
+		else
+		    ports_repo_insert=""
+		fi
+		cat << EOM
 
 FreeBSD now publishes kernel module packages for each minor release.
 However, your configuration file(s)
@@ -587,8 +588,9 @@ searched first.
 See pkg.conf(5) for more information.
 
 EOM
-	    pause
-	done
+		pause
+	    done
+	fi  # uname FreeBSD
 	
 	critical_pkg_file=$(auto-localbase)/etc/auto-admin/critical-packages
 	if [ -e $critical_pkg_file ]; then
