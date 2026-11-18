@@ -80,10 +80,15 @@ if [ $# != 0 ]; then
 fi
 
 # FIXME: Add other platforms that support read -t timeout
-if [ $(auto-ostype) = FreeBSD ]; then
+case $(auto-ostype) in
+DragonFly|FreeBSD)
     # Exit from su if idle time too long
     read_flags='-t 60'
-fi
+    ;;
+
+*)
+    ;;
+esac
 
 # FIXME: Figure out how to trap read -t timeout.  This doesn't work.
 # trap su_exit ALRM

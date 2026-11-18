@@ -59,7 +59,7 @@ if [ $# != 0 ]; then
 fi
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     auto-enable-service -s statd rpc_statd $0
     auto-enable-service -s lockd rpc_lockd $0
     
