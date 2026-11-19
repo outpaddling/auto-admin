@@ -65,7 +65,7 @@ case $(auto-ostype) in
 DragonFly|FreeBSD)
     service=$1
     service $service stop || true
-    service $service disable
+    service $service disable || true
     ;;
 
 NetBSD)
