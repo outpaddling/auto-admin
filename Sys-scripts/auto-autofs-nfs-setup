@@ -60,9 +60,12 @@ fi
 
 case $(auto-ostype) in
 DragonFly|FreeBSD)
+    auto-enable-service nfsclient $0
     auto-enable-service statd $0
     auto-enable-service lockd $0
     
+    # FIXME: Is this necessary?  auto-enable-service restarts if already enabled.
+    service nfsclient restart
     service lockd restart
     service statd restart
     
