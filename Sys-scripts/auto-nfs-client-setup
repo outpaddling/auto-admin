@@ -107,9 +107,9 @@ mapping="$1"
 case $(auto-ostype) in
 FreeBSD)
     # Enable in rc.conf
-    sysrc nfs_client_enable="YES"
-    auto-enable-service -s statd rpc_statd $0
-    auto-enable-service -s lockd rpc_lockd $0
+    auto-enable-service nfsclient $0
+    auto-enable-service statd $0
+    auto-enable-service lockd $0
 
     if [ $mapping = sysctl ]; then
 	auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0

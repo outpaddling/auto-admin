@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Name:
-#       auto-service-enabled - Exit 0 if the indicated service is enables
+#       auto-service-enabled - Exit 0 if the indicated service is enabled
 #
 #   Section:
 #       8
@@ -18,13 +18,11 @@
 #       in scripts.
 #
 #       Note: The service name used here is the name of the service
-#       indicated in /etc/rc.conf, which may differ from the filename
-#       of the service script in /etc/rc.conf.
-#       For example, on FreeBSD, the service name for /etc/rc.d/lockd
-#       is "rpc_lockd".  
+#       as specified to underlying native commands such as "service"
+#       or "systemctl".
 #       
 #   Arguments:
-#       service-name    Name of the service (as spelled in rc.conf, etc.)
+#       service-name    Name of the service
 #       
 #   Returns:
 #       0 if the service is enabled, non-zero otherwise
@@ -44,17 +42,29 @@
 ##########################################################################
 
 if [ $# != 1 ]; then
-    printf "Usage: $0 rc.conf-name\n"
+    printf "Usage: $0 service-name\n"
     exit 1
 fi
     
 case $(auto-ostype) in
 DragonFly|FreeBSD)
-    # FIXME: Is there a way to use the rc.d filename?
+    script=$1
     # As of 2026-10-31, "service name status" does not distinguish
     # between stopped and running services.  Both are reported as "not running".
-    service=$1
-    grep -q "^${service}_enable=.*YES.*" /etc/rc.conf
+    # So, we have to extract rcvar from the service script and check it
+    # in rc.conf.
+    for dir in /etc/rc.d /usr/local/etc/rc.d; do
+	if [ -e $dir/$script ]; then
+	    if grep -q '^rcvar=' $dir/$script; then
+		service=$(grep '^rcvar=' $dir/$script | tail -1 | cut -d = -f 2)
+	    else
+		service=$script
+	    fi
+	    printf "rc service name = $service\n"
+	    break
+	fi
+    done
+    grep -q "^${service}=.*YES.*" /etc/rc.conf
     exit $?
     ;;
     

@@ -16,24 +16,16 @@
 #       command disables a service.  It is primarily a compatibility layer
 #       to mask the extensive differences in how services are handled
 #       between various Unix platforms such as BSD, Linux, and macOS.
-#       This makes it possible to write portable programs that manipulate
-#       services.
+#       This makes it possible to write portable code that manipulate
+#       services, assuming the service has the same name across platforms,
+#       as is often the case.
 #
-#       On BSD systems, the name of the
-#       service as it appears in rc.conf should be used.  This may differ
-#       from the script name in rc.d.
-#
-#       On macOS, use the plist name
-#       with or without the .plist extension.
-#
-#       On Linux systems using systemd, use the service name as it would
-#       appear in a systemctl command.
+#       Note: The service name used here is the name of the service
+#       as specified to underlying native commands such as "service"
+#       or "systemctl".
 #       
 #   Arguments:
-#       service-name    Name of the service as it appears in rc.conf (BSD)
-#                       or as it appears in a systemctl command (Linux),
-#                       or the name of a plist file with or without ".plist"
-#                       (macOS)
+#       service-name    Name of the service
 #       
 #   Returns:
 #       0 on success, non-zero error codes otherwise.
@@ -73,9 +65,7 @@ case $(auto-ostype) in
 DragonFly|FreeBSD)
     service=$1
     service $service stop || true
-    if auto-service-enabled $service; then
-	sysrc ${service}_enable=NO
-    fi
+    service $service disable
     ;;
 
 NetBSD)

@@ -8,7 +8,7 @@ stop_service()
     # FIXME: Don't do OS checks inside functions.  Less confusing if
     # OS separation is done in one place in each script.
     case $(auto-ostype) in
-	FreeBSD|NetBSD)
+	DragonFly|FreeBSD|NetBSD)
 	    if auto-service-enabled $service; then
 		printf "$service is enabled.\n"
 		service $script stop
@@ -87,16 +87,12 @@ DragonFly|FreeBSD)
 	exit 0
     fi
     
-    if grep -q "^${service}_enable=\"NO\"" /etc/rc.conf; then
-	sed -i '' "s|${service}_enable=\"NO\"|${service}_enable=\"YES\"|g" /etc/rc.conf
-    fi
-
-    auto-set-conf-var ${service}_enable YES /etc/rc.conf $caller
+    service $service enable
     stop_service || true
-    if [ -e /etc/rc.d/$script ] || [ -e $(auto-localbase)/etc/rc.d/$script ]; then
+    if [ -e /etc/rc.d/$service ] || [ -e $(auto-localbase)/etc/rc.d/$service ]; then
 	# Use restart instead of start to prevent desktop-installer
 	# from exiting after killing rogue devd?
-	service $(basename $script) restart || true
+	service $service restart || true
     else
 	printf "Warning: No service startup script found for $service.\n"
     fi

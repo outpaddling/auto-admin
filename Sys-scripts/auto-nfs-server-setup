@@ -128,9 +128,9 @@ FreeBSD)
     touch /etc/exports
     auto-append-line "V4: / $clients" /etc/exports $0
     auto-append-line 'nfsv4_server_enable="YES"' /etc/rc.conf $0
-    auto-enable-service -s nfsd nfs_server $0
-    auto-enable-service -s statd rpc_statd $0
-    auto-enable-service -s lockd rpc_lockd $0
+    auto-enable-service nfsd $0
+    auto-enable-service statd $0
+    auto-enable-service lockd $0
     
     if [ $mapping = sysctl ]; then
 	auto-set-sysctl vfs.nfs.enable_uidtostring 1 $0

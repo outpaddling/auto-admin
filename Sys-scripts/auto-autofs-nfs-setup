@@ -60,14 +60,14 @@ fi
 
 case $(auto-ostype) in
 DragonFly|FreeBSD)
-    auto-enable-service -s statd rpc_statd $0
-    auto-enable-service -s lockd rpc_lockd $0
+    auto-enable-service statd $0
+    auto-enable-service lockd $0
     
     service lockd restart
     service statd restart
     
-    if ! auto-service-enabled autofs; then
-	auto-enable-service autofs $0
+    if ! auto-service-enabled automount; then
+	auto-enable-service automount $0
     else
 	printf "autofs already enabled.\n"
     fi
@@ -80,6 +80,7 @@ DragonFly|FreeBSD)
     ;;
 
 NetBSD)
+    # FIXME: Update *service* to use script name like FreeBSD
     auto-enable-service statd $0
     auto-enable-service lockd $0
     
