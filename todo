@@ -1,6 +1,6 @@
 
 *service*: Support using rc script filename
-    FreeBSD: Extract rcvar from within the file
+    NetBSD, OpenBSD: Extract rcvar from within the file
     Darwin, Linux: Extract service name from filename.{plist|service}
 	Maybe:
 	base=$(basename script)
