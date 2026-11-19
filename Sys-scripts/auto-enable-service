@@ -1,7 +1,66 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-enable-service - Enable and start a service
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-enable-service [-s script-path] service-name caller|nocomment
+#       
+#   Description:
+#       The
+#       .B auto-enable-service
+#       command enables and starts a service.  It is primarily a compatibility layer
+#       to mask the extensive differences in how services are handled
+#       between various Unix platforms such as BSD, Linux, and macOS.
+#       This makes it possible to write portable code that manipulate
+#       services, assuming the service has the same name across platforms,
+#       as is often the case.
+#
+#       Note: The service name used here is the name of the service
+#       as specified to underlying native commands such as "service"
+#       or "systemctl".
+#
+#       If the service was not already listed in the configuration file,
+#       an entry is added.
+#       If caller is not "nocomment", the new entry is wrapped in a
+#       comment as follows:
+#
+#       .nf
+#       .na
+#       # Added by auto-admin from $caller
+#       service_enable=YES
+#       # End $caller addition
+#       .ad
+#       .fi
+#       
+#   Arguments:
+#       -s script-path  Specify the full pathname of the service script
+#       service-name    Name of the service as specified to the native command
+#       caller          Name of the calling program, usually $0, or "nocomment"
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-enable-service lpjs_compd nocomment
+#       auto-enable-service lpjs_compd $0
+#       auto-enable-service -s /usr/pkg/share/lpjs/Systemd/lpjs_compd.service lpjs_compd nocomment
+#       auto-enable-service -s /usr/pkg/share/lpjs/Launchd/org.pkgsrc.lpjs_compd.plist org.pkgsrc.lpjs_compd nocomment
+#
+#   See also:
+#       auto-admin(8), auto-disable-service(8), auto-service-enabled(8),
+#       auto-restart-services(8), auto-services-manager(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2012-01-08  Jason Bacon Begin
 #   2024-10-21  izzy Meyer  Start OpenBSD support
+#   2026-11-19  Jason Bacon Add man page template
+##########################################################################
     
 stop_service()
 {
@@ -45,7 +104,7 @@ usage()
     # FIXME: Tailor usage message to OS.  Currently BSD-centric.
     cat << EOM
 
-Usage: $0 [-s script-name] service-name calling-program-name|nocomment
+Usage: $0 [-s script-name] service-name caller-name|nocomment
 
 Examples:
     $0 -s kerberos5_server kerberos my-setup-script
