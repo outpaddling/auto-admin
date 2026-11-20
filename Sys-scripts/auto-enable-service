@@ -158,6 +158,7 @@ DragonFly|FreeBSD)
     ;;
     
 NetBSD)
+    # FIXME: Use auto-service-enabled
     if grep -q "^${service}=YES" /etc/rc.conf; then
 	printf "$service already enabled, restarting.\n"
 	service $service restart
@@ -188,6 +189,7 @@ NetBSD)
     ;;
 
 OpenBSD)
+    # FIXME: Use auto-service-enabled
     if rcctl ls on | grep -q "${service}"; then
 	printf "$service already enabled, restarting.\n"
 	rcctl restart $service
@@ -245,6 +247,7 @@ Debian|RHEL)
     ;;
 
 Darwin)
+    # FIXME: Don't require absolute path for script?
     if [ ! -e $script ]; then
 	printf "$script: File not found.\n" >> /dev/stderr
 	exit 1
