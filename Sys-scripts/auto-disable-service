@@ -62,7 +62,27 @@ if [ $# != 1 ]; then
 fi
     
 case $(auto-ostype) in
-DragonFly|FreeBSD)
+DragonFly)
+    service=$1
+    service $service stop || true
+    for dir in /etc/rc.d /usr/local/etc/rc.d; do
+	if [ -e $dir/$script ]; then
+	    if grep -q '^rcvar=' $dir/$script; then
+		rcvar=$(grep '^rcvar=' $dir/$script | tail -1 | cut -d = -f 2)
+	    else
+		rcvar=$script
+	    fi
+	    printf "rc service name = $rcvar\n"
+	    break
+	fi
+    done
+    if ! which sysrc; then
+	pkg install -y sysrc
+    fi
+    sysrc $rcvar=NO
+    ;;
+
+FreeBSD)
     service=$1
     service $service stop || true
     service $service disable || true

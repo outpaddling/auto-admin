@@ -406,7 +406,7 @@ DragonFly|FreeBSD|NetBSD|OpenBSD)
 esac
 
 case $(auto-ostype) in
-FreeBSD|NetBSD)
+DragonFly|FreeBSD|NetBSD)
     printf "Add $user_name to operator group to allow shutdown, reboot, etc? y/[n] "
     read add
     if [ 0$add = 0y ]; then
@@ -416,7 +416,7 @@ FreeBSD|NetBSD)
 esac
 
 case $(auto-ostype) in
-FreeBSD)
+DragonFly|FreeBSD)
     printf "Add $user_name to video group for optimal graphics performance? [y]/n "
     read add
     if [ 0$add != 0n ]; then
