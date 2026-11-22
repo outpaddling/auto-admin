@@ -35,6 +35,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-enable-autologout(8) | Set idle time limit for known shells |
 | auto-enable-passwdqc(8) | Enable password quality enforcement |
 | auto-enable-service(8) | Enable and start a service |
+| auto-file-secure(8) | Error out if a file is writable by non-root users |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |

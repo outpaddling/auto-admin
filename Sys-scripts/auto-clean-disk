@@ -61,7 +61,7 @@ FreeBSD)
     printf "Clean package cache? [y]/n "
     read clean
     if [ 0$clean != 0n ]; then
-	pkg clean -a
+	pkg clean -ay
     fi
     
     printf "Clean ports tree? [y]/n "
