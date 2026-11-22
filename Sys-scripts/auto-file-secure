@@ -46,6 +46,60 @@ usage()
 
 
 ##########################################################################
+#   Function description:
+#       Check security of a file
+#
+#   Arguments:
+#       path
+#       
+#   Returns:
+#       0 if secure, non-zero otherwise
+#       
+#   History:
+#   Date        Name        Modification
+#   2026-11-22  Jason Bacon Begin
+##########################################################################
+
+check_secure()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: check_secure path\n"
+	exit 1
+    fi
+    
+    localfile=$1
+    status=0
+    
+    perms=`ls -ld $localfile`
+    file_type=`printf '%s' $perms | cut -c 1-1`
+    owner=`ls -ld $localfile | awk '{ print $3 }'`
+    group=`ls -ld $localfile | awk '{ print $4 }'`
+    
+    # FIXME: Check permissions and suid bits
+    
+    if [ $owner != root ] || [ $group != root ] && [ $group != wheel ] && [ $group != bin ]; then
+	printf "$0: $localfile is not owned by root:root or root:wheel or root:bin.\n"
+	ls -ld $localfile
+	status=1
+    fi
+    
+    group_write=`printf '%s' $perms | cut -c 6-6`
+    if [ $group_write != '-' ]; then
+	printf "$0: $localfile is group writable!\n"
+	status=1
+    fi
+    
+    world_write=`printf '%s' $perms | cut -c 9-9`
+    if [ $world_write != '-' ]; then
+	printf "$0: $localfile is world writable!\n"
+	status=1
+    fi
+    
+    return $status
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -58,33 +112,20 @@ if [ ! -e $filename ]; then
     printf "$0: $filename: No such file or directory.\n"
     exit 1
 fi
+check_secure $filename
+status=$?
 
-status=0
-
-owner=`ls -l $filename | awk '{ print $3 }'`
-group=`ls -l $filename | awk '{ print $4 }'`
-# FIXME: Check permissions and suid bits
-if [ $owner != root ] || [ $group != root ] && [ $group != wheel ] && [ $group != bin ]; then
-    printf "$0: $filename is not owned by root:root or root:wheel or root:bin.\n"
-    ls -l $filename
-    status=1
+if [ $status = 0 ] && [ $file_type = 'l' ]; then
+    # To get file linked to portably, print last field of ls -ld
+    filename2=$(ls -ld $filename | awk '{ print $NF }')
+    printf "$0: $filename is secure, but a symbolic link to $filename2...\n"
+    # Not all platforms have realpath command
+    if [ $(echo $filename2 | cut -c 1) = '/' ]; then
+	check_secure $filename2
+    else
+	check_secure $(dirname $filename)/$filename2
+    fi
+    status=$?
 fi
 
-perms=`ls -l $filename`
-file_type=`printf '%s' $perms | cut -c 1-1`
-if [ $file_type = 'l' ]; then
-    printf "$0: Note: $filename is a symbolic link!\n"
-fi
-
-group_write=`printf '%s' $perms | cut -c 6-6`
-if [ $group_write != '-' ]; then
-    printf "$0: $filename is group writable!\n"
-    status=1
-fi
-
-world_write=`printf '%s' $perms | cut -c 9-9`
-if [ $world_write != '-' ]; then
-    printf "$0: $filename is world writable!\n"
-    status=1
-fi
 exit $status
