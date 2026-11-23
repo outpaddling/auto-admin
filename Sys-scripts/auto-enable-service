@@ -149,10 +149,11 @@ DragonFly|FreeBSD)
     if [ $(uname) = FreeBSD ]; then
 	service $service enable
     else
+	rcvar=''
 	for dir in /etc/rc.d /usr/local/etc/rc.d; do
 	    if [ -e $dir/$script ]; then
 		if grep -q '^rcvar=' $dir/$script; then
-		    rcvar=$(grep '^rcvar=' $dir/$script | tail -1 | cut -d = -f 2)
+		    rcvar="$(grep '^rcvar=' $dir/$script | tail -1 | cut -d = -f 2 | tr -d '"')"
 		else
 		    rcvar=$script
 		fi
@@ -160,10 +161,15 @@ DragonFly|FreeBSD)
 		break
 	    fi
 	done
-	if ! which sysrc; then
-	    pkg install -y sysrc
+	if [ -z "$rcvar" ]; then
+	    printf "$0: $service: No such service.\n"
+	    exit 1
+	else
+	    if ! which sysrc; then
+		pkg install -y sysrc
+	    fi
+	    sysrc $rcvar=YES
 	fi
-	sysrc $rcvar=YES
     fi
     stop_service || true
     if [ -e /etc/rc.d/$service ] || [ -e $(auto-localbase)/etc/rc.d/$service ]; then
