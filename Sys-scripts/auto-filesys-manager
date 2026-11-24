@@ -1,5 +1,40 @@
 #!/bin/sh
 
+##########################################################################
+#   Name:
+#       auto-filesys-manager - Menu for common filesystem management tasks
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-filesys-manager
+#       
+#   Description:
+#       The
+#       .B auto-filesys-manager
+#       command presents a simple text menu for filesystem management tasks
+#       such as removing cached files, formatting media, enabling NFS
+#       server or client, etc.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       Always returns 0
+#
+#   Examples:
+#       auto-filesys-manager
+#
+#   See also:
+#       auto-admin(8), auto-autofs-nfs-setup(8), auto-clean-disk(8),
+#       auto-clean-ports(8), auto-fusefs-install(8), auto-media-format(8),
+#       auto-nfs-client-setup(8), auto-nfs-server-setup(8)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-05  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
