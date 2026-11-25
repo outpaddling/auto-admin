@@ -1,9 +1,42 @@
 #!/bin/sh
 
-#   Description:
-#       Correct a clock that has strayed too far for NTP to deal with
+##########################################################################
+#   Name:
+#       auto-fix-date - Synchronize an incorrect system clock
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-fix-date
 #       
+#   Description:
+#       The
+#       .B auto-fix-date
+#       command corrects the system date.  Services such as ntpd(8)
+#       will fail to correct a clock that has strayed too far, since they will
+#       only make small incremental corrections in order to avoid confusing
+#       other processes.
+#
+#       The ntpdate(8) command instantly corrects the system clock, but
+#       cannot run while ntpd(8) is running.
+#       The auto-fix-date script is a convenience that temporarily
+#       stops ntpd(8), runs ntpdate(8), and restarts ntpd(8).
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   See also:
+#       auto-admin(8), ntpd(8), ntpdate(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2020-12-23  Jason Bacon Begin
+#   2026-11-24  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {

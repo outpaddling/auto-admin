@@ -1,8 +1,47 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-firewall-setup - Enable a simple firewall
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-firewall-setup
+#       
 #   Description:
-#       Configure a basic firewall
+#       The
+#       .B auto-firewall-setup
+#       command installs a simple firewall rule set and enables the
+#       ipfw(8) firewall.
+#
+#       Caution: This script should not be run remotely via ssh, as
+#       it may terminate and disable the network connection.
+#       To enable a firewall
+#       remotely, use a LOM (lights out management) remote console if
+#       available.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-firewall-setup
+#
+#   Files:
+#       /etc/ipfw.rules
+#
+#   See also:
+#       auto-admin(8), ipfw(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2020-06-30  Jason Bacon Begin
+#   2026-11-24  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
