@@ -1,5 +1,37 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-fusefs-install - Install and enable fusefs
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-fusefs-install
+#       
+#   Description:
+#       The
+#       .B auto-fusefs-install
+#       command installs the necessary packages for common fusefs-supported
+#       filesystems and enables the fusefs system.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-fusefs-install
+#
+#   See also:
+#       auto-admin(8), fusefs(5)
+#
+#   History:
+#   Date        Name        Modification
+#   2026-11-25  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -18,44 +50,16 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    : ${PORTSDIR:=/usr/ports}
-    pkg install -y pkgconf zenity autoconf automake libublio gettext-tools \
-	texinfo fusefs-libs
-    
-    # There were license restrictions up into 2020
-    # exfat tools were marked for no binary package at one point
-    #if ! auto-package-installed sysutils/fusefs-exfat; then
-    #    (cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make deinstall clean reinstall)
-    #fi
-    #if ! auto-package-installed sysutils/exfat-utils; then
-    #    (cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make deinstall clean reinstall)
-    #fi
-    pkg install -y exfat-utils fusefs-exfat
-    
-    pkg install -y fusefs-ntfs fusefs-ext2 fusefs-lkl \
+    pkg install -y fusefs-libs \
+    exfat-utils fusefs-exfat fusefs-ntfs fusefs-ext2 fusefs-lkl \
 	fusefs-hfsfuse fusefs-simple-mtpfs
-    
     kldload fusefs || true
     sysrc kld_list+=fusefs
     ;;
 
 NetBSD)
-    : ${PORTSDIR:=/usr/ports}
-    pkgin -y install pkgconf zenity autoconf automake gettext-tools \
-	gtexinfo fuse
-    
-    # There were license restrictions up into 2020
-    # exfat tools were marked for no binary package at one point
-    #if ! auto-package-installed sysutils/fusefs-exfat; then
-    #    (cd $PORTSDIR/sysutils/fusefs-exfat && unset BATCH && make deinstall clean reinstall)
-    #fi
-    #if ! auto-package-installed sysutils/exfat-utils; then
-    #    (cd $PORTSDIR/sysutils/exfat-utils && unset BATCH && make deinstall clean reinstall)
-    #fi
-    pkgin -y install fuse-exfat
-    
     # FreeBSD uses fuse-lkl for ext4, NetBSD fuse-ext2 (2023-06)
-    pkgin -y install fuse-ntfs fuse-ext2
+    pkgin -y fuse fuse-exfat install fuse-ntfs fuse-ext2
     
     # FIXME: How to enable fuse on NetBSD?
     #kldload fusefs || true
