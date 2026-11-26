@@ -1,9 +1,44 @@
 #!/bin/sh -e
 
-#   Description:
-#       Verify that calling user is a member of operator.
+##########################################################################
+#   Name:
+#       auto-group-check - Verify that owner of a process is a member of group
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-group-check group caller
 #       
+#   Description:
+#       The
+#       .B auto-group-check
+#       command verifies that the user who owns the calling process is
+#       a member of the specified group.  If not, an error is printed
+#       including "caller", the name of the calling program, which is
+#       usually specified at "$0" in a script.
+#       
+#   Arguments:
+#       group   Group that the process owner must belong to
+#       caller  Name of the calling program, usually $0 in a script
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-group-check operator $0
+#
+#   Files:
+#       /etc/group, /etc/passwd
+#
+#   See also:
+#       auto-admin(8), auto-root-check(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2019-07-16  Jason Bacon Begin
+#   2026-11-26  Jason Bacon Add man page template
+##########################################################################
 
 usage()
 {
@@ -22,7 +57,7 @@ fi
 group="$1"
 script="$2"
 
-if ! groups | fgrep -q "$group"; then
+if ! groups | fgrep -qw "$group"; then
     printf "$script can only be run by members of $group.\n"
     exit 1
 fi
