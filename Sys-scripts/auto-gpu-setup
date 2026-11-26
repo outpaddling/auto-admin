@@ -1,12 +1,44 @@
 #!/bin/sh -e
 
-#   Description:
-#       FreeBSD requires a kernel module to support modern Intel
-#       GPUs.  This script automatically detects the presence of an
-#       Intel GPU and performs the necessary system configuration to
-#       enable it in Xorg.
+##########################################################################
+#   Name:
+#       auto-gpu-setup - Interactively configure GPU drivers
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-gpu-setup
 #       
+#   Description:
+#       The
+#       .B auto-gpu-setup
+#       command detects available video hardware and guides the user
+#       in selecting an appropriate direct rendering module (DRM) and
+#       X11 driver.  It then deinstalls all DRMs and drivers, installs
+#       the selected ones, and loads the selected DRM, and reconfigures
+#       the system to load it at boot time.
+#       
+#   Arguments:
+#       None
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-gpu-setup
+#
+#   Files:
+#       /etc/rc.conf
+#
+#   See also:
+#       auto-admin(8), drm(7), kldload(8), kldstat(8), Xorg(1)
+#
+#   History:
+#   Date        Name        Modification
 #   2017-02-14  J Bacon     Begin
+#   2026-11-26  Jason Bacon Add man page template
+##########################################################################
 
 ##########################################################################
 #   Function description:

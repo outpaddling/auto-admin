@@ -40,6 +40,7 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-firewall-setup(8) | Enable a simple firewall |
 | auto-fix-date(8) | Synchronize an incorrect system clock |
 | auto-fusefs-install(8) | Install and enable fusefs |
+| auto-gpu-setup(8) | Interactively configure GPU drivers |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |
