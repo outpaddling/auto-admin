@@ -43,6 +43,9 @@ install auto-admin using your chosen package manager and run `man script`
 | auto-gpu-setup(8) | Interactively configure GPU drivers |
 | auto-group-check(8) | Verify that owner of a process is a member of group |
 | auto-harden(8) | Perform common system-hardening configurations |
+| auto-hardware-specs(8) | Display basic hardware specs |
+| auto-hyperthreading-toggle(8) | Enable or disable Intel hyperthreading |
+| auto-idrac-config(8) | Set mode, network prefix size, and gateway for Dell iDRAC |
 | auto-image2dev(8) | Write a disk image to a storage device |
 | auto-install-linux_base(8) | Install and enable Linux kernal compat |
 | auto-ldap-client-setup(8) | Configure authentication via LDAP |

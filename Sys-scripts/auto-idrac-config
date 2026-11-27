@@ -1,19 +1,77 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Name:
+#       auto-idrac-config - Set mode, network prefix size, and gateway for Dell iDRAC
+#
+#   Section:
+#       8
+#
+#   Synopsis:
+#       auto-idrac-config primary-Ethernet mode prefix-size gateway
+#       
 #   Description:
-#       Configure idrac for standard cluster-admin IP scheme
+#       The
+#       .B auto-idrac-config
+#       command configures network access to a local Dell iDRAC platform.
+#       It sets the address according to the cluster LAN scheme used
+#       by SPCM (Simple Portable Cluster Manager),
+#       https://github.com/outpaddling/SPCM.  In this scheme, the
+#       available IP addresses are divided into four blocks.
+#
+#       .nf
+#       .na
+#       Block1  Primary Ethernet
+#       Block2  LOM (Lights-out management)
+#       Block3  High-speed network (e.g. Infiniband IP over IB)
+#       Block4  Other
+#       .ad
+#       .fi
+#
+#       E.g., using a standard IPv4 192.168.0.0/16 network, this provides 16,384
+#       addresses per block:
+#
+#       .nf
+#       .na
+#       Block1  192.168.0.1   - 192.168.63.255
+#       Block2  192.168.64.0  - 192.168.127.255
+#       Block3  192.168.128.0 - 192.168.191.255
+#       Block4  192.168.192.0 - 192.168.255.255
+#       .ad
+#       .fi
+#
+#       The user provides the IP address of the primary Ethernet interface,
+#       the desired iDRAC mode, network prefix size in bits, and the
+#       network gateway.  The
+#       .B auto-idrac-config
+#       script retrieves the IP address of the given Block1 primary Ethernet
+#       interface, calculates the corresponding address for the IDRAC
+#       in Block2, and configures the iDRAC platform accordingly using
+#       ipmitool(8).
 #       
 #   Arguments:
-#       shared: For idrac with shared interface
-#       dedicated: For idrac with dedicated interface
-#       (Most use a shared interface)
+#       primary-Ethernet    IP address of the primary Ethernet (Block1)
+#       mode                "shared" or "dedicated" (check your iDRAC capabilities)
+#       prefix-size         Number of bits in the network prefix
+#       gateway             Network gateway IP address
 #       
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   Examples:
+#       auto-idrac-config bce0 shared 24 192.168.0.1
+#       auto-idrac-config em1 dedicated 16 192.168.1.1
+#
+#   Files:
+#       /etc/hosts
+#
+#   See also:
+#       auto-admin(8), ipmitool(8)
+#
+#   History:
+#   Date        Name        Modification
 #   2016-08-24  J Bacon     Begin
-
-##########################################################################
-#   FIXME:
-#       Factor out an auto-idrac-config script to set any network
-#       parameters and call it from here.
+#   2026-11-26  Jason Bacon Add man page template
 ##########################################################################
 
 usage()
